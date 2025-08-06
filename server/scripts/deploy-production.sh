@@ -99,10 +99,12 @@ npm run build
 # Copy production environment
 log "⚙️  Setting up production environment..."
 if [ -f ".env.production" ]; then
-    cp .env.production .env
-    log "Production environment configured"
+    cp .env.production .env.local
+    log "Production environment configured (.env.production → .env.local)"
+    log "Environment file will be loaded as .env.local by PM2"
 else
-    warning "No .env.production file found. Please create one manually."
+    error "No .env.production file found. Please create one first!"
+    exit 1
 fi
 
 # Set permissions
