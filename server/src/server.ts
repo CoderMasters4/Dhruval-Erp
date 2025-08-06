@@ -76,11 +76,11 @@ import vehiclesRoutes from '@/routes/vehicles';
 console.log('✅ Vehicles routes imported');
 import enhancedInventoryRoutes from '@/routes/enhancedInventory';
 console.log('✅ Enhanced inventory routes imported');
-// Import complete V2 routes (all 24 models) - Temporarily commented out
+// Import complete V2 routes (all 24 models) - Now enabled as V1
 console.log('📝 Loading complete V2 routes...');
-// import v2Routes from '@/routes/v2/index';
+import v2Routes from '@/routes/v2/index';
 console.log('✅ V2 routes imported with all 24 models');
-// import v2SimpleRoutes from '@/routes/v2/indexSimple';
+import v2SimpleRoutes from '@/routes/v2/indexSimple';
 console.log('✅ V2 Simple routes imported');
 
 console.log('✅ All routes imported successfully!');
@@ -308,11 +308,34 @@ apiRouter.use('/vehicles', vehiclesRoutes);
 // Mount API routes
 app.use(config.API_PREFIX, apiRouter);
 
+// Root API info endpoint
+app.get('/api', (req, res) => {
+  res.status(200).json({
+    success: true,
+    message: 'Dhruval Exim ERP API',
+    version: '2.0.0',
+    description: 'Complete Factory ERP Management System',
+    endpoints: {
+      v1: '/api/v1/',
+      health: '/api/v1/health',
+      info: '/api/v1/info',
+      auth: '/api/v1/auth/*',
+      companies: '/api/v1/companies/*',
+      users: '/api/v1/users/*',
+      customers: '/api/v1/customers/*',
+      suppliers: '/api/v1/suppliers/*',
+      inventory: '/api/v1/inventory/*'
+    },
+    timestamp: new Date().toISOString()
+  });
+});
+
 // =============================================
-// API V2 ROUTES (New Architecture) - Safe Loading - Temporarily commented out
+// API V1 ROUTES (Complete Business Management System)
 // =============================================
-// app.use('/api/v2', v2Routes);
-// app.use('/api/v2-simple', v2SimpleRoutes);
+// Mount V2 routes as V1 (latest version)
+app.use('/api/v1', v2Routes);
+app.use('/api/v1/simple', v2SimpleRoutes);
 
 // =============================================
 // WEBSOCKET SETUP
