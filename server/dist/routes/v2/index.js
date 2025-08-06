@@ -37,7 +37,7 @@ const router = (0, express_1.Router)();
 router.get('/health', (req, res) => {
     res.status(200).json({
         success: true,
-        message: 'API v2 is healthy',
+        message: 'Dhruval Exim ERP API v1 is healthy',
         timestamp: new Date().toISOString(),
         version: '2.0.0'
     });
@@ -65,32 +65,32 @@ router.get('/info', (req, res) => {
                 'Dynamic Report Generation'
             ],
             endpoints: {
-                auth: '/api/v2/auth',
-                companies: '/api/v2/companies',
-                users: '/api/v2/users',
-                visitors: '/api/v2/visitors',
-                customers: '/api/v2/customers',
-                suppliers: '/api/v2/suppliers',
-                inventory: '/api/v2/inventory',
-                production: '/api/v2/production',
-                customerOrders: '/api/v2/customer-orders',
-                invoices: '/api/v2/invoices',
-                purchaseOrders: '/api/v2/purchase-orders',
-                quotations: '/api/v2/quotations',
-                roles: '/api/v2/roles',
-                vehicles: '/api/v2/vehicles',
-                warehouses: '/api/v2/warehouses',
-                stockMovements: '/api/v2/stock-movements',
-                financialTransactions: '/api/v2/financial-transactions',
-                auditLogs: '/api/v2/audit-logs',
-                securityLogs: '/api/v2/security-logs',
-                businessAnalytics: '/api/v2/business-analytics',
-                boilerMonitoring: '/api/v2/boiler-monitoring',
-                electricityMonitoring: '/api/v2/electricity-monitoring',
-                hospitality: '/api/v2/hospitality',
-                dispatch: '/api/v2/dispatch',
-                reports: '/api/v2/reports',
-                spares: '/api/v2/spares'
+                auth: '/api/v1/auth',
+                companies: '/api/v1/companies',
+                users: '/api/v1/users',
+                visitors: '/api/v1/visitors',
+                customers: '/api/v1/customers',
+                suppliers: '/api/v1/suppliers',
+                inventory: '/api/v1/inventory',
+                production: '/api/v1/production',
+                customerOrders: '/api/v1/customer-orders',
+                invoices: '/api/v1/invoices',
+                purchaseOrders: '/api/v1/purchase-orders',
+                quotations: '/api/v1/quotations',
+                roles: '/api/v1/roles',
+                vehicles: '/api/v1/vehicles',
+                warehouses: '/api/v1/warehouses',
+                stockMovements: '/api/v1/stock-movements',
+                financialTransactions: '/api/v1/financial-transactions',
+                auditLogs: '/api/v1/audit-logs',
+                securityLogs: '/api/v1/security-logs',
+                businessAnalytics: '/api/v1/business-analytics',
+                boilerMonitoring: '/api/v1/boiler-monitoring',
+                electricityMonitoring: '/api/v1/electricity-monitoring',
+                hospitality: '/api/v1/hospitality',
+                dispatch: '/api/v1/dispatch',
+                reports: '/api/v1/reports',
+                spares: '/api/v1/spares'
             }
         },
         timestamp: new Date().toISOString()
@@ -139,7 +139,7 @@ router.get('/protected', auth_1.authenticate, (req, res) => {
     });
 });
 router.use('*', (req, res) => {
-    logger_1.logger.warn('API v2 route not found', {
+    logger_1.logger.warn('API v1 route not found', {
         method: req.method,
         url: req.originalUrl,
         ip: req.ip,
@@ -149,38 +149,38 @@ router.use('*', (req, res) => {
         success: false,
         message: 'API endpoint not found',
         availableEndpoints: {
-            health: 'GET /api/v2/health',
-            info: 'GET /api/v2/info',
+            health: 'GET /api/v1/health',
+            info: 'GET /api/v1/info',
             auth: {
-                login: 'POST /api/v2/auth/login',
-                register: 'POST /api/v2/auth/register',
-                refresh: 'POST /api/v2/auth/refresh',
-                logout: 'POST /api/v2/auth/logout',
-                profile: 'GET /api/v2/auth/profile'
+                login: 'POST /api/v1/auth/login',
+                register: 'POST /api/v1/auth/register',
+                refresh: 'POST /api/v1/auth/refresh',
+                logout: 'POST /api/v1/auth/logout',
+                profile: 'GET /api/v1/auth/profile'
             },
             companies: {
-                list: 'GET /api/v2/companies',
-                create: 'POST /api/v2/companies',
-                get: 'GET /api/v2/companies/:id',
-                update: 'PUT /api/v2/companies/:id',
-                delete: 'DELETE /api/v2/companies/:id'
+                list: 'GET /api/v1/companies',
+                create: 'POST /api/v1/companies',
+                get: 'GET /api/v1/companies/:id',
+                update: 'PUT /api/v1/companies/:id',
+                delete: 'DELETE /api/v1/companies/:id'
             },
             users: {
-                list: 'GET /api/v2/users',
-                create: 'POST /api/v2/users',
-                profile: 'GET /api/v2/users/profile',
-                get: 'GET /api/v2/users/:id',
-                update: 'PUT /api/v2/users/:id',
-                delete: 'DELETE /api/v2/users/:id'
+                list: 'GET /api/v1/users',
+                create: 'POST /api/v1/users',
+                profile: 'GET /api/v1/users/profile',
+                get: 'GET /api/v1/users/:id',
+                update: 'PUT /api/v1/users/:id',
+                delete: 'DELETE /api/v1/users/:id'
             },
             visitors: {
-                list: 'GET /api/v2/visitors',
-                create: 'POST /api/v2/visitors',
-                get: 'GET /api/v2/visitors/:id',
-                checkin: 'POST /api/v2/visitors/:id/checkin',
-                checkout: 'POST /api/v2/visitors/:id/checkout',
-                approve: 'POST /api/v2/visitors/:id/approve',
-                reject: 'POST /api/v2/visitors/:id/reject'
+                list: 'GET /api/v1/visitors',
+                create: 'POST /api/v1/visitors',
+                get: 'GET /api/v1/visitors/:id',
+                checkin: 'POST /api/v1/visitors/:id/checkin',
+                checkout: 'POST /api/v1/visitors/:id/checkout',
+                approve: 'POST /api/v1/visitors/:id/approve',
+                reject: 'POST /api/v1/visitors/:id/reject'
             }
         },
         timestamp: new Date().toISOString()

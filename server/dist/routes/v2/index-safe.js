@@ -15,23 +15,23 @@ router.get('/health', (req, res) => {
 router.get('/info', (req, res) => {
     res.status(200).json({
         success: true,
-        message: 'Factory ERP API v2 - Complete Business Management System',
+        message: 'Dhruval Exim ERP API v1 - Complete Business Management System',
         version: '2.0.0',
         timestamp: new Date().toISOString(),
         description: 'Comprehensive Factory ERP API with all business modules',
         endpoints: {
-            health: '/api/v2/health',
-            info: '/api/v2/info',
-            auth: '/api/v2/auth/*',
-            companies: '/api/v2/companies/*',
-            users: '/api/v2/users/*',
-            customers: '/api/v2/customers/*',
-            suppliers: '/api/v2/suppliers/*',
-            inventory: '/api/v2/inventory/*',
-            production: '/api/v2/production/*',
-            'purchase-orders': '/api/v2/purchase-orders/*',
-            invoices: '/api/v2/invoices/*',
-            visitors: '/api/v2/visitors/*'
+            health: '/api/v1/health',
+            info: '/api/v1/info',
+            auth: '/api/v1/auth/*',
+            companies: '/api/v1/companies/*',
+            users: '/api/v1/users/*',
+            customers: '/api/v1/customers/*',
+            suppliers: '/api/v1/suppliers/*',
+            inventory: '/api/v1/inventory/*',
+            production: '/api/v1/production/*',
+            'purchase-orders': '/api/v1/purchase-orders/*',
+            invoices: '/api/v1/invoices/*',
+            visitors: '/api/v1/visitors/*'
         },
         features: [
             'Complete Authentication & Authorization',
@@ -112,22 +112,22 @@ catch (error) {
 router.use('*', (req, res) => {
     res.status(404).json({
         success: false,
-        message: 'API v2 endpoint not found',
+        message: 'API v1 endpoint not found',
         path: req.originalUrl,
-        suggestion: 'Check /api/v2/info for all available endpoints',
+        suggestion: 'Check /api/v1/info for all available endpoints',
         availableEndpoints: [
-            '/api/v2/health',
-            '/api/v2/info',
-            '/api/v2/auth/*',
-            '/api/v2/companies/*',
-            '/api/v2/users/*',
-            '/api/v2/customers/*',
-            '/api/v2/suppliers/*',
-            '/api/v2/inventory/*',
-            '/api/v2/production/*',
-            '/api/v2/purchase-orders/*',
-            '/api/v2/invoices/*',
-            '/api/v2/visitors/*'
+            '/api/v1/health',
+            '/api/v1/info',
+            '/api/v1/auth/*',
+            '/api/v1/companies/*',
+            '/api/v1/users/*',
+            '/api/v1/customers/*',
+            '/api/v1/suppliers/*',
+            '/api/v1/inventory/*',
+            '/api/v1/production/*',
+            '/api/v1/purchase-orders/*',
+            '/api/v1/invoices/*',
+            '/api/v1/visitors/*'
         ]
     });
 });
