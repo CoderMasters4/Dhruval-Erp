@@ -55,13 +55,15 @@ class DatabaseManager {
       // Authentication
       authSource: 'admin',
       
-      // SSL/TLS (for production)
+      // SSL/TLS (for production) - Updated for MongoDB Atlas
       ...(config.NODE_ENV === 'production' && {
-        ssl: true,
-        sslValidate: true,
-        sslCA: process.env.MONGODB_SSL_CA,
-        sslCert: process.env.MONGODB_SSL_CERT,
-        sslKey: process.env.MONGODB_SSL_KEY
+        tls: true,
+        tlsAllowInvalidCertificates: false,
+        tlsAllowInvalidHostnames: false,
+        // Only add custom certificates if provided
+        ...(process.env.MONGODB_SSL_CA && { tlsCAFile: process.env.MONGODB_SSL_CA }),
+        ...(process.env.MONGODB_SSL_CERT && { tlsCertificateFile: process.env.MONGODB_SSL_CERT }),
+        ...(process.env.MONGODB_SSL_KEY && { tlsCertificateKeyFile: process.env.MONGODB_SSL_KEY })
       })
     };
 

@@ -5,8 +5,11 @@
   "scripts": {
     "dev": "next dev --turbopack -p 4001",
     "build": "next build",
+    "build:prod": "NODE_ENV=production next build",
     "start": "next start -p 4001",
-    "lint": "next lint"
+    "start:prod": "NODE_ENV=production next start -p 4001",
+    "lint": "next lint",
+    "export": "next export"
   },
   "dependencies": {
     "@casl/ability": "^6.7.3",

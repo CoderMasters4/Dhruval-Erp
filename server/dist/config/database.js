@@ -72,11 +72,12 @@ class DatabaseManager {
             compressors: ['zlib'],
             authSource: 'admin',
             ...(environment_1.default.NODE_ENV === 'production' && {
-                ssl: true,
-                sslValidate: true,
-                sslCA: process.env.MONGODB_SSL_CA,
-                sslCert: process.env.MONGODB_SSL_CERT,
-                sslKey: process.env.MONGODB_SSL_KEY
+                tls: true,
+                tlsAllowInvalidCertificates: false,
+                tlsAllowInvalidHostnames: false,
+                ...(process.env.MONGODB_SSL_CA && { tlsCAFile: process.env.MONGODB_SSL_CA }),
+                ...(process.env.MONGODB_SSL_CERT && { tlsCertificateFile: process.env.MONGODB_SSL_CERT }),
+                ...(process.env.MONGODB_SSL_KEY && { tlsCertificateKeyFile: process.env.MONGODB_SSL_KEY })
             })
         };
         return { uri, options };
