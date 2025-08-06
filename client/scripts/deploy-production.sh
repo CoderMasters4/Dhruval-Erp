@@ -103,9 +103,11 @@ npm ci --only=production
 log "⚙️  Setting up production environment..."
 if [ -f ".env.production" ]; then
     cp .env.production .env.local
-    log "Production environment configured"
+    log "Production environment configured (.env.production → .env.local)"
+    log "Next.js will load environment from .env.local"
 else
-    warning "No .env.production file found. Please create one manually."
+    error "No .env.production file found. Please create one first!"
+    exit 1
 fi
 
 # Build application
