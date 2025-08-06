@@ -128,5 +128,5 @@ ehthumbs.db
 uploads/
 public/uploads/
 
-# Documentation (if you want to exclude)
-# docs/
+# Documentation (excluded)
+docs/

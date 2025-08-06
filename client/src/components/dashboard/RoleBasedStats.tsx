@@ -1,0 +1,162 @@
+import React from 'react'
+import {
+  Users,
+  Package,
+  ShoppingCart,
+  DollarSign,
+  Factory,
+  Truck,
+  AlertTriangle,
+  TrendingUp,
+  Building2,
+  UserCheck,
+  Settings,
+  BarChart3
+} from 'lucide-react'
+import { useDashboardPermissions } from '@/lib/hooks/useDashboardPermissions'
+import { useSelector } from 'react-redux'
+import { selectCurrentUser, selectIsSuperAdmin } from '@/lib/features/auth/authSlice'
+
+interface StatCardProps {
+  title: string
+  value: string | number
+  change?: string
+  changeType?: 'increase' | 'decrease'
+  icon: React.ElementType
+  color: 'sky' | 'black'
+  loading?: boolean
+}
+
+const StatCard: React.FC<StatCardProps> = ({ 
+  title, 
+  value, 
+  change, 
+  changeType, 
+  icon: Icon, 
+  color,
+  loading = false 
+}) => {
+  if (loading) {
+    return (
+      <div className="bg-white rounded-xl border-2 border-sky-500 p-6 animate-pulse">
+        <div className="flex items-center justify-between">
+          <div className="space-y-2">
+            <div className="h-4 bg-sky-200 rounded w-24"></div>
+            <div className="h-8 bg-sky-200 rounded w-16"></div>
+            <div className="h-4 bg-sky-200 rounded w-20"></div>
+          </div>
+          <div className="h-12 w-12 bg-sky-200 rounded-xl"></div>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="bg-white rounded-xl border-2 border-sky-500 p-4 sm:p-6 hover:border-black transition-colors">
+      <div className="flex items-center justify-between">
+        <div className="flex-1 min-w-0">
+          <p className="text-xs sm:text-sm font-medium text-black mb-1 truncate">{title}</p>
+          <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-black">{value}</p>
+          {change && (
+            <div className="flex items-center mt-1 sm:mt-2">
+              <TrendingUp className={`h-3 w-3 sm:h-4 sm:w-4 mr-1 ${changeType === 'increase' ? 'text-sky-500' : 'text-black'}`} />
+              <span className={`text-xs sm:text-sm font-medium ${changeType === 'increase' ? 'text-sky-500' : 'text-black'}`}>
+                {change}
+              </span>
+              <span className="text-xs sm:text-sm text-black ml-1 hidden sm:inline">vs last month</span>
+            </div>
+          )}
+        </div>
+        <div className={`p-2 sm:p-3 rounded-xl flex-shrink-0 ${color === 'sky' ? 'bg-sky-500' : 'bg-black'}`}>
+          <Icon className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
+        </div>
+      </div>
+    </div>
+  )
+}
+
+interface RoleBasedStatsProps {
+  stats?: {
+    totalOrders?: number
+    totalRevenue?: number
+    totalCustomers?: number
+    totalProducts?: number
+    totalProduction?: number
+    totalInventory?: number
+    totalEmployees?: number
+    totalSuppliers?: number
+    pendingOrders?: number
+    completedOrders?: number
+    lowStockItems?: number
+    activeProduction?: number
+  }
+  loading?: boolean
+}
+
+export const RoleBasedStats: React.FC<RoleBasedStatsProps> = ({ stats, loading = false }) => {
+  const permissions = useDashboardPermissions()
+  const user = useSelector(selectCurrentUser)
+  const isSuperAdmin = useSelector(selectIsSuperAdmin)
+
+  const getStatsForRole = () => {
+    const roleStats = []
+
+    // Super Admin - All stats
+    if (isSuperAdmin) {
+      roleStats.push(
+        { title: 'Total Companies', value: '12', change: '+2', changeType: 'increase' as const, icon: Building2, color: 'sky' as const },
+        { title: 'Total Users', value: stats?.totalEmployees || '0', change: '+5', changeType: 'increase' as const, icon: Users, color: 'black' as const },
+        { title: 'System Health', value: '98%', change: '+1%', changeType: 'increase' as const, icon: Settings, color: 'sky' as const },
+        { title: 'Total Revenue', value: `₹${(stats?.totalRevenue || 0).toLocaleString()}`, change: '+12%', changeType: 'increase' as const, icon: DollarSign, color: 'black' as const }
+      )
+    }
+    // Company Owner - Business overview
+    else if (permissions.canViewFinancials && permissions.canViewOrders) {
+      roleStats.push(
+        { title: 'Total Orders', value: stats?.totalOrders || '0', change: '+8%', changeType: 'increase' as const, icon: ShoppingCart, color: 'sky' as const },
+        { title: 'Revenue', value: `₹${(stats?.totalRevenue || 0).toLocaleString()}`, change: '+12%', changeType: 'increase' as const, icon: DollarSign, color: 'black' as const },
+        { title: 'Customers', value: stats?.totalCustomers || '0', change: '+15%', changeType: 'increase' as const, icon: Users, color: 'sky' as const },
+        { title: 'Products', value: stats?.totalProducts || '0', change: '+3%', changeType: 'increase' as const, icon: Package, color: 'black' as const }
+      )
+    }
+    // Production Manager - Production focused
+    else if (permissions.canViewProduction) {
+      roleStats.push(
+        { title: 'Active Production', value: stats?.activeProduction || '0', change: '+5%', changeType: 'increase' as const, icon: Factory, color: 'sky' as const },
+        { title: 'Completed Orders', value: stats?.completedOrders || '0', change: '+10%', changeType: 'increase' as const, icon: UserCheck, color: 'black' as const },
+        { title: 'Inventory Items', value: stats?.totalInventory || '0', change: '-2%', changeType: 'decrease' as const, icon: Package, color: 'sky' as const },
+        { title: 'Low Stock Alerts', value: stats?.lowStockItems || '0', change: '+1', changeType: 'increase' as const, icon: AlertTriangle, color: 'black' as const }
+      )
+    }
+    // Operator - Basic operational stats
+    else {
+      roleStats.push(
+        { title: 'My Tasks', value: '8', change: '+2', changeType: 'increase' as const, icon: UserCheck, color: 'sky' as const },
+        { title: 'Production Units', value: '156', change: '+12', changeType: 'increase' as const, icon: Factory, color: 'black' as const },
+        { title: 'Quality Checks', value: '24', change: '+3', changeType: 'increase' as const, icon: BarChart3, color: 'sky' as const },
+        { title: 'Pending Items', value: '5', change: '-1', changeType: 'decrease' as const, icon: AlertTriangle, color: 'black' as const }
+      )
+    }
+
+    return roleStats
+  }
+
+  const statsToShow = getStatsForRole()
+
+  return (
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
+      {statsToShow.map((stat, index) => (
+        <StatCard
+          key={index}
+          title={stat.title}
+          value={stat.value}
+          change={stat.change}
+          changeType={stat.changeType}
+          icon={stat.icon}
+          color={stat.color}
+          loading={loading}
+        />
+      ))}
+    </div>
+  )
+}
