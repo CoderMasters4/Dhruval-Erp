@@ -76,6 +76,10 @@ import vehiclesRoutes from '@/routes/vehicles';
 console.log('✅ Vehicles routes imported');
 import enhancedInventoryRoutes from '@/routes/enhancedInventory';
 console.log('✅ Enhanced inventory routes imported');
+
+// Import V1 routes (new working routes)
+import v1CompaniesRoutes from '@/routes/v1/companies';
+console.log('✅ V1 Companies routes imported');
 // Import complete V2 routes (all 24 models) - Temporarily disabled to fix hanging
 console.log('📝 Loading complete V2 routes...');
 // import v2Routes from '@/routes/v2/index';
@@ -250,6 +254,34 @@ const apiRouter = express.Router();
 apiRouter.use('/auth', authRoutes);
 apiRouter.use('/setup', setupRoutes);
 
+// Public info endpoint
+apiRouter.get('/info', (req, res) => {
+  res.status(200).json({
+    success: true,
+    message: 'Dhruval Exim ERP API v1',
+    version: '2.0.0',
+    description: 'Complete Factory ERP Management System',
+    availableEndpoints: [
+      'GET /api/v1/info - API information (public)',
+      'POST /api/v1/auth/login - User login (public)',
+      'POST /api/v1/auth/register - User registration (public)',
+      'GET /api/v1/companies - List companies (auth required)',
+      'GET /api/v1/users - List users (auth required)',
+      'GET /api/v1/customers - List customers (auth required)',
+      'GET /api/v1/suppliers - List suppliers (auth required)',
+      'GET /api/v1/inventory - List inventory (auth required)',
+      'GET /api/v1/orders - List orders (auth required)',
+      'GET /api/v1/dashboard - Dashboard data (auth required)'
+    ],
+    authentication: {
+      required: 'Most endpoints require authentication',
+      loginEndpoint: '/api/v1/auth/login',
+      tokenType: 'Bearer token in Authorization header'
+    },
+    timestamp: new Date().toISOString()
+  });
+});
+
 // Protected routes (authentication required)
 apiRouter.use(authenticate);
 
@@ -308,6 +340,9 @@ apiRouter.use('/vehicles', vehiclesRoutes);
 // Mount API routes
 app.use(config.API_PREFIX, apiRouter);
 
+// Mount V1 specific routes (working routes)
+app.use('/api/v1/companies', v1CompaniesRoutes);
+
 // Root API info endpoint
 app.get('/api', (req, res) => {
   res.status(200).json({
@@ -331,28 +366,7 @@ app.get('/api', (req, res) => {
   });
 });
 
-// API V1 info endpoint
-app.get('/api/v1/info', (req, res) => {
-  res.status(200).json({
-    success: true,
-    message: 'Dhruval Exim ERP API v1',
-    version: '2.0.0',
-    description: 'Complete Factory ERP Management System',
-    availableEndpoints: [
-      'GET /api/v1/health',
-      'POST /api/v1/auth/login',
-      'POST /api/v1/auth/register',
-      'GET /api/v1/companies',
-      'GET /api/v1/users',
-      'GET /api/v1/customers',
-      'GET /api/v1/suppliers',
-      'GET /api/v1/inventory',
-      'GET /api/v1/orders',
-      'GET /api/v1/dashboard'
-    ],
-    timestamp: new Date().toISOString()
-  });
-});
+
 
 // =============================================
 // API V1 ROUTES (Complete Business Management System)
