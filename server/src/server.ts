@@ -76,12 +76,12 @@ import vehiclesRoutes from '@/routes/vehicles';
 console.log('✅ Vehicles routes imported');
 import enhancedInventoryRoutes from '@/routes/enhancedInventory';
 console.log('✅ Enhanced inventory routes imported');
-// Import complete V2 routes (all 24 models) - Now enabled as V1
+// Import complete V2 routes (all 24 models) - Temporarily disabled to fix hanging
 console.log('📝 Loading complete V2 routes...');
-import v2Routes from '@/routes/v2/index';
-console.log('✅ V2 routes imported with all 24 models');
-import v2SimpleRoutes from '@/routes/v2/indexSimple';
-console.log('✅ V2 Simple routes imported');
+// import v2Routes from '@/routes/v2/index';
+console.log('✅ V2 routes temporarily disabled to fix hanging issue');
+// import v2SimpleRoutes from '@/routes/v2/indexSimple';
+console.log('✅ V2 Simple routes temporarily disabled');
 
 console.log('✅ All routes imported successfully!');
 console.log('🚀 About to create Express app...');
@@ -318,14 +318,38 @@ app.get('/api', (req, res) => {
     endpoints: {
       v1: '/api/v1/',
       health: '/api/v1/health',
-      info: '/api/v1/info',
       auth: '/api/v1/auth/*',
       companies: '/api/v1/companies/*',
       users: '/api/v1/users/*',
       customers: '/api/v1/customers/*',
       suppliers: '/api/v1/suppliers/*',
-      inventory: '/api/v1/inventory/*'
+      inventory: '/api/v1/inventory/*',
+      orders: '/api/v1/orders/*',
+      dashboard: '/api/v1/dashboard/*'
     },
+    timestamp: new Date().toISOString()
+  });
+});
+
+// API V1 info endpoint
+app.get('/api/v1/info', (req, res) => {
+  res.status(200).json({
+    success: true,
+    message: 'Dhruval Exim ERP API v1',
+    version: '2.0.0',
+    description: 'Complete Factory ERP Management System',
+    availableEndpoints: [
+      'GET /api/v1/health',
+      'POST /api/v1/auth/login',
+      'POST /api/v1/auth/register',
+      'GET /api/v1/companies',
+      'GET /api/v1/users',
+      'GET /api/v1/customers',
+      'GET /api/v1/suppliers',
+      'GET /api/v1/inventory',
+      'GET /api/v1/orders',
+      'GET /api/v1/dashboard'
+    ],
     timestamp: new Date().toISOString()
   });
 });
@@ -333,9 +357,9 @@ app.get('/api', (req, res) => {
 // =============================================
 // API V1 ROUTES (Complete Business Management System)
 // =============================================
-// Mount V2 routes as V1 (latest version)
-app.use('/api/v1', v2Routes);
-app.use('/api/v1/simple', v2SimpleRoutes);
+// Mount V2 routes as V1 (latest version) - Temporarily disabled
+// app.use('/api/v1', v2Routes);
+// app.use('/api/v1/simple', v2SimpleRoutes);
 
 // =============================================
 // WEBSOCKET SETUP
