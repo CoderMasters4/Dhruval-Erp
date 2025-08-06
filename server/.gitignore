@@ -57,7 +57,7 @@ Thumbs.db
 
 # Build outputs
 build/
-dist/
+# dist/ - Keep dist folder for production deployment
 
 # Cache directories
 .cache/
