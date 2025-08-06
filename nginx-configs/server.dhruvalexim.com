@@ -73,9 +73,12 @@ server {
     
     # Health check endpoint
     location /health {
-        proxy_pass http://127.0.0.1:4000/api/v1/health;
+        proxy_pass http://127.0.0.1:4000/health;
         proxy_http_version 1.1;
         proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
         access_log off;
     }
     
@@ -92,9 +95,9 @@ server {
         proxy_send_timeout 300;
     }
     
-    # Default route (redirect to API docs or health)
+    # Default route (redirect to health check)
     location / {
-        return 301 /api/v1/health;
+        return 301 /health;
     }
     
     # Error pages
@@ -105,16 +108,23 @@ server {
     access_log /var/log/nginx/dhruval-erp-server.access.log;
     error_log /var/log/nginx/dhruval-erp-server.error.log;
 
-   
-}
-
-# HTTP to HTTPS redirect
-server {
-    if ($host = server.dhruvalexim.com) {
-        return 301 https://$host$request_uri;
-    } # managed by Certbot
-
+    # SSL Configuration (will be managed by Certbot)
     listen 80;
-    server_name server.dhruvalexim.com;
-    return 404; # managed by Certbot
+    # listen 443 ssl; # managed by Certbot
+    # ssl_certificate /etc/letsencrypt/live/server.dhruvalexim.com/fullchain.pem; # managed by Certbot
+    # ssl_certificate_key /etc/letsencrypt/live/server.dhruvalexim.com/privkey.pem; # managed by Certbot
+    # include /etc/letsencrypt/options-ssl-nginx.conf; # managed by Certbot
+    # ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem; # managed by Certbot
 }
+}
+
+# HTTP to HTTPS redirect (will be configured by Certbot)
+# server {
+#     if ($host = server.dhruvalexim.com) {
+#         return 301 https://$host$request_uri;
+#     } # managed by Certbot
+#
+#     listen 80;
+#     server_name server.dhruvalexim.com;
+#     return 404; # managed by Certbot
+# }
