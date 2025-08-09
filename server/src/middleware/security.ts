@@ -17,11 +17,20 @@ export const corsOptions = {
   origin: function (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) {
     // Allow requests with no origin (mobile apps, Postman, etc.)
     if (!origin) return callback(null, true);
-    
+
+    // In development, be more permissive
+    if (config.NODE_ENV === 'development') {
+      return callback(null, true);
+    }
+
     if (config.CORS_ORIGIN.includes(origin)) {
       callback(null, true);
     } else {
-      logger.warn('CORS blocked request', { origin, allowedOrigins: config.CORS_ORIGIN });
+      logger.warn('CORS blocked request', {
+        origin,
+        allowedOrigins: config.CORS_ORIGIN,
+        nodeEnv: config.NODE_ENV
+      });
       callback(new Error('Not allowed by CORS'), false);
     }
   },
@@ -37,7 +46,9 @@ export const corsOptions = {
     'X-API-Key',
     'X-Request-ID',
     'X-User-Agent',
-    'X-Forwarded-For'
+    'X-Forwarded-For',
+    'Cache-Control',
+    'Pragma'
   ],
   exposedHeaders: [
     'X-Total-Count',
@@ -47,7 +58,8 @@ export const corsOptions = {
     'X-Rate-Limit-Remaining',
     'X-Rate-Limit-Reset'
   ],
-  maxAge: 86400 // 24 hours
+  maxAge: 86400, // 24 hours
+  optionsSuccessStatus: 200 // Some legacy browsers (IE11, various SmartTVs) choke on 204
 };
 
 // =============================================

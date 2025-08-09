@@ -514,9 +514,10 @@ router.post('/login', authRateLimit, loginValidation, async (req: Request, res: 
     res.cookie('refreshToken', refreshToken, {
       httpOnly: true,
       secure: config.COOKIE_SECURE,
-      sameSite: config.COOKIE_SAME_SITE,
+      sameSite: config.COOKIE_SAME_SITE as 'strict' | 'lax' | 'none',
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-      domain: config.NODE_ENV === 'production' ? config.COOKIE_DOMAIN : undefined
+      domain: config.NODE_ENV === 'production' ? config.COOKIE_DOMAIN : undefined,
+      path: '/'
     });
 
     res.json({

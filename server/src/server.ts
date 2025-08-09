@@ -140,8 +140,9 @@ app.use(session({
     secure: config.COOKIE_SECURE,
     httpOnly: config.COOKIE_HTTP_ONLY,
     maxAge: config.SESSION_MAX_AGE,
-    sameSite: config.COOKIE_SAME_SITE,
-    domain: config.NODE_ENV === 'production' ? config.COOKIE_DOMAIN : undefined
+    sameSite: config.COOKIE_SAME_SITE as 'strict' | 'lax' | 'none',
+    domain: config.NODE_ENV === 'production' ? config.COOKIE_DOMAIN : undefined,
+    path: '/'
   },
   store: MongoStore.create({
     mongoUrl: config.MONGODB_URI,
@@ -252,6 +253,19 @@ app.get('/live', (req: Request, res: Response) => {
 });
 
 // =============================================
+// CORS PREFLIGHT HANDLER
+// =============================================
+// Handle preflight OPTIONS requests for all routes
+app.options('*', (req: Request, res: Response) => {
+  res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
+  res.header('Access-Control-Allow-Methods', 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Content-Type,Authorization,X-Requested-With,X-Company-ID,X-API-Key,X-Request-ID,X-User-Agent,X-Forwarded-For,Origin,Accept,Cache-Control,Pragma');
+  res.header('Access-Control-Allow-Credentials', 'true');
+  res.header('Access-Control-Max-Age', '86400');
+  res.status(200).end();
+});
+
+// =============================================
 // API ROUTES
 // =============================================
 const apiRouter = express.Router();
@@ -259,6 +273,37 @@ const apiRouter = express.Router();
 // Public routes (no authentication required)
 apiRouter.use('/auth', authRoutes);
 apiRouter.use('/setup', setupRoutes);
+
+// Health check endpoint (public)
+apiRouter.get('/health', (req: Request, res: Response) => {
+  res.status(200).json({
+    success: true,
+    message: 'Server is healthy',
+    timestamp: new Date().toISOString(),
+    environment: config.NODE_ENV,
+    version: config.APP_VERSION
+  });
+});
+
+// Cookie debug endpoint (public)
+apiRouter.get('/debug/cookies', (req: Request, res: Response) => {
+  res.status(200).json({
+    success: true,
+    message: 'Cookie debug info',
+    cookies: {
+      received: req.cookies,
+      headers: req.headers.cookie,
+      origin: req.headers.origin,
+      userAgent: req.headers['user-agent']
+    },
+    config: {
+      cookieDomain: config.COOKIE_DOMAIN,
+      cookieSecure: config.COOKIE_SECURE,
+      cookieSameSite: config.COOKIE_SAME_SITE,
+      nodeEnv: config.NODE_ENV
+    }
+  });
+});
 
 // 2FA verification route (public - used during login)
 apiRouter.use('/2fa', twoFactorRoutes);
