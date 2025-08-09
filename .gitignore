@@ -86,7 +86,7 @@ dist
 
 # Gatsby files
 .cache/
-public
+
 
 # Storybook build outputs
 .out
@@ -105,7 +105,7 @@ temp/
 *.ntvs*
 *.njsproj
 *.sln
-*.sw?
+
 
 # OS generated files
 Thumbs.db
