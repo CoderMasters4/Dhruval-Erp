@@ -105,7 +105,6 @@ const pwaConfig = withPWA({
       urlPattern: /\.(?:mp3|wav|ogg)$/i,
       handler: 'CacheFirst',
       options: {
-        rangeRequests: true,
         cacheName: 'static-audio-assets',
         expiration: {
           maxEntries: 32,
@@ -117,7 +116,6 @@ const pwaConfig = withPWA({
       urlPattern: /\.(?:mp4)$/i,
       handler: 'CacheFirst',
       options: {
-        rangeRequests: true,
         cacheName: 'static-video-assets',
         expiration: {
           maxEntries: 32,
@@ -170,14 +168,7 @@ const pwaConfig = withPWA({
       },
     },
     {
-      urlPattern: ({ url }) => {
-        const isSameOrigin = self.origin === url.origin;
-        if (!isSameOrigin) return false;
-        const pathname = url.pathname;
-        // Exclude API routes from caching
-        if (pathname.startsWith('/api/')) return false;
-        return true;
-      },
+      urlPattern: /^(?!.*\/api\/).*$/,
       handler: 'NetworkFirst',
       options: {
         cacheName: 'pages',
