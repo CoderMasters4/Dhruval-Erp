@@ -18,6 +18,7 @@ import {
 } from 'lucide-react'
 import { selectCurrentUser, selectCurrentCompany, selectIsSuperAdmin } from '@/lib/features/auth/authSlice'
 import { CompanySwitcher } from '@/components/ui/CompanySwitcher'
+import { BrowserInstallButton } from '@/components/pwa/BrowserInstallButton'
 import { 
   selectNotifications, 
   selectUnreadNotifications, 
@@ -140,6 +141,9 @@ export function Header() {
 
       {/* Right side */}
       <div className="flex items-center space-x-2 sm:space-x-3 lg:space-x-4">
+        {/* PWA Install Button */}
+        <BrowserInstallButton />
+
         {/* Company Switcher */}
         <CompanySwitcher />
 

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { X, Download, Smartphone, Monitor, Zap, Shield, Share } from 'lucide-react'
+import { X, Download, Share } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 
 interface BeforeInstallPromptEvent extends Event {
@@ -116,127 +116,57 @@ The app will then appear on your home screen like a native app!`)
   }
 
   return (
-    <div className="fixed bottom-4 left-4 right-4 z-50 md:left-auto md:right-4 md:max-w-sm animate-slide-up">
-      <div className="bg-gradient-to-br from-white via-blue-50 to-indigo-50 border border-blue-200/50 rounded-3xl shadow-2xl backdrop-blur-xl p-6 relative overflow-hidden">
-        {/* Background Pattern */}
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 via-transparent to-indigo-500/5 rounded-3xl"></div>
-        <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-blue-400/10 to-indigo-400/10 rounded-full -translate-y-16 translate-x-16"></div>
+    <div className="fixed bottom-4 left-4 right-4 z-50 md:left-auto md:right-4 md:max-w-sm">
+      <div className="bg-white border border-slate-200 rounded-2xl shadow-xl p-4 relative">
         {/* Header */}
-        <div className="relative flex items-start justify-between mb-5">
-          <div className="flex items-center space-x-4">
-            <div className="w-14 h-14 bg-gradient-to-br from-blue-500 via-blue-600 to-indigo-600 rounded-2xl flex items-center justify-center shadow-lg shadow-blue-500/25">
-              <Download className="h-7 w-7 text-white" />
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center">
+              <Download className="h-5 w-5 text-white" />
             </div>
             <div>
-              <h3 className="font-bold text-gray-900 text-lg">Install ERP App</h3>
-              <p className="text-sm text-blue-600 font-medium">Get the full experience</p>
+              <h3 className="font-semibold text-slate-900 text-base">Install ERP App</h3>
+              <p className="text-xs text-slate-600">Quick access & offline mode</p>
             </div>
           </div>
           <button
             onClick={handleDismiss}
-            className="text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full p-2 transition-all duration-200"
+            className="text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg p-1.5 transition-colors"
           >
-            <X className="h-5 w-5" />
+            <X className="h-4 w-4" />
           </button>
         </div>
 
-        {/* Benefits */}
-        <div className="relative space-y-4 mb-6">
-          <div className="flex items-center space-x-4 text-sm">
-            <div className="w-10 h-10 bg-gradient-to-br from-green-400 to-emerald-500 rounded-xl flex items-center justify-center shadow-md">
-              <Zap className="h-5 w-5 text-white" />
-            </div>
-            <div>
-              <span className="text-gray-900 font-semibold">Lightning Fast</span>
-              <p className="text-gray-600 text-xs">Instant loading & offline access</p>
-            </div>
-          </div>
-          
-          <div className="flex items-center space-x-4 text-sm">
-            <div className="w-10 h-10 bg-gradient-to-br from-blue-400 to-indigo-500 rounded-xl flex items-center justify-center shadow-md">
-              {isIOS ? (
-                <Smartphone className="h-5 w-5 text-white" />
-              ) : (
-                <Monitor className="h-5 w-5 text-white" />
-              )}
-            </div>
-            <div>
-              <span className="text-gray-900 font-semibold">
-                {isIOS ? 'Home Screen Access' : 'Desktop Integration'}
-              </span>
-              <p className="text-gray-600 text-xs">
-                {isIOS ? 'Quick access from your home screen' : 'Native desktop app experience'}
-              </p>
-            </div>
-          </div>
-          
-          <div className="flex items-center space-x-4 text-sm">
-            <div className="w-10 h-10 bg-gradient-to-br from-purple-400 to-pink-500 rounded-xl flex items-center justify-center shadow-md">
-              <Shield className="h-5 w-5 text-white" />
-            </div>
-            <div>
-              <span className="text-gray-900 font-semibold">Always Secure</span>
-              <p className="text-gray-600 text-xs">Auto-updates & enhanced security</p>
-            </div>
-          </div>
-        </div>
-
         {/* Action Buttons */}
-        <div className="relative flex flex-col space-y-3">
+        <div className="flex gap-2">
+
           {isIOS ? (
-            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200/50 rounded-2xl p-5">
-              <div className="flex items-center space-x-3 mb-4">
-                <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-md">
-                  <Share className="h-5 w-5 text-white" />
-                </div>
-                <span className="text-sm font-bold text-blue-900">
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+              <div className="flex items-center gap-2 mb-2">
+                <Share className="h-4 w-4 text-blue-600" />
+                <span className="text-sm font-semibold text-blue-900">
                   Tap Share → Add to Home Screen
                 </span>
-              </div>
-              <div className="text-xs text-blue-700 leading-relaxed bg-white/50 rounded-lg p-3">
-                <div className="flex items-center space-x-2 mb-2">
-                  <div className="w-5 h-5 bg-blue-500 text-white rounded-full flex items-center justify-center text-xs font-bold">1</div>
-                  <span>Tap the Share button (□↗) at the bottom</span>
-                </div>
-                <div className="flex items-center space-x-2 mb-2">
-                  <div className="w-5 h-5 bg-blue-500 text-white rounded-full flex items-center justify-center text-xs font-bold">2</div>
-                  <span>Scroll down and tap "Add to Home Screen"</span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <div className="w-5 h-5 bg-blue-500 text-white rounded-full flex items-center justify-center text-xs font-bold">3</div>
-                  <span>Tap "Add" to confirm installation</span>
-                </div>
               </div>
             </div>
           ) : (
             <Button
               onClick={handleInstall}
               disabled={!deferredPrompt}
-              className="w-full bg-gradient-to-r from-blue-500 via-blue-600 to-indigo-600 hover:from-blue-600 hover:via-blue-700 hover:to-indigo-700 text-white font-bold py-4 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-[1.02]"
+              className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 rounded-lg"
             >
-              <Download className="h-5 w-5 mr-3" />
-              Install App Now
-              <div className="ml-auto">
-                <div className="w-6 h-6 bg-white/20 rounded-full flex items-center justify-center">
-                  <span className="text-xs">→</span>
-                </div>
-              </div>
+              <Download className="h-4 w-4 mr-2" />
+              Download
             </Button>
           )}
 
           <Button
             onClick={handleDismiss}
-            variant="outline"
-            className="w-full border-gray-300/50 text-gray-600 hover:bg-gray-50/80 hover:border-gray-400/50 py-3 rounded-2xl transition-all duration-200 backdrop-blur-sm"
+            className="bg-slate-600 hover:bg-slate-700 text-white font-semibold py-2.5 rounded-lg px-4"
           >
-            Maybe Later
+            Later
           </Button>
         </div>
-
-        {/* Small print */}
-        <p className="text-xs text-gray-500 mt-3 text-center">
-          Free • No app store required • Uninstall anytime
-        </p>
       </div>
     </div>
   )

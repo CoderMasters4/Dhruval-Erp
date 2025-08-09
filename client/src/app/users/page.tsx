@@ -2,12 +2,10 @@
 
 import React, { useState, Suspense } from 'react'
 import { toast } from 'react-hot-toast'
-import { useRouter } from 'next/navigation'
 import {
   Shield,
   AlertCircle,
-  Plus,
-  Loader2
+  Plus
 } from 'lucide-react'
 import { useSelector } from 'react-redux'
 import { selectIsSuperAdmin } from '@/lib/features/auth/authSlice'
@@ -39,7 +37,13 @@ interface PaginationState {
 
 export default function UsersPage() {
   const isSuperAdmin = useSelector(selectIsSuperAdmin)
-  const { openUserForm } = useModals()
+  const {
+    openUserForm,
+    openUserDetails,
+    openDeleteUser,
+    openPasswordModal,
+    openToggle2FA
+  } = useModals()
 
   // State management
   const [filters, setFilters] = useState<UserFilters>({
@@ -74,8 +78,36 @@ export default function UsersPage() {
 
   // Event handlers
   const handleView = (user: any) => {
-    // TODO: Implement user details modal
-    console.log('View user:', user)
+    openUserDetails({
+      user,
+      onEdit: () => {
+        openUserForm({
+          user,
+          onSuccess: () => {
+            refetch()
+            toast.success('User updated successfully!')
+          }
+        })
+      },
+      onChangePassword: () => {
+        openPasswordModal({
+          user,
+          onSuccess: () => {
+            refetch()
+            toast.success('Password updated successfully!')
+          }
+        })
+      },
+      onToggle2FA: () => {
+        openToggle2FA({
+          user,
+          onSuccess: () => {
+            refetch()
+            toast.success(`2FA ${user.is2FAEnabled ? 'disabled' : 'enabled'} successfully!`)
+          }
+        })
+      }
+    })
   }
 
   const handleEdit = (user: any) => {
@@ -89,18 +121,33 @@ export default function UsersPage() {
   }
 
   const handleDelete = (user: any) => {
-    // TODO: Implement delete user modal
-    console.log('Delete user:', user)
+    openDeleteUser({
+      user,
+      onSuccess: () => {
+        refetch()
+        toast.success('User deleted successfully!')
+      }
+    })
   }
 
   const handleChangePassword = (user: any) => {
-    // TODO: Implement password change modal
-    console.log('Change password for user:', user)
+    openPasswordModal({
+      user,
+      onSuccess: () => {
+        refetch()
+        toast.success('Password updated successfully!')
+      }
+    })
   }
 
   const handleToggle2FA = (user: any) => {
-    // TODO: Implement 2FA toggle modal
-    console.log('Toggle 2FA for user:', user)
+    openToggle2FA({
+      user,
+      onSuccess: () => {
+        refetch()
+        toast.success(`2FA ${user.is2FAEnabled ? 'disabled' : 'enabled'} successfully!`)
+      }
+    })
   }
 
   const handleCreateNew = () => {

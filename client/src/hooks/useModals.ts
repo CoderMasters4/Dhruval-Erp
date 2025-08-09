@@ -17,6 +17,10 @@ export const useModals = () => {
     
     // User modals
     openUserForm: (props: any) => openModal('USER_FORM', props),
+    openUserDetails: (props: any) => openModal('USER_DETAILS', props),
+    openDeleteUser: (props: any) => openModal('DELETE_USER', props),
+    openPasswordModal: (props: any) => openModal('PASSWORD_MODAL', props),
+    openToggle2FA: (props: any) => openModal('TOGGLE_2FA', props),
     
     // Vehicle modals
     openVehicleForm: (props: any) => openModal('VEHICLE_FORM', props),

@@ -1,39 +1,98 @@
 import { baseApi } from '@/lib/api/baseApi'
 
+export interface CompanyAccess {
+  companyId: string
+  companyName?: string
+  role: string
+  permissions?: {
+    [module: string]: {
+      [action: string]: boolean
+    }
+  }
+  isActive: boolean
+  joinedAt: Date
+  leftAt?: Date
+  remarks?: string
+}
+
 export interface User {
   _id: string
+  id?: string // For compatibility
   username: string
+  email: string
   personalInfo: {
     firstName: string
     lastName: string
+    middleName?: string
+    displayName?: string
     phone: string
-    dateOfBirth: string
-    gender: string
-    displayName: string
+    alternatePhone?: string
+    dateOfBirth?: string
+    gender?: 'Male' | 'Female' | 'Other'
+    bloodGroup?: string
+    profilePhoto?: string
+    signature?: string
   }
+  addresses?: {
+    current?: {
+      street?: string
+      area?: string
+      city?: string
+      state?: string
+      pincode?: string
+      country?: string
+    }
+    permanent?: {
+      street?: string
+      area?: string
+      city?: string
+      state?: string
+      pincode?: string
+      country?: string
+    }
+  }
+  companyAccess: CompanyAccess[]
   isSuperAdmin: boolean
-  isActive: boolean
-  createdAt: string
-  primaryCompany: {
+  primaryCompanyId?: string
+  primaryCompany?: {
     _id: string
     companyCode: string
     companyName: string
   }
-  isOnline: boolean
-  companyAccess: Array<{
-    companyId: string
-    role: string
-    isActive: boolean
-  }>
+  security?: {
+    isEmailVerified: boolean
+    is2FAEnabled: boolean
+    lastLogin?: string
+    loginAttempts: number
+    lockUntil?: string
+    passwordChangedAt?: string
+  }
+  preferences?: {
+    language: string
+    theme: string
+    notifications: {
+      email: boolean
+      sms: boolean
+      whatsapp: boolean
+      push: boolean
+    }
+    dashboard: {
+      defaultCompany?: string
+      widgets: string[]
+    }
+  }
+  isActive: boolean
+  createdBy?: string
+  createdAt: string
+  updatedAt?: string
+
   // Legacy fields for backward compatibility
   name?: string
-  email?: string
   role?: 'super_admin' | 'admin' | 'manager' | 'user'
   designation?: string
   isEmailVerified?: boolean
   is2FAEnabled?: boolean
   lastLogin?: string
-  updatedAt?: string
   avatar?: string
   phone?: string
   department?: string
@@ -42,6 +101,7 @@ export interface User {
   loginAttempts?: number
   lockUntil?: string
   passwordChangedAt?: string
+  isOnline?: boolean
 }
 
 export interface UsersResponse {
@@ -62,9 +122,27 @@ export interface CreateUserRequest {
   personalInfo: {
     firstName: string
     lastName: string
+    middleName?: string
+    displayName?: string
     phone: string
+    alternatePhone?: string
+    dateOfBirth?: string
+    gender?: 'Male' | 'Female' | 'Other'
   }
-  role: User['role']
+  primaryCompanyId?: string
+  companyAccess?: {
+    companyId: string
+    role: string
+    permissions?: {
+      [module: string]: {
+        [action: string]: boolean
+      }
+    }
+  }[]
+  isSuperAdmin?: boolean
+
+  // Legacy fields for backward compatibility
+  role?: string
   department?: string
   designation?: string
   companyId?: string
@@ -149,18 +227,26 @@ export const usersApi = baseApi.injectEndpoints({
         body: passwords,
       }),
     }),
-    resetPassword: builder.mutation<void, { id: string; passwords: ResetPasswordRequest }>({
-      query: ({ id, passwords }) => ({
-        url: `/users/${id}/reset-password`,
+    resetPassword: builder.mutation<void, { userId: string; newPassword: string }>({
+      query: ({ userId, newPassword }) => ({
+        // Target v2 route even if baseUrl is /api/v1
+        url: `/../api/v2/users/${userId}/reset-password`,
         method: 'POST',
-        body: passwords,
+        body: { newPassword },
       }),
     }),
-    toggle2FA: builder.mutation<void, { id: string; data: Toggle2FARequest }>({
-      query: ({ id, data }) => ({
-        url: `/users/${id}/toggle-2fa`,
+    changeUserPassword: builder.mutation<void, { userId: string; newPassword: string }>({
+      query: ({ userId, newPassword }) => ({
+        url: `/users/${userId}/change-password`,
         method: 'POST',
-        body: data,
+        body: { newPassword },
+      }),
+    }),
+    toggle2FA: builder.mutation<void, { userId: string; enable: boolean }>({
+      query: ({ userId, enable }) => ({
+        url: `/users/${userId}/toggle-2fa`,
+        method: 'POST',
+        body: { enable },
       }),
       invalidatesTags: ['User'],
     }),
@@ -184,6 +270,7 @@ export const {
   useDeleteUserMutation,
   useChangePasswordMutation,
   useResetPasswordMutation,
+  useChangeUserPasswordMutation,
   useToggle2FAMutation,
   useToggleUserStatusMutation,
 } = usersApi

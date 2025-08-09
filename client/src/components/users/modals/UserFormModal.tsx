@@ -17,6 +17,7 @@ import {
   useCreateUserMutation,
   useUpdateUserMutation
 } from '@/lib/features/users/usersApi'
+import { useGetAllCompaniesQuery } from '@/lib/features/companies/companiesApi'
 
 interface UserFormModalProps {
   isOpen: boolean
@@ -32,11 +33,17 @@ interface FormData {
   confirmPassword: string
   firstName: string
   lastName: string
+  middleName: string
   phone: string
-  role: UserType['role']
+  alternatePhone: string
+  dateOfBirth: string
+  gender: 'Male' | 'Female' | 'Other' | ''
+  primaryCompanyId: string
+  role: string
   department: string
   designation: string
   isActive: boolean
+  isSuperAdmin: boolean
 }
 
 // Department options
@@ -69,11 +76,17 @@ export default function UserFormModal({ isOpen, onClose, onSuccess, user }: User
     confirmPassword: '',
     firstName: '',
     lastName: '',
+    middleName: '',
     phone: '',
+    alternatePhone: '',
+    dateOfBirth: '',
+    gender: '',
+    primaryCompanyId: '',
     role: 'user',
     department: '',
     designation: '',
-    isActive: true
+    isActive: true,
+    isSuperAdmin: false
   })
 
   const [showPassword, setShowPassword] = useState(false)
@@ -83,8 +96,15 @@ export default function UserFormModal({ isOpen, onClose, onSuccess, user }: User
   const [createUser, { isLoading: isCreating }] = useCreateUserMutation()
   const [updateUser, { isLoading: isUpdating }] = useUpdateUserMutation()
 
+  // Fetch companies for selection
+  const { data: companiesResponse, isLoading: companiesLoading } = useGetAllCompaniesQuery()
+  const companies = companiesResponse?.data || []
+
   const isEditing = !!user
   const isLoading = isCreating || isUpdating
+
+  // Helper function to get user ID
+  const getUserId = (user: UserType) => user.id || user._id
 
   useEffect(() => {
     if (user) {
@@ -95,11 +115,17 @@ export default function UserFormModal({ isOpen, onClose, onSuccess, user }: User
         confirmPassword: '',
         firstName: user.personalInfo?.firstName || '',
         lastName: user.personalInfo?.lastName || '',
+        middleName: user.personalInfo?.middleName || '',
         phone: user.personalInfo?.phone || '',
-        role: user.role || 'user',
+        alternatePhone: user.personalInfo?.alternatePhone || '',
+        dateOfBirth: user.personalInfo?.dateOfBirth || '',
+        gender: user.personalInfo?.gender || '',
+        primaryCompanyId: user.primaryCompanyId || user.companyAccess?.[0]?.companyId || '',
+        role: user.companyAccess?.[0]?.role || user.role || 'user',
         department: user.department || '',
         designation: user.designation || '',
-        isActive: user.isActive ?? true
+        isActive: user.isActive ?? true,
+        isSuperAdmin: user.isSuperAdmin || false
       })
     } else {
       setFormData({
@@ -109,15 +135,21 @@ export default function UserFormModal({ isOpen, onClose, onSuccess, user }: User
         confirmPassword: '',
         firstName: '',
         lastName: '',
+        middleName: '',
         phone: '',
+        alternatePhone: '',
+        dateOfBirth: '',
+        gender: '',
+        primaryCompanyId: companies[0]?._id || '',
         role: 'user',
         department: '',
         designation: '',
-        isActive: true
+        isActive: true,
+        isSuperAdmin: false
       })
     }
     setErrors({})
-  }, [user, isOpen])
+  }, [user, isOpen, companies])
 
   const validateForm = (): boolean => {
     const newErrors: Partial<FormData> = {}
@@ -164,6 +196,10 @@ export default function UserFormModal({ isOpen, onClose, onSuccess, user }: User
       }
     }
 
+    if (!formData.primaryCompanyId && !formData.isSuperAdmin) {
+      newErrors.primaryCompanyId = 'Company selection is required'
+    }
+
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
   }
@@ -177,41 +213,84 @@ export default function UserFormModal({ isOpen, onClose, onSuccess, user }: User
 
     try {
       if (isEditing && user) {
-        await updateUser({
-          id: user._id,
+        const updatePayload = {
+          id: getUserId(user),
           user: {
             username: formData.username,
             email: formData.email,
             personalInfo: {
               firstName: formData.firstName,
               lastName: formData.lastName,
-              phone: formData.phone
+              middleName: formData.middleName,
+              phone: formData.phone,
+              alternatePhone: formData.alternatePhone,
+              dateOfBirth: formData.dateOfBirth,
+              gender: formData.gender,
+              displayName: `${formData.firstName} ${formData.lastName}`
             },
-            role: formData.role,
-            department: formData.department,
-            designation: formData.designation,
-            isActive: formData.isActive
+            primaryCompanyId: formData.primaryCompanyId,
+            isActive: formData.isActive,
+            isSuperAdmin: formData.isSuperAdmin
           }
-        }).unwrap()
+        }
+        console.log('Update user payload:', updatePayload)
+        await updateUser(updatePayload).unwrap()
+        toast.success('User updated successfully!')
       } else {
-        await createUser({
+        const createPayload = {
           username: formData.username,
           email: formData.email,
           password: formData.password,
           personalInfo: {
             firstName: formData.firstName,
             lastName: formData.lastName,
-            phone: formData.phone
+            middleName: formData.middleName,
+            phone: formData.phone,
+            alternatePhone: formData.alternatePhone,
+            dateOfBirth: formData.dateOfBirth || undefined,
+            gender: formData.gender || undefined,
+            displayName: `${formData.firstName} ${formData.lastName}`
           },
+          primaryCompanyId: formData.primaryCompanyId,
+          companyAccess: formData.primaryCompanyId ? [{
+            companyId: formData.primaryCompanyId,
+            role: formData.role,
+            permissions: {}
+          }] : [],
+          isSuperAdmin: formData.isSuperAdmin,
+          // Legacy fields for backward compatibility
           role: formData.role,
           department: formData.department,
           designation: formData.designation
-        }).unwrap()
+        }
+        console.log('Create user payload:', createPayload)
+        await createUser(createPayload).unwrap()
+        toast.success('User created successfully!')
       }
 
       onSuccess()
+      onClose()
     } catch (error: any) {
-      toast.error(error?.data?.message || `Failed to ${isEditing ? 'update' : 'create'} user`)
+      console.error(`${isEditing ? 'Update' : 'Create'} user error:`, error)
+
+      // Handle different types of errors
+      let errorMessage = `Failed to ${isEditing ? 'update' : 'create'} user`
+
+      if (error?.data?.message) {
+        errorMessage = error.data.message
+      } else if (error?.data?.error) {
+        errorMessage = error.data.error
+      } else if (error?.message) {
+        errorMessage = error.message
+      } else if (error?.status === 500) {
+        errorMessage = 'Server error occurred. Please try again later.'
+      } else if (error?.status === 400) {
+        errorMessage = 'Invalid data provided. Please check your inputs.'
+      } else if (error?.status === 409) {
+        errorMessage = 'Username or email already exists.'
+      }
+
+      toast.error(errorMessage)
     }
   }
 
@@ -381,6 +460,60 @@ export default function UserFormModal({ isOpen, onClose, onSuccess, user }: User
               </div>
             </div>
 
+            {/* Company Assignment */}
+            <div className="bg-purple-50 rounded-xl p-6 border border-purple-200">
+              <h3 className="text-lg font-semibold text-black mb-4 flex items-center">
+                <Building2 className="w-5 h-5 mr-2 text-purple-600" />
+                Company Assignment
+              </h3>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-semibold text-black mb-2">
+                    Primary Company *
+                  </label>
+                  <select
+                    required
+                    value={formData.primaryCompanyId}
+                    onChange={(e) => updateFormData({ primaryCompanyId: e.target.value })}
+                    className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-all duration-200 bg-white text-gray-900 font-medium ${
+                      errors.primaryCompanyId ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                    }`}
+                    disabled={companiesLoading}
+                  >
+                    <option value="">Select Company</option>
+                    {companies.map((company) => (
+                      <option key={company._id} value={company._id}>
+                        {company.companyName} ({company.companyCode})
+                      </option>
+                    ))}
+                  </select>
+                  {errors.primaryCompanyId && (
+                    <p className="mt-1 text-sm text-red-600 font-medium">{errors.primaryCompanyId}</p>
+                  )}
+                  {companiesLoading && (
+                    <p className="mt-1 text-xs text-gray-500">Loading companies...</p>
+                  )}
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-black mb-2">
+                    Gender
+                  </label>
+                  <select
+                    value={formData.gender}
+                    onChange={(e) => updateFormData({ gender: e.target.value as 'Male' | 'Female' | 'Other' | '' })}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-all duration-200 bg-white text-gray-900 font-medium"
+                  >
+                    <option value="">Select Gender</option>
+                    <option value="Male">Male</option>
+                    <option value="Female">Female</option>
+                    <option value="Other">Other</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
             {/* Role & Status */}
             <div className="bg-green-50 rounded-xl p-6 border border-green-200">
               <h3 className="text-lg font-semibold text-black mb-4 flex items-center">
@@ -439,6 +572,29 @@ export default function UserFormModal({ isOpen, onClose, onSuccess, user }: User
                     </div>
                   </div>
                 )}
+
+                {/* Super Admin Toggle */}
+                <div>
+                  <label className="block text-sm font-semibold text-black mb-2">
+                    Super Admin Privileges
+                  </label>
+                  <div className="flex items-center space-x-3">
+                    <label className="flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={formData.isSuperAdmin}
+                        onChange={(e) => updateFormData({ isSuperAdmin: e.target.checked })}
+                        className="mr-2 w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
+                      />
+                      <span className="text-sm font-medium text-gray-700">
+                        Grant Super Admin Access
+                      </span>
+                    </label>
+                  </div>
+                  <p className="mt-1 text-xs text-gray-500">
+                    Super Admin users have full access to all companies and system settings
+                  </p>
+                </div>
               </div>
             </div>
 

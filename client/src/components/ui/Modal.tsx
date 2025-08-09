@@ -16,6 +16,7 @@ interface ModalProps {
   className?: string
   headerClassName?: string
   contentClassName?: string
+  portalTargetId?: string // Render inside this container if present (keeps sidebar interactive)
 }
 
 export function Modal({
@@ -29,7 +30,8 @@ export function Modal({
   closeOnOverlayClick = true,
   className,
   headerClassName,
-  contentClassName
+  contentClassName,
+  portalTargetId = 'app-content-root'
 }: ModalProps) {
   // Handle escape key
   useEffect(() => {
@@ -62,7 +64,7 @@ export function Modal({
   }
 
   const modalContent = (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+    <div className="absolute inset-0 z-[60] flex items-center justify-center p-4">
       {/* Backdrop */}
       <div
         className="absolute inset-0 bg-black bg-opacity-50 backdrop-blur-sm"
@@ -121,8 +123,9 @@ export function Modal({
     </div>
   )
 
-  // Use portal to render modal at the end of body
-  return createPortal(modalContent, document.body)
+  // Use portal to render modal at the end of body or inside provided container
+  const target = (typeof window !== 'undefined' && document.getElementById(portalTargetId)) || document.body
+  return createPortal(modalContent, target)
 }
 
 // Modal content sections for better organization

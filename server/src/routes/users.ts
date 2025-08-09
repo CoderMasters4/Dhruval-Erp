@@ -270,7 +270,7 @@ router.get('/:userId', async (req: Request, res: Response) => {
 router.post('/', async (req: Request, res: Response) => {
   try {
     const user = (req as any).user
-    const { username, password, personalInfo, companyAccess } = req.body
+    const { username, email, password, personalInfo, companyAccess } = req.body
 
     // Check if user has permission to create users
     if (!user.isSuperAdmin && !user.companyAccess?.some((access: any) => 
@@ -283,7 +283,7 @@ router.post('/', async (req: Request, res: Response) => {
     }
 
     // Check if username already exists
-    const existingUser = await User.findOne({ username })
+    const existingUser = await User.findOne({ $or: [{ username }, { email: email?.toLowerCase() }] })
     if (existingUser) {
       return res.status(400).json({
         error: 'Username already exists',
@@ -343,6 +343,7 @@ router.post('/', async (req: Request, res: Response) => {
     // Create new user
     const newUser = new User({
       username,
+      email: email?.toLowerCase(),
       password: hashedPassword,
       personalInfo,
       primaryCompanyId: userPrimaryCompanyId,

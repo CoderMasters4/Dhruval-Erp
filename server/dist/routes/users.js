@@ -230,14 +230,14 @@ router.get('/:userId', async (req, res) => {
 router.post('/', async (req, res) => {
     try {
         const user = req.user;
-        const { username, password, personalInfo, companyAccess } = req.body;
+        const { username, email, password, personalInfo, companyAccess } = req.body;
         if (!user.isSuperAdmin && !user.companyAccess?.some((access) => access.permissions?.users?.create && access.isActive)) {
             return res.status(403).json({
                 error: 'Permission denied',
                 message: 'You do not have permission to create users'
             });
         }
-        const existingUser = await User_1.default.findOne({ username });
+        const existingUser = await User_1.default.findOne({ $or: [{ username }, { email: email?.toLowerCase() }] });
         if (existingUser) {
             return res.status(400).json({
                 error: 'Username already exists',
@@ -289,6 +289,7 @@ router.post('/', async (req, res) => {
         }
         const newUser = new User_1.default({
             username,
+            email: email?.toLowerCase(),
             password: hashedPassword,
             personalInfo,
             primaryCompanyId: userPrimaryCompanyId,

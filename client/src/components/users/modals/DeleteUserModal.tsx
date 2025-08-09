@@ -27,6 +27,9 @@ export default function DeleteUserModal({ isOpen, onClose, onSuccess, user }: De
 
   const [deleteUser, { isLoading }] = useDeleteUserMutation()
 
+  // Helper function to get user ID
+  const getUserId = (user: UserType) => user.id || user._id
+
   const userName =
     user.personalInfo?.displayName ||
     (user.personalInfo?.firstName && user.personalInfo?.lastName
@@ -45,10 +48,28 @@ export default function DeleteUserModal({ isOpen, onClose, onSuccess, user }: De
     }
 
     try {
-      await deleteUser(user._id).unwrap()
+      await deleteUser(getUserId(user)).unwrap()
+      toast.success('User deleted successfully!')
       onSuccess()
+      onClose()
     } catch (error: any) {
-      setError(error?.data?.message || 'Failed to delete user')
+      console.error('Delete user error:', error)
+
+      let errorMessage = 'Failed to delete user'
+      if (error?.data?.message) {
+        errorMessage = error.data.message
+      } else if (error?.data?.error) {
+        errorMessage = error.data.error
+      } else if (error?.status === 403) {
+        errorMessage = 'You do not have permission to delete this user'
+      } else if (error?.status === 404) {
+        errorMessage = 'User not found'
+      } else if (error?.status === 500) {
+        errorMessage = 'Server error occurred. Please try again later.'
+      }
+
+      setError(errorMessage)
+      toast.error(errorMessage)
     }
   }
 

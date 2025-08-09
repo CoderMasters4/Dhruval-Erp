@@ -24,41 +24,55 @@ interface Toggle2FAModalProps {
 }
 
 export default function Toggle2FAModal({ isOpen, onClose, onSuccess, user }: Toggle2FAModalProps) {
-  const [password, setPassword] = useState('')
-  const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState('')
+  const [isConfirmed, setIsConfirmed] = useState(false)
 
   const [toggle2FA, { isLoading }] = useToggle2FAMutation()
 
   const isEnabling = !user.is2FAEnabled
 
+  // Helper function to get user ID
+  const getUserId = (user: UserType) => user.id || user._id
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    
-    if (!password.trim()) {
-      setError('Password is required to modify 2FA settings')
+
+    if (!isConfirmed) {
+      setError('Please confirm the action by checking the checkbox')
       return
     }
 
     try {
       await toggle2FA({
-        id: user._id,
-        data: {
-          enable: isEnabling,
-          password: password
-        }
+        userId: getUserId(user),
+        enable: isEnabling
       }).unwrap()
-      
+
+      toast.success(`2FA ${isEnabling ? 'enabled' : 'disabled'} successfully!`)
       onSuccess()
+      onClose()
     } catch (error: any) {
-      setError(error?.data?.message || `Failed to ${isEnabling ? 'enable' : 'disable'} 2FA`)
+      console.error('Toggle 2FA error:', error)
+
+      let errorMessage = `Failed to ${isEnabling ? 'enable' : 'disable'} 2FA`
+      if (error?.data?.message) {
+        errorMessage = error.data.message
+      } else if (error?.data?.error) {
+        errorMessage = error.data.error
+      } else if (error?.status === 403) {
+        errorMessage = 'You do not have permission to modify 2FA settings'
+      } else if (error?.status === 404) {
+        errorMessage = 'User not found'
+      } else if (error?.status === 500) {
+        errorMessage = 'Server error occurred. Please try again later.'
+      }
+
+      setError(errorMessage)
+      toast.error(errorMessage)
     }
   }
 
-  const handlePasswordChange = (value: string) => {
-    setPassword(value)
-    if (error) setError('')
-  }
+
 
   const userName = user.personalInfo?.displayName ||
     (user.personalInfo?.firstName && user.personalInfo?.lastName
@@ -158,37 +172,24 @@ export default function Toggle2FAModal({ isOpen, onClose, onSuccess, user }: Tog
             </div>
           </div>
 
-          {/* Password Confirmation */}
+          {/* Confirmation Checkbox */}
           <form id="toggle-2fa-form" onSubmit={handleSubmit} className="space-y-6">
-            <div>
-              <label className="block text-sm font-semibold text-black mb-2">
-                Admin Password Confirmation *
-              </label>
-              <div className="relative">
+            <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
+              <label className="flex items-start gap-3 cursor-pointer">
                 <input
-                  type={showPassword ? 'text' : 'password'}
-                  required
-                  value={password}
-                  onChange={(e) => handlePasswordChange(e.target.value)}
-                  className={`w-full px-4 py-3 pr-12 border rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-all duration-200 ${
-                    error ? 'border-red-300 bg-red-50' : 'border-gray-300 bg-white'
-                  }`}
-                  placeholder="Enter your admin password"
+                  type="checkbox"
+                  checked={isConfirmed}
+                  onChange={(e) => setIsConfirmed(e.target.checked)}
+                  className="mt-1 w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                 />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                >
-                  {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-                </button>
-              </div>
+                <span className="text-sm text-gray-700">
+                  I understand the implications and want to {isEnabling ? 'enable' : 'disable'} Two-Factor Authentication for{' '}
+                  <strong>{user.personalInfo?.displayName || user.username}</strong>
+                </span>
+              </label>
               {error && (
-                <p className="mt-1 text-sm text-red-600 font-medium">{error}</p>
+                <p className="mt-2 text-sm text-red-600 font-medium">{error}</p>
               )}
-              <p className="mt-1 text-xs text-gray-600">
-                Your admin password is required to modify 2FA settings for security purposes.
-              </p>
             </div>
         </form>
       </ModalContent>

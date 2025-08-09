@@ -7,6 +7,7 @@ import { Sidebar } from './Sidebar'
 import { Header } from './Header'
 import { NotificationSystem } from '../notifications/NotificationSystem'
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute'
+import { ModalManager } from '@/components/modals/ModalManager'
 import clsx from 'clsx'
 
 interface AppLayoutProps {
@@ -59,11 +60,15 @@ export function AppLayout({ children }: AppLayoutProps) {
           <Header />
 
           <main className="p-3 sm:p-4 lg:p-6">
-            <div className="max-w-7xl mx-auto">
+            {/* Content root for modals to portal into, so sidebar remains interactive */}
+            <div id="app-content-root" className="relative max-w-7xl mx-auto">
               {children}
             </div>
           </main>
         </div>
+
+        {/* Modal Manager */}
+        <ModalManager />
       </div>
     </ProtectedRoute>
   )

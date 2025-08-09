@@ -1,7 +1,6 @@
 import React, { useState } from 'react'
 import { toast } from 'react-hot-toast'
 import {
-  Key,
   Eye,
   EyeOff,
   Shield,
@@ -13,7 +12,7 @@ import { Button } from '@/components/ui/Button'
 import { Modal, ModalContent, ModalFooter } from '@/components/ui/Modal'
 import {
   User as UserType,
-  useResetPasswordMutation
+  useChangeUserPasswordMutation
 } from '@/lib/features/users/usersApi'
 
 interface PasswordModalProps {
@@ -38,7 +37,10 @@ export default function PasswordModal({ isOpen, onClose, onSuccess, user }: Pass
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [errors, setErrors] = useState<Partial<FormData>>({})
 
-  const [resetPassword, { isLoading }] = useResetPasswordMutation()
+  const [changePassword, { isLoading }] = useChangeUserPasswordMutation()
+
+  // Helper function to get user ID
+  const getUserId = (user: UserType) => user.id || user._id
 
   const validateForm = (): boolean => {
     const newErrors: Partial<FormData> = {}
@@ -69,17 +71,33 @@ export default function PasswordModal({ isOpen, onClose, onSuccess, user }: Pass
     }
 
     try {
-      await resetPassword({
-        id: user._id,
-        passwords: {
-          newPassword: formData.newPassword,
-          confirmPassword: formData.confirmPassword
-        }
+      await changePassword({
+        userId: getUserId(user),
+        newPassword: formData.newPassword
       }).unwrap()
-      
+
+      toast.success('Password changed successfully!')
       onSuccess()
+      onClose()
     } catch (error: any) {
-      toast.error(error?.data?.message || 'Failed to update password')
+      console.error('Change password error:', error)
+
+      let errorMessage = 'Failed to change password'
+      if (error?.data?.message) {
+        errorMessage = error.data.message
+      } else if (error?.data?.error) {
+        errorMessage = error.data.error
+      } else if (error?.status === 403) {
+        errorMessage = 'You do not have permission to change this user\'s password'
+      } else if (error?.status === 404) {
+        errorMessage = 'User not found'
+      } else if (error?.status === 400) {
+        errorMessage = 'Invalid password format'
+      } else if (error?.status === 500) {
+        errorMessage = 'Server error occurred. Please try again later.'
+      }
+
+      toast.error(errorMessage)
     }
   }
 
@@ -91,6 +109,13 @@ export default function PasswordModal({ isOpen, onClose, onSuccess, user }: Pass
       delete newErrors[key as keyof FormData]
     })
     setErrors(newErrors)
+  }
+
+  const handleClose = () => {
+    // Reset form data
+    setFormData({ newPassword: '', confirmPassword: '' })
+    setErrors({})
+    onClose()
   }
 
   const getPasswordStrength = (password: string) => {
@@ -120,7 +145,7 @@ export default function PasswordModal({ isOpen, onClose, onSuccess, user }: Pass
   return (
     <Modal
       isOpen={isOpen}
-      onClose={onClose}
+      onClose={handleClose}
       title="Change Password"
       subtitle={`Update password for ${userName}`}
       size="md"
@@ -273,7 +298,7 @@ export default function PasswordModal({ isOpen, onClose, onSuccess, user }: Pass
       <ModalFooter>
         <Button
           type="button"
-          onClick={onClose}
+          onClick={handleClose}
           disabled={isLoading}
           className="px-6 py-3 border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 font-semibold transition-colors"
         >
