@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useSelector } from 'react-redux'
 import { selectIsAuthenticated } from '@/lib/features/auth/authSlice'
 import { Building2, Shield, BarChart3 } from 'lucide-react'
-import Image from 'next/image'
+import { LoginLogo } from '@/components/ui/Logo'
 
 export default function Home() {
   const router = useRouter()
@@ -56,7 +56,7 @@ export default function Home() {
                 <div className="relative">
                   {/* Main Building Icon */}
                   <div className="relative z-10">
-                   <Image src={'/logo.png'} alt="Factory ERP" width={120} height={120} />
+                   <LoginLogo size="lg" />
                   </div>
                 </div>
               </div>

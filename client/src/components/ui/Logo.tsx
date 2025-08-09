@@ -38,23 +38,26 @@ export function Logo({
 
   // Fallback icon component
   const FallbackIcon = () => (
-    <div 
+    <div
       className={`flex items-center justify-center bg-gradient-to-br from-sky-400 to-blue-600 rounded-lg ${className}`}
       style={{ width, height }}
     >
-      <Building2 
-        className="text-white" 
-        size={Math.min(width, height) * 0.6} 
+      <Building2
+        className="text-white"
+        size={Math.min(width, height) * 0.6}
       />
     </div>
   )
+
+  // Use the new logo URL
+  const logoUrl = "https://sin1.contabostorage.com/f2fccc77b60c414fba55836499ec71b1:erp/logo.png"
 
   return (
     <div className="flex items-center space-x-2">
       {/* Logo Image with Fallback */}
       {!imageError ? (
         <Image
-          src="/logo.png"
+          src={logoUrl}
           alt="Factory ERP Logo"
           width={width}
           height={height}

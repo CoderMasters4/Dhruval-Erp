@@ -2,7 +2,7 @@
 
 import { Loader2, Building2, Zap, Shield, BarChart3 } from 'lucide-react'
 import clsx from 'clsx'
-import Image from 'next/image'
+import { Logo } from '@/components/ui/Logo'
 
 interface LoadingSpinnerProps {
   size?: 'sm' | 'md' | 'lg'
@@ -61,9 +61,7 @@ export function AppLoader({
           {showLogo && (
             <div className="mb-8">
               <div className="relative w-16 h-16 mx-auto mb-4">
-                <div className="w-16 h-16 bg-white rounded-xl shadow-xl flex items-center justify-center">
-                  <Image src="/logo.png" alt="ERP Logo" width={48} height={48} className="rounded-lg" />
-                </div>
+                <Logo width={48} height={48} className="rounded-lg" />
               </div>
               <h2 className="text-lg font-semibold text-white mb-1">Enterprise ERP</h2>
               <p className="text-sm text-slate-400">Business Management System</p>
@@ -94,7 +92,7 @@ export function AppLoader({
               <div className="w-24 h-24 bg-white rounded-2xl shadow-xl border border-gray-100 flex items-center justify-center relative overflow-hidden">
                 {/* Subtle background pattern */}
                 <div className="absolute inset-0 bg-gradient-to-br from-blue-50 to-indigo-50 opacity-50"></div>
-                <Image src="/logo.png" alt="ERP Logo" width={72} height={72} className="rounded-xl relative z-10" />
+                <Logo width={72} height={72} className="rounded-xl relative z-10" />
               </div>
             </div>
 

@@ -6,10 +6,10 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { Mail, ArrowLeft, CheckCircle, Loader2 } from 'lucide-react'
-import Image from 'next/image'
 import Link from 'next/link'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
+import { LoginLogo } from '@/components/ui/Logo'
 import { useForgotPasswordMutation } from '@/lib/api/authApi'
 import toast from 'react-hot-toast'
 
@@ -50,15 +50,8 @@ export default function ForgotPasswordPage() {
         <div className="hidden lg:flex lg:w-1/2 bg-sky-50 items-center justify-center p-12">
           <div className="max-w-md text-center">
             <div className="mb-8">
-              <Image
-                src="/logo.png"
-                alt="ERP System Logo"
-                width={120}
-                height={120}
-                className="mx-auto mb-6"
-                priority
-              />
-              <h1 className="text-3xl font-bold text-sky-900 mb-4">
+              <LoginLogo size="lg" />
+              <h1 className="text-3xl font-bold text-sky-900 mb-4 mt-4">
                 ERP Management System
               </h1>
               <p className="text-sky-700 text-lg">
@@ -73,15 +66,8 @@ export default function ForgotPasswordPage() {
           <div className="w-full max-w-md space-y-8">
             {/* Mobile Logo */}
             <div className="lg:hidden text-center">
-              <Image
-                src="/logo.png"
-                alt="ERP System Logo"
-                width={80}
-                height={80}
-                className="mx-auto mb-4"
-                priority
-              />
-              <h1 className="text-2xl font-bold text-gray-900">ERP System</h1>
+              <LoginLogo size="md" />
+              <h1 className="text-2xl font-bold text-gray-900 mt-4">ERP System</h1>
             </div>
 
             {/* Success Card */}
@@ -140,15 +126,8 @@ export default function ForgotPasswordPage() {
       <div className="hidden lg:flex lg:w-1/2 bg-sky-50 items-center justify-center p-12">
         <div className="max-w-md text-center">
           <div className="mb-8">
-            <Image
-              src="/logo.png"
-              alt="ERP System Logo"
-              width={120}
-              height={120}
-              className="mx-auto mb-6"
-              priority
-            />
-            <h1 className="text-3xl font-bold text-sky-900 mb-4">
+            <LoginLogo size="lg" />
+            <h1 className="text-3xl font-bold text-sky-900 mb-4 mt-4">
               ERP Management System
             </h1>
             <p className="text-sky-700 text-lg">
@@ -163,15 +142,8 @@ export default function ForgotPasswordPage() {
         <div className="w-full max-w-md space-y-8">
           {/* Mobile Logo */}
           <div className="lg:hidden text-center">
-            <Image
-              src="/logo.png"
-              alt="ERP System Logo"
-              width={80}
-              height={80}
-              className="mx-auto mb-4"
-              priority
-            />
-            <h1 className="text-2xl font-bold text-gray-900">ERP System</h1>
+            <LoginLogo size="md" />
+            <h1 className="text-2xl font-bold text-gray-900 mt-4">ERP System</h1>
           </div>
 
           {/* Form Card */}

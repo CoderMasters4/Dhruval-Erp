@@ -34,7 +34,8 @@ import {
   Send,
   Quote,
   DollarSign,
-  ShoppingBag
+  ShoppingBag,
+  Layers
 } from 'lucide-react'
 import { selectSidebarCollapsed, selectSidebarOpen, toggleSidebar, setSidebarCollapsed } from '@/lib/features/ui/uiSlice'
 import { selectCurrentUser, selectIsSuperAdmin } from '@/lib/features/auth/authSlice'
@@ -139,10 +140,56 @@ const navigationItems: NavigationItem[] = [
     permission: 'view:Customer'
   },
   {
-    name: 'Suppliers',
-    href: '/suppliers',
-    icon: Truck,
-    permission: 'view:Supplier'
+    name: 'Sales',
+    href: '/sales',
+    icon: ShoppingBag,
+    permission: 'view:Sale',
+    children: [
+      {
+        name: 'Sales Overview',
+        href: '/sales',
+        icon: ShoppingBag,
+        permission: 'view:Sale'
+      },
+      {
+        name: 'Orders',
+        href: '/orders',
+        icon: FileText,
+        permission: 'view:Order'
+      },
+      {
+        name: 'Quotations',
+        href: '/quotations',
+        icon: Quote,
+        permission: 'view:Quotation'
+      }
+    ]
+  },
+  {
+    name: 'Purchase',
+    href: '/purchase',
+    icon: ShoppingCart,
+    permission: 'view:Purchase',
+    children: [
+      {
+        name: 'Purchase Overview',
+        href: '/purchase',
+        icon: ShoppingCart,
+        permission: 'view:Purchase'
+      },
+      {
+        name: 'Purchase Orders',
+        href: '/purchase/orders',
+        icon: FileText,
+        permission: 'view:PurchaseOrder'
+      },
+      {
+        name: 'Suppliers',
+        href: '/suppliers',
+        icon: Truck,
+        permission: 'view:Supplier'
+      }
+    ]
   },
 
   // Inventory Management
@@ -162,6 +209,12 @@ const navigationItems: NavigationItem[] = [
         name: 'Basic View',
         href: '/inventory',
         icon: List,
+        permission: 'view:InventoryItem'
+      },
+      {
+        name: 'Advanced Inventory',
+        href: '/inventory/advanced',
+        icon: Layers,
         permission: 'view:InventoryItem'
       },
       {
@@ -190,51 +243,69 @@ const navigationItems: NavigationItem[] = [
     name: 'Production',
     href: '/production',
     icon: Factory,
-    permission: 'view:ProductionOrder'
-  },
-  {
-    name: 'Sales & Orders',
-    href: '/sales',
-    icon: ShoppingCart,
-    permission: 'view:CustomerOrder',
+    permission: 'view:ProductionOrder',
     children: [
       {
-        name: 'Customer Orders',
-        href: '/sales/orders',
-        icon: ShoppingCart,
-        permission: 'view:CustomerOrder'
+        name: 'Basic Production',
+        href: '/production',
+        icon: Factory,
+        permission: 'view:ProductionOrder'
       },
       {
-        name: 'Quotations',
-        href: '/quotations',
-        icon: Quote,
-        permission: 'view:Quotation'
-      },
-      {
-        name: 'Invoices',
-        href: '/invoices',
-        icon: FileText,
-        permission: 'view:Invoice'
+        name: 'Enhanced Tracking',
+        href: '/production/enhanced',
+        icon: BarChart3,
+        permission: 'view:ProductionOrder'
       }
     ]
   },
+
+  // Dispatch & Logistics
   {
-    name: 'Purchase',
-    href: '/purchase',
-    icon: ShoppingBag,
-    permission: 'view:PurchaseOrder',
+    name: 'Dispatch',
+    href: '/dispatch',
+    icon: Send,
+    permission: 'view:Dispatch',
     children: [
       {
-        name: 'Purchase Orders',
-        href: '/purchase-orders',
-        icon: ShoppingBag,
-        permission: 'view:PurchaseOrder'
+        name: 'Basic Dispatch',
+        href: '/dispatch',
+        icon: Send,
+        permission: 'view:Dispatch'
       },
       {
-        name: 'Quotations',
-        href: '/purchase/quotations',
-        icon: Quote,
-        permission: 'view:Quotation'
+        name: 'Enhanced Tracking',
+        href: '/dispatch/enhanced',
+        icon: Truck,
+        permission: 'view:Dispatch'
+      },
+      {
+        name: 'AWB Management',
+        href: '/dispatch/awb',
+        icon: FileText,
+        permission: 'view:Dispatch'
+      }
+    ]
+  },
+
+  // Quality Control
+  {
+    name: 'Quality',
+    href: '/quality',
+    icon: AlertTriangle,
+    permission: 'view:QualityCheck',
+    children: [
+      {
+        name: 'Quality Checks',
+        href: '/quality',
+        icon: AlertTriangle,
+        permission: 'view:QualityCheck'
+      },
+      {
+        name: 'Defect Tracking',
+        href: '/quality/defects',
+        icon: FileSearch,
+        permission: 'view:QualityCheck'
       }
     ]
   },
@@ -331,6 +402,12 @@ const navigationItems: NavigationItem[] = [
         href: '/operations/dispatch',
         icon: Send,
         permission: 'view:Dispatch'
+      },
+      {
+        name: 'Enhanced Dispatch',
+        href: '/dispatch/enhanced',
+        icon: Truck,
+        permission: 'view:Dispatch'
       }
     ]
   },
@@ -378,7 +455,7 @@ export function Sidebar() {
     if (!user) return item.name === 'Dashboard'
 
     // Show basic business modules for all authenticated users
-    const basicModules = ['Dashboard', 'Companies', 'Users', 'Customers', 'Suppliers', 'Inventory', 'Production', 'Orders', 'Advanced Reports']
+    const basicModules = ['Dashboard', 'Companies', 'Users & Access', 'Customers', 'Sales', 'Purchase', 'Inventory', 'Production', 'Dispatch', 'Quality', 'Financial', 'Security', 'Advanced Reports']
     if (basicModules.includes(item.name)) return true
 
     // Filter by roles if specified
@@ -505,9 +582,7 @@ export function Sidebar() {
         {/* Header */}
         <div className="flex items-center justify-between h-16 px-3 sm:px-4 border-b-2 border-sky-500">
           <Link href="/dashboard" className="flex items-center space-x-2">
-            <div className={`${isCollapsed ? 'h-10 w-10' : 'h-10 w-10'} bg-white rounded-xl flex items-center justify-center shadow-sm border-2 border-sky-500`}>
-              <SidebarLogo collapsed={isCollapsed} />
-            </div>
+            <SidebarLogo collapsed={isCollapsed} />
           </Link>
           
           <button

@@ -120,7 +120,24 @@ export const baseApi = createApi({
     'List',
     'Detail',
     'Stats',
-    
+
+    // Enhanced Features
+    'Sales',
+    'SalesStats',
+    'Purchase',
+    'PurchaseStats',
+    'AdvancedInventory',
+    'FentInventory',
+    'ProcessTracking',
+    'AgingStock',
+    'EnhancedProduction',
+    'ProductionTracking',
+    'JobWork',
+    'EnhancedDispatch',
+    'PackingList',
+    'RTOTracking',
+    'TwoFactor'
+
   ],
   endpoints: () => ({}),
 })
