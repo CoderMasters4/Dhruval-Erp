@@ -11,6 +11,7 @@ import { UserManagementHeader } from '@/components/ui/PageHeader'
 import { Users, Shield, Settings, RefreshCw, Plus } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { ResponsiveCard } from '@/components/ui/ResponsiveCard'
+import { useGetUsers2FAStatusQuery } from '@/lib/api/adminApi'
 import toast from 'react-hot-toast'
 
 interface User {
@@ -35,18 +36,34 @@ interface UserStats {
 
 export default function AdminUsersPage() {
   const currentUser = useSelector(selectCurrentUser)
-  const [users, setUsers] = useState<User[]>([])
-  const [stats, setStats] = useState<UserStats>({
+  const [modalOpen, setModalOpen] = useState(false)
+  const [modalMode, setModalMode] = useState<'create' | 'edit'>('create')
+  const [selectedUser, setSelectedUser] = useState<User | null>(null)
+
+  // Use RTK Query instead of manual fetch
+  const {
+    data: usersResponse,
+    isLoading: loading,
+    isFetching: refreshing,
+    error,
+    refetch
+  } = useGetUsers2FAStatusQuery()
+
+  const users = usersResponse?.data?.users || []
+  const stats = usersResponse?.data?.stats || {
     totalUsers: 0,
     twoFactorEnabled: 0,
     twoFactorDisabled: 0,
     adoptionRate: 0
-  })
-  const [loading, setLoading] = useState(true)
-  const [refreshing, setRefreshing] = useState(false)
-  const [modalOpen, setModalOpen] = useState(false)
-  const [modalMode, setModalMode] = useState<'create' | 'edit'>('create')
-  const [selectedUser, setSelectedUser] = useState<User | null>(null)
+  }
+
+  // Handle error
+  useEffect(() => {
+    if (error) {
+      console.error('Fetch users error:', error)
+      toast.error('Failed to fetch users')
+    }
+  }, [error])
 
   // Check if user is super admin
   if (!currentUser?.isSuperAdmin) {
@@ -63,38 +80,8 @@ export default function AdminUsersPage() {
     )
   }
 
-  const fetchUsers = async () => {
-    try {
-      const response = await fetch('/api/admin/users/2fa-status', {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-        },
-      })
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch users')
-      }
-
-      const result = await response.json()
-      
-      if (result.success) {
-        setUsers(result.data.users)
-        setStats(result.data.stats)
-      } else {
-        toast.error(result.message || 'Failed to fetch users')
-      }
-    } catch (error) {
-      console.error('Fetch users error:', error)
-      toast.error('Failed to fetch users')
-    } finally {
-      setLoading(false)
-      setRefreshing(false)
-    }
-  }
-
-  const handleRefresh = async () => {
-    setRefreshing(true)
-    await fetchUsers()
+  const handleRefresh = () => {
+    refetch()
   }
 
   const handleCreateUser = () => {
@@ -110,12 +97,8 @@ export default function AdminUsersPage() {
   }
 
   const handleModalSuccess = () => {
-    fetchUsers()
+    refetch()
   }
-
-  useEffect(() => {
-    fetchUsers()
-  }, [])
 
   // Check if user is super admin
   if (!currentUser?.isSuperAdmin) {

@@ -12,6 +12,26 @@ export interface Quotation {
       phone: string
     }
   }
+  party?: {
+    partyName: string
+    partyCode: string
+    contactInfo?: {
+      email: string
+      phone: string
+    }
+  }
+  amounts?: {
+    subtotal: number
+    totalDiscount: number
+    taxableAmount: number
+    totalTaxAmount: number
+    grandTotal: number
+    freightCharges?: number
+    packingCharges?: number
+    installationCharges?: number
+    otherCharges?: number
+    roundingAdjustment?: number
+  }
   supplierName?: string
   requestedBy?: string
   department?: string
@@ -135,6 +155,7 @@ export interface CreateQuotationRequest {
 }
 
 export const quotationsApi = baseApi.injectEndpoints({
+    overrideExisting: true,
   endpoints: (builder) => ({
     // Get all quotations with filtering and pagination
     getQuotations: builder.query<

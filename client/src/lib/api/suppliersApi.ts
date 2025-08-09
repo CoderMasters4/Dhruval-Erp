@@ -3,9 +3,12 @@ import { baseApi } from './baseApi'
 export interface Supplier {
   _id: string
   supplierCode: string
+  supplierName?: string
   companyName: string
+  displayName?: string
   category: 'raw_materials' | 'packaging' | 'machinery' | 'services' | 'utilities'
   status: 'active' | 'inactive' | 'pending' | 'blacklisted'
+  isActive?: boolean
   email?: string
   phone?: string
   website?: string
@@ -15,12 +18,28 @@ export interface Supplier {
     state?: string
     pincode?: string
     country?: string
+    addressLine1?: string
+    addressLine2?: string
   }
+  addresses?: Array<{
+    addressLine1: string
+    addressLine2?: string
+    city: string
+    state: string
+    pincode: string
+    country: string
+  }>
   contactPerson?: {
     name: string
     designation?: string
     email?: string
     phone?: string
+  }
+  contactInfo?: {
+    primaryEmail?: string
+    alternateEmail?: string
+    primaryPhone?: string
+    alternatePhone?: string
   }
   businessDetails?: {
     gstin?: string
@@ -28,12 +47,53 @@ export interface Supplier {
     registrationNumber?: string
     taxId?: string
   }
+  businessInfo?: {
+    businessType?: string
+    industry?: string
+    subIndustry?: string
+    businessDescription?: string
+    website?: string
+  }
+  registrationDetails?: {
+    pan?: string
+    gstin?: string
+    registrationNumber?: string
+  }
   bankDetails?: {
     accountName?: string
     accountNumber?: string
     bankName?: string
     ifscCode?: string
     swiftCode?: string
+  }
+  financialInfo?: {
+    paymentTerms?: string
+    creditDays?: number
+    creditLimit?: number
+  }
+  relationship?: {
+    supplierCategory?: string
+    supplierType?: string
+    supplierSince?: string
+    priority?: 'low' | 'medium' | 'high'
+    strategicPartner?: boolean
+  }
+  supplyHistory?: {
+    totalOrders?: number
+    totalOrderValue?: number
+    averageOrderValue?: number
+    onTimeDeliveryRate?: number
+    averageLeadTime?: number
+    qualityRejectionRate?: number
+  }
+  quality?: {
+    defectRate?: number
+    returnRate?: number
+    qualityScore?: number
+  }
+  compliance?: {
+    vendorApprovalStatus?: 'approved' | 'pending' | 'rejected'
+    certifications?: string[]
   }
   rating?: number
   totalOrders?: number
@@ -110,6 +170,7 @@ export interface CreateSupplierRequest {
 }
 
 export const suppliersApi = baseApi.injectEndpoints({
+    overrideExisting: true,
   endpoints: (builder) => ({
     // Get all suppliers with filtering and pagination
     getSuppliers: builder.query<

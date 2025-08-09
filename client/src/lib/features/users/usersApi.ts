@@ -29,6 +29,7 @@ export interface User {
   name?: string
   email?: string
   role?: 'super_admin' | 'admin' | 'manager' | 'user'
+  designation?: string
   isEmailVerified?: boolean
   is2FAEnabled?: boolean
   lastLogin?: string

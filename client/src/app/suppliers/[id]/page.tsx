@@ -83,7 +83,7 @@ export default function SupplierDetailsPage() {
   const ordersPagination = ordersData?.pagination
 
   // Helper functions
-  const formatDate = (dateString: string | null) => {
+  const formatDate = (dateString: string | null | undefined) => {
     if (!dateString) return 'Never'
     return new Date(dateString).toLocaleDateString('en-IN', {
       day: '2-digit',

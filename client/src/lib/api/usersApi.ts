@@ -9,6 +9,7 @@ export interface User {
   phone?: string
   avatar?: string
   companyId?: string
+  designation?: string
   personalInfo: {
     firstName: string
     lastName: string
@@ -66,6 +67,7 @@ export interface CreateUserRequest {
 }
 
 export const usersApi = baseApi.injectEndpoints({
+    
   endpoints: (builder) => ({
     // Get all users with filtering and pagination
     getUsers: builder.query<

@@ -67,6 +67,7 @@ export interface CreateVisitorRequest {
 }
 
 export const visitorsApi = baseApi.injectEndpoints({
+  overrideExisting: true,
   endpoints: (builder) => ({
     // Get all visitors with filtering and pagination
     getVisitors: builder.query<

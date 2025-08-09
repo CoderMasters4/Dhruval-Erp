@@ -5,6 +5,7 @@ import { Shield, ShieldCheck, ShieldX, AlertTriangle, User, Settings, Edit } fro
 import { QuickUserToggle } from './QuickUserToggle'
 import { Button } from '@/components/ui/Button'
 import { ResponsiveCard } from '@/components/ui/ResponsiveCard'
+import { useForceDisableUser2FAMutation } from '@/lib/api/adminApi'
 import toast from 'react-hot-toast'
 
 interface User {
@@ -33,6 +34,7 @@ export function UserTwoFactorManagement({
   className
 }: UserTwoFactorManagementProps) {
   const [loadingUsers, setLoadingUsers] = useState<Set<string>>(new Set())
+  const [forceDisableUser2FA] = useForceDisableUser2FAMutation()
 
   const handleToggleTwoFactor = async (userId: string, currentStatus: boolean, userName: string) => {
     setLoadingUsers(prev => new Set(prev).add(userId))
@@ -81,24 +83,12 @@ export function UserTwoFactorManagement({
     setLoadingUsers(prev => new Set(prev).add(userId))
 
     try {
-      const response = await fetch(`/api/admin/users/${userId}/force-disable-2fa`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      })
-
-      const result = await response.json()
-
-      if (result.success) {
-        toast.success(`2FA force disabled for ${userName}`)
-        onRefresh()
-      } else {
-        toast.error(result.message || 'Failed to force disable 2FA')
-      }
-    } catch (error) {
+      await forceDisableUser2FA(userId).unwrap()
+      toast.success(`2FA force disabled for ${userName}`)
+      onRefresh()
+    } catch (error: any) {
       console.error('Force disable 2FA error:', error)
-      toast.error('Failed to force disable 2FA')
+      toast.error(error?.data?.message || 'Failed to force disable 2FA')
     } finally {
       setLoadingUsers(prev => {
         const newSet = new Set(prev)

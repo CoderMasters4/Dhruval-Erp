@@ -7,6 +7,12 @@ import { X, User, Mail, Phone, Building2, Shield, Save, Trash2 } from 'lucide-re
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { ResponsiveCard } from '@/components/ui/ResponsiveCard'
+import {
+  useGetCompaniesQuery,
+  useCreateAdminUserMutation,
+  useUpdateAdminUserMutation,
+  useDeleteAdminUserMutation
+} from '@/lib/api/adminApi'
 import toast from 'react-hot-toast'
 
 interface Company {
@@ -47,8 +53,16 @@ export function UserCrudModal({
   mode 
 }: UserCrudModalProps) {
   const currentUser = useSelector(selectCurrentUser)
-  const [companies, setCompanies] = useState<Company[]>([])
-  const [loading, setLoading] = useState(false)
+
+  // RTK Query hooks
+  const { data: companiesResponse, isLoading: companiesLoading } = useGetCompaniesQuery()
+  const [createUser, { isLoading: isCreating }] = useCreateAdminUserMutation()
+  const [updateUser, { isLoading: isUpdating }] = useUpdateAdminUserMutation()
+  const [deleteUser, { isLoading: isDeleting }] = useDeleteAdminUserMutation()
+
+  const companies = companiesResponse?.data || []
+  const loading = isCreating || isUpdating || isDeleting
+
   const [formData, setFormData] = useState<UserFormData>({
     username: '',
     email: '',
@@ -73,7 +87,6 @@ export function UserCrudModal({
 
   useEffect(() => {
     if (isOpen) {
-      fetchCompanies()
       if (mode === 'edit' && user) {
         setFormData({
           username: user.username || '',
@@ -99,18 +112,6 @@ export function UserCrudModal({
     }
   }, [isOpen, mode, user, currentUser])
 
-  const fetchCompanies = async () => {
-    try {
-      const response = await fetch('/api/companies')
-      const result = await response.json()
-      if (result.success) {
-        setCompanies(result.data)
-      }
-    } catch (error) {
-      console.error('Failed to fetch companies:', error)
-    }
-  }
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
@@ -129,36 +130,22 @@ export function UserCrudModal({
       return
     }
 
-    setLoading(true)
     try {
-      const url = mode === 'create' ? '/api/admin/users' : `/api/admin/users/${user._id}`
-      const method = mode === 'create' ? 'POST' : 'PUT'
-
-      const payload = {
-        ...formData,
-        ...(mode === 'edit' && !formData.password ? { password: undefined, confirmPassword: undefined } : {})
-      }
-
-      const response = await fetch(url, {
-        method,
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(payload)
-      })
-
-      const result = await response.json()
-      if (result.success) {
-        toast.success(`User ${mode === 'create' ? 'created' : 'updated'} successfully`)
-        onSuccess()
-        onClose()
+      if (mode === 'create') {
+        await createUser(formData).unwrap()
+        toast.success('User created successfully')
       } else {
-        toast.error(result.message || `Failed to ${mode} user`)
+        const payload = {
+          ...formData,
+          ...(mode === 'edit' && !formData.password ? { password: undefined, confirmPassword: undefined } : {})
+        }
+        await updateUser({ userId: user!._id, userData: payload }).unwrap()
+        toast.success('User updated successfully')
       }
-    } catch (error) {
-      toast.error(`Failed to ${mode} user`)
-    } finally {
-      setLoading(false)
+      onSuccess()
+      onClose()
+    } catch (error: any) {
+      toast.error(error?.data?.message || `Failed to ${mode} user`)
     }
   }
 
@@ -167,24 +154,13 @@ export function UserCrudModal({
       return
     }
 
-    setLoading(true)
     try {
-      const response = await fetch(`/api/admin/users/${user._id}`, {
-        method: 'DELETE'
-      })
-
-      const result = await response.json()
-      if (result.success) {
-        toast.success('User deleted successfully')
-        onSuccess()
-        onClose()
-      } else {
-        toast.error(result.message || 'Failed to delete user')
-      }
-    } catch (error) {
-      toast.error('Failed to delete user')
-    } finally {
-      setLoading(false)
+      await deleteUser(user!._id).unwrap()
+      toast.success('User deleted successfully')
+      onSuccess()
+      onClose()
+    } catch (error: any) {
+      toast.error(error?.data?.message || 'Failed to delete user')
     }
   }
 

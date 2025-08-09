@@ -97,6 +97,7 @@ export interface CreateWarehouseRequest {
 }
 
 export const warehousesApi = baseApi.injectEndpoints({
+  overrideExisting: true,
   endpoints: (builder) => ({
     // Get all warehouses with filtering and pagination
     getWarehouses: builder.query<

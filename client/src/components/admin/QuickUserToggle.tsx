@@ -3,6 +3,11 @@
 import { useState } from 'react'
 import { Shield, ShieldCheck, ShieldX, User, UserCheck, UserX } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
+import {
+  useToggleUserStatusMutation,
+  useEnableUser2FAMutation,
+  useDisableUser2FAMutation
+} from '@/lib/api/adminApi'
 import toast from 'react-hot-toast'
 
 interface QuickUserToggleProps {
@@ -14,65 +19,42 @@ interface QuickUserToggleProps {
   className?: string
 }
 
-export function QuickUserToggle({ 
-  userId, 
-  userName, 
-  isActive, 
-  twoFactorEnabled, 
+export function QuickUserToggle({
+  userId,
+  userName,
+  isActive,
+  twoFactorEnabled,
   onUpdate,
-  className 
+  className
 }: QuickUserToggleProps) {
-  const [loading, setLoading] = useState(false)
+  const [toggleUserStatus, { isLoading: isTogglingStatus }] = useToggleUserStatusMutation()
+  const [enableUser2FA, { isLoading: isEnabling2FA }] = useEnableUser2FAMutation()
+  const [disableUser2FA, { isLoading: isDisabling2FA }] = useDisableUser2FAMutation()
+
+  const loading = isTogglingStatus || isEnabling2FA || isDisabling2FA
 
   const handleToggleStatus = async () => {
-    setLoading(true)
     try {
-      const response = await fetch(`/api/admin/users/${userId}/toggle-status`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      })
-
-      const result = await response.json()
-      if (result.success) {
-        toast.success(`User ${isActive ? 'deactivated' : 'activated'} successfully`)
-        onUpdate()
-      } else {
-        toast.error(result.message || 'Failed to update user status')
-      }
-    } catch (error) {
-      toast.error('Failed to update user status')
-    } finally {
-      setLoading(false)
+      const result = await toggleUserStatus(userId).unwrap()
+      toast.success(`User ${isActive ? 'deactivated' : 'activated'} successfully`)
+      onUpdate()
+    } catch (error: any) {
+      toast.error(error?.data?.message || 'Failed to update user status')
     }
   }
 
   const handleToggle2FA = async () => {
-    setLoading(true)
     try {
-      const endpoint = twoFactorEnabled 
-        ? `/api/admin/users/${userId}/disable-2fa`
-        : `/api/admin/users/${userId}/enable-2fa`
-
-      const response = await fetch(endpoint, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      })
-
-      const result = await response.json()
-      if (result.success) {
-        toast.success(`2FA ${twoFactorEnabled ? 'disabled' : 'enabled'} for ${userName}`)
-        onUpdate()
+      if (twoFactorEnabled) {
+        await disableUser2FA(userId).unwrap()
+        toast.success(`2FA disabled for ${userName}`)
       } else {
-        toast.error(result.message || 'Failed to update 2FA status')
+        await enableUser2FA(userId).unwrap()
+        toast.success(`2FA enabled for ${userName}`)
       }
-    } catch (error) {
-      toast.error('Failed to update 2FA status')
-    } finally {
-      setLoading(false)
+      onUpdate()
+    } catch (error: any) {
+      toast.error(error?.data?.message || 'Failed to update 2FA status')
     }
   }
 

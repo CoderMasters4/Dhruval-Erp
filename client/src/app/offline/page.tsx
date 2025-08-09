@@ -4,11 +4,19 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { WifiOff, RefreshCw, Home, ArrowLeft } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
+import { useHealthCheckQuery } from '@/lib/api/authApi'
 
 export default function OfflinePage() {
   const [isOnline, setIsOnline] = useState(false)
   const [isRetrying, setIsRetrying] = useState(false)
+  const [triggerHealthCheck, setTriggerHealthCheck] = useState(false)
   const router = useRouter()
+
+  // Use RTK Query for health check instead of direct fetch
+  const { data: healthData, error: healthError, isFetching } = useHealthCheckQuery(undefined, {
+    skip: !triggerHealthCheck,
+    refetchOnMountOrArgChange: true,
+  })
 
   useEffect(() => {
     // Check initial online status
@@ -36,26 +44,26 @@ export default function OfflinePage() {
     }
   }, [router])
 
-  const handleRetry = async () => {
-    setIsRetrying(true)
-    
-    try {
-      // Try to fetch a simple endpoint to check connectivity
-      const response = await fetch('/api/health', { 
-        method: 'GET',
-        cache: 'no-cache'
-      })
-      
-      if (response.ok) {
+  // Handle health check response
+  useEffect(() => {
+    if (triggerHealthCheck && !isFetching) {
+      if (healthData?.success && !healthError) {
+        // Health check successful - we're back online
+        setIsOnline(true)
+        setIsRetrying(false)
         router.push('/dashboard')
       } else {
-        throw new Error('Network check failed')
+        // Health check failed - still offline
+        console.log('Still offline:', healthError)
+        setIsRetrying(false)
+        setTriggerHealthCheck(false)
       }
-    } catch (error) {
-      console.log('Still offline:', error)
-      // Show user that we're still offline
-      setTimeout(() => setIsRetrying(false), 1000)
     }
+  }, [healthData, healthError, isFetching, triggerHealthCheck, router])
+
+  const handleRetry = () => {
+    setIsRetrying(true)
+    setTriggerHealthCheck(true)
   }
 
   const handleGoHome = () => {

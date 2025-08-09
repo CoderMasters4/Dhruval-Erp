@@ -115,6 +115,7 @@ export interface PurchaseReportFilters {
 }
 
 export const purchaseReportsApi = baseApi.injectEndpoints({
+  overrideExisting: true,
   endpoints: (builder) => ({
     // Get supplier-wise purchase report
     getSupplierWisePurchaseReport: builder.query<
@@ -163,7 +164,7 @@ export const purchaseReportsApi = baseApi.injectEndpoints({
         url: '/reports/generate/purchase/supplier-wise',
         method: 'GET',
         params,
-        responseHandler: (response) => response.blob(),
+        responseHandler: (response: Response) => response.blob(),
       }),
     }),
 
@@ -180,7 +181,7 @@ export const purchaseReportsApi = baseApi.injectEndpoints({
         url: '/reports/generate/purchase/summary',
         method: 'GET',
         params,
-        responseHandler: (response) => response.blob(),
+        responseHandler: (response: Response) => response.blob(),
       }),
     }),
   }),

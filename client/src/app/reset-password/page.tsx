@@ -10,6 +10,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
+import { useVerifyResetTokenQuery, useResetPasswordMutation } from '@/lib/api/authApi'
 import toast from 'react-hot-toast'
 
 const resetPasswordSchema = z.object({
@@ -31,14 +32,20 @@ type ResetPasswordFormData = z.infer<typeof resetPasswordSchema>
 function ResetPasswordContent() {
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
-  const [isLoading, setIsLoading] = useState(false)
   const [isSuccess, setIsSuccess] = useState(false)
-  const [tokenValid, setTokenValid] = useState<boolean | null>(null)
-  const [userEmail, setUserEmail] = useState('')
-  
+
   const router = useRouter()
   const searchParams = useSearchParams()
   const token = searchParams?.get('token')
+
+  // RTK Query hooks
+  const { data: tokenData, isLoading: isVerifying, error: tokenError } = useVerifyResetTokenQuery(token || '', {
+    skip: !token
+  })
+  const [resetPassword, { isLoading }] = useResetPasswordMutation()
+
+  const tokenValid = token && !tokenError && tokenData?.success
+  const userEmail = '' // Email will be shown after successful verification
 
   const {
     register,
@@ -51,64 +58,28 @@ function ResetPasswordContent() {
 
   const newPassword = watch('newPassword', '')
 
-  // Verify token on component mount
+  // Handle token verification error
   useEffect(() => {
-    if (!token) {
-      setTokenValid(false)
-      return
+    if (tokenError) {
+      console.error('Token verification error:', tokenError)
     }
-
-    const verifyToken = async () => {
-      try {
-        const response = await fetch(`/api/auth/reset-password/${token}`)
-        const result = await response.json()
-
-        if (result.success) {
-          setTokenValid(true)
-          setUserEmail(result.data.email)
-        } else {
-          setTokenValid(false)
-        }
-      } catch (error) {
-        console.error('Token verification error:', error)
-        setTokenValid(false)
-      }
-    }
-
-    verifyToken()
-  }, [token])
+  }, [tokenError])
 
   const onSubmit = async (data: ResetPasswordFormData) => {
     if (!token) return
 
-    setIsLoading(true)
-    
     try {
-      const response = await fetch('/api/auth/reset-password', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          token,
-          newPassword: data.newPassword,
-          confirmPassword: data.confirmPassword,
-        }),
-      })
+      await resetPassword({
+        token,
+        password: data.newPassword,
+        confirmPassword: data.confirmPassword,
+      }).unwrap()
 
-      const result = await response.json()
-
-      if (result.success) {
-        setIsSuccess(true)
-        toast.success('Password reset successfully!')
-      } else {
-        toast.error(result.message || 'Failed to reset password')
-      }
-    } catch (error) {
+      setIsSuccess(true)
+      toast.success('Password reset successfully!')
+    } catch (error: any) {
       console.error('Reset password error:', error)
-      toast.error('Something went wrong. Please try again.')
-    } finally {
-      setIsLoading(false)
+      toast.error(error?.data?.message || 'Something went wrong. Please try again.')
     }
   }
 
@@ -128,7 +99,7 @@ function ResetPasswordContent() {
   const strengthColors = ['bg-red-500', 'bg-orange-500', 'bg-yellow-500', 'bg-blue-500', 'bg-green-500']
 
   // Loading state while verifying token
-  if (tokenValid === null) {
+  if (isVerifying) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
         <div className="text-center">
@@ -140,7 +111,7 @@ function ResetPasswordContent() {
   }
 
   // Invalid token state
-  if (tokenValid === false) {
+  if (!tokenValid && !isVerifying) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center p-4">
         <div className="max-w-md w-full text-center">

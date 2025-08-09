@@ -10,6 +10,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
+import { useForgotPasswordMutation } from '@/lib/api/authApi'
 import toast from 'react-hot-toast'
 
 const forgotPasswordSchema = z.object({
@@ -20,8 +21,7 @@ type ForgotPasswordFormData = z.infer<typeof forgotPasswordSchema>
 
 export default function ForgotPasswordPage() {
   const [isSubmitted, setIsSubmitted] = useState(false)
-  const [isLoading, setIsLoading] = useState(false)
-  const router = useRouter()
+  const [forgotPassword, { isLoading }] = useForgotPasswordMutation()
 
   const {
     register,
@@ -33,30 +33,13 @@ export default function ForgotPasswordPage() {
   })
 
   const onSubmit = async (data: ForgotPasswordFormData) => {
-    setIsLoading(true)
-    
     try {
-      const response = await fetch('/api/auth/forgot-password', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data),
-      })
-
-      const result = await response.json()
-
-      if (result.success) {
-        setIsSubmitted(true)
-        toast.success('Password reset email sent!')
-      } else {
-        toast.error(result.message || 'Failed to send reset email')
-      }
-    } catch (error) {
+      await forgotPassword(data).unwrap()
+      setIsSubmitted(true)
+      toast.success('Password reset email sent!')
+    } catch (error: any) {
       console.error('Forgot password error:', error)
-      toast.error('Something went wrong. Please try again.')
-    } finally {
-      setIsLoading(false)
+      toast.error(error?.data?.message || 'Something went wrong. Please try again.')
     }
   }
 

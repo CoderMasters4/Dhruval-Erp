@@ -37,6 +37,9 @@ export interface LoginResponse {
     requiresTwoFactor?: boolean
     tempToken?: string
   }
+  // 2FA fields at root level for backward compatibility
+  requiresTwoFactor?: boolean
+  tempToken?: string
   message: string
 }
 
@@ -75,6 +78,7 @@ export interface UpdateProfileRequest {
 }
 
 export const authApi = baseApi.injectEndpoints({
+  overrideExisting: true,
   endpoints: (builder) => ({
     // Login
     login: builder.mutation<LoginResponse, LoginRequest>({
@@ -112,6 +116,40 @@ export const authApi = baseApi.injectEndpoints({
       }),
     }),
 
+    // Forgot password
+    forgotPassword: builder.mutation<{ success: boolean; message: string }, { email: string }>({
+      query: (data) => ({
+        url: '/auth/forgot-password',
+        method: 'POST',
+        body: data,
+      }),
+    }),
+
+    // Verify reset token
+    verifyResetToken: builder.query<{ success: boolean; message: string }, string>({
+      query: (token) => ({
+        url: `/auth/reset-password/${token}`,
+        method: 'GET',
+      }),
+    }),
+
+    // Reset password
+    resetPassword: builder.mutation<{ success: boolean; message: string }, { token: string; password: string; confirmPassword: string }>({
+      query: (data) => ({
+        url: '/auth/reset-password',
+        method: 'POST',
+        body: data,
+      }),
+    }),
+
+    // Health check
+    healthCheck: builder.query<{ success: boolean; message: string }, void>({
+      query: () => ({
+        url: '/health',
+        method: 'GET',
+      }),
+    }),
+
     // Get current user
     getCurrentUser: builder.query<{ success: boolean; data: User }, void>({
       query: () => '/auth/me',
@@ -137,23 +175,7 @@ export const authApi = baseApi.injectEndpoints({
       }),
     }),
 
-    // Forgot password
-    forgotPassword: builder.mutation<{ success: boolean; message: string }, ForgotPasswordRequest>({
-      query: (emailData) => ({
-        url: '/auth/forgot-password',
-        method: 'POST',
-        body: emailData,
-      }),
-    }),
 
-    // Reset password
-    resetPassword: builder.mutation<{ success: boolean; message: string }, ResetPasswordRequest>({
-      query: (resetData) => ({
-        url: '/auth/reset-password',
-        method: 'POST',
-        body: resetData,
-      }),
-    }),
 
     // Verify email
     verifyEmail: builder.mutation<{ success: boolean; message: string }, { token: string }>({
@@ -219,7 +241,6 @@ export const authApi = baseApi.injectEndpoints({
       invalidatesTags: ['User', 'Company'],
     }),
   }),
-  overrideExisting: true,
 })
 
 export const {
@@ -239,4 +260,6 @@ export const {
   useGetUserCompaniesQuery,
   useGetAllCompaniesQuery,
   useSwitchCompanyMutation,
+  useVerifyResetTokenQuery,
+  useHealthCheckQuery,
 } = authApi

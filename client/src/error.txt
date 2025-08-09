@@ -1,0 +1,380 @@
+ npx tsc --noEmit --skipLibCheck
+src/app/login/page.tsx:78:20 - error TS2339: Property 'requiresTwoFactor' does not exist on type 'LoginResponse'.
+
+78         if (result.requiresTwoFactor) {
+                      ~~~~~~~~~~~~~~~~~
+
+src/app/login/page.tsx:79:23 - error TS2339: Property 'tempToken' does not exist on type 'LoginResponse'.
+
+79           if (!result.tempToken) {
+                         ~~~~~~~~~
+
+src/app/login/page.tsx:83:32 - error TS2339: Property 'tempToken' does not exist on type 'LoginResponse'.
+
+83           setLoginToken(result.tempToken)
+                                  ~~~~~~~~~
+
+src/app/reports/supplier-wise-purchase/page.tsx:274:33 - error TS2339: Property 'supplierName' does not exist on type 'Supplier'.
+
+274                       {supplier.supplierName} ({supplier.supplierCode})
+                                    ~~~~~~~~~~~~
+
+src/app/suppliers/[id]/page.tsx:233:31 - error TS2339: Property 'supplierName' does not exist on type 'Supplier'.
+
+233                     {supplier.supplierName || supplier.displayName}
+                                  ~~~~~~~~~~~~
+
+src/app/suppliers/[id]/page.tsx:233:56 - error TS2339: Property 'displayName' does not exist on type 'Supplier'.
+
+233                     {supplier.supplierName || supplier.displayName}
+                                                           ~~~~~~~~~~~
+
+src/app/suppliers/[id]/page.tsx:236:57 - error TS2339: Property 'relationship' does not exist on type 'Supplier'.
+
+236                     {supplier.supplierCode} • {supplier.relationship?.supplierCategory || 'General'}
+                                                            ~~~~~~~~~~~~
+
+src/app/suppliers/[id]/page.tsx:242:34 - error TS2339: Property 'isActive' does not exist on type 'Supplier'.
+
+242                         supplier.isActive ? 'bg-green-400' : 'bg-red-400'
+                                     ~~~~~~~~
+
+src/app/suppliers/[id]/page.tsx:244:71 - error TS2339: Property 'isActive' does not exist on type 'Supplier'.
+
+244                       <span className="text-sm font-medium">{supplier.isActive ? 'ACTIVE' : 'INACTIVE'}</span>
+                                                                          ~~~~~~~~
+
+src/app/suppliers/[id]/page.tsx:247:71 - error TS2339: Property 'relationship' does not exist on type 'Supplier'.
+
+247                       <span className="text-sm font-medium">{supplier.relationship?.supplierType?.toUpperCase() || 'TRADER'}</span>
+                                                                          ~~~~~~~~~~~~
+
+src/app/suppliers/[id]/page.tsx:284:29 - error TS2339: Property 'supplyHistory' does not exist on type 'Supplier'.
+
+284                   {supplier.supplyHistory?.totalOrders || 0}
+                                ~~~~~~~~~~~~~
+
+src/app/suppliers/[id]/page.tsx:309:44 - error TS2339: Property 'supplyHistory' does not exist on type 'Supplier'.
+
+309                   {formatCurrency(supplier.supplyHistory?.totalOrderValue || 0)}
+                                               ~~~~~~~~~~~~~
+
+src/app/suppliers/[id]/page.tsx:334:29 - error TS2339: Property 'supplyHistory' does not exist on type 'Supplier'.
+
+334                   {supplier.supplyHistory?.onTimeDeliveryRate || 0}%
+                                ~~~~~~~~~~~~~
+
+src/app/suppliers/[id]/page.tsx:338:97 - error TS2339: Property 'supplyHistory' does not exist on type 'Supplier'.
+
+338                     <div className="h-1 bg-purple-500 rounded-full" style={{ width: `${supplier.supplyHistory?.onTimeDeliveryRate || 0}%` }}></div>
+                                                                                                    ~~~~~~~~~~~~~
+
+src/app/suppliers/[id]/page.tsx:359:36 - error TS2339: Property 'quality' does not exist on type 'Supplier'.
+
+359                   {100 - (supplier.quality?.defectRate || 0)}%
+                                       ~~~~~~~
+
+src/app/suppliers/[id]/page.tsx:363:104 - error TS2339: Property 'quality' does not exist on type 'Supplier'.
+
+363                     <div className="h-1 bg-orange-500 rounded-full" style={{ width: `${100 - (supplier.quality?.defectRate || 0)}%` }}></div>
+                                                                                                           ~~~~~~~
+
+src/app/suppliers/[id]/page.tsx:419:72 - error TS2339: Property 'contactInfo' does not exist on type 'Supplier'.
+
+419                     <p className="text-gray-900 font-medium">{supplier.contactInfo?.primaryEmail || 'N/A'}</p>
+                                                                           ~~~~~~~~~~~
+
+src/app/suppliers/[id]/page.tsx:422:27 - error TS2339: Property 'contactInfo' does not exist on type 'Supplier'.
+
+422                 {supplier.contactInfo?.alternateEmail && (
+                              ~~~~~~~~~~~
+
+src/app/suppliers/[id]/page.tsx:427:74 - error TS2339: Property 'contactInfo' does not exist on type 'Supplier'.
+
+427                       <p className="text-gray-900 font-medium">{supplier.contactInfo.alternateEmail}</p>
+                                                                             ~~~~~~~~~~~
+
+src/app/suppliers/[id]/page.tsx:435:72 - error TS2339: Property 'contactInfo' does not exist on type 'Supplier'.
+
+435                     <p className="text-gray-900 font-medium">{supplier.contactInfo?.primaryPhone || 'N/A'}</p>
+                                                                           ~~~~~~~~~~~
+
+src/app/suppliers/[id]/page.tsx:438:27 - error TS2339: Property 'contactInfo' does not exist on type 'Supplier'.
+
+438                 {supplier.contactInfo?.alternatePhone && (
+                              ~~~~~~~~~~~
+
+src/app/suppliers/[id]/page.tsx:443:74 - error TS2339: Property 'contactInfo' does not exist on type 'Supplier'.
+
+443                       <p className="text-gray-900 font-medium">{supplier.contactInfo.alternatePhone}</p>
+                                                                             ~~~~~~~~~~~
+
+src/app/suppliers/[id]/page.tsx:451:31 - error TS2551: Property 'addresses' does not exist on type 'Supplier'. Did you mean 'address'?
+
+451                     {supplier.addresses?.[0] ? (
+                                  ~~~~~~~~~
+
+  src/lib/api/suppliersApi.ts:12:3
+    12   address?: {
+         ~~~~~~~
+    'address' is declared here.
+
+src/app/suppliers/[id]/page.tsx:453:40 - error TS2551: Property 'addresses' does not exist on type 'Supplier'. Did you mean 'address'?
+
+453                         <div>{supplier.addresses[0].addressLine1}</div>
+                                           ~~~~~~~~~
+
+  src/lib/api/suppliersApi.ts:12:3
+    12   address?: {
+         ~~~~~~~
+    'address' is declared here.
+
+src/app/suppliers/[id]/page.tsx:454:35 - error TS2551: Property 'addresses' does not exist on type 'Supplier'. Did you mean 'address'?
+
+454                         {supplier.addresses[0].addressLine2 && <div>{supplier.addresses[0].addressLine2}</div>}
+                                      ~~~~~~~~~
+
+  src/lib/api/suppliersApi.ts:12:3
+    12   address?: {
+         ~~~~~~~
+    'address' is declared here.
+
+src/app/suppliers/[id]/page.tsx:454:79 - error TS2551: Property 'addresses' does not exist on type 'Supplier'. Did you mean 'address'?
+
+454                         {supplier.addresses[0].addressLine2 && <div>{supplier.addresses[0].addressLine2}</div>}
+                                                                                  ~~~~~~~~~
+
+  src/lib/api/suppliersApi.ts:12:3
+    12   address?: {
+         ~~~~~~~
+    'address' is declared here.
+
+src/app/suppliers/[id]/page.tsx:455:40 - error TS2551: Property 'addresses' does not exist on type 'Supplier'. Did you mean 'address'?
+
+455                         <div>{supplier.addresses[0].city}, {supplier.addresses[0].state}</div>
+                                           ~~~~~~~~~
+
+  src/lib/api/suppliersApi.ts:12:3
+    12   address?: {
+         ~~~~~~~
+    'address' is declared here.
+
+src/app/suppliers/[id]/page.tsx:455:70 - error TS2551: Property 'addresses' does not exist on type 'Supplier'. Did you mean 'address'?
+
+455                         <div>{supplier.addresses[0].city}, {supplier.addresses[0].state}</div>
+                                                                         ~~~~~~~~~
+
+  src/lib/api/suppliersApi.ts:12:3
+    12   address?: {
+         ~~~~~~~
+    'address' is declared here.
+
+src/app/suppliers/[id]/page.tsx:456:40 - error TS2551: Property 'addresses' does not exist on type 'Supplier'. Did you mean 'address'?
+
+456                         <div>{supplier.addresses[0].pincode}, {supplier.addresses[0].country}</div>
+                                           ~~~~~~~~~
+
+  src/lib/api/suppliersApi.ts:12:3
+    12   address?: {
+         ~~~~~~~
+    'address' is declared here.
+
+src/app/suppliers/[id]/page.tsx:456:73 - error TS2551: Property 'addresses' does not exist on type 'Supplier'. Did you mean 'address'?
+
+456                         <div>{supplier.addresses[0].pincode}, {supplier.addresses[0].country}</div>
+                                                                            ~~~~~~~~~
+
+  src/lib/api/suppliersApi.ts:12:3
+    12   address?: {
+         ~~~~~~~
+    'address' is declared here.
+
+src/app/suppliers/[id]/page.tsx:474:45 - error TS2339: Property 'businessInfo' does not exist on type 'Supplier'.
+
+474                   {getIndustryIcon(supplier.businessInfo?.industry || '')}
+                                                ~~~~~~~~~~~~
+
+src/app/suppliers/[id]/page.tsx:477:72 - error TS2339: Property 'businessInfo' does not exist on type 'Supplier'.
+
+477                     <p className="text-gray-900 font-medium">{supplier.businessInfo?.industry || 'N/A'}</p>
+                                                                           ~~~~~~~~~~~~
+
+src/app/suppliers/[id]/page.tsx:484:72 - error TS2339: Property 'businessInfo' does not exist on type 'Supplier'.
+
+484                     <p className="text-gray-900 font-medium">{supplier.businessInfo?.businessType || 'N/A'}</p>
+                                                                           ~~~~~~~~~~~~
+
+src/app/suppliers/[id]/page.tsx:491:72 - error TS2339: Property 'registrationDetails' does not exist on type 'Supplier'.
+
+491                     <p className="text-gray-900 font-medium">{supplier.registrationDetails?.pan || 'N/A'}</p>
+                                                                           ~~~~~~~~~~~~~~~~~~~
+
+src/app/suppliers/[id]/page.tsx:498:72 - error TS2339: Property 'financialInfo' does not exist on type 'Supplier'.
+
+498                     <p className="text-gray-900 font-medium">{supplier.financialInfo?.paymentTerms || 'N/A'}</p>
+                                                                           ~~~~~~~~~~~~~
+
+src/app/suppliers/[id]/page.tsx:505:72 - error TS2339: Property 'financialInfo' does not exist on type 'Supplier'.
+
+505                     <p className="text-gray-900 font-medium">{supplier.financialInfo?.creditDays || 0} days</p>
+                                                                           ~~~~~~~~~~~~~
+
+src/app/suppliers/[id]/page.tsx:512:72 - error TS2339: Property 'relationship' does not exist on type 'Supplier'.
+
+512                     <p className="text-gray-900 font-medium">{supplier.relationship?.supplierCategory || 'N/A'}</p>
+                                                                           ~~~~~~~~~~~~
+
+src/app/suppliers/[id]/page.tsx:665:31 - error TS2339: Property 'supplyHistory' does not exist on type 'Supplier'.
+
+665                     {supplier.supplyHistory?.onTimeDeliveryRate || 0}%
+                                  ~~~~~~~~~~~~~
+
+src/app/suppliers/[id]/page.tsx:672:38 - error TS2339: Property 'quality' does not exist on type 'Supplier'.
+
+672                     {100 - (supplier.quality?.defectRate || 0)}%
+                                         ~~~~~~~
+
+src/app/suppliers/[id]/page.tsx:679:31 - error TS2339: Property 'supplyHistory' does not exist on type 'Supplier'.
+
+679                     {supplier.supplyHistory?.averageLeadTime || 0}
+                                  ~~~~~~~~~~~~~
+
+src/app/suppliers/[id]/page.tsx:686:31 - error TS2339: Property 'quality' does not exist on type 'Supplier'.
+
+686                     {supplier.quality?.returnRate || 0}%
+                                  ~~~~~~~
+
+src/app/suppliers/[id]/page.tsx:701:83 - error TS2339: Property 'supplyHistory' does not exist on type 'Supplier'.
+
+701                     <span className="text-sm font-medium text-gray-900">{supplier.supplyHistory?.totalOrders || 0}</span>
+                                                                                      ~~~~~~~~~~~~~
+
+src/app/suppliers/[id]/page.tsx:705:98 - error TS2339: Property 'supplyHistory' does not exist on type 'Supplier'.
+
+705                     <span className="text-sm font-medium text-gray-900">{formatCurrency(supplier.supplyHistory?.totalOrderValue || 0)}</span>
+                                                                                                     ~~~~~~~~~~~~~
+
+src/app/suppliers/[id]/page.tsx:709:98 - error TS2339: Property 'supplyHistory' does not exist on type 'Supplier'.
+
+709                     <span className="text-sm font-medium text-gray-900">{formatCurrency(supplier.supplyHistory?.averageOrderValue || 0)}</span>
+                                                                                                     ~~~~~~~~~~~~~
+
+src/app/suppliers/[id]/page.tsx:713:82 - error TS2339: Property 'supplyHistory' does not exist on type 'Supplier'.
+
+713                     <span className="text-sm font-medium text-red-600">{supplier.supplyHistory?.qualityRejectionRate || 0}%</span>
+                                                                                     ~~~~~~~~~~~~~
+
+src/app/suppliers/[id]/page.tsx:723:94 - error TS2339: Property 'relationship' does not exist on type 'Supplier'.
+
+723                     <span className="text-sm font-medium text-gray-900">{formatDate(supplier.relationship?.supplierSince)}</span>
+                                                                                                 ~~~~~~~~~~~~
+
+src/app/suppliers/[id]/page.tsx:727:83 - error TS2339: Property 'relationship' does not exist on type 'Supplier'.
+
+727                     <span className="text-sm font-medium text-gray-900">{supplier.relationship?.supplierType || 'N/A'}</span>
+                                                                                      ~~~~~~~~~~~~
+
+src/app/suppliers/[id]/page.tsx:733:32 - error TS2339: Property 'relationship' does not exist on type 'Supplier'.
+
+733                       supplier.relationship?.priority === 'high' ? 'bg-red-100 text-red-800' :
+                                   ~~~~~~~~~~~~
+
+src/app/suppliers/[id]/page.tsx:734:32 - error TS2339: Property 'relationship' does not exist on type 'Supplier'.
+
+734                       supplier.relationship?.priority === 'medium' ? 'bg-yellow-100 text-yellow-800' :
+                                   ~~~~~~~~~~~~
+
+src/app/suppliers/[id]/page.tsx:737:33 - error TS2339: Property 'relationship' does not exist on type 'Supplier'.
+
+737                       {supplier.relationship?.priority || 'Low'}
+                                    ~~~~~~~~~~~~
+
+src/app/suppliers/[id]/page.tsx:743:33 - error TS2339: Property 'relationship' does not exist on type 'Supplier'.
+
+743                       {supplier.relationship?.strategicPartner ? 'Yes' : 'No'}
+                                    ~~~~~~~~~~~~
+
+src/app/suppliers/[id]/page.tsx:750:32 - error TS2339: Property 'compliance' does not exist on type 'Supplier'.
+
+750                       supplier.compliance?.vendorApprovalStatus === 'approved' ? 'bg-green-100 text-green-800' :
+                                   ~~~~~~~~~~
+
+src/app/suppliers/[id]/page.tsx:751:32 - error TS2339: Property 'compliance' does not exist on type 'Supplier'.
+
+751                       supplier.compliance?.vendorApprovalStatus === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                                   ~~~~~~~~~~
+
+src/app/suppliers/[id]/page.tsx:754:33 - error TS2339: Property 'compliance' does not exist on type 'Supplier'.
+
+754                       {supplier.compliance?.vendorApprovalStatus?.toUpperCase() || 'PENDING'}
+                                    ~~~~~~~~~~
+
+src/components/layout/AppLoadingWrapper.tsx:49:9 - error TS2322: Type '{ message: string; showLogo: true; showFeatures: boolean; }' is not assignable to type 'IntrinsicAttributes & AppLoaderProps'.
+  Property 'showFeatures' does not exist on type 'IntrinsicAttributes & AppLoaderProps'.
+
+49         showFeatures={!showInitialLoader}
+           ~~~~~~~~~~~~
+
+src/components/layout/AppLoadingWrapper.tsx:60:9 - error TS2322: Type '{ message: string; showLogo: true; showFeatures: boolean; }' is not assignable to type 'IntrinsicAttributes & AppLoaderProps'.
+  Property 'showFeatures' does not exist on type 'IntrinsicAttributes & AppLoaderProps'.
+
+60         showFeatures={true}
+           ~~~~~~~~~~~~
+
+src/components/quotations/QuotationCard.tsx:116:60 - error TS2339: Property 'party' does not exist on type 'Quotation'.
+
+116             {quotation.customer?.customerName || quotation.party?.partyName || 'N/A'}
+                                                               ~~~~~
+
+src/components/quotations/QuotationCard.tsx:154:45 - error TS2339: Property 'amounts' does not exist on type 'Quotation'.
+
+154             <span>{formatCurrency(quotation.amounts?.grandTotal || 0)}</span>
+                                                ~~~~~~~
+
+src/components/quotations/QuotationCard.tsx:158:20 - error TS2339: Property 'party' does not exist on type 'Quotation'.
+
+158         {quotation.party?.contactInfo?.email && (
+                       ~~~~~
+
+src/components/quotations/QuotationCard.tsx:161:51 - error TS2339: Property 'party' does not exist on type 'Quotation'.
+
+161             <span className="truncate">{quotation.party.contactInfo.email}</span>
+                                                      ~~~~~
+
+src/components/users/modals/UserFormModal.tsx:101:27 - error TS2339: Property 'designation' does not exist on type 'User'.
+
+101         designation: user.designation || '',
+                              ~~~~~~~~~~~
+
+src/lib/api/purchaseReportsApi.ts:133:22 - error TS2820: Type '"PurchaseReport"' is not assignable to type 'TagDescription<"Company" | "User" | "Role" | "Customer" | "Supplier" | "InventoryItem" | "StockMovement" | "Warehouse" | "Batch" | "ProductionOrder" | "CustomerOrder" | "PurchaseOrder" | ... 27 more ... | "File"> | null | undefined'. Did you mean '"PurchaseOrder"'?
+
+133       providesTags: ['PurchaseReport'],
+                         ~~~~~~~~~~~~~~~~
+
+src/lib/api/purchaseReportsApi.ts:154:22 - error TS2820: Type '"PurchaseReport"' is not assignable to type 'TagDescription<"Company" | "User" | "Role" | "Customer" | "Supplier" | "InventoryItem" | "StockMovement" | "Warehouse" | "Batch" | "ProductionOrder" | "CustomerOrder" | "PurchaseOrder" | ... 27 more ... | "File"> | null | undefined'. Did you mean '"PurchaseOrder"'?
+
+154       providesTags: ['PurchaseReport'],
+                         ~~~~~~~~~~~~~~~~
+
+src/lib/api/purchaseReportsApi.ts:166:27 - error TS7006: Parameter 'response' implicitly has an 'any' type.
+
+166         responseHandler: (response) => response.blob(),
+                              ~~~~~~~~
+
+src/lib/api/purchaseReportsApi.ts:183:27 - error TS7006: Parameter 'response' implicitly has an 'any' type.
+
+183         responseHandler: (response) => response.blob(),
+                              ~~~~~~~~
+
+
+Found 65 errors in 7 files.
+
+Errors  Files
+     3  src/app/login/page.tsx:78
+     1  src/app/reports/supplier-wise-purchase/page.tsx:274
+    50  src/app/suppliers/[id]/page.tsx:233
+     2  src/components/layout/AppLoadingWrapper.tsx:49
+     4  src/components/quotations/QuotationCard.tsx:116
+     1  src/components/users/modals/UserFormModal.tsx:101
+     4  src/lib/api/purchaseReportsApi.ts:133
+rajat@Rajats-MacBook-Pro client % 

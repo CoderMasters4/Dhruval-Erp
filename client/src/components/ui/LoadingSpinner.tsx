@@ -29,6 +29,7 @@ export function LoadingSpinner({ size = 'md', className, text }: LoadingSpinnerP
 interface AppLoaderProps {
   message?: string
   showLogo?: boolean
+  showFeatures?: boolean
   className?: string
   variant?: 'default' | 'minimal' | 'corporate'
 }
