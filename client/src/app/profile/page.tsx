@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useSelector } from 'react-redux'
 import { selectCurrentUser } from '@/lib/features/auth/authSlice'
 import { AppLayout } from '@/components/layout/AppLayout'
@@ -10,18 +10,32 @@ import { TwoFactorToggle } from '@/components/settings/TwoFactorToggle'
 import { SecurityHeader } from '@/components/ui/PageHeader'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
-import { User, Mail, Phone, Building2, Shield, Edit, Save, X } from 'lucide-react'
+import { User, Mail, Phone, Building2, Shield, Edit, Save, X, Download, Smartphone } from 'lucide-react'
 import toast from 'react-hot-toast'
 
 export default function ProfilePage() {
   const user = useSelector(selectCurrentUser)
   const [isEditing, setIsEditing] = useState(false)
+  const [isPWAInstalled, setIsPWAInstalled] = useState(false)
   const [formData, setFormData] = useState({
     firstName: user?.firstName || '',
     lastName: user?.lastName || '',
     email: user?.email || '',
     phone: user?.phone || '',
   })
+
+  // Check PWA installation status
+  useEffect(() => {
+    const checkPWAStatus = () => {
+      if (typeof window !== 'undefined') {
+        const isStandalone = window.matchMedia('(display-mode: standalone)').matches ||
+                            (window.navigator as any).standalone ||
+                            document.referrer.includes('android-app://')
+        setIsPWAInstalled(isStandalone)
+      }
+    }
+    checkPWAStatus()
+  }, [])
 
   const handleSave = async () => {
     try {
@@ -41,6 +55,58 @@ export default function ProfilePage() {
       phone: user?.phone || '',
     })
     setIsEditing(false)
+  }
+
+  const handleInstallPWA = () => {
+    // Try to use the global install function from PWAManager
+    if ((window as any).installPWA) {
+      (window as any).installPWA()
+      toast.success('Install prompt triggered!')
+    } else {
+      // Fallback instructions
+      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent)
+
+      if (isIOS) {
+        toast((t) => (
+          <div className="flex flex-col gap-2">
+            <div className="font-semibold">Install ERP App on iOS</div>
+            <div className="text-sm">
+              1. Tap the <strong>Share</strong> button (□↗)<br/>
+              2. Scroll down and tap <strong>"Add to Home Screen"</strong><br/>
+              3. Tap <strong>"Add"</strong> to confirm
+            </div>
+            <button
+              onClick={() => toast.dismiss(t.id)}
+              className="text-blue-600 text-sm font-medium mt-2"
+            >
+              Got it!
+            </button>
+          </div>
+        ), {
+          duration: 10000,
+          icon: '📱'
+        })
+      } else {
+        toast((t) => (
+          <div className="flex flex-col gap-2">
+            <div className="font-semibold">Install ERP App</div>
+            <div className="text-sm">
+              Look for the install icon (⊕) in your browser's address bar,<br/>
+              or check the browser menu for "Install" or "Add to Home Screen"
+            </div>
+            <button
+              onClick={() => toast.dismiss(t.id)}
+              className="text-blue-600 text-sm font-medium mt-2"
+            >
+              Got it!
+            </button>
+          </div>
+        ), {
+          duration: 8000,
+          icon: '💻'
+        })
+      }
+    }
   }
 
   return (
@@ -144,6 +210,68 @@ export default function ProfilePage() {
                 <p className="text-gray-900">{user?.phone || 'Not set'}</p>
               )}
             </div>
+
+            {/* Company Information */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                <Building2 className="h-4 w-4 inline mr-1" />
+                Company
+              </label>
+              <p className="text-gray-900">{user?.companyId || 'Not assigned'}</p>
+            </div>
+
+            {/* Role Information */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                <Shield className="h-4 w-4 inline mr-1" />
+                Role
+              </label>
+              <div className="flex items-center gap-2">
+                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                  {typeof user?.roles?.[0] === 'string' ? user.roles[0] : user?.roles?.[0]?.roleId || 'User'}
+                </span>
+                {user?.isActive && (
+                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                    Active
+                  </span>
+                )}
+              </div>
+            </div>
+
+            {/* Account Status */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Account Status
+              </label>
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-600">Email Verified</span>
+                  <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                    user?.isActive
+                      ? 'bg-green-100 text-green-800'
+                      : 'bg-yellow-100 text-yellow-800'
+                  }`}>
+                    {user?.isActive ? 'Verified' : 'Pending'}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-600">Two-Factor Auth</span>
+                  <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                    user?.isActive
+                      ? 'bg-green-100 text-green-800'
+                      : 'bg-gray-100 text-gray-800'
+                  }`}>
+                    {user?.isActive ? 'Enabled' : 'Disabled'}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-600">Last Login</span>
+                  <span className="text-sm text-gray-900">
+                    {user?.updatedAt ? new Date(user.updatedAt).toLocaleDateString() : 'Never'}
+                  </span>
+                </div>
+              </div>
+            </div>
           </div>
 
           {/* Company Information */}
@@ -198,6 +326,66 @@ export default function ProfilePage() {
           </div>
           <TwoFactorToggle />
         </div>
+
+        {/* PWA Installation */}
+        <ResponsiveCard padding="lg">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <Smartphone className="h-5 w-5 text-blue-600" />
+              <h2 className="text-lg font-semibold">Mobile App</h2>
+            </div>
+            {isPWAInstalled && (
+              <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">
+                Installed
+              </span>
+            )}
+          </div>
+
+          <div className="space-y-4">
+            <p className="text-sm text-gray-600">
+              Install the ERP app on your device for faster access, offline functionality, and a native app experience.
+            </p>
+
+            <div className="flex flex-col sm:flex-row gap-3">
+              <Button
+                onClick={handleInstallPWA}
+                disabled={isPWAInstalled}
+                className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white"
+              >
+                <Download className="h-4 w-4" />
+                {isPWAInstalled ? 'App Installed' : 'Install App'}
+              </Button>
+
+              {!isPWAInstalled && (
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    // Reset PWA prompt dismissal
+                    localStorage.removeItem('pwa-prompt-permanently-dismissed')
+                    sessionStorage.removeItem('pwa-prompt-dismissed')
+                    toast.success('PWA prompts re-enabled! You may see install prompts again.')
+                  }}
+                  className="flex items-center gap-2"
+                >
+                  <Shield className="h-4 w-4" />
+                  Reset Install Prompts
+                </Button>
+              )}
+            </div>
+
+            {isPWAInstalled && (
+              <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+                <div className="flex items-center gap-2 text-green-800">
+                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                  <span className="text-sm font-medium">App is installed and ready to use!</span>
+                </div>
+                <p className="text-xs text-green-700 mt-1">
+                  You can access the app from your home screen or app drawer.
+                </p>
+              </div>
+            )}
+          </div>
+        </ResponsiveCard>
 
         {/* Account Activity */}
         <ResponsiveCard padding="lg">

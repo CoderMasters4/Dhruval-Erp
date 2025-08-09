@@ -46,24 +46,52 @@ export function ChartContainer({
 }: ChartContainerProps) {
   const [showFilters, setShowFilters] = useState(false)
 
-  const handleDownload = () => {
+  const handleDownload = async () => {
     // Convert chart data to CSV and download
     if (data && data.length > 0) {
-      const headers = Object.keys(data[0]).join(',')
-      const rows = data.map(row => Object.values(row).join(',')).join('\n')
-      const csv = `${headers}\n${rows}`
-      
-      const blob = new Blob([csv], { type: 'text/csv' })
-      const url = window.URL.createObjectURL(blob)
-      const a = document.createElement('a')
-      a.href = url
-      a.download = `${title.toLowerCase().replace(/\s+/g, '_')}_data.csv`
-      document.body.appendChild(a)
-      a.click()
-      document.body.removeChild(a)
-      window.URL.revokeObjectURL(url)
+      try {
+        // Import download utility dynamically to avoid SSR issues
+        const { downloadCSV } = await import('@/utils/downloadUtils')
+
+        const filename = `${title.toLowerCase().replace(/\s+/g, '_')}_data.csv`
+        const success = await downloadCSV(data, filename)
+
+        if (!success) {
+          // Fallback to original method
+          const headers = Object.keys(data[0]).join(',')
+          const rows = data.map(row => Object.values(row).join(',')).join('\n')
+          const csv = `${headers}\n${rows}`
+
+          const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
+          const url = window.URL.createObjectURL(blob)
+          const a = document.createElement('a')
+          a.href = url
+          a.download = filename
+          a.style.display = 'none'
+          document.body.appendChild(a)
+          a.click()
+          document.body.removeChild(a)
+          window.URL.revokeObjectURL(url)
+        }
+      } catch (error) {
+        console.error('Chart download failed:', error)
+        // Fallback to original method
+        const headers = Object.keys(data[0]).join(',')
+        const rows = data.map(row => Object.values(row).join(',')).join('\n')
+        const csv = `${headers}\n${rows}`
+
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
+        const url = window.URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = `${title.toLowerCase().replace(/\s+/g, '_')}_data.csv`
+        document.body.appendChild(a)
+        a.click()
+        document.body.removeChild(a)
+        window.URL.revokeObjectURL(url)
+      }
     }
-    
+
     actions?.onDownload?.()
   }
 

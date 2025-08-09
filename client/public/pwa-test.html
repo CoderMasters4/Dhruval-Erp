@@ -114,7 +114,10 @@
         </div>
 
         <div class="test-section">
-            <h3>📊 PWA Status</h3>
+            <h3>📊 PWA Status & Install</h3>
+            <button onclick="checkPWAStatus()">Check PWA Status</button>
+            <button onclick="triggerInstallPrompt()">Trigger Install Prompt</button>
+            <button onclick="testOfflineCapability()">Test Offline Mode</button>
             <div id="pwaStatus"></div>
         </div>
 
@@ -178,11 +181,80 @@
             const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
             const isIOSStandalone = window.navigator.standalone === true;
             const isInstalled = isStandalone || isIOSStandalone;
-            
+
+            let statusMessage = '';
             if (isInstalled) {
-                updateStatus(pwaStatus, '✅ PWA is installed and running in standalone mode', 'success');
+                statusMessage = '✅ PWA is installed and running in standalone mode';
+                updateStatus(pwaStatus, statusMessage, 'success');
             } else {
-                updateStatus(pwaStatus, '📱 PWA is running in browser mode', 'warning');
+                statusMessage = '📱 PWA is running in browser mode';
+                updateStatus(pwaStatus, statusMessage, 'warning');
+
+                // Check if install prompt is available
+                if (deferredPrompt) {
+                    statusMessage += '<br>🎯 Install prompt is available!';
+                } else if (window.installPWA) {
+                    statusMessage += '<br>🔧 Manual install function available';
+                } else {
+                    statusMessage += '<br>⚠️ Install prompt not available';
+                }
+                updateStatus(pwaStatus, statusMessage, 'warning');
+            }
+        }
+
+        // Trigger install prompt
+        function triggerInstallPrompt() {
+            if (window.installPWA) {
+                // Use the global install function from PWAManager
+                window.installPWA();
+                addTestResult('🎯 Install prompt triggered via PWAManager', 'success');
+            } else if (deferredPrompt) {
+                // Use the deferred prompt directly
+                deferredPrompt.prompt();
+                deferredPrompt.userChoice.then((choiceResult) => {
+                    addTestResult(`🎯 Install prompt result: ${choiceResult.outcome}`, 'info');
+                    deferredPrompt = null;
+                });
+            } else {
+                // Show manual instructions
+                const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+                if (isIOS) {
+                    addTestResult('📱 iOS: Tap Share → Add to Home Screen', 'warning');
+                } else {
+                    addTestResult('⚠️ Install prompt not available in this browser', 'error');
+                }
+            }
+        }
+
+        // Test offline capability
+        function testOfflineCapability() {
+            addTestResult('🔄 Testing offline capability...', 'warning');
+
+            // Check service worker
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.getRegistrations().then(registrations => {
+                    if (registrations.length > 0) {
+                        addTestResult('✅ Service worker registered for offline support', 'success');
+
+                        // Test cache
+                        if ('caches' in window) {
+                            caches.keys().then(cacheNames => {
+                                addTestResult(`📦 ${cacheNames.length} cache(s) available: ${cacheNames.join(', ')}`, 'success');
+                            });
+                        }
+                    } else {
+                        addTestResult('❌ No service worker registered', 'error');
+                    }
+                });
+            } else {
+                addTestResult('❌ Service workers not supported', 'error');
+            }
+
+            // Test offline detection
+            if (navigator.onLine) {
+                addTestResult('🌐 Currently online', 'success');
+            } else {
+                addTestResult('📴 Currently offline', 'warning');
             }
         }
 
@@ -216,16 +288,47 @@
         function testServiceWorker() {
             if ('serviceWorker' in navigator) {
                 addTestResult('✅ Service Worker supported', 'success');
-                
-                navigator.serviceWorker.getRegistration().then(registration => {
-                    if (registration) {
+
+                navigator.serviceWorker.getRegistrations().then(registrations => {
+                    if (registrations.length > 0) {
                         addTestResult('✅ Service Worker registered', 'success');
+                        registrations.forEach((reg, index) => {
+                            addTestResult(`📍 SW ${index + 1}: ${reg.scope}`, 'success');
+                            addTestResult(`📍 SW ${index + 1} State: ${reg.active?.state || 'unknown'}`, 'info');
+                        });
+
+                        // Test if SW is controlling the page
+                        if (navigator.serviceWorker.controller) {
+                            addTestResult('✅ Service Worker is controlling this page', 'success');
+                        } else {
+                            addTestResult('⚠️ Service Worker not controlling this page yet', 'warning');
+                        }
                     } else {
                         addTestResult('⚠️ Service Worker not registered', 'warning');
+                        // Try to register manually
+                        registerServiceWorkerManually();
                     }
+                }).catch(error => {
+                    addTestResult('❌ Service Worker check failed: ' + error.message, 'error');
                 });
             } else {
                 addTestResult('❌ Service Worker not supported', 'error');
+            }
+        }
+
+        // Manual service worker registration
+        function registerServiceWorkerManually() {
+            if ('serviceWorker' in navigator) {
+                addTestResult('🔄 Attempting manual SW registration...', 'warning');
+                navigator.serviceWorker.register('/sw.js', {
+                    scope: '/',
+                    updateViaCache: 'none'
+                }).then(registration => {
+                    addTestResult('✅ Service Worker registered manually', 'success');
+                    addTestResult(`📍 Manual SW scope: ${registration.scope}`, 'success');
+                }).catch(error => {
+                    addTestResult('❌ Manual SW registration failed: ' + error.message, 'error');
+                });
             }
         }
 

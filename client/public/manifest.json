@@ -2,7 +2,7 @@
   "name": "ERP Management System",
   "short_name": "ERP System",
   "description": "Complete Enterprise Resource Planning Management System for modern businesses",
-  "start_url": "/dashboard",
+  "start_url": "/",
   "scope": "/",
   "display": "standalone",
   "display_override": ["window-controls-overlay", "standalone", "minimal-ui"],

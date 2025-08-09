@@ -87,10 +87,34 @@ export default function SalesPage() {
           status: selectedFilter === 'all' ? undefined : selectedFilter
         }
       }).unwrap()
+
       toast.success('Export started. Download will begin shortly.')
-      // Handle download URL
+
       if (result.data.downloadUrl) {
-        window.open(result.data.downloadUrl, '_blank')
+        try {
+          // Import download utility dynamically
+          const { downloadWithFallback } = await import('@/utils/downloadUtils')
+
+          const downloadResult = await downloadWithFallback(
+            result.data.downloadUrl,
+            `sales-export-${new Date().toISOString().split('T')[0]}.${format}`
+          )
+
+          if (downloadResult.success) {
+            if (downloadResult.method === 'clipboard') {
+              toast('Download URL copied to clipboard. Paste in new tab to download.', {
+                icon: 'ℹ️',
+                duration: 5000
+              })
+            }
+          } else {
+            // Final fallback
+            window.open(result.data.downloadUrl, '_blank')
+          }
+        } catch (importError) {
+          // Fallback to original method
+          window.open(result.data.downloadUrl, '_blank')
+        }
       }
     } catch (error: any) {
       toast.error(error?.data?.message || 'Failed to export data')

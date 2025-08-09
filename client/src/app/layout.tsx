@@ -3,32 +3,119 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { Providers } from "./providers";
 import { InstallPrompt } from "@/components/pwa/InstallPrompt";
+import PWAManager from "@/components/pwa/PWAManager";
 
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "ERP System - Textile Business Management",
-  description: "Complete ERP solution for textile and fabric printing business with multi-company support",
-  keywords: "ERP, textile, fabric, printing, inventory, warehouse, invoicing",
+  title: {
+    default: "ERP System - Textile Business Management",
+    template: "%s | ERP System"
+  },
+  description: "Complete ERP solution for textile and fabric printing business with multi-company support, inventory management, sales, purchase, and production tracking.",
+  keywords: "ERP, textile, fabric, printing, inventory, warehouse, invoicing, business management, PWA, offline",
+  authors: [{ name: "ERP System Team" }],
+  creator: "ERP System",
+  publisher: "ERP System",
   manifest: "/manifest.json",
+  metadataBase: new URL('https://erp.dhruvalexim.com'),
+  alternates: {
+    canonical: '/',
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
     title: "ERP System",
+    startupImage: [
+      {
+        url: '/icons/apple-touch-icon-180x180.png',
+        media: '(device-width: 320px) and (device-height: 568px) and (-webkit-device-pixel-ratio: 2)',
+      },
+      {
+        url: '/icons/apple-touch-icon-180x180.png',
+        media: '(device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2)',
+      },
+      {
+        url: '/icons/apple-touch-icon-180x180.png',
+        media: '(device-width: 414px) and (device-height: 736px) and (-webkit-device-pixel-ratio: 3)',
+      },
+    ],
   },
   formatDetection: {
     telephone: false,
+    email: false,
+    address: false,
+  },
+  icons: {
+    icon: [
+      { url: '/favicon.ico', sizes: 'any' },
+      { url: '/favicon.svg', type: 'image/svg+xml' },
+      { url: '/icons/favicon-16x16.png', sizes: '16x16', type: 'image/png' },
+      { url: '/icons/favicon-32x32.png', sizes: '32x32', type: 'image/png' },
+      { url: '/icons/icon-192x192.png', sizes: '192x192', type: 'image/png' },
+      { url: '/icons/icon-512x512.png', sizes: '512x512', type: 'image/png' },
+    ],
+    apple: [
+      { url: '/icons/apple-touch-icon-57x57.png', sizes: '57x57' },
+      { url: '/icons/apple-touch-icon-60x60.png', sizes: '60x60' },
+      { url: '/icons/apple-touch-icon-72x72.png', sizes: '72x72' },
+      { url: '/icons/apple-touch-icon-76x76.png', sizes: '76x76' },
+      { url: '/icons/apple-touch-icon-114x114.png', sizes: '114x114' },
+      { url: '/icons/apple-touch-icon-120x120.png', sizes: '120x120' },
+      { url: '/icons/apple-touch-icon-144x144.png', sizes: '144x144' },
+      { url: '/icons/apple-touch-icon-152x152.png', sizes: '152x152' },
+      { url: '/icons/apple-touch-icon-180x180.png', sizes: '180x180' },
+    ],
+    other: [
+      {
+        rel: 'mask-icon',
+        url: '/favicon.svg',
+        color: '#0ea5e9',
+      },
+    ],
   },
   openGraph: {
     type: "website",
     siteName: "ERP Management System",
     title: "ERP System - Textile Business Management",
-    description: "Complete ERP solution for textile and fabric printing business",
+    description: "Complete ERP solution for textile and fabric printing business with multi-company support",
+    url: 'https://erp.dhruvalexim.com',
+    images: [
+      {
+        url: '/logo.png',
+        width: 1200,
+        height: 630,
+        alt: 'ERP System Logo',
+      },
+    ],
+    locale: 'en_US',
   },
   twitter: {
-    card: "summary",
+    card: "summary_large_image",
     title: "ERP System - Textile Business Management",
-    description: "Complete ERP solution for textile and fabric printing business",
+    description: "Complete ERP solution for textile and fabric printing business with multi-company support",
+    images: ['/logo.png'],
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
+  },
+  other: {
+    'mobile-web-app-capable': 'yes',
+    'apple-mobile-web-app-capable': 'yes',
+    'apple-mobile-web-app-status-bar-style': 'default',
+    'apple-mobile-web-app-title': 'ERP System',
+    'application-name': 'ERP System',
+    'msapplication-TileColor': '#0ea5e9',
+    'msapplication-TileImage': '/icons/icon-144x144.png',
+    'theme-color': '#0ea5e9',
   },
 };
 
@@ -89,6 +176,7 @@ export default function RootLayout({
       <body className={`${inter.className} antialiased`}>
         <Providers>
           {children}
+          <PWAManager />
           <InstallPrompt />
         </Providers>
       </body>

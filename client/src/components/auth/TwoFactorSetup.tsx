@@ -123,15 +123,39 @@ export function TwoFactorSetup({ className }: TwoFactorSetupProps) {
     toast.success('Copied to clipboard')
   }
 
-  const downloadBackupCodes = () => {
-    const content = backupCodes.join('\n')
-    const blob = new Blob([content], { type: 'text/plain' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = 'backup-codes.txt'
-    a.click()
-    URL.revokeObjectURL(url)
+  const downloadBackupCodes = async () => {
+    try {
+      // Import download utility dynamically
+      const { downloadText } = await import('@/utils/downloadUtils')
+
+      const content = backupCodes.join('\n')
+      const success = await downloadText(content, 'backup-codes.txt')
+
+      if (!success) {
+        // Fallback to original method
+        const blob = new Blob([content], { type: 'text/plain;charset=utf-8;' })
+        const url = URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = 'backup-codes.txt'
+        a.style.display = 'none'
+        document.body.appendChild(a)
+        a.click()
+        document.body.removeChild(a)
+        URL.revokeObjectURL(url)
+      }
+    } catch (error) {
+      console.error('Backup codes download failed:', error)
+      // Fallback to original method
+      const content = backupCodes.join('\n')
+      const blob = new Blob([content], { type: 'text/plain;charset=utf-8;' })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = 'backup-codes.txt'
+      a.click()
+      URL.revokeObjectURL(url)
+    }
   }
 
   const renderStatus = () => (
