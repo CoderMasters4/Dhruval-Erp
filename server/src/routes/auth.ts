@@ -13,6 +13,7 @@ import logger, { logSecurity, logAudit } from '@/utils/logger';
 
 // Import 2FA service
 import TwoFactorService from '@/services/TwoFactorService';
+import twoFactorRoutes from '@/routes/twoFactor';
 
 const router = Router();
 
@@ -612,5 +613,11 @@ router.post('/logout', (req: Request, res: Response) => {
     message: 'Logout successful'
   });
 });
+
+// =============================================
+// 2FA ROUTES
+// =============================================
+// Mount 2FA routes under /auth/2fa
+router.use('/2fa', twoFactorRoutes);
 
 export default router;

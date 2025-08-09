@@ -11,7 +11,7 @@ const express_rate_limit_1 = __importDefault(require("express-rate-limit"));
 const router = (0, express_1.Router)();
 const twoFactorRateLimit = (0, express_rate_limit_1.default)({
     windowMs: 15 * 60 * 1000,
-    max: 5,
+    max: 50,
     message: {
         success: false,
         message: 'Too many 2FA attempts. Please try again later.',
@@ -130,7 +130,9 @@ router.post('/disable', auth_1.authenticate, twoFactorRateLimit, async (req, res
 router.post('/verify', twoFactorRateLimit, async (req, res) => {
     try {
         const { token, backupCode, tempToken } = req.body;
+        console.log('2FA verify request:', { hasToken: !!token, hasBackupCode: !!backupCode, hasTempToken: !!tempToken });
         if (!tempToken) {
+            console.log('No temp token provided');
             return res.status(400).json({
                 success: false,
                 message: 'Temporary token required'
@@ -140,8 +142,10 @@ router.post('/verify', twoFactorRateLimit, async (req, res) => {
         let decoded;
         try {
             decoded = jwt.verify(tempToken, process.env.JWT_SECRET);
+            console.log('Temp token decoded:', { userId: decoded.userId, type: decoded.type });
         }
         catch (error) {
+            console.log('Temp token verification failed:', error.message);
             return res.status(401).json({
                 success: false,
                 message: 'Invalid or expired temporary token'
@@ -156,17 +160,21 @@ router.post('/verify', twoFactorRateLimit, async (req, res) => {
         const userId = decoded.userId;
         let verified = false;
         if (token) {
+            console.log('Verifying TOTP token:', token);
             verified = await TwoFactorService_1.default.verifyToken(userId, token, false);
         }
         else if (backupCode) {
+            console.log('Verifying backup code:', backupCode);
             verified = await TwoFactorService_1.default.verifyToken(userId, backupCode, true);
         }
         else {
+            console.log('No token or backup code provided');
             return res.status(400).json({
                 success: false,
                 message: 'Token or backup code required'
             });
         }
+        console.log('2FA verification result:', verified);
         if (!verified) {
             return res.status(401).json({
                 success: false,
@@ -183,10 +191,40 @@ router.post('/verify', twoFactorRateLimit, async (req, res) => {
                 message: 'User not found'
             });
         }
-        const { generateAccessToken } = require('@/middleware/auth');
+        const { generateAccessToken, generateRefreshToken } = require('@/middleware/auth');
+        const config = require('@/config/environment').default;
         const accessToken = generateAccessToken(user, user.companyAccess?.[0]?.companyId?._id);
+        const refreshToken = generateRefreshToken(user._id);
         user.lastLoginAt = new Date();
         await user.save();
+        const parseJWTExpire = (expireStr) => {
+            const match = expireStr.match(/^(\d+)([smhd])$/);
+            if (!match)
+                return 15 * 60 * 1000;
+            const value = parseInt(match[1]);
+            const unit = match[2];
+            switch (unit) {
+                case 's': return value * 1000;
+                case 'm': return value * 60 * 1000;
+                case 'h': return value * 60 * 60 * 1000;
+                case 'd': return value * 24 * 60 * 60 * 1000;
+                default: return 15 * 60 * 1000;
+            }
+        };
+        const cookieOptions = {
+            httpOnly: config.COOKIE_HTTP_ONLY,
+            secure: config.COOKIE_SECURE,
+            sameSite: config.COOKIE_SAME_SITE,
+            domain: config.NODE_ENV === 'production' ? config.COOKIE_DOMAIN : undefined
+        };
+        res.cookie('accessToken', accessToken, {
+            ...cookieOptions,
+            maxAge: parseJWTExpire(config.JWT_EXPIRE)
+        });
+        res.cookie('refreshToken', refreshToken, {
+            ...cookieOptions,
+            maxAge: parseJWTExpire(config.JWT_REFRESH_EXPIRE)
+        });
         res.json({
             success: true,
             data: {
@@ -200,7 +238,8 @@ router.post('/verify', twoFactorRateLimit, async (req, res) => {
                     lastLoginAt: new Date()
                 },
                 tokens: {
-                    accessToken
+                    accessToken,
+                    refreshToken
                 },
                 companies: user.companyAccess?.map((access) => access.companyId) || [],
                 currentCompany: user.companyAccess?.[0]?.companyId || null,

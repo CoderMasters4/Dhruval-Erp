@@ -6,7 +6,7 @@ import { selectCurrentUser } from '@/lib/features/auth/authSlice'
 import { AppLayout } from '@/components/layout/AppLayout'
 import { ResponsiveContainer } from '@/components/ui/ResponsiveContainer'
 import { ResponsiveCard } from '@/components/ui/ResponsiveCard'
-import { TwoFactorSetup } from '@/components/auth/TwoFactorSetup'
+import { TwoFactorToggle } from '@/components/settings/TwoFactorToggle'
 import { SecurityHeader } from '@/components/ui/PageHeader'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
@@ -196,7 +196,7 @@ export default function ProfilePage() {
               </div>
             </div>
           </div>
-          <TwoFactorSetup />
+          <TwoFactorToggle />
         </div>
 
         {/* Account Activity */}

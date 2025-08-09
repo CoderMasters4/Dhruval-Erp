@@ -46,6 +46,7 @@ const security_1 = require("@/middleware/security");
 const environment_1 = __importDefault(require("@/config/environment"));
 const logger_1 = __importStar(require("@/utils/logger"));
 const TwoFactorService_1 = __importDefault(require("@/services/TwoFactorService"));
+const twoFactor_1 = __importDefault(require("@/routes/twoFactor"));
 const router = (0, express_1.Router)();
 const registerValidation = [
     (0, express_validator_1.body)('username')
@@ -444,7 +445,8 @@ router.post('/login', security_1.authRateLimit, loginValidation, async (req, res
             secure: environment_1.default.COOKIE_SECURE,
             sameSite: environment_1.default.COOKIE_SAME_SITE,
             maxAge: 7 * 24 * 60 * 60 * 1000,
-            domain: environment_1.default.NODE_ENV === 'production' ? environment_1.default.COOKIE_DOMAIN : undefined
+            domain: environment_1.default.NODE_ENV === 'production' ? environment_1.default.COOKIE_DOMAIN : undefined,
+            path: '/'
         });
         res.json({
             success: true,
@@ -526,5 +528,6 @@ router.post('/logout', (req, res) => {
         message: 'Logout successful'
     });
 });
+router.use('/2fa', twoFactor_1.default);
 exports.default = router;
 //# sourceMappingURL=auth.js.map

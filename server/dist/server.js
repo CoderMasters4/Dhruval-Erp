@@ -98,6 +98,8 @@ const companies_2 = __importDefault(require("@/routes/v1/companies"));
 console.log('✅ V1 Companies routes imported');
 const users_2 = __importDefault(require("@/routes/v1/users"));
 console.log('✅ V1 Users routes imported');
+const quotations_1 = __importDefault(require("@/routes/v1/quotations"));
+console.log('✅ V1 Quotations routes imported');
 console.log('📝 Loading complete V2 routes...');
 console.log('✅ V2 routes temporarily disabled to fix hanging issue');
 console.log('✅ V2 Simple routes temporarily disabled');
@@ -132,7 +134,8 @@ app.use((0, express_session_1.default)({
         httpOnly: environment_1.default.COOKIE_HTTP_ONLY,
         maxAge: environment_1.default.SESSION_MAX_AGE,
         sameSite: environment_1.default.COOKIE_SAME_SITE,
-        domain: environment_1.default.NODE_ENV === 'production' ? environment_1.default.COOKIE_DOMAIN : undefined
+        domain: environment_1.default.NODE_ENV === 'production' ? environment_1.default.COOKIE_DOMAIN : undefined,
+        path: '/'
     },
     store: connect_mongo_1.default.create({
         mongoUrl: environment_1.default.MONGODB_URI,
@@ -216,9 +219,45 @@ app.get('/ready', async (req, res) => {
 app.get('/live', (req, res) => {
     res.status(200).json({ status: 'alive' });
 });
+app.options('*', (req, res) => {
+    res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
+    res.header('Access-Control-Allow-Methods', 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Content-Type,Authorization,X-Requested-With,X-Company-ID,X-API-Key,X-Request-ID,X-User-Agent,X-Forwarded-For,Origin,Accept,Cache-Control,Pragma');
+    res.header('Access-Control-Allow-Credentials', 'true');
+    res.header('Access-Control-Max-Age', '86400');
+    res.status(200).end();
+});
 const apiRouter = express_1.default.Router();
 apiRouter.use('/auth', auth_2.default);
 apiRouter.use('/setup', setup_1.default);
+apiRouter.get('/health', (req, res) => {
+    res.status(200).json({
+        success: true,
+        message: 'Server is healthy',
+        timestamp: new Date().toISOString(),
+        environment: environment_1.default.NODE_ENV,
+        version: environment_1.default.APP_VERSION
+    });
+});
+apiRouter.get('/debug/cookies', (req, res) => {
+    res.status(200).json({
+        success: true,
+        message: 'Cookie debug info',
+        cookies: {
+            received: req.cookies,
+            headers: req.headers.cookie,
+            origin: req.headers.origin,
+            userAgent: req.headers['user-agent']
+        },
+        config: {
+            cookieDomain: environment_1.default.COOKIE_DOMAIN,
+            cookieSecure: environment_1.default.COOKIE_SECURE,
+            cookieSameSite: environment_1.default.COOKIE_SAME_SITE,
+            nodeEnv: environment_1.default.NODE_ENV
+        }
+    });
+});
+apiRouter.use('/2fa', twoFactor_1.default);
 apiRouter.get('/info', (req, res) => {
     res.status(200).json({
         success: true,
@@ -246,7 +285,6 @@ apiRouter.get('/info', (req, res) => {
     });
 });
 apiRouter.use(auth_1.authenticate);
-apiRouter.use('/auth/2fa', twoFactor_1.default);
 apiRouter.use('/admin', adminTwoFactor_1.default);
 apiRouter.use('/admin', adminUsers_1.default);
 apiRouter.use('/admin', adminCompanies_1.default);
@@ -268,6 +306,7 @@ apiRouter.use('/warehouses', warehouses_1.default);
 app.use(environment_1.default.API_PREFIX, apiRouter);
 app.use('/api/v1/companies', companies_2.default);
 app.use('/api/v1/users', users_2.default);
+app.use('/api/v1/quotations', quotations_1.default);
 app.get('/api', (req, res) => {
     res.status(200).json({
         success: true,

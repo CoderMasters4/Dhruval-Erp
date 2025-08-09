@@ -37,11 +37,11 @@ export class TwoFactorService {
         throw new Error('User not found');
       }
 
-      // Generate secret
+      // Generate secret with shorter length to reduce QR code data
       const secret = speakeasy.generateSecret({
-        name: `ERP (${user.email})`,
-        issuer: 'ERP System',
-        length: 20
+        name: `ERP (${user.email?.split('@')[0] || 'User'})`,
+        issuer: 'ERP',
+        length: 16 // Shorter length for smaller QR code
       });
 
       // Check if 2FA record exists (user-level only)
@@ -62,22 +62,23 @@ export class TwoFactorService {
 
       await twoFactor.save();
 
-      // Generate proper TOTP URL for Google Authenticator
-      const serviceName = 'Enterprise ERP';
-      const accountName = user.email || user.username;
+      // Generate minimal TOTP URL for QR code compatibility
+      const serviceName = 'ERP';
+      const accountName = user.email?.split('@')[0] || user.username || 'User';
 
-      // Create proper otpauth URL
-      const otpAuthUrl = `otpauth://totp/${encodeURIComponent(serviceName)}:${encodeURIComponent(accountName)}?secret=${secret.base32}&issuer=${encodeURIComponent(serviceName)}`;
+      // Create minimal otpauth URL to avoid "Data too long" error
+      const otpAuthUrl = `otpauth://totp/${accountName}?secret=${secret.base32}&issuer=${serviceName}`;
 
       console.log('Generated TOTP URL:', otpAuthUrl);
+      console.log('URL length:', otpAuthUrl.length);
       console.log('Secret length:', secret.base32!.length);
 
       try {
-        // Generate QR code with proper settings for Google Authenticator
+        // Generate QR code with optimized settings to avoid "Data too long" error
         const qrCodeUrl: string = await QRCode.toDataURL(otpAuthUrl, {
-          errorCorrectionLevel: 'M', // Medium error correction
-          margin: 4, // Standard margin
-          width: 256, // Good size for scanning
+          errorCorrectionLevel: 'L', // Low error correction for smaller data
+          margin: 2, // Smaller margin
+          width: 200, // Smaller size
           color: {
             dark: '#000000',
             light: '#FFFFFF'

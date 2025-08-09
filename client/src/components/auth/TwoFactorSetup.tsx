@@ -21,19 +21,22 @@ interface TwoFactorSetupProps {
 }
 
 export function TwoFactorSetup({ className }: TwoFactorSetupProps) {
-  const [step, setStep] = useState<'status' | 'setup' | 'verify' | 'backup'>('status')
+  const [step, setStep] = useState<'status' | 'setup' | 'verify' | 'backup' | 'disable'>('status')
   const [verificationToken, setVerificationToken] = useState('')
   const [password, setPassword] = useState('')
   const [secret, setSecret] = useState('')
   const [qrCodeUrl, setQrCodeUrl] = useState('')
   const [backupCodes, setBackupCodes] = useState<string[]>([])
+  const [showConfirmDisable, setShowConfirmDisable] = useState(false)
 
-  const { data: statusData, refetch: refetchStatus } = useGetTwoFactorStatusQuery()
+  const { data: statusData, isLoading: statusLoading, refetch: refetchStatus } = useGetTwoFactorStatusQuery()
   const [setupTwoFactor, { isLoading: isSettingUp }] = useSetupTwoFactorMutation()
   const [enableTwoFactor, { isLoading: isEnabling }] = useEnableTwoFactorMutation()
   const [disableTwoFactor, { isLoading: isDisabling }] = useDisableTwoFactorMutation()
   const [generateBackupCodes, { isLoading: isGeneratingCodes }] = useGenerateBackupCodesMutation()
   const [testTwoFactor, { isLoading: isTesting }] = useTestTwoFactorMutation()
+
+  const isLoading = statusLoading || isSettingUp || isEnabling || isDisabling || isGeneratingCodes || isTesting
 
   const isEnabled = statusData?.data?.isEnabled || false
 
@@ -86,10 +89,17 @@ export function TwoFactorSetup({ className }: TwoFactorSetupProps) {
       toast.success('2FA disabled successfully')
       setStep('status')
       setPassword('')
+      setShowConfirmDisable(false)
       refetchStatus()
     } catch (error: any) {
       toast.error(error?.data?.message || 'Failed to disable 2FA')
     }
+  }
+
+  const handleCancelDisable = () => {
+    setShowConfirmDisable(false)
+    setPassword('')
+    setStep('status')
   }
 
   const handleGenerateNewBackupCodes = async () => {

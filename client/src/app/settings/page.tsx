@@ -19,7 +19,7 @@ import { useSelector, useDispatch } from 'react-redux'
 import { selectTheme, setTheme } from '@/lib/features/ui/uiSlice'
 import { selectCurrentUser } from '@/lib/features/auth/authSlice'
 import { Can } from '@/lib/casl/Can'
-import { TwoFactorSetup } from '@/components/auth/TwoFactorSetup'
+import { TwoFactorToggle } from '@/components/settings/TwoFactorToggle'
 
 export default function SettingsPage() {
   const dispatch = useDispatch()
@@ -294,9 +294,7 @@ export default function SettingsPage() {
                         </button>
                       </div>
 
-                      <div className="bg-gray-50 rounded-lg p-1">
-                        <TwoFactorSetup />
-                      </div>
+                      <TwoFactorToggle />
                     </div>
                   </div>
                 </div>

@@ -12,6 +12,7 @@ import { useLoginMutation } from '@/lib/api/authApi'
 import { setCredentials, selectIsAuthenticated, setCompanies, setPermissions } from '@/lib/features/auth/authSlice'
 import { addNotification } from '@/lib/features/ui/uiSlice'
 import { LoginTwoFactorVerification } from '@/components/auth/LoginTwoFactorVerification'
+import { LoginLogo } from '@/components/ui/Logo'
 import toast from 'react-hot-toast'
 
 const loginSchema = z.object({
@@ -174,16 +175,8 @@ export default function LoginPage() {
         <div className="hidden lg:flex lg:w-1/2 bg-sky-50 items-center justify-center p-12">
           <div className="max-w-md text-center">
             <div className="mb-8">
-              <Image
-                src="/logo.png"
-                alt="Factory ERP Logo"
-                width={120}
-                height={120}
-                className="mx-auto mb-6"
-                priority
-              />
-              <h1 className="text-4xl font-bold text-black mb-4">Factory ERP</h1>
-              <p className="text-xl text-black">Complete Manufacturing Management Solution</p>
+              <LoginLogo size="lg" />
+              <p className="text-xl text-black mt-4">Complete Manufacturing Management Solution</p>
             </div>
             <div className="space-y-4 text-left">
               <div className="flex items-center space-x-3">
@@ -211,15 +204,8 @@ export default function LoginPage() {
           <div className="w-full max-w-md">
             {/* Mobile Logo */}
             <div className="text-center mb-8 lg:hidden">
-              <Image
-                src="/logo.png"
-                alt="Factory ERP Logo"
-                width={80}
-                height={80}
-                className="mx-auto mb-4"
-                priority
-              />
-              <h2 className="text-3xl font-bold text-black mb-2">Welcome Back</h2>
+              <LoginLogo size="md" />
+              <h2 className="text-3xl font-bold text-black mb-2 mt-4">Welcome Back</h2>
               <p className="text-black">Sign in to your Factory ERP account</p>
             </div>
 

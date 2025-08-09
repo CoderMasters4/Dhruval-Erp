@@ -16,9 +16,9 @@ class TwoFactorService {
                 throw new Error('User not found');
             }
             const secret = speakeasy_1.default.generateSecret({
-                name: `ERP (${user.email})`,
-                issuer: 'ERP System',
-                length: 20
+                name: `ERP (${user.email?.split('@')[0] || 'User'})`,
+                issuer: 'ERP',
+                length: 16
             });
             let twoFactor = await TwoFactor_1.default.findOne({ userId });
             if (!twoFactor) {
@@ -34,16 +34,17 @@ class TwoFactorService {
                 twoFactor.setupAt = new Date();
             }
             await twoFactor.save();
-            const serviceName = 'Enterprise ERP';
-            const accountName = user.email || user.username;
-            const otpAuthUrl = `otpauth://totp/${encodeURIComponent(serviceName)}:${encodeURIComponent(accountName)}?secret=${secret.base32}&issuer=${encodeURIComponent(serviceName)}`;
+            const serviceName = 'ERP';
+            const accountName = user.email?.split('@')[0] || user.username || 'User';
+            const otpAuthUrl = `otpauth://totp/${accountName}?secret=${secret.base32}&issuer=${serviceName}`;
             console.log('Generated TOTP URL:', otpAuthUrl);
+            console.log('URL length:', otpAuthUrl.length);
             console.log('Secret length:', secret.base32.length);
             try {
                 const qrCodeUrl = await qrcode_1.default.toDataURL(otpAuthUrl, {
-                    errorCorrectionLevel: 'M',
-                    margin: 4,
-                    width: 256,
+                    errorCorrectionLevel: 'L',
+                    margin: 2,
+                    width: 200,
                     color: {
                         dark: '#000000',
                         light: '#FFFFFF'

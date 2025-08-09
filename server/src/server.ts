@@ -305,7 +305,8 @@ apiRouter.get('/debug/cookies', (req: Request, res: Response) => {
   });
 });
 
-// 2FA verification route (public - used during login)
+// 2FA routes now mounted under /auth/2fa in auth.ts
+// Keep this for login verification only
 apiRouter.use('/2fa', twoFactorRoutes);
 
 // Public info endpoint

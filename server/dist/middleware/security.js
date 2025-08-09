@@ -18,11 +18,18 @@ exports.corsOptions = {
     origin: function (origin, callback) {
         if (!origin)
             return callback(null, true);
+        if (environment_1.default.NODE_ENV === 'development') {
+            return callback(null, true);
+        }
         if (environment_1.default.CORS_ORIGIN.includes(origin)) {
             callback(null, true);
         }
         else {
-            logger_1.default.warn('CORS blocked request', { origin, allowedOrigins: environment_1.default.CORS_ORIGIN });
+            logger_1.default.warn('CORS blocked request', {
+                origin,
+                allowedOrigins: environment_1.default.CORS_ORIGIN,
+                nodeEnv: environment_1.default.NODE_ENV
+            });
             callback(new Error('Not allowed by CORS'), false);
         }
     },
@@ -38,7 +45,9 @@ exports.corsOptions = {
         'X-API-Key',
         'X-Request-ID',
         'X-User-Agent',
-        'X-Forwarded-For'
+        'X-Forwarded-For',
+        'Cache-Control',
+        'Pragma'
     ],
     exposedHeaders: [
         'X-Total-Count',
@@ -48,7 +57,8 @@ exports.corsOptions = {
         'X-Rate-Limit-Remaining',
         'X-Rate-Limit-Reset'
     ],
-    maxAge: 86400
+    maxAge: 86400,
+    optionsSuccessStatus: 200
 };
 exports.helmetOptions = {
     contentSecurityPolicy: environment_1.default.ENABLE_CONTENT_SECURITY_POLICY ? {

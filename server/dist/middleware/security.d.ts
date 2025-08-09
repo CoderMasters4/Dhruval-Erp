@@ -6,6 +6,7 @@ export declare const corsOptions: {
     allowedHeaders: string[];
     exposedHeaders: string[];
     maxAge: number;
+    optionsSuccessStatus: number;
 };
 export declare const helmetOptions: {
     contentSecurityPolicy: boolean | {

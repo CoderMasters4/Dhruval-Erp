@@ -4,7 +4,6 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useSelector, useDispatch } from 'react-redux'
-import Image from 'next/image'
 import {
   LayoutDashboard,
   Building2,
@@ -39,6 +38,7 @@ import {
 } from 'lucide-react'
 import { selectSidebarCollapsed, selectSidebarOpen, toggleSidebar, setSidebarCollapsed } from '@/lib/features/ui/uiSlice'
 import { selectCurrentUser, selectIsSuperAdmin } from '@/lib/features/auth/authSlice'
+import { SidebarLogo } from '@/components/ui/Logo'
 
 import clsx from 'clsx'
 
@@ -505,37 +505,9 @@ export function Sidebar() {
         {/* Header */}
         <div className="flex items-center justify-between h-16 px-3 sm:px-4 border-b-2 border-sky-500">
           <Link href="/dashboard" className="flex items-center space-x-2">
-            {isCollapsed ? (
-              <div className="h-10 w-10 bg-white rounded-xl flex items-center justify-center shadow-sm border-2 border-sky-500">
-                <Image
-                  src="/logo.png"
-                  alt="Factory ERP"
-                  width={24}
-                  height={24}
-                  className="rounded"
-                />
-              </div>
-            ) : (
-              <>
-                <div className="h-10 w-10 bg-white rounded-xl flex items-center justify-center shadow-sm border-2 border-sky-500">
-                  <Image
-                    src="/logo.png"
-                    alt="Factory ERP"
-                    width={24}
-                    height={24}
-                    className="rounded"
-                  />
-                </div>
-                <div className="flex flex-col">
-                  <span className="text-xl font-bold text-black">
-                    Factory ERP
-                  </span>
-                  <span className="text-xs text-sky-600 font-medium">
-                    Manufacturing Suite
-                  </span>
-                </div>
-              </>
-            )}
+            <div className={`${isCollapsed ? 'h-10 w-10' : 'h-10 w-10'} bg-white rounded-xl flex items-center justify-center shadow-sm border-2 border-sky-500`}>
+              <SidebarLogo collapsed={isCollapsed} />
+            </div>
           </Link>
           
           <button

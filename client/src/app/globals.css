@@ -39,6 +39,52 @@ textarea::placeholder {
   color: #6b7280 !important; /* text-gray-500 */
 }
 
+/* Fix for general text visibility */
+.text-gray-500,
+.text-gray-400,
+.text-gray-300 {
+  color: #374151 !important; /* Darker gray for better visibility */
+}
+
+/* Ensure all text elements have proper contrast */
+p, span, div, label, h1, h2, h3, h4, h5, h6 {
+  color: inherit;
+}
+
+/* Fix for modal and card text */
+.bg-white p,
+.bg-white span,
+.bg-white div,
+.bg-white label {
+  color: #111827 !important; /* text-gray-900 */
+}
+
+/* Fix for button text visibility */
+button {
+  color: inherit;
+}
+
+button.bg-white {
+  color: #111827 !important;
+}
+
+/* Fix for specific gray text classes */
+.text-gray-600 {
+  color: #4b5563 !important;
+}
+
+.text-gray-700 {
+  color: #374151 !important;
+}
+
+.text-gray-800 {
+  color: #1f2937 !important;
+}
+
+.text-gray-900 {
+  color: #111827 !important;
+}
+
 /* Custom scrollbar */
 ::-webkit-scrollbar {
   width: 6px;
