@@ -125,6 +125,7 @@ router.post('/users', authenticate, requireAdmin, async (req: Request, res: Resp
         phone: phone || ''
       },
       password: hashedPassword,
+      primaryCompanyId: companyId,
       companyAccess: [{
         companyId,
         role,

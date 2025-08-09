@@ -10,6 +10,8 @@ export declare class ReportController extends BaseController<IReport> {
     generateInventoryReport(req: Request, res: Response): Promise<void>;
     generateProductionReport(req: Request, res: Response): Promise<void>;
     getReportStats(req: Request, res: Response): Promise<void>;
+    generateSupplierWisePurchaseReport(req: Request, res: Response): Promise<void>;
+    generatePurchaseSummaryReport(req: Request, res: Response): Promise<void>;
     getReportById(req: Request, res: Response): Promise<void>;
 }
 //# sourceMappingURL=ReportController.d.ts.map

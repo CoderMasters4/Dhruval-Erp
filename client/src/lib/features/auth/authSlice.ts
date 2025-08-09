@@ -76,6 +76,7 @@ interface AuthState {
   refreshToken: string | null
   isAuthenticated: boolean
   isLoading: boolean
+  isInitialized: boolean
   error: string | null
   companies: Company[]
   currentCompany: Company | null
@@ -89,6 +90,7 @@ const initialState: AuthState = {
   refreshToken: null,
   isAuthenticated: false,
   isLoading: false,
+  isInitialized: false,
   error: null,
   companies: [],
   currentCompany: null,
@@ -243,6 +245,7 @@ const authSlice = createSlice({
         const companiesStr = localStorage.getItem('companies')
         const permissionsStr = localStorage.getItem('permissions')
         const currentCompanyStr = localStorage.getItem('currentCompany')
+        const currentCompanyId = localStorage.getItem('currentCompanyId')
 
         if (token && userStr) {
           try {
@@ -263,6 +266,10 @@ const authSlice = createSlice({
             if (currentCompanyStr) {
               state.currentCompany = JSON.parse(currentCompanyStr)
             }
+
+            if (currentCompanyId) {
+              state.currentCompanyId = currentCompanyId
+            }
           } catch {
             // Clear invalid data
             localStorage.removeItem('token')
@@ -271,9 +278,21 @@ const authSlice = createSlice({
             localStorage.removeItem('companies')
             localStorage.removeItem('permissions')
             localStorage.removeItem('currentCompany')
+            localStorage.removeItem('currentCompanyId')
+            state.isAuthenticated = false
+            state.user = null
+            state.token = null
+            state.refreshToken = null
+            state.companies = []
+            state.permissions = {}
+            state.currentCompany = null
+            state.currentCompanyId = null
           }
         }
       }
+
+      state.isLoading = false
+      state.isInitialized = true
     },
   },
 })
@@ -298,6 +317,7 @@ export const selectCurrentToken = (state: { auth: AuthState }) => state.auth.tok
 export const selectRefreshToken = (state: { auth: AuthState }) => state.auth.refreshToken
 export const selectIsAuthenticated = (state: { auth: AuthState }) => state.auth.isAuthenticated
 export const selectAuthLoading = (state: { auth: AuthState }) => state.auth.isLoading
+export const selectAuthInitialized = (state: { auth: AuthState }) => state.auth.isInitialized
 export const selectAuthError = (state: { auth: AuthState }) => state.auth.error
 export const selectCompanies = (state: { auth: AuthState }) => state.auth.companies
 export const selectCurrentCompany = (state: { auth: AuthState }) => state.auth.currentCompany

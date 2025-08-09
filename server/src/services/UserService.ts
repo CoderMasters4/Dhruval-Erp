@@ -59,6 +59,96 @@ export class UserService extends BaseService<IUser> {
         }
       };
 
+      // Ensure non-superadmin users have company access
+      if (!userToCreate.isSuperAdmin && (!userToCreate.companyAccess || userToCreate.companyAccess.length === 0)) {
+        // If no company access provided, we need a default company
+        if (!userToCreate.primaryCompanyId) {
+          // Get the first active company as default
+          const Company = require('../models/Company').default;
+          const defaultCompany = await Company.findOne({ isActive: true }).sort({ createdAt: 1 });
+
+          if (defaultCompany) {
+            userToCreate.primaryCompanyId = defaultCompany._id;
+            userToCreate.companyAccess = [{
+              companyId: defaultCompany._id,
+              role: 'operator',
+              department: 'Production',
+              isActive: true,
+              joinedAt: new Date(),
+              permissions: {
+                inventory: { view: true, create: false, edit: false, delete: false, approve: false, viewReports: false },
+                production: { view: true, create: true, edit: false, delete: false, approve: false, viewReports: false },
+                orders: { view: true, create: false, edit: false, delete: false, approve: false, viewReports: false },
+                financial: { view: false, create: false, edit: false, delete: false, approve: false, viewReports: false },
+                security: {
+                  gateManagement: false,
+                  visitorManagement: false,
+                  vehicleTracking: false,
+                  cctvAccess: false,
+                  emergencyResponse: false,
+                  securityReports: false,
+                  incidentManagement: false,
+                  accessControl: false,
+                  patrolManagement: false
+                },
+                hr: {
+                  viewEmployees: false,
+                  manageEmployees: false,
+                  manageAttendance: false,
+                  manageSalary: false,
+                  manageLeaves: false,
+                  viewReports: false,
+                  recruitment: false,
+                  performance: false,
+                  training: false,
+                  disciplinary: false
+                },
+                admin: { userManagement: false, systemSettings: false, backupRestore: false, auditLogs: false }
+              }
+            }];
+          }
+        } else if (userToCreate.primaryCompanyId && (!userToCreate.companyAccess || userToCreate.companyAccess.length === 0)) {
+          // If primaryCompanyId is provided but no companyAccess, create default access
+          userToCreate.companyAccess = [{
+            companyId: userToCreate.primaryCompanyId,
+            role: 'operator',
+            department: 'Production',
+            isActive: true,
+            joinedAt: new Date(),
+            permissions: {
+              inventory: { view: true, create: false, edit: false, delete: false, approve: false, viewReports: false },
+              production: { view: true, create: true, edit: false, delete: false, approve: false, viewReports: false },
+              orders: { view: true, create: false, edit: false, delete: false, approve: false, viewReports: false },
+              financial: { view: false, create: false, edit: false, delete: false, approve: false, viewReports: false },
+              security: {
+                gateManagement: false,
+                visitorManagement: false,
+                vehicleTracking: false,
+                cctvAccess: false,
+                emergencyResponse: false,
+                securityReports: false,
+                incidentManagement: false,
+                accessControl: false,
+                patrolManagement: false
+              },
+              hr: {
+                viewEmployees: false,
+                manageEmployees: false,
+                manageAttendance: false,
+                manageSalary: false,
+                manageLeaves: false,
+                viewReports: false,
+                recruitment: false,
+                performance: false,
+                training: false,
+                disciplinary: false
+              },
+              admin: { userManagement: false, systemSettings: false, backupRestore: false, auditLogs: false }
+            }
+          }];
+        }
+      }
+
       const user = await this.create(userToCreate, createdBy);
 
       logger.info('User created successfully', { 

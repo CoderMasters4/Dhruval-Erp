@@ -58,6 +58,7 @@ export default function ReportsPage() {
 
   const tabs = [
     { id: 'user-analytics', name: 'User Analytics', icon: Users, available: true },
+    { id: 'purchase-reports', name: 'Purchase Reports', icon: BarChart3, available: true },
     { id: 'company-performance', name: 'Company Performance', icon: Building2, available: isSuperAdmin },
     { id: 'system-health', name: 'System Health', icon: Activity, available: isSuperAdmin },
   ].filter(tab => tab.available)
@@ -250,6 +251,108 @@ export default function ReportsPage() {
                   </ResponsiveContainer>
                 </div>
               )}
+            </div>
+          </div>
+        )}
+
+        {/* Purchase Reports Tab */}
+        {activeTab === 'purchase-reports' && (
+          <div className="space-y-6">
+            {/* Purchase Reports Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {/* Supplier-wise Purchase Report */}
+              <div className="bg-white rounded-xl border-2 border-sky-500 p-6 hover:shadow-xl transition-all duration-300 group cursor-pointer"
+                   onClick={() => window.location.href = '/reports/supplier-wise-purchase'}>
+                <div className="flex items-center justify-between mb-4">
+                  <div className="p-3 bg-blue-100 rounded-xl group-hover:bg-blue-200 transition-colors">
+                    <Building2 className="h-8 w-8 text-blue-600" />
+                  </div>
+                  <div className="text-right">
+                    <div className="text-2xl font-bold text-black">📊</div>
+                  </div>
+                </div>
+                <h3 className="text-lg font-semibold text-black mb-2">
+                  Supplier-wise Purchase Report
+                </h3>
+                <p className="text-sm text-gray-600 mb-4">
+                  Comprehensive analysis of purchases by supplier with detailed breakdowns and performance metrics.
+                </p>
+                <div className="flex items-center text-blue-600 text-sm font-medium">
+                  <span>View Report</span>
+                  <TrendingUp className="h-4 w-4 ml-2 group-hover:translate-x-1 transition-transform" />
+                </div>
+              </div>
+
+              {/* Purchase Summary Report */}
+              <div className="bg-white rounded-xl border-2 border-sky-500 p-6 hover:shadow-xl transition-all duration-300 group cursor-pointer opacity-50">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="p-3 bg-green-100 rounded-xl group-hover:bg-green-200 transition-colors">
+                    <BarChart3 className="h-8 w-8 text-green-600" />
+                  </div>
+                  <div className="text-right">
+                    <div className="text-2xl font-bold text-black">📈</div>
+                  </div>
+                </div>
+                <h3 className="text-lg font-semibold text-black mb-2">
+                  Purchase Summary Report
+                </h3>
+                <p className="text-sm text-gray-600 mb-4">
+                  Overall purchase statistics and trends with monthly/quarterly breakdowns.
+                </p>
+                <div className="flex items-center text-gray-400 text-sm font-medium">
+                  <span>Coming Soon</span>
+                  <TrendingUp className="h-4 w-4 ml-2" />
+                </div>
+              </div>
+
+              {/* Category-wise Purchase Report */}
+              <div className="bg-white rounded-xl border-2 border-sky-500 p-6 hover:shadow-xl transition-all duration-300 group cursor-pointer opacity-50">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="p-3 bg-purple-100 rounded-xl group-hover:bg-purple-200 transition-colors">
+                    <Database className="h-8 w-8 text-purple-600" />
+                  </div>
+                  <div className="text-right">
+                    <div className="text-2xl font-bold text-black">📋</div>
+                  </div>
+                </div>
+                <h3 className="text-lg font-semibold text-black mb-2">
+                  Category-wise Purchase Report
+                </h3>
+                <p className="text-sm text-gray-600 mb-4">
+                  Purchase analysis by product categories and item classifications.
+                </p>
+                <div className="flex items-center text-gray-400 text-sm font-medium">
+                  <span>Coming Soon</span>
+                  <TrendingUp className="h-4 w-4 ml-2" />
+                </div>
+              </div>
+            </div>
+
+            {/* Quick Stats */}
+            <div className="bg-white rounded-xl border-2 border-sky-500 p-6">
+              <h3 className="text-lg font-semibold text-black mb-4">Quick Purchase Insights</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="text-center p-4 bg-blue-50 rounded-xl">
+                  <div className="text-2xl font-bold text-blue-600">📦</div>
+                  <div className="text-sm text-gray-600 mt-2">Total Purchase Orders</div>
+                  <div className="text-lg font-semibold text-black">View detailed reports to see current statistics</div>
+                </div>
+                <div className="text-center p-4 bg-green-50 rounded-xl">
+                  <div className="text-2xl font-bold text-green-600">💰</div>
+                  <div className="text-sm text-gray-600 mt-2">Total Purchase Value</div>
+                  <div className="text-lg font-semibold text-black">Available in reports</div>
+                </div>
+                <div className="text-center p-4 bg-purple-50 rounded-xl">
+                  <div className="text-2xl font-bold text-purple-600">🏢</div>
+                  <div className="text-sm text-gray-600 mt-2">Active Suppliers</div>
+                  <div className="text-lg font-semibold text-black">Check supplier reports</div>
+                </div>
+                <div className="text-center p-4 bg-orange-50 rounded-xl">
+                  <div className="text-2xl font-bold text-orange-600">📊</div>
+                  <div className="text-sm text-gray-600 mt-2">Performance Metrics</div>
+                  <div className="text-lg font-semibold text-black">Detailed analytics available</div>
+                </div>
+              </div>
             </div>
           </div>
         )}

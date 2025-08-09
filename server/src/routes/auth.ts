@@ -209,6 +209,7 @@ router.post('/register', authRateLimit, registerValidation, async (req: Request,
         current: { country: 'India' },
         permanent: { country: 'India' }
       },
+      primaryCompanyId: company._id,
       companyAccess: [{
         companyId: company._id,
         role: 'super_admin', // First user becomes super admin

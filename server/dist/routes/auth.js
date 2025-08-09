@@ -198,6 +198,7 @@ router.post('/register', security_1.authRateLimit, registerValidation, async (re
                 current: { country: 'India' },
                 permanent: { country: 'India' }
             },
+            primaryCompanyId: company._id,
             companyAccess: [{
                     companyId: company._id,
                     role: 'super_admin',

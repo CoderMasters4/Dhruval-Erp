@@ -73,7 +73,7 @@ const CompanyFilters: React.FC<CompanyFiltersProps> = ({
               placeholder="Search companies by name, code, or GSTIN..."
               value={filters.search}
               onChange={(e) => handleSearchChange(e.target.value)}
-              className="w-full pl-12 pr-4 py-4 border border-gray-300 rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-all duration-200 bg-gray-50 focus:bg-white text-black placeholder-gray-500"
+              className="w-full pl-12 pr-4 py-4 border border-gray-300 rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-all duration-200 bg-gray-50 focus:bg-white text-gray-900 font-medium placeholder:text-gray-500"
               disabled={isLoading}
             />
           </div>
@@ -86,7 +86,7 @@ const CompanyFilters: React.FC<CompanyFiltersProps> = ({
             <select
               value={filters.status}
               onChange={(e) => handleStatusChange(e.target.value)}
-              className="appearance-none bg-gray-50 border border-gray-300 rounded-xl px-4 py-4 pr-10 focus:ring-2 focus:ring-sky-500 focus:border-sky-500 focus:bg-white transition-all duration-200 text-black font-medium"
+              className="appearance-none bg-gray-50 border border-gray-300 rounded-xl px-4 py-4 pr-10 focus:ring-2 focus:ring-sky-500 focus:border-sky-500 focus:bg-white transition-all duration-200 text-gray-900 font-medium"
               disabled={isLoading}
             >
               <option value="all">All Status</option>
@@ -136,7 +136,7 @@ const CompanyFilters: React.FC<CompanyFiltersProps> = ({
             <select
               value={filters.industry || ''}
               onChange={(e) => handleIndustryChange(e.target.value)}
-              className="appearance-none bg-gray-50 border border-gray-300 rounded-xl pl-10 pr-8 py-4 focus:ring-2 focus:ring-sky-500 focus:border-sky-500 focus:bg-white transition-all duration-200 text-black font-medium"
+              className="appearance-none bg-gray-50 border border-gray-300 rounded-xl pl-10 pr-8 py-4 focus:ring-2 focus:ring-sky-500 focus:border-sky-500 focus:bg-white transition-all duration-200 text-gray-900 font-medium"
               disabled={isLoading}
             >
               <option value="">All Industries</option>

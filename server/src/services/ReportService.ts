@@ -468,6 +468,296 @@ export class ReportService extends BaseService<IReport> {
   }
 
   /**
+   * Generate supplier-wise purchase report
+   */
+  async generateSupplierWisePurchaseReport(
+    companyId: string,
+    dateRange: { start: Date; end: Date },
+    filters: any = {},
+    pagination: { page: number; limit: number } = { page: 1, limit: 10 },
+    format: string = 'json'
+  ): Promise<any> {
+    try {
+      const { default: PurchaseOrder } = await import('../models/PurchaseOrder');
+      const { default: Supplier } = await import('../models/Supplier');
+
+      const matchQuery: any = {
+        companyId: new Types.ObjectId(companyId),
+        poDate: {
+          $gte: dateRange.start,
+          $lte: dateRange.end
+        },
+        isActive: true
+      };
+
+      // Apply filters
+      if (filters.supplierId) {
+        matchQuery['supplier.supplierId'] = new Types.ObjectId(filters.supplierId);
+      }
+
+      if (filters.status) {
+        matchQuery.status = filters.status;
+      }
+
+      if (filters.category) {
+        matchQuery.category = filters.category;
+      }
+
+      // Get supplier-wise purchase data with aggregation
+      const supplierWiseData = await PurchaseOrder.aggregate([
+        { $match: matchQuery },
+        {
+          $group: {
+            _id: '$supplier.supplierId',
+            supplierName: { $first: '$supplier.supplierName' },
+            supplierCode: { $first: '$supplier.supplierCode' },
+            totalOrders: { $sum: 1 },
+            totalAmount: { $sum: '$amounts.grandTotal' },
+            totalTaxAmount: { $sum: '$amounts.totalTaxAmount' },
+            avgOrderValue: { $avg: '$amounts.grandTotal' },
+            orders: {
+              $push: {
+                poNumber: '$poNumber',
+                poDate: '$poDate',
+                status: '$status',
+                category: '$category',
+                priority: '$priority',
+                expectedDeliveryDate: '$expectedDeliveryDate',
+                grandTotal: '$amounts.grandTotal',
+                taxAmount: '$amounts.totalTaxAmount',
+                itemCount: { $size: '$items' }
+              }
+            }
+          }
+        },
+        {
+          $lookup: {
+            from: 'suppliers',
+            localField: '_id',
+            foreignField: '_id',
+            as: 'supplierDetails'
+          }
+        },
+        {
+          $addFields: {
+            supplierInfo: { $arrayElemAt: ['$supplierDetails', 0] }
+          }
+        },
+        {
+          $project: {
+            supplierId: '$_id',
+            supplierName: 1,
+            supplierCode: 1,
+            contactInfo: '$supplierInfo.contactInfo',
+            businessInfo: '$supplierInfo.businessInfo',
+            totalOrders: 1,
+            totalAmount: 1,
+            totalTaxAmount: 1,
+            avgOrderValue: 1,
+            orders: 1,
+            performance: {
+              onTimeDeliveryRate: { $multiply: [{ $divide: ['$totalOrders', '$totalOrders'] }, 100] },
+              totalSpent: '$totalAmount'
+            }
+          }
+        },
+        { $sort: { totalAmount: -1 } }
+      ]);
+
+      // Apply pagination
+      const skip = (pagination.page - 1) * pagination.limit;
+      const paginatedData = supplierWiseData.slice(skip, skip + pagination.limit);
+
+      // Get summary statistics
+      const summary = await PurchaseOrder.aggregate([
+        { $match: matchQuery },
+        {
+          $group: {
+            _id: null,
+            totalPurchaseOrders: { $sum: 1 },
+            totalPurchaseAmount: { $sum: '$amounts.grandTotal' },
+            totalTaxAmount: { $sum: '$amounts.totalTaxAmount' },
+            avgOrderValue: { $avg: '$amounts.grandTotal' },
+            uniqueSuppliers: { $addToSet: '$supplier.supplierId' },
+            statusBreakdown: {
+              $push: '$status'
+            }
+          }
+        },
+        {
+          $addFields: {
+            uniqueSuppliersCount: { $size: '$uniqueSuppliers' }
+          }
+        }
+      ]);
+
+      // Get status breakdown
+      const statusBreakdown = await PurchaseOrder.aggregate([
+        { $match: matchQuery },
+        {
+          $group: {
+            _id: '$status',
+            count: { $sum: 1 },
+            totalAmount: { $sum: '$amounts.grandTotal' }
+          }
+        }
+      ]);
+
+      // Get category breakdown
+      const categoryBreakdown = await PurchaseOrder.aggregate([
+        { $match: matchQuery },
+        {
+          $group: {
+            _id: '$category',
+            count: { $sum: 1 },
+            totalAmount: { $sum: '$amounts.grandTotal' }
+          }
+        }
+      ]);
+
+      const result = {
+        summary: summary[0] || {
+          totalPurchaseOrders: 0,
+          totalPurchaseAmount: 0,
+          totalTaxAmount: 0,
+          avgOrderValue: 0,
+          uniqueSuppliersCount: 0
+        },
+        statusBreakdown,
+        categoryBreakdown,
+        supplierWiseData: paginatedData,
+        pagination: {
+          page: pagination.page,
+          limit: pagination.limit,
+          total: supplierWiseData.length,
+          pages: Math.ceil(supplierWiseData.length / pagination.limit)
+        },
+        filters,
+        dateRange,
+        generatedAt: new Date()
+      };
+
+      logger.info('Supplier-wise purchase report generated', {
+        companyId,
+        dateRange,
+        filters,
+        totalSuppliers: supplierWiseData.length,
+        totalAmount: result.summary.totalPurchaseAmount
+      });
+
+      return result;
+    } catch (error) {
+      logger.error('Error generating supplier-wise purchase report', { error, companyId, dateRange, filters });
+      throw error;
+    }
+  }
+
+  /**
+   * Generate purchase summary report
+   */
+  async generatePurchaseSummaryReport(companyId: string, dateRange: { start: Date; end: Date }, format: string = 'json'): Promise<any> {
+    try {
+      const { default: PurchaseOrder } = await import('../models/PurchaseOrder');
+
+      const matchQuery = {
+        companyId: new Types.ObjectId(companyId),
+        poDate: {
+          $gte: dateRange.start,
+          $lte: dateRange.end
+        },
+        isActive: true
+      };
+
+      const [
+        purchaseSummary,
+        monthlyTrends,
+        topSuppliers,
+        categoryBreakdown
+      ] = await Promise.all([
+        // Purchase summary
+        PurchaseOrder.aggregate([
+          { $match: matchQuery },
+          { $group: {
+            _id: null,
+            totalPurchases: { $sum: '$amounts.grandTotal' },
+            totalOrders: { $sum: 1 },
+            avgOrderValue: { $avg: '$amounts.grandTotal' },
+            totalTax: { $sum: '$amounts.totalTaxAmount' }
+          }}
+        ]),
+
+        // Monthly trends
+        PurchaseOrder.aggregate([
+          { $match: matchQuery },
+          { $group: {
+            _id: {
+              year: { $year: '$poDate' },
+              month: { $month: '$poDate' }
+            },
+            totalAmount: { $sum: '$amounts.grandTotal' },
+            orderCount: { $sum: 1 }
+          }},
+          { $sort: { '_id.year': 1, '_id.month': 1 } }
+        ]),
+
+        // Top suppliers
+        PurchaseOrder.aggregate([
+          { $match: matchQuery },
+          { $group: {
+            _id: '$supplier.supplierId',
+            supplierName: { $first: '$supplier.supplierName' },
+            totalAmount: { $sum: '$amounts.grandTotal' },
+            orderCount: { $sum: 1 }
+          }},
+          { $sort: { totalAmount: -1 } },
+          { $limit: 10 }
+        ]),
+
+        // Category breakdown
+        PurchaseOrder.aggregate([
+          { $match: matchQuery },
+          { $group: {
+            _id: '$category',
+            totalAmount: { $sum: '$amounts.grandTotal' },
+            orderCount: { $sum: 1 }
+          }},
+          { $sort: { totalAmount: -1 } }
+        ])
+      ]);
+
+      const result = {
+        summary: purchaseSummary[0] || {
+          totalPurchases: 0,
+          totalOrders: 0,
+          avgOrderValue: 0,
+          totalTax: 0
+        },
+        monthlyTrends: monthlyTrends.map(trend => ({
+          month: `${trend._id.year}-${String(trend._id.month).padStart(2, '0')}`,
+          totalAmount: trend.totalAmount,
+          orderCount: trend.orderCount
+        })),
+        topSuppliers,
+        categoryBreakdown,
+        dateRange,
+        generatedAt: new Date()
+      };
+
+      logger.info('Purchase summary report generated', {
+        companyId,
+        dateRange,
+        totalPurchases: result.summary.totalPurchases,
+        totalOrders: result.summary.totalOrders
+      });
+
+      return result;
+    } catch (error) {
+      logger.error('Error generating purchase summary report', { error, companyId, dateRange });
+      throw error;
+    }
+  }
+
+  /**
    * Validate report data
    */
   private validateReportData(reportData: Partial<IReport>): void {

@@ -87,6 +87,7 @@ router.post('/users', auth_1.authenticate, auth_1.requireAdmin, async (req, res)
                 phone: phone || ''
             },
             password: hashedPassword,
+            primaryCompanyId: companyId,
             companyAccess: [{
                     companyId,
                     role,

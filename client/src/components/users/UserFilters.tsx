@@ -85,7 +85,7 @@ export default function UserFilters({
               value={filters.search}
               onChange={(e) => onFilterChange({ search: e.target.value })}
               disabled={isLoading}
-              className="pl-10 pr-4 py-3 w-full border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-all duration-200 disabled:bg-gray-50 disabled:cursor-not-allowed"
+              className="pl-10 pr-4 py-3 w-full border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-all duration-200 disabled:bg-gray-50 disabled:cursor-not-allowed bg-white text-gray-900 font-medium placeholder:text-gray-500"
             />
           </div>
         </div>

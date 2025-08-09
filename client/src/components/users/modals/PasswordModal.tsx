@@ -1,7 +1,6 @@
 import React, { useState } from 'react'
 import { toast } from 'react-hot-toast'
 import {
-  X,
   Key,
   Eye,
   EyeOff,
@@ -11,9 +10,10 @@ import {
   AlertCircle
 } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
-import { 
-  User as UserType, 
-  useResetPasswordMutation 
+import { Modal, ModalContent, ModalFooter } from '@/components/ui/Modal'
+import {
+  User as UserType,
+  useResetPasswordMutation
 } from '@/lib/features/users/usersApi'
 
 interface PasswordModalProps {
@@ -112,43 +112,22 @@ export default function PasswordModal({ isOpen, onClose, onSuccess, user }: Pass
   }
 
   const passwordStrength = getPasswordStrength(formData.newPassword)
-
-  if (!isOpen) return null
+  const userName = user.personalInfo?.displayName ||
+    (user.personalInfo?.firstName && user.personalInfo?.lastName
+      ? `${user.personalInfo.firstName} ${user.personalInfo.lastName}`
+      : user.name || user.username || 'User')
 
   return (
-    <div className="fixed inset-0 bg-white bg-opacity-30 backdrop-blur-md flex items-center justify-center z-[60] p-4">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-hidden border border-sky-200">
-        {/* Header */}
-        <div className="bg-gradient-to-r from-green-500 to-emerald-600 p-6 relative overflow-hidden">
-          <div className="absolute -top-4 -right-4 w-20 h-20 bg-white bg-opacity-20 rounded-full"></div>
-          <div className="absolute -bottom-2 -left-2 w-12 h-12 bg-white bg-opacity-10 rounded-full"></div>
-          
-          <div className="relative z-10 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-white bg-opacity-20 rounded-xl">
-                <Key className="w-6 h-6 text-white" />
-              </div>
-              <div>
-                <h2 className="text-2xl font-bold text-white">
-                  Change Password
-                </h2>
-                <p className="text-green-100">
-                  Update password for {user.name}
-                </p>
-              </div>
-            </div>
-            
-            <Button
-              onClick={onClose}
-              className="p-2 text-white hover:bg-white hover:bg-opacity-20 rounded-xl transition-colors bg-transparent border-0"
-            >
-              <X className="w-6 h-6" />
-            </Button>
-          </div>
-        </div>
-
-        {/* Form */}
-        <form onSubmit={handleSubmit} className="p-6">
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title="Change Password"
+      subtitle={`Update password for ${userName}`}
+      size="md"
+      headerClassName="bg-gradient-to-r from-green-500 to-emerald-600"
+    >
+      <ModalContent>
+        <form id="password-form" onSubmit={handleSubmit} className="p-6">
           <div className="space-y-6">
             {/* User Info */}
             <div className="bg-sky-50 rounded-xl p-4 border border-sky-200">
@@ -288,28 +267,29 @@ export default function PasswordModal({ isOpen, onClose, onSuccess, user }: Pass
             </div>
           </div>
 
-          {/* Actions */}
-          <div className="flex items-center justify-end gap-4 mt-8 pt-6 border-t border-gray-200">
-            <Button
-              type="button"
-              onClick={onClose}
-              disabled={isLoading}
-              className="px-6 py-3 border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 font-semibold transition-colors"
-            >
-              Cancel
-            </Button>
-            
-            <Button
-              type="submit"
-              disabled={isLoading}
-              className="bg-green-500 hover:bg-green-600 text-white px-8 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
-            >
-              {isLoading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-              Update Password
-            </Button>
-          </div>
         </form>
-      </div>
-    </div>
+      </ModalContent>
+
+      <ModalFooter>
+        <Button
+          type="button"
+          onClick={onClose}
+          disabled={isLoading}
+          className="px-6 py-3 border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 font-semibold transition-colors"
+        >
+          Cancel
+        </Button>
+
+        <Button
+          type="submit"
+          form="password-form"
+          disabled={isLoading}
+          className="bg-green-500 hover:bg-green-600 text-white px-8 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
+        >
+          {isLoading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+          Update Password
+        </Button>
+      </ModalFooter>
+    </Modal>
   )
 }

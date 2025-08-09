@@ -17,6 +17,17 @@ export declare class ReportService extends BaseService<IReport> {
         start: Date;
         end: Date;
     }): Promise<any>;
+    generateSupplierWisePurchaseReport(companyId: string, dateRange: {
+        start: Date;
+        end: Date;
+    }, filters?: any, pagination?: {
+        page: number;
+        limit: number;
+    }, format?: string): Promise<any>;
+    generatePurchaseSummaryReport(companyId: string, dateRange: {
+        start: Date;
+        end: Date;
+    }, format?: string): Promise<any>;
     private validateReportData;
 }
 //# sourceMappingURL=ReportService.d.ts.map

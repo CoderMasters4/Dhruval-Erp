@@ -51,6 +51,20 @@ router.get('/generate/inventory', reportController.generateInventoryReport.bind(
 router.get('/generate/production', reportController.generateProductionReport.bind(reportController));
 
 /**
+ * @route   GET /api/v2/reports/generate/purchase/supplier-wise
+ * @desc    Generate supplier-wise purchase report
+ * @access  Private
+ */
+router.get('/generate/purchase/supplier-wise', reportController.generateSupplierWisePurchaseReport.bind(reportController));
+
+/**
+ * @route   GET /api/v2/reports/generate/purchase/summary
+ * @desc    Generate purchase summary report
+ * @access  Private
+ */
+router.get('/generate/purchase/summary', reportController.generatePurchaseSummaryReport.bind(reportController));
+
+/**
  * @route   GET /api/v2/reports/:id
  * @desc    Get report by ID
  * @access  Private

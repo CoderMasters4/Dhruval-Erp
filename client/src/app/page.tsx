@@ -4,13 +4,13 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useSelector } from 'react-redux'
 import { selectIsAuthenticated } from '@/lib/features/auth/authSlice'
-import { Loader2, Building2, Sparkles, ArrowRight } from 'lucide-react'
+import { Building2, Shield, BarChart3 } from 'lucide-react'
 import Image from 'next/image'
 
 export default function Home() {
   const router = useRouter()
   const isAuthenticated = useSelector(selectIsAuthenticated)
-  const [isLoading, setIsLoading] = useState(true)
+
   const [showContent, setShowContent] = useState(false)
 
   useEffect(() => {
@@ -58,36 +58,23 @@ export default function Home() {
                   <div className="relative z-10">
                    <Image src={'/logo.png'} alt="Factory ERP" width={120} height={120} />
                   </div>
-
-                  {/* Overlay Elements for ERP feel */}
-                  <div className="absolute -top-2 -right-2 w-6 h-6 bg-yellow-400 rounded-full flex items-center justify-center">
-                    <div className="w-2 h-2 bg-white rounded-full"></div>
-                  </div>
-                  <div className="absolute -bottom-1 -left-1 w-4 h-4 bg-green-400 rounded-full flex items-center justify-center">
-                    <div className="w-1.5 h-1.5 bg-white rounded-full"></div>
-                  </div>
-
-                  {/* Connection Lines */}
-                  <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
-                    <div className="w-8 h-0.5 bg-white opacity-30 rotate-45"></div>
-                    <div className="w-8 h-0.5 bg-white opacity-30 -rotate-45 -mt-0.5"></div>
-                  </div>
                 </div>
               </div>
+            </div>
+          </div>
 
-              {/* Enhanced Sparkle Animation */}
-              <div className="absolute -top-3 -right-3 text-yellow-400 animate-pulse">
-                <Sparkles className="w-8 h-8" />
-              </div>
-              <div className="absolute -bottom-3 -left-3 text-sky-400 animate-bounce">
-                <Sparkles className="w-6 h-6" />
-              </div>
-              <div className="absolute top-2 -left-4 text-green-400 animate-ping">
-                <div className="w-2 h-2 bg-green-400 rounded-full"></div>
-              </div>
-              <div className="absolute -top-2 right-2 text-blue-300 animate-pulse">
-                <div className="w-3 h-3 bg-blue-300 rounded-full"></div>
-              </div>
+          {/* Loading Spinner */}
+          <div className="mb-8 animate-fade-in-up animation-delay-400">
+            <div className="relative w-16 h-16 mx-auto mb-6">
+              <div className="absolute inset-0 border-4 border-sky-200 rounded-full"></div>
+              <div className="absolute inset-0 border-4 border-transparent border-t-sky-500 rounded-full animate-spin"></div>
+              <div className="absolute inset-2 border-4 border-transparent border-t-blue-500 rounded-full animate-spin animation-delay-150" style={{ animationDirection: 'reverse' }}></div>
+            </div>
+
+            <div className="flex items-center justify-center space-x-1 mb-4">
+              <div className="w-2 h-2 bg-sky-500 rounded-full animate-bounce"></div>
+              <div className="w-2 h-2 bg-sky-500 rounded-full animate-bounce animation-delay-100"></div>
+              <div className="w-2 h-2 bg-sky-500 rounded-full animate-bounce animation-delay-200"></div>
             </div>
           </div>
 
@@ -107,24 +94,13 @@ export default function Home() {
             </p>
           </div>
 
-          {/* Loading Animation */}
-          <div className="flex items-center justify-center space-x-3 animate-fade-in-up animation-delay-400">
-            <div className="relative">
-              <Loader2 className="h-6 w-6 animate-spin text-sky-600" />
-              <div className="absolute inset-0 h-6 w-6 animate-ping text-sky-400 opacity-20">
-                <Loader2 className="h-6 w-6" />
-              </div>
-            </div>
-            <p className="text-gray-700 font-medium">
-              {isAuthenticated ? 'Taking you to Dashboard...' : 'Redirecting to Login...'}
+          {/* Loading Message */}
+          <div className="animate-fade-in-up animation-delay-400">
+            <p className="text-lg font-medium text-gray-600 mb-2">
+              {isAuthenticated ? 'Taking you to dashboard...' : 'Redirecting to login...'}
             </p>
-            <ArrowRight className="h-5 w-5 text-sky-600 animate-pulse" />
-          </div>
-
-          {/* Progress Bar */}
-          <div className="mt-8 w-64 mx-auto">
-            <div className="w-full bg-gray-200 rounded-full h-2">
-              <div className="bg-gradient-to-r from-sky-500 to-blue-600 h-2 rounded-full animate-progress"></div>
+            <div className="w-64 bg-gray-200 rounded-full h-2 mx-auto">
+              <div className="bg-gradient-to-r from-sky-500 to-blue-600 h-2 rounded-full animate-pulse" style={{ width: '70%' }}></div>
             </div>
           </div>
 
@@ -139,84 +115,23 @@ export default function Home() {
             </div>
 
             <div className="text-center p-6 bg-white bg-opacity-70 rounded-2xl backdrop-blur-sm border border-white border-opacity-30 hover:bg-opacity-80 transition-all duration-300 hover:scale-105">
-              <div className="w-16 h-16 bg-gradient-to-br from-green-400 to-green-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
-                <Sparkles className="w-8 h-8 text-white" />
+              <div className="w-16 h-16 bg-gradient-to-br from-blue-400 to-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
+                <Shield className="w-8 h-8 text-white" />
               </div>
-              <h3 className="font-bold text-black mb-2 text-lg">Smart Analytics</h3>
-              <p className="text-sm text-gray-600 leading-relaxed">Get real-time insights with advanced analytics, production tracking, and comprehensive reporting tools</p>
+              <h3 className="font-bold text-black mb-2 text-lg">Advanced Security</h3>
+              <p className="text-sm text-gray-600 leading-relaxed">Enterprise-grade security with 2FA, audit trails, and comprehensive permission management</p>
             </div>
 
             <div className="text-center p-6 bg-white bg-opacity-70 rounded-2xl backdrop-blur-sm border border-white border-opacity-30 hover:bg-opacity-80 transition-all duration-300 hover:scale-105">
-              <div className="w-16 h-16 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
-                <ArrowRight className="w-8 h-8 text-white" />
+              <div className="w-16 h-16 bg-gradient-to-br from-purple-400 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
+                <BarChart3 className="w-8 h-8 text-white" />
               </div>
-              <h3 className="font-bold text-black mb-2 text-lg">Seamless Integration</h3>
-              <p className="text-sm text-gray-600 leading-relaxed">Easy integration with existing systems and workflows for smooth business operations and data flow</p>
+              <h3 className="font-bold text-black mb-2 text-lg">Real-time Analytics</h3>
+              <p className="text-sm text-gray-600 leading-relaxed">Comprehensive reporting and analytics to make data-driven decisions for your business</p>
             </div>
           </div>
         </div>
       </div>
-
-      {/* Custom CSS for animations */}
-      <style jsx>{`
-        @keyframes blob {
-          0% { transform: translate(0px, 0px) scale(1); }
-          33% { transform: translate(30px, -50px) scale(1.1); }
-          66% { transform: translate(-20px, 20px) scale(0.9); }
-          100% { transform: translate(0px, 0px) scale(1); }
-        }
-
-        @keyframes fade-in-up {
-          from {
-            opacity: 0;
-            transform: translateY(30px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-
-        @keyframes progress {
-          from { width: 0%; }
-          to { width: 100%; }
-        }
-
-        .animate-blob {
-          animation: blob 7s infinite;
-        }
-
-        .animation-delay-2000 {
-          animation-delay: 2s;
-        }
-
-        .animation-delay-4000 {
-          animation-delay: 4s;
-        }
-
-        .animate-fade-in-up {
-          animation: fade-in-up 0.8s ease-out forwards;
-        }
-
-        .animation-delay-200 {
-          animation-delay: 0.2s;
-          opacity: 0;
-        }
-
-        .animation-delay-400 {
-          animation-delay: 0.4s;
-          opacity: 0;
-        }
-
-        .animation-delay-600 {
-          animation-delay: 0.6s;
-          opacity: 0;
-        }
-
-        .animate-progress {
-          animation: progress 2s ease-in-out;
-        }
-      `}</style>
     </div>
   )
 }

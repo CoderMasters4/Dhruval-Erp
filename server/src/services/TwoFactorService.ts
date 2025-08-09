@@ -62,57 +62,61 @@ export class TwoFactorService {
 
       await twoFactor.save();
 
-      // Generate extremely minimal TOTP URL for QR code compatibility
-      // Use the shortest possible format with a very short secret
-      const emailPart = user.email.split('@')[0];
-      const shortLabel = emailPart.length > 4 ? emailPart.substring(0, 4) : emailPart;
+      // Generate proper TOTP URL for Google Authenticator
+      const serviceName = 'Enterprise ERP';
+      const accountName = user.email || user.username;
 
-      // Generate a shorter secret specifically for QR code
-      const shortSecret = secret.base32!.substring(0, 16); // Use only first 16 characters
+      // Create proper otpauth URL
+      const otpAuthUrl = `otpauth://totp/${encodeURIComponent(serviceName)}:${encodeURIComponent(accountName)}?secret=${secret.base32}&issuer=${encodeURIComponent(serviceName)}`;
 
-      // Try multiple formats, starting with the most minimal
-      const urlFormats = [
-        `otpauth://totp/${shortLabel}?secret=${shortSecret}`,
-        `otpauth://totp/ERP?secret=${shortSecret}`,
-        `otpauth://totp/E?secret=${shortSecret}`
-      ];
+      console.log('Generated TOTP URL:', otpAuthUrl);
+      console.log('Secret length:', secret.base32!.length);
 
-      console.log('Original secret length:', secret.base32!.length);
-      console.log('Short secret length:', shortSecret.length);
+      try {
+        // Generate QR code with proper settings for Google Authenticator
+        const qrCodeUrl: string = await QRCode.toDataURL(otpAuthUrl, {
+          errorCorrectionLevel: 'M', // Medium error correction
+          margin: 4, // Standard margin
+          width: 256, // Good size for scanning
+          color: {
+            dark: '#000000',
+            light: '#FFFFFF'
+          }
+        });
 
-      for (let i = 0; i < urlFormats.length; i++) {
-        const otpAuthUrl = urlFormats[i];
-        console.log(`Trying URL format ${i + 1}:`, otpAuthUrl);
-        console.log(`URL length: ${otpAuthUrl.length}`);
+        console.log('QR Code generated successfully');
+        return {
+          secret: secret.base32!,
+          qrCodeUrl,
+          backupCodes: [] // Will be generated when 2FA is enabled
+        };
+      } catch (qrError) {
+        console.error('QR Code generation failed:', qrError);
 
+        // Fallback: try with simpler URL format
         try {
-          // Generate QR code with minimal settings
-          const qrCodeUrl: string = await QRCode.toDataURL(otpAuthUrl, {
+          const simpleUrl = `otpauth://totp/${encodeURIComponent(accountName)}?secret=${secret.base32}&issuer=${encodeURIComponent(serviceName)}`;
+          const fallbackQrCodeUrl: string = await QRCode.toDataURL(simpleUrl, {
             errorCorrectionLevel: 'L',
-            margin: 0,
-            width: 80,
-            scale: 1
+            margin: 2,
+            width: 200
           });
 
-          console.log(`QR Code generated successfully with format ${i + 1}`);
+          console.log('Fallback QR Code generated successfully');
           return {
-            secret: secret.base32!, // Return full secret for manual entry
-            qrCodeUrl,
-            backupCodes: [] // Will be generated when 2FA is enabled
+            secret: secret.base32!,
+            qrCodeUrl: fallbackQrCodeUrl,
+            backupCodes: []
           };
-        } catch (qrError) {
-          console.error(`QR Code generation failed for format ${i + 1}:`, qrError.message);
-          continue;
+        } catch (fallbackError) {
+          console.error('Fallback QR Code generation also failed:', fallbackError);
+          return {
+            secret: secret.base32!,
+            qrCodeUrl: '', // Empty QR code URL - will show manual entry only
+            backupCodes: []
+          };
         }
       }
-
-      // If all formats fail, return without QR code
-      console.error('All QR Code generation attempts failed');
-      return {
-        secret: secret.base32!,
-        qrCodeUrl: '', // Empty QR code URL - will show manual entry only
-        backupCodes: []
-      };
     } catch (error: any) {
       throw new Error(`Failed to setup 2FA: ${error.message}`);
     }

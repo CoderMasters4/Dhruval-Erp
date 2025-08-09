@@ -3,10 +3,11 @@
 import { useEffect } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { useRouter, usePathname } from 'next/navigation'
-import { initializeAuth, selectIsAuthenticated, selectCurrentUser } from '@/lib/features/auth/authSlice'
+import { initializeAuth, selectIsAuthenticated, selectCurrentUser, selectAuthLoading, selectAuthInitialized } from '@/lib/features/auth/authSlice'
 import { defineAbilityFor } from '@/lib/casl/ability'
 import { AbilityContext } from '@/lib/casl/Can'
 import { selectPermissions } from '@/lib/features/auth/authSlice'
+import { AppLoader } from '@/components/ui/LoadingSpinner'
 
 interface AuthProviderProps {
   children: React.ReactNode
@@ -21,25 +22,41 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const isAuthenticated = useSelector(selectIsAuthenticated)
   const user = useSelector(selectCurrentUser)
   const permissions = useSelector(selectPermissions)
+  const isLoading = useSelector(selectAuthLoading)
+  const isInitialized = useSelector(selectAuthInitialized)
 
   // Initialize auth from localStorage on app start
   useEffect(() => {
     dispatch(initializeAuth())
   }, [dispatch])
 
-  // Handle authentication redirects with a delay to allow initialization
+  // Handle authentication redirects with a small delay to allow initialization
   useEffect(() => {
     const timer = setTimeout(() => {
       const isPublicRoute = pathname ? publicRoutes.includes(pathname) : false
 
       if (!isAuthenticated && !isPublicRoute) {
-        // Redirect to login if not authenticated and trying to access protected route
+        // Store the intended route before redirecting to login
+        if (typeof window !== 'undefined' && pathname !== '/') {
+          localStorage.setItem('intendedRoute', pathname)
+        }
         router.push('/login')
-      } else if (isAuthenticated && pathname === '/') {
-        // Only redirect from root page to dashboard
-        router.push('/dashboard')
+      } else if (isAuthenticated) {
+        // Check if there's an intended route to redirect to
+        if (typeof window !== 'undefined') {
+          const intendedRoute = localStorage.getItem('intendedRoute')
+          if (intendedRoute && intendedRoute !== '/login' && intendedRoute !== pathname) {
+            localStorage.removeItem('intendedRoute')
+            router.push(intendedRoute)
+            return
+          }
+        }
+
+        // Only redirect from root page to dashboard if no intended route
+        if (pathname === '/') {
+          router.push('/dashboard')
+        }
       }
-      // Don't redirect on other routes - let them stay where they are
     }, 100) // Small delay to allow auth initialization
 
     return () => clearTimeout(timer)
@@ -60,12 +77,15 @@ export function useAuth() {
   const isAuthenticated = useSelector(selectIsAuthenticated)
   const user = useSelector(selectCurrentUser)
   const permissions = useSelector(selectPermissions)
-  
+  const isLoading = useSelector(selectAuthLoading)
+  const isInitialized = useSelector(selectAuthInitialized)
+
   return {
     isAuthenticated,
     user,
     permissions,
-    isLoading: false, // You can add loading state if needed
+    isLoading,
+    isInitialized,
   }
 }
 

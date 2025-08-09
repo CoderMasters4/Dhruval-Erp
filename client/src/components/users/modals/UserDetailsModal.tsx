@@ -1,6 +1,5 @@
 import React from 'react'
 import {
-  X,
   User,
   Mail,
   Phone,
@@ -15,6 +14,7 @@ import {
   AlertTriangle
 } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
+import { Modal, ModalContent, ModalFooter } from '@/components/ui/Modal'
 import { User as UserType } from '@/lib/features/users/usersApi'
 import clsx from 'clsx'
 
@@ -35,8 +35,6 @@ export default function UserDetailsModal({
   onChangePassword,
   onToggle2FA
 }: UserDetailsModalProps) {
-  if (!isOpen) return null
-
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
@@ -52,11 +50,11 @@ export default function UserDetailsModal({
     const date = new Date(dateString)
     const now = new Date()
     const diffInHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60))
-    
+
     if (diffInHours < 1) return 'Just now'
     if (diffInHours < 24) return `${diffInHours} hours ago`
     if (diffInHours < 168) return `${Math.floor(diffInHours / 24)} days ago`
-    
+
     return date.toLocaleDateString('en-US', {
       month: 'short',
       day: 'numeric',
@@ -77,86 +75,20 @@ export default function UserDetailsModal({
     }
   }
 
-  return (
-    <div className="fixed inset-0 bg-white bg-opacity-30 backdrop-blur-md flex items-center justify-center z-[60] p-4">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-hidden border border-sky-200">
-        {/* Header */}
-        <div className="bg-gradient-to-r from-sky-500 to-blue-600 p-6 relative overflow-hidden">
-          <div className="absolute -top-4 -right-4 w-20 h-20 bg-white bg-opacity-20 rounded-full"></div>
-          <div className="absolute -bottom-2 -left-2 w-12 h-12 bg-white bg-opacity-10 rounded-full"></div>
-          
-          <div className="relative z-10 flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              {/* Avatar */}
-              <div className="flex-shrink-0">
-                {user.avatar ? (
-                  <img
-                    className="h-16 w-16 rounded-full object-cover border-4 border-white border-opacity-30"
-                    src={user.avatar}
-                    alt={user.name}
-                  />
-                ) : (
-                  <div className="h-16 w-16 bg-white bg-opacity-20 rounded-full flex items-center justify-center border-4 border-white border-opacity-30">
-                    <span className="text-white font-bold text-2xl">
-                      {user.name?.charAt(0)?.toUpperCase() || 'U'}
-                    </span>
-                  </div>
-                )}
-              </div>
-              
-              <div>
-                <h2 className="text-2xl font-bold text-white mb-1">
-                  {user.name}
-                </h2>
-                <div className="flex items-center gap-3">
-                  <span className={clsx(
-                    'inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold border border-white border-opacity-30',
-                    'bg-white bg-opacity-20 text-white'
-                  )}>
-                    <Shield className="w-4 h-4 mr-1" />
-                    {user.role.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
-                  </span>
-                  
-                  <span className={clsx(
-                    'inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold border border-white border-opacity-30',
-                    user.isActive
-                      ? 'bg-green-500 bg-opacity-80 text-white'
-                      : 'bg-red-500 bg-opacity-80 text-white'
-                  )}>
-                    {user.isActive ? (
-                      <>
-                        <CheckCircle className="w-4 h-4 mr-1" />
-                        Active
-                      </>
-                    ) : (
-                      <>
-                        <XCircle className="w-4 h-4 mr-1" />
-                        Inactive
-                      </>
-                    )}
-                  </span>
-                  
-                  {user.is2FAEnabled && (
-                    <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold bg-yellow-500 bg-opacity-80 text-white border border-white border-opacity-30">
-                      <Shield className="w-4 h-4 mr-1" />
-                      2FA Enabled
-                    </span>
-                  )}
-                </div>
-              </div>
-            </div>
-            
-            <Button
-              onClick={onClose}
-              className="p-2 text-white hover:bg-white hover:bg-opacity-20 rounded-xl transition-colors bg-transparent border-0"
-            >
-              <X className="w-6 h-6" />
-            </Button>
-          </div>
-        </div>
+  const userName = user.personalInfo?.displayName ||
+    (user.personalInfo?.firstName && user.personalInfo?.lastName
+      ? `${user.personalInfo.firstName} ${user.personalInfo.lastName}`
+      : user.name || user.username || 'Unnamed User')
 
-        {/* Content */}
-        <div className="p-6 overflow-y-auto max-h-[calc(90vh-200px)]">
+  return (
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title="User Details"
+      subtitle="View and manage user information"
+      size="lg"
+    >
+      <ModalContent>
           <div className="space-y-6">
             {/* Contact Information */}
             <div className="bg-sky-50 rounded-xl p-6 border border-sky-200">
@@ -281,39 +213,38 @@ export default function UserDetailsModal({
             )}
           </div>
 
-          {/* Actions */}
-          <div className="flex items-center justify-end gap-4 mt-8 pt-6 border-t border-gray-200">
-            <Button
-              onClick={onChangePassword}
-              className="bg-green-500 hover:bg-green-600 text-white px-6 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-200 flex items-center"
-            >
-              <Key className="w-4 h-4 mr-2" />
-              Change Password
-            </Button>
-            
-            <Button
-              onClick={onToggle2FA}
-              className={clsx(
-                'px-6 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-200 flex items-center',
-                user.is2FAEnabled
-                  ? 'bg-orange-500 hover:bg-orange-600 text-white'
-                  : 'bg-purple-500 hover:bg-purple-600 text-white'
-              )}
-            >
-              <Shield className="w-4 h-4 mr-2" />
-              {user.is2FAEnabled ? 'Disable 2FA' : 'Enable 2FA'}
-            </Button>
-            
-            <Button
-              onClick={onEdit}
-              className="bg-sky-500 hover:bg-sky-600 text-white px-6 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-200 flex items-center"
-            >
-              <Edit className="w-4 h-4 mr-2" />
-              Edit User
-            </Button>
-          </div>
-        </div>
-      </div>
-    </div>
+      </ModalContent>
+
+      <ModalFooter>
+        <Button
+          onClick={onChangePassword}
+          className="bg-green-500 hover:bg-green-600 text-white px-6 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-200 flex items-center"
+        >
+          <Key className="w-4 h-4 mr-2" />
+          Change Password
+        </Button>
+
+        <Button
+          onClick={onToggle2FA}
+          className={clsx(
+            'px-6 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-200 flex items-center',
+            user.is2FAEnabled
+              ? 'bg-orange-500 hover:bg-orange-600 text-white'
+              : 'bg-purple-500 hover:bg-purple-600 text-white'
+          )}
+        >
+          <Shield className="w-4 h-4 mr-2" />
+          {user.is2FAEnabled ? 'Disable 2FA' : 'Enable 2FA'}
+        </Button>
+
+        <Button
+          onClick={onEdit}
+          className="bg-sky-500 hover:bg-sky-600 text-white px-6 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-200 flex items-center"
+        >
+          <Edit className="w-4 h-4 mr-2" />
+          Edit User
+        </Button>
+      </ModalFooter>
+    </Modal>
   )
 }

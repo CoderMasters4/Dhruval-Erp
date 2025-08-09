@@ -216,6 +216,8 @@ export class VehicleService {
     }
   }
 
+
+
   /**
    * Get vehicles by purpose
    */
@@ -415,6 +417,8 @@ export class VehicleService {
       throw error;
     }
   }
+
+
 
   /**
    * Get vehicle maintenance history

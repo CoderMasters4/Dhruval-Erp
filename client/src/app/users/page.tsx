@@ -4,7 +4,6 @@ import React, { useState, Suspense } from 'react'
 import { toast } from 'react-hot-toast'
 import { useRouter } from 'next/navigation'
 import {
-  Users,
   Shield,
   AlertCircle,
   Plus,
@@ -15,16 +14,15 @@ import { selectIsSuperAdmin } from '@/lib/features/auth/authSlice'
 import { useGetAllUsersQuery } from '@/lib/features/users/usersApi'
 import { AppLayout } from '@/components/layout/AppLayout'
 import { Button } from '@/components/ui/Button'
+import { Pagination } from '@/components/ui/Pagination'
 
 // Lazy loaded components
 const UserStats = React.lazy(() => import('@/components/users/UserStats'))
 const UserFilters = React.lazy(() => import('@/components/users/UserFilters'))
 const UserList = React.lazy(() => import('@/components/users/UserList'))
-const UserFormModal = React.lazy(() => import('@/components/users/modals/UserFormModal'))
-const UserDetailsModal = React.lazy(() => import('@/components/users/modals/UserDetailsModal'))
-const PasswordModal = React.lazy(() => import('@/components/users/modals/PasswordModal'))
-const Toggle2FAModal = React.lazy(() => import('@/components/users/modals/Toggle2FAModal'))
-const DeleteUserModal = React.lazy(() => import('@/components/users/modals/DeleteUserModal'))
+
+// Import modal hook
+import { useModals } from '@/hooks/useModals'
 
 interface UserFilters {
   search: string
@@ -34,9 +32,14 @@ interface UserFilters {
   sortOrder: 'asc' | 'desc'
 }
 
+interface PaginationState {
+  page: number
+  limit: number
+}
+
 export default function UsersPage() {
-  const router = useRouter()
   const isSuperAdmin = useSelector(selectIsSuperAdmin)
+  const { openUserForm } = useModals()
 
   // State management
   const [filters, setFilters] = useState<UserFilters>({
@@ -47,13 +50,10 @@ export default function UsersPage() {
     sortOrder: 'asc'
   })
 
-  const [showCreateModal, setShowCreateModal] = useState(false)
-  const [showEditModal, setShowEditModal] = useState(false)
-  const [showDetailsModal, setShowDetailsModal] = useState(false)
-  const [showPasswordModal, setShowPasswordModal] = useState(false)
-  const [show2FAModal, setShow2FAModal] = useState(false)
-  const [showDeleteModal, setShowDeleteModal] = useState(false)
-  const [selectedUser, setSelectedUser] = useState<any>(null)
+  const [pagination, setPagination] = useState<PaginationState>({
+    page: 1,
+    limit: 10
+  })
 
   // API query
   const {
@@ -62,46 +62,60 @@ export default function UsersPage() {
     error,
     refetch
   } = useGetAllUsersQuery({
+    page: pagination.page,
+    limit: pagination.limit,
     search: filters.search || undefined,
     role: filters.role !== 'all' ? filters.role : undefined,
     status: filters.status !== 'all' ? filters.status : undefined,
   })
 
   const users = usersResponse?.data || []
-  const totalUsers = usersResponse?.total || 0
+  const paginationInfo = usersResponse?.pagination || { page: 1, limit: 10, total: 0, pages: 1 }
 
   // Event handlers
   const handleView = (user: any) => {
-    setSelectedUser(user)
-    setShowDetailsModal(true)
+    // TODO: Implement user details modal
+    console.log('View user:', user)
   }
 
   const handleEdit = (user: any) => {
-    setSelectedUser(user)
-    setShowEditModal(true)
+    openUserForm({
+      user,
+      onSuccess: () => {
+        refetch()
+        toast.success('User updated successfully!')
+      }
+    })
   }
 
   const handleDelete = (user: any) => {
-    setSelectedUser(user)
-    setShowDeleteModal(true)
+    // TODO: Implement delete user modal
+    console.log('Delete user:', user)
   }
 
   const handleChangePassword = (user: any) => {
-    setSelectedUser(user)
-    setShowPasswordModal(true)
+    // TODO: Implement password change modal
+    console.log('Change password for user:', user)
   }
 
   const handleToggle2FA = (user: any) => {
-    setSelectedUser(user)
-    setShow2FAModal(true)
+    // TODO: Implement 2FA toggle modal
+    console.log('Toggle 2FA for user:', user)
   }
 
   const handleCreateNew = () => {
-    setShowCreateModal(true)
+    openUserForm({
+      onSuccess: () => {
+        refetch()
+        toast.success('User created successfully!')
+      }
+    })
   }
 
   const handleFilterChange = (newFilters: Partial<UserFilters>) => {
     setFilters(prev => ({ ...prev, ...newFilters }))
+    // Reset to first page when filters change
+    setPagination(prev => ({ ...prev, page: 1 }))
   }
 
   const handleReset = () => {
@@ -112,6 +126,15 @@ export default function UsersPage() {
       sortBy: 'name',
       sortOrder: 'asc'
     })
+    setPagination(prev => ({ ...prev, page: 1 }))
+  }
+
+  const handlePageChange = (page: number) => {
+    setPagination(prev => ({ ...prev, page }))
+  }
+
+  const handleItemsPerPageChange = (limit: number) => {
+    setPagination({ page: 1, limit })
   }
 
   // Access control
@@ -180,7 +203,7 @@ export default function UsersPage() {
               ))}
             </div>
           }>
-            <UserStats users={users} totalUsers={totalUsers} isLoading={isLoading} />
+            <UserStats users={users} totalUsers={paginationInfo.total} isLoading={isLoading} />
           </Suspense>
 
           {/* Filters */}
@@ -225,120 +248,22 @@ export default function UsersPage() {
             />
           </Suspense>
 
-          {/* Modals */}
-          {showCreateModal && (
-            <Suspense fallback={<div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"><Loader2 className="w-8 h-8 animate-spin text-white" /></div>}>
-              <UserFormModal
-                isOpen={showCreateModal}
-                onClose={() => setShowCreateModal(false)}
-                onSuccess={() => {
-                  setShowCreateModal(false)
-                  refetch()
-                  toast.success('User created successfully!')
-                }}
+          {/* Pagination */}
+          {paginationInfo.pages > 1 && (
+            <div className="mt-8">
+              <Pagination
+                currentPage={paginationInfo.page}
+                totalPages={paginationInfo.pages}
+                totalItems={paginationInfo.total}
+                itemsPerPage={paginationInfo.limit}
+                onPageChange={handlePageChange}
+                onItemsPerPageChange={handleItemsPerPageChange}
+                className="bg-white rounded-2xl shadow-lg border border-sky-200 p-6"
               />
-            </Suspense>
+            </div>
           )}
 
-          {showEditModal && selectedUser && (
-            <Suspense fallback={<div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"><Loader2 className="w-8 h-8 animate-spin text-white" /></div>}>
-              <UserFormModal
-                isOpen={showEditModal}
-                onClose={() => {
-                  setShowEditModal(false)
-                  setSelectedUser(null)
-                }}
-                onSuccess={() => {
-                  setShowEditModal(false)
-                  setSelectedUser(null)
-                  refetch()
-                  toast.success('User updated successfully!')
-                }}
-                user={selectedUser}
-              />
-            </Suspense>
-          )}
-
-          {showDetailsModal && selectedUser && (
-            <Suspense fallback={<div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"><Loader2 className="w-8 h-8 animate-spin text-white" /></div>}>
-              <UserDetailsModal
-                isOpen={showDetailsModal}
-                onClose={() => {
-                  setShowDetailsModal(false)
-                  setSelectedUser(null)
-                }}
-                user={selectedUser}
-                onEdit={() => {
-                  setShowDetailsModal(false)
-                  setShowEditModal(true)
-                }}
-                onChangePassword={() => {
-                  setShowDetailsModal(false)
-                  setShowPasswordModal(true)
-                }}
-                onToggle2FA={() => {
-                  setShowDetailsModal(false)
-                  setShow2FAModal(true)
-                }}
-              />
-            </Suspense>
-          )}
-
-          {showPasswordModal && selectedUser && (
-            <Suspense fallback={<div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"><Loader2 className="w-8 h-8 animate-spin text-white" /></div>}>
-              <PasswordModal
-                isOpen={showPasswordModal}
-                onClose={() => {
-                  setShowPasswordModal(false)
-                  setSelectedUser(null)
-                }}
-                onSuccess={() => {
-                  setShowPasswordModal(false)
-                  setSelectedUser(null)
-                  toast.success('Password updated successfully!')
-                }}
-                user={selectedUser}
-              />
-            </Suspense>
-          )}
-
-          {show2FAModal && selectedUser && (
-            <Suspense fallback={<div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"><Loader2 className="w-8 h-8 animate-spin text-white" /></div>}>
-              <Toggle2FAModal
-                isOpen={show2FAModal}
-                onClose={() => {
-                  setShow2FAModal(false)
-                  setSelectedUser(null)
-                }}
-                onSuccess={() => {
-                  setShow2FAModal(false)
-                  setSelectedUser(null)
-                  refetch()
-                  toast.success('2FA settings updated successfully!')
-                }}
-                user={selectedUser}
-              />
-            </Suspense>
-          )}
-
-          {showDeleteModal && selectedUser && (
-            <Suspense fallback={<div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"><Loader2 className="w-8 h-8 animate-spin text-white" /></div>}>
-              <DeleteUserModal
-                isOpen={showDeleteModal}
-                onClose={() => {
-                  setShowDeleteModal(false)
-                  setSelectedUser(null)
-                }}
-                onSuccess={() => {
-                  setShowDeleteModal(false)
-                  setSelectedUser(null)
-                  refetch()
-                  toast.success('User deleted successfully!')
-                }}
-                user={selectedUser}
-              />
-            </Suspense>
-          )}
+          {/* Modals are now handled by ModalManager */}
         </div>
       </div>
     </AppLayout>

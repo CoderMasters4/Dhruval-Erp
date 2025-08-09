@@ -17,11 +17,21 @@ router.get('/', async (req, res) => {
         const pageNum = parseInt(page);
         const limitNum = parseInt(limit);
         const searchTerm = search;
-        const companyId = user.isSuperAdmin ? req.query.companyId || user.companyId : user.companyId;
-        let query = {
-            companyId: new mongoose_1.default.Types.ObjectId(companyId),
-            isActive: true
-        };
+        let query = { isActive: true };
+        if (user.isSuperAdmin) {
+            if (req.query.companyId) {
+                query.companyId = new mongoose_1.default.Types.ObjectId(req.query.companyId);
+            }
+        }
+        else {
+            if (!user.companyId) {
+                return res.status(400).json({
+                    error: 'Company ID required',
+                    message: 'X-Company-ID header is required'
+                });
+            }
+            query.companyId = new mongoose_1.default.Types.ObjectId(user.companyId);
+        }
         if (searchTerm) {
             query.$or = [
                 { warehouseCode: { $regex: searchTerm, $options: 'i' } },
@@ -111,14 +121,23 @@ router.get('/', async (req, res) => {
 router.get('/stats', async (req, res) => {
     try {
         const user = req.user;
-        const companyId = user.isSuperAdmin ? req.query.companyId || user.companyId : user.companyId;
+        let matchQuery = { isActive: true };
+        if (user.isSuperAdmin) {
+            if (req.query.companyId) {
+                matchQuery.companyId = new mongoose_1.default.Types.ObjectId(req.query.companyId);
+            }
+        }
+        else {
+            if (!user.companyId) {
+                return res.status(400).json({
+                    error: 'Company ID required',
+                    message: 'X-Company-ID header is required'
+                });
+            }
+            matchQuery.companyId = new mongoose_1.default.Types.ObjectId(user.companyId);
+        }
         const stats = await Warehouse_1.default.aggregate([
-            {
-                $match: {
-                    companyId: new mongoose_1.default.Types.ObjectId(companyId),
-                    isActive: true
-                }
-            },
+            { $match: matchQuery },
             {
                 $group: {
                     _id: null,
@@ -130,12 +149,7 @@ router.get('/stats', async (req, res) => {
             }
         ]);
         const typeStats = await Warehouse_1.default.aggregate([
-            {
-                $match: {
-                    companyId: new mongoose_1.default.Types.ObjectId(companyId),
-                    isActive: true
-                }
-            },
+            { $match: matchQuery },
             {
                 $group: {
                     _id: '$warehouseType',
@@ -143,10 +157,7 @@ router.get('/stats', async (req, res) => {
                 }
             }
         ]);
-        const topWarehouses = await Warehouse_1.default.find({
-            companyId: new mongoose_1.default.Types.ObjectId(companyId),
-            isActive: true
-        })
+        const topWarehouses = await Warehouse_1.default.find(matchQuery)
             .select('warehouseName capacity')
             .sort({ 'capacity.utilizationPercentage': -1 })
             .limit(5)
@@ -196,9 +207,25 @@ router.post('/', async (req, res) => {
     try {
         const user = req.user;
         const warehouseData = req.body;
+        let companyId = user.companyId;
+        if (user.isSuperAdmin) {
+            companyId = warehouseData.companyId || req.query.companyId || user.companyId;
+            if (!companyId) {
+                return res.status(400).json({
+                    error: 'Company ID required',
+                    message: 'Company ID is required for warehouse creation'
+                });
+            }
+        }
+        else if (!companyId) {
+            return res.status(400).json({
+                error: 'Company ID required',
+                message: 'X-Company-ID header is required'
+            });
+        }
         const newWarehouse = new Warehouse_1.default({
             ...warehouseData,
-            companyId: user.companyId,
+            companyId,
             createdBy: user.userId,
             isActive: true
         });

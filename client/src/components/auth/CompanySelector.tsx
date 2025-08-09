@@ -91,7 +91,7 @@ export function CompanySelector() {
                   className={({ active }) =>
                     clsx(
                       'relative cursor-pointer select-none py-3 pl-4 pr-10',
-                      active ? 'bg-sky-50 text-black' : 'text-black hover:bg-sky-50'
+                      active ? 'bg-sky-50 text-gray-900' : 'text-gray-900 hover:bg-sky-50'
                     )
                   }
                   value={company}

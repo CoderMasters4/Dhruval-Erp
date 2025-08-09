@@ -5,6 +5,8 @@ import { Provider } from 'react-redux'
 import { Toaster } from 'react-hot-toast'
 import { store } from '@/lib/store'
 import { AuthProvider } from '@/components/auth/AuthProvider'
+import { ModalProvider } from '@/components/providers/ModalProvider'
+import { ModalManager } from '@/components/modals/ModalManager'
 import { initializeUI } from '@/lib/features/ui/uiSlice'
 
 function AppInitializer({ children }: { children: React.ReactNode }) {
@@ -21,7 +23,10 @@ export function Providers({ children }: { children: React.ReactNode }) {
     <Provider store={store}>
       <AppInitializer>
         <AuthProvider>
-          {children}
+          <ModalProvider>
+            {children}
+            <ModalManager />
+          </ModalProvider>
           <Toaster
             position="top-right"
             toastOptions={{

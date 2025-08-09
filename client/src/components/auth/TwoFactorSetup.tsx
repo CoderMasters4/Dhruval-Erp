@@ -215,8 +215,25 @@ export function TwoFactorSetup({ className }: TwoFactorSetupProps) {
 
       {qrCodeUrl ? (
         <div className="flex justify-center">
-          <div className="bg-white p-4 rounded-lg border">
-            <QRCodeSVG value={qrCodeUrl} size={200} />
+          <div className="bg-white p-4 rounded-lg border shadow-sm">
+            {qrCodeUrl.startsWith('data:image') ? (
+              // If it's a data URL from server, display as image
+              <img
+                src={qrCodeUrl}
+                alt="2FA QR Code"
+                className="w-48 h-48 object-contain"
+              />
+            ) : (
+              // If it's a raw otpauth URL, use QRCodeSVG
+              <QRCodeSVG
+                value={qrCodeUrl}
+                size={192}
+                level="M"
+                includeMargin={true}
+                bgColor="#FFFFFF"
+                fgColor="#000000"
+              />
+            )}
           </div>
         </div>
       ) : (
@@ -262,14 +279,14 @@ export function TwoFactorSetup({ className }: TwoFactorSetupProps) {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4 text-xs">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
             <div>
               <span className="font-medium text-gray-700">Account name:</span>
-              <div className="text-gray-600">ERP System</div>
+              <div className="text-gray-600 font-mono">Enterprise ERP</div>
             </div>
             <div>
               <span className="font-medium text-gray-700">Issuer:</span>
-              <div className="text-gray-600">ERP</div>
+              <div className="text-gray-600 font-mono">Enterprise ERP</div>
             </div>
           </div>
         </div>

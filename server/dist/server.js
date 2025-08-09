@@ -92,9 +92,15 @@ const vehicles_1 = __importDefault(require("@/routes/vehicles"));
 console.log('✅ Vehicles routes imported');
 const enhancedInventory_1 = __importDefault(require("@/routes/enhancedInventory"));
 console.log('✅ Enhanced inventory routes imported');
+const warehouses_1 = __importDefault(require("@/routes/warehouses"));
+console.log('✅ Warehouses routes imported');
+const companies_2 = __importDefault(require("@/routes/v1/companies"));
+console.log('✅ V1 Companies routes imported');
+const users_2 = __importDefault(require("@/routes/v1/users"));
+console.log('✅ V1 Users routes imported');
 console.log('📝 Loading complete V2 routes...');
-console.log('✅ V2 routes imported with all 24 models');
-console.log('✅ V2 Simple routes imported');
+console.log('✅ V2 routes temporarily disabled to fix hanging issue');
+console.log('✅ V2 Simple routes temporarily disabled');
 console.log('✅ All routes imported successfully!');
 console.log('🚀 About to create Express app...');
 console.log('🚀 Creating Express app...');
@@ -213,6 +219,32 @@ app.get('/live', (req, res) => {
 const apiRouter = express_1.default.Router();
 apiRouter.use('/auth', auth_2.default);
 apiRouter.use('/setup', setup_1.default);
+apiRouter.get('/info', (req, res) => {
+    res.status(200).json({
+        success: true,
+        message: 'Dhruval Exim ERP API v1',
+        version: '2.0.0',
+        description: 'Complete Factory ERP Management System',
+        availableEndpoints: [
+            'GET /api/v1/info - API information (public)',
+            'POST /api/v1/auth/login - User login (public)',
+            'POST /api/v1/auth/register - User registration (public)',
+            'GET /api/v1/companies - List companies (auth required)',
+            'GET /api/v1/users - List users (auth required)',
+            'GET /api/v1/customers - List customers (auth required)',
+            'GET /api/v1/suppliers - List suppliers (auth required)',
+            'GET /api/v1/inventory - List inventory (auth required)',
+            'GET /api/v1/orders - List orders (auth required)',
+            'GET /api/v1/dashboard - Dashboard data (auth required)'
+        ],
+        authentication: {
+            required: 'Most endpoints require authentication',
+            loginEndpoint: '/api/v1/auth/login',
+            tokenType: 'Bearer token in Authorization header'
+        },
+        timestamp: new Date().toISOString()
+    });
+});
 apiRouter.use(auth_1.authenticate);
 apiRouter.use('/auth/2fa', twoFactor_1.default);
 apiRouter.use('/admin', adminTwoFactor_1.default);
@@ -232,7 +264,31 @@ apiRouter.use('/roles', roles_1.default);
 apiRouter.use('/spares', spares_1.default);
 apiRouter.use('/customer-visits', customerVisits_1.default);
 apiRouter.use('/vehicles', vehicles_1.default);
+apiRouter.use('/warehouses', warehouses_1.default);
 app.use(environment_1.default.API_PREFIX, apiRouter);
+app.use('/api/v1/companies', companies_2.default);
+app.use('/api/v1/users', users_2.default);
+app.get('/api', (req, res) => {
+    res.status(200).json({
+        success: true,
+        message: 'Dhruval Exim ERP API',
+        version: '2.0.0',
+        description: 'Complete Factory ERP Management System',
+        endpoints: {
+            v1: '/api/v1/',
+            health: '/api/v1/health',
+            auth: '/api/v1/auth/*',
+            companies: '/api/v1/companies/*',
+            users: '/api/v1/users/*',
+            customers: '/api/v1/customers/*',
+            suppliers: '/api/v1/suppliers/*',
+            inventory: '/api/v1/inventory/*',
+            orders: '/api/v1/orders/*',
+            dashboard: '/api/v1/dashboard/*'
+        },
+        timestamp: new Date().toISOString()
+    });
+});
 const httpServer = (0, http_1.createServer)(app);
 exports.httpServer = httpServer;
 let io = null;

@@ -245,19 +245,54 @@ router.post('/', async (req, res) => {
             });
         }
         const hashedPassword = await bcryptjs_1.default.hash(password, 12);
+        let userCompanyAccess = companyAccess;
+        let userPrimaryCompanyId = null;
+        if (!user.isSuperAdmin) {
+            userPrimaryCompanyId = user.primaryCompanyId || user.companyAccess?.[0]?.companyId;
+            userCompanyAccess = [{
+                    companyId: userPrimaryCompanyId,
+                    role: 'operator',
+                    department: 'Production',
+                    isActive: true,
+                    joinedAt: new Date(),
+                    permissions: {
+                        inventory: { view: true, create: false, edit: false, delete: false, approve: false, viewReports: false },
+                        production: { view: true, create: true, edit: false, delete: false, approve: false, viewReports: false },
+                        orders: { view: true, create: false, edit: false, delete: false, approve: false, viewReports: false },
+                        financial: { view: false, create: false, edit: false, delete: false, approve: false, viewReports: false },
+                        security: {
+                            gateManagement: false,
+                            visitorManagement: false,
+                            vehicleTracking: false,
+                            cctvAccess: false,
+                            emergencyResponse: false,
+                            securityReports: false,
+                            incidentManagement: false,
+                            accessControl: false,
+                            patrolManagement: false
+                        },
+                        hr: {
+                            viewEmployees: false,
+                            manageEmployees: false,
+                            manageAttendance: false,
+                            manageSalary: false,
+                            manageLeaves: false,
+                            viewReports: false,
+                            recruitment: false,
+                            performance: false,
+                            training: false,
+                            disciplinary: false
+                        },
+                        admin: { userManagement: false, systemSettings: false, backupRestore: false, auditLogs: false }
+                    }
+                }];
+        }
         const newUser = new User_1.default({
             username,
             password: hashedPassword,
             personalInfo,
-            companyAccess: user.isSuperAdmin ? companyAccess : [{
-                    companyId: user.companyId,
-                    role: 'employee',
-                    isActive: true,
-                    permissions: {
-                        dashboard: { view: true },
-                        profile: { view: true, edit: true }
-                    }
-                }],
+            primaryCompanyId: userPrimaryCompanyId,
+            companyAccess: userCompanyAccess,
             isActive: true,
             createdAt: new Date()
         });

@@ -13,7 +13,8 @@ import {
   Users,
   Clock,
   CheckCircle,
-  XCircle
+  XCircle,
+  Building2
 } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { User } from '@/lib/features/users/usersApi'
@@ -55,27 +56,60 @@ export default function UserList({
     })
   }
 
-  const getRoleColor = (role: string) => {
+  const getRoleColor = (role?: string) => {
     switch (role) {
       case 'super_admin':
         return 'bg-red-100 text-red-800 border-red-200'
       case 'admin':
+      case 'owner':
         return 'bg-purple-100 text-purple-800 border-purple-200'
       case 'manager':
+      case 'production_manager':
         return 'bg-blue-100 text-blue-800 border-blue-200'
+      case 'operator':
+        return 'bg-green-100 text-green-800 border-green-200'
+      case 'accountant':
+        return 'bg-yellow-100 text-yellow-800 border-yellow-200'
+      case 'sales_executive':
+        return 'bg-indigo-100 text-indigo-800 border-indigo-200'
       default:
         return 'bg-gray-100 text-gray-800 border-gray-200'
     }
   }
 
-  const getRoleIcon = (role: string) => {
+  const getRoleIcon = (role?: string) => {
     switch (role) {
       case 'super_admin':
       case 'admin':
+      case 'owner':
         return Shield
       default:
         return UserCheck
     }
+  }
+
+  const getUserRole = (user: User) => {
+    if (user.isSuperAdmin) return 'super_admin'
+    if (user.companyAccess && user.companyAccess.length > 0) {
+      return user.companyAccess[0].role
+    }
+    return user.role || 'user'
+  }
+
+  const getUserName = (user: User) => {
+    if (user.personalInfo?.displayName) return user.personalInfo.displayName
+    if (user.personalInfo?.firstName && user.personalInfo?.lastName) {
+      return `${user.personalInfo.firstName} ${user.personalInfo.lastName}`
+    }
+    return user.name || user.username || 'Unnamed User'
+  }
+
+  const getUserEmail = (user: User) => {
+    return user.email || `${user.username}@company.com`
+  }
+
+  const getUserPhone = (user: User) => {
+    return user.personalInfo?.phone || user.phone
   }
 
   if (isLoading) {
@@ -114,8 +148,12 @@ export default function UserList({
   return (
     <div className="space-y-4">
       {users.map((user) => {
-        const RoleIcon = getRoleIcon(user.role)
-        
+        const userRole = getUserRole(user)
+        const userName = getUserName(user)
+        const userEmail = getUserEmail(user)
+        const userPhone = getUserPhone(user)
+        const RoleIcon = getRoleIcon(userRole)
+
         return (
           <div
             key={user._id}
@@ -130,12 +168,12 @@ export default function UserList({
                       <img
                         className="h-12 w-12 rounded-full object-cover border-2 border-sky-200"
                         src={user.avatar}
-                        alt={user.name}
+                        alt={userName}
                       />
                     ) : (
                       <div className="h-12 w-12 bg-gradient-to-br from-sky-400 to-blue-600 rounded-full flex items-center justify-center border-2 border-sky-200">
                         <span className="text-white font-semibold text-lg">
-                          {user.name?.charAt(0)?.toUpperCase() || 'U'}
+                          {userName.charAt(0)?.toUpperCase() || 'U'}
                         </span>
                       </div>
                     )}
@@ -145,16 +183,16 @@ export default function UserList({
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-3 mb-2">
                       <h3 className="text-lg font-bold text-black truncate">
-                        {user.name || 'Unnamed User'}
+                        {userName}
                       </h3>
-                      
+
                       {/* Role Badge */}
                       <span className={clsx(
                         'inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold border',
-                        getRoleColor(user.role)
+                        getRoleColor(userRole)
                       )}>
                         <RoleIcon className="w-3 h-3 mr-1" />
-                        {user?.role?.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                        {userRole?.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
                       </span>
 
                       {/* Status Badge */}
@@ -186,24 +224,33 @@ export default function UserList({
                       )}
                     </div>
                     
-                    <div className="flex items-center gap-6 text-sm text-gray-600">
+                    <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600">
                       <div className="flex items-center gap-1">
                         <Mail className="w-4 h-4" />
-                        <span className="truncate max-w-xs">{user.email}</span>
+                        <span className="truncate max-w-xs">{userEmail}</span>
                       </div>
-                      
-                      {user.phone && (
+
+                      {userPhone && (
                         <div className="flex items-center gap-1">
                           <Phone className="w-4 h-4" />
-                          <span>{user.phone}</span>
+                          <span>{userPhone}</span>
                         </div>
                       )}
-                      
+
+                      {user.primaryCompany && (
+                        <div className="flex items-center gap-1">
+                          <Building2 className="w-4 h-4" />
+                          <span className="truncate max-w-xs">
+                            {user.primaryCompany.companyName} ({user.primaryCompany.companyCode})
+                          </span>
+                        </div>
+                      )}
+
                       <div className="flex items-center gap-1">
                         <Clock className="w-4 h-4" />
                         <span>Last login: {formatLastLogin(user.lastLogin)}</span>
                       </div>
-                      
+
                       <div className="flex items-center gap-1">
                         <Calendar className="w-4 h-4" />
                         <span>Joined {new Date(user.createdAt).toLocaleDateString()}</span>

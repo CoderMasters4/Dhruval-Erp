@@ -294,20 +294,59 @@ router.post('/', async (req: Request, res: Response) => {
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 12)
 
+    // Determine company access
+    let userCompanyAccess = companyAccess;
+    let userPrimaryCompanyId = null;
+
+    if (!user.isSuperAdmin) {
+      // For non-superadmin users, use the creator's company
+      userPrimaryCompanyId = user.primaryCompanyId || user.companyAccess?.[0]?.companyId;
+      userCompanyAccess = [{
+        companyId: userPrimaryCompanyId,
+        role: 'operator',
+        department: 'Production',
+        isActive: true,
+        joinedAt: new Date(),
+        permissions: {
+          inventory: { view: true, create: false, edit: false, delete: false, approve: false, viewReports: false },
+          production: { view: true, create: true, edit: false, delete: false, approve: false, viewReports: false },
+          orders: { view: true, create: false, edit: false, delete: false, approve: false, viewReports: false },
+          financial: { view: false, create: false, edit: false, delete: false, approve: false, viewReports: false },
+          security: {
+            gateManagement: false,
+            visitorManagement: false,
+            vehicleTracking: false,
+            cctvAccess: false,
+            emergencyResponse: false,
+            securityReports: false,
+            incidentManagement: false,
+            accessControl: false,
+            patrolManagement: false
+          },
+          hr: {
+            viewEmployees: false,
+            manageEmployees: false,
+            manageAttendance: false,
+            manageSalary: false,
+            manageLeaves: false,
+            viewReports: false,
+            recruitment: false,
+            performance: false,
+            training: false,
+            disciplinary: false
+          },
+          admin: { userManagement: false, systemSettings: false, backupRestore: false, auditLogs: false }
+        }
+      }];
+    }
+
     // Create new user
     const newUser = new User({
       username,
       password: hashedPassword,
       personalInfo,
-      companyAccess: user.isSuperAdmin ? companyAccess : [{
-        companyId: user.companyId,
-        role: 'employee',
-        isActive: true,
-        permissions: {
-          dashboard: { view: true },
-          profile: { view: true, edit: true }
-        }
-      }],
+      primaryCompanyId: userPrimaryCompanyId,
+      companyAccess: userCompanyAccess,
       isActive: true,
       createdAt: new Date()
     })

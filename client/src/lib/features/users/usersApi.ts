@@ -2,14 +2,36 @@ import { baseApi } from '@/lib/api/baseApi'
 
 export interface User {
   _id: string
-  name: string
-  email: string
-  role: 'super_admin' | 'admin' | 'manager' | 'user'
+  username: string
+  personalInfo: {
+    firstName: string
+    lastName: string
+    phone: string
+    dateOfBirth: string
+    gender: string
+    displayName: string
+  }
+  isSuperAdmin: boolean
   isActive: boolean
-  isEmailVerified: boolean
-  is2FAEnabled: boolean
-  lastLogin?: string
   createdAt: string
+  primaryCompany: {
+    _id: string
+    companyCode: string
+    companyName: string
+  }
+  isOnline: boolean
+  companyAccess: Array<{
+    companyId: string
+    role: string
+    isActive: boolean
+  }>
+  // Legacy fields for backward compatibility
+  name?: string
+  email?: string
+  role?: 'super_admin' | 'admin' | 'manager' | 'user'
+  isEmailVerified?: boolean
+  is2FAEnabled?: boolean
+  lastLogin?: string
   updatedAt?: string
   avatar?: string
   phone?: string
@@ -24,29 +46,42 @@ export interface User {
 export interface UsersResponse {
   success: boolean
   data: User[]
-  total: number
-  page?: number
-  limit?: number
+  pagination: {
+    page: number
+    limit: number
+    total: number
+    pages: number
+  }
 }
 
 export interface CreateUserRequest {
-  name: string
+  username: string
   email: string
   password: string
+  personalInfo: {
+    firstName: string
+    lastName: string
+    phone: string
+  }
   role: User['role']
-  phone?: string
   department?: string
+  designation?: string
   companyId?: string
   permissions?: string[]
 }
 
 export interface UpdateUserRequest {
-  name?: string
+  username?: string
   email?: string
+  personalInfo?: {
+    firstName?: string
+    lastName?: string
+    phone?: string
+  }
   role?: User['role']
   isActive?: boolean
-  phone?: string
   department?: string
+  designation?: string
   permissions?: string[]
 }
 
@@ -69,9 +104,13 @@ export interface Toggle2FARequest {
 export const usersApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     getAllUsers: builder.query<UsersResponse, { page?: number; limit?: number; search?: string; role?: string; status?: string }>({
-      query: (params) => ({
+      query: (params = {}) => ({
         url: '/users',
-        params,
+        params: {
+          page: params.page || 1,
+          limit: params.limit || 10,
+          ...params
+        },
       }),
       providesTags: ['User'],
     }),

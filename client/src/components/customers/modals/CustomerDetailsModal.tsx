@@ -18,13 +18,14 @@ import {
 } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Customer } from '@/lib/features/customers/customersApi'
+import { useModals } from '@/hooks/useModals'
 import clsx from 'clsx'
 
 interface CustomerDetailsModalProps {
   isOpen: boolean
   onClose: () => void
   customer: Customer
-  onEdit: () => void
+  onEdit?: () => void
 }
 
 export default function CustomerDetailsModal({
@@ -33,7 +34,18 @@ export default function CustomerDetailsModal({
   customer,
   onEdit
 }: CustomerDetailsModalProps) {
+  const { openCustomerForm } = useModals()
+
   if (!isOpen) return null
+
+  const handleEdit = () => {
+    if (onEdit) {
+      onEdit()
+    } else {
+      onClose()
+      openCustomerForm({ customer })
+    }
+  }
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
@@ -343,7 +355,7 @@ export default function CustomerDetailsModal({
           {/* Actions */}
           <div className="flex items-center justify-end gap-4 mt-8 pt-6 border-t border-gray-200">
             <Button
-              onClick={onEdit}
+              onClick={handleEdit}
               className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-200 flex items-center"
             >
               <Edit className="w-4 h-4 mr-2" />

@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { Shield, Key, ArrowLeft, RefreshCw } from 'lucide-react'
 import { setCredentials } from '@/lib/features/auth/authSlice'
+import { useLoginTwoFactorVerifyMutation, useTwoFactorResetRequestMutation } from '@/lib/api/twoFactorApi'
 import toast from 'react-hot-toast'
 
 interface LoginTwoFactorVerificationProps {
@@ -24,11 +25,13 @@ export function LoginTwoFactorVerification({
   const [token, setToken] = useState('')
   const [backupCode, setBackupCode] = useState('')
   const [useBackupCode, setUseBackupCode] = useState(false)
-  const [isLoading, setIsLoading] = useState(false)
-  const [isResetting, setIsResetting] = useState(false)
-  
+
   const router = useRouter()
   const dispatch = useDispatch()
+
+  // RTK Query hooks
+  const [loginTwoFactorVerify, { isLoading }] = useLoginTwoFactorVerifyMutation()
+  const [twoFactorResetRequest, { isLoading: isResetting }] = useTwoFactorResetRequestMutation()
 
   const handleVerify = async () => {
     if (!token && !backupCode) {
@@ -36,76 +39,85 @@ export function LoginTwoFactorVerification({
       return
     }
 
-    setIsLoading(true)
-    try {
-      const response = await fetch('/api/v1/auth/2fa/verify', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          token: useBackupCode ? '' : token,
-          backupCode: useBackupCode ? backupCode : undefined,
-          tempToken: tempToken
-        })
-      })
+    if (!tempToken) {
+      toast.error('Invalid session. Please login again.')
+      onCancel()
+      return
+    }
 
-      const result = await response.json()
+    // Basic JWT validation (should have 3 parts separated by dots)
+    if (!tempToken.includes('.') || tempToken.split('.').length !== 3) {
+      toast.error('Invalid session token. Please login again.')
+      console.error('Invalid tempToken format:', tempToken)
+      onCancel()
+      return
+    }
+
+    console.log('2FA Verification attempt:', {
+      useBackupCode,
+      hasToken: !!token,
+      hasBackupCode: !!backupCode,
+      tempToken: tempToken ? 'present' : 'missing'
+    })
+
+    try {
+      const result = await loginTwoFactorVerify({
+        token: useBackupCode ? undefined : token,
+        backupCode: useBackupCode ? backupCode : undefined,
+        tempToken: tempToken
+      }).unwrap()
+
+      console.log('2FA Verification response:', result)
 
       if (result.success) {
-        // Handle successful 2FA verification
-        const userData = result.data.user
-        const tokens = result.data.tokens
-        const companies = result.data.companies || []
-        const currentCompany = result.data.currentCompany
-        const permissions = result.data.permissions
+        // Handle successful 2FA verification - extract from data object
+        const userData = result.data?.user || result.user
+        const token = result.data?.tokens?.accessToken || result.token
+        const companies = result.data?.companies || result.companies || []
+        const permissions = result.data?.permissions || result.permissions
 
-        // Update user with current company info
-        const userWithCompany = {
-          ...userData,
-          currentCompanyId: currentCompany?.id,
-          isSuperAdmin: userData.isSuperAdmin || false
-        }
+        console.log('2FA Success - storing auth data:', {
+          hasUser: !!userData,
+          hasToken: !!token,
+          hasCompanies: !!companies,
+          tokenLength: token?.length || 0
+        })
+
+        const refreshToken = result.data?.tokens?.refreshToken || result.refreshToken || ''
 
         dispatch(setCredentials({
-          user: userWithCompany,
-          token: tokens?.accessToken || '',
-          refreshToken: undefined,
-          companies: companies.map((company: any) => ({
-            _id: company._id,
-            companyCode: company.companyCode,
-            companyName: company.companyName,
-            legalName: company.companyName,
-            isActive: company.isActive || true
-          })),
-          permissions
+          user: userData,
+          token: token || '',
+          refreshToken: refreshToken,
+          companies: companies,
+          permissions: Array.isArray(permissions) ? undefined : permissions
         }))
+
+        // Store tokens in localStorage for persistence
+        if (token) {
+          localStorage.setItem('accessToken', token)
+        }
+        if (refreshToken) {
+          localStorage.setItem('refreshToken', refreshToken)
+        }
 
         toast.success('Two-factor authentication successful!')
         router.push('/dashboard')
       } else {
+        console.error('2FA Verification failed:', result)
         toast.error(result.message || 'Verification failed')
       }
     } catch (error: any) {
       console.error('2FA verification error:', error)
-      toast.error('Verification failed. Please try again.')
-    } finally {
-      setIsLoading(false)
+      toast.error(error?.data?.message || 'Verification failed. Please try again.')
     }
   }
 
   const handleReset2FA = async () => {
-    setIsResetting(true)
     try {
-      const response = await fetch('/api/v1/auth/2fa/reset-request', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${tempToken}`
-        }
-      })
-
-      const result = await response.json()
+      const result = await twoFactorResetRequest({
+        tempToken: tempToken
+      }).unwrap()
 
       if (result.success) {
         toast.success('2FA reset request sent. Please check your email for instructions.')
@@ -115,13 +127,11 @@ export function LoginTwoFactorVerification({
       }
     } catch (error: any) {
       console.error('2FA reset error:', error)
-      toast.error('Failed to send reset request. Please try again.')
-    } finally {
-      setIsResetting(false)
+      toast.error(error?.data?.message || 'Failed to send reset request. Please try again.')
     }
   }
 
-  const handleKeyPress = (e: React.KeyboardEvent) => {
+  const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
       handleVerify()
     }
@@ -161,9 +171,9 @@ export function LoginTwoFactorVerification({
                   type="text"
                   value={backupCode}
                   onChange={(e) => setBackupCode(e.target.value)}
-                  onKeyPress={handleKeyPress}
+                  onKeyDown={handleKeyDown}
                   placeholder="Enter backup code"
-                  className="pl-10"
+                  className="pl-10 text-gray-900 font-medium"
                   disabled={isLoading}
                 />
               </div>
@@ -181,9 +191,9 @@ export function LoginTwoFactorVerification({
                   type="text"
                   value={token}
                   onChange={(e) => setToken(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                  onKeyPress={handleKeyPress}
+                  onKeyDown={handleKeyDown}
                   placeholder="123456"
-                  className="pl-10 text-center text-lg tracking-widest"
+                  className="pl-10 text-center text-lg tracking-widest text-gray-900 font-bold"
                   maxLength={6}
                   disabled={isLoading}
                 />

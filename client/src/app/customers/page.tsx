@@ -20,9 +20,7 @@ import { Button } from '@/components/ui/Button'
 import CustomerStats from '@/components/customers/CustomerStats'
 import CustomerFilters from '@/components/customers/CustomerFilters'
 import CustomerList from '@/components/customers/CustomerList'
-import CustomerFormModal from '@/components/customers/modals/CustomerFormModal'
-import CustomerDetailsModal from '@/components/customers/modals/CustomerDetailsModal'
-import DeleteCustomerModal from '@/components/customers/modals/DeleteCustomerModal'
+import { useModals } from '@/hooks/useModals'
 
 interface CustomerFilters {
   search: string
@@ -34,6 +32,7 @@ interface CustomerFilters {
 
 export default function CustomersPage() {
   const isSuperAdmin = useSelector(selectIsSuperAdmin)
+  const { openCustomerForm, openCustomerDetails, openDeleteCustomer } = useModals()
 
   // State management
   const [filters, setFilters] = useState<CustomerFilters>({
@@ -43,12 +42,6 @@ export default function CustomersPage() {
     sortBy: 'name',
     sortOrder: 'asc'
   })
-
-  const [showCreateModal, setShowCreateModal] = useState(false)
-  const [showEditModal, setShowEditModal] = useState(false)
-  const [showDetailsModal, setShowDetailsModal] = useState(false)
-  const [showDeleteModal, setShowDeleteModal] = useState(false)
-  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null)
 
   // API query with proper parameters
   const {
@@ -72,22 +65,36 @@ export default function CustomersPage() {
 
   // Event handlers
   const handleView = (customer: Customer) => {
-    setSelectedCustomer(customer)
-    setShowDetailsModal(true)
+    openCustomerDetails({ customer })
   }
 
   const handleEdit = (customer: Customer) => {
-    setSelectedCustomer(customer)
-    setShowEditModal(true)
+    openCustomerForm({
+      customer,
+      onSuccess: () => {
+        refetch()
+        toast.success('Customer updated successfully!')
+      }
+    })
   }
 
   const handleDelete = (customer: Customer) => {
-    setSelectedCustomer(customer)
-    setShowDeleteModal(true)
+    openDeleteCustomer({
+      customer,
+      onSuccess: () => {
+        refetch()
+        toast.success('Customer deleted successfully!')
+      }
+    })
   }
 
   const handleCreateNew = () => {
-    setShowCreateModal(true)
+    openCustomerForm({
+      onSuccess: () => {
+        refetch()
+        toast.success('Customer created successfully!')
+      }
+    })
   }
 
   const handleFilterChange = (newFilters: Partial<CustomerFilters>) => {
@@ -205,67 +212,7 @@ export default function CustomersPage() {
             onDelete={handleDelete}
           />
 
-          {/* Modals */}
-          {showCreateModal && (
-            <CustomerFormModal
-              isOpen={showCreateModal}
-              onClose={() => setShowCreateModal(false)}
-              onSuccess={() => {
-                setShowCreateModal(false)
-                refetch()
-                toast.success('Customer created successfully!')
-              }}
-            />
-          )}
-
-          {showEditModal && selectedCustomer && (
-            <CustomerFormModal
-              isOpen={showEditModal}
-              onClose={() => {
-                setShowEditModal(false)
-                setSelectedCustomer(null)
-              }}
-              onSuccess={() => {
-                setShowEditModal(false)
-                setSelectedCustomer(null)
-                refetch()
-                toast.success('Customer updated successfully!')
-              }}
-              customer={selectedCustomer}
-            />
-          )}
-
-          {showDetailsModal && selectedCustomer && (
-            <CustomerDetailsModal
-              isOpen={showDetailsModal}
-              onClose={() => {
-                setShowDetailsModal(false)
-                setSelectedCustomer(null)
-              }}
-              customer={selectedCustomer}
-              onEdit={() => {
-                setShowDetailsModal(false)
-                setShowEditModal(true)
-              }}
-            />
-          )}
-
-          {showDeleteModal && selectedCustomer && (
-            <DeleteCustomerModal
-              isOpen={showDeleteModal}
-              onClose={() => {
-                setShowDeleteModal(false)
-                setSelectedCustomer(null)
-              }}
-              onSuccess={() => {
-                setShowDeleteModal(false)
-                setSelectedCustomer(null)
-                refetch()
-                toast.success('Customer deleted successfully!')
-              }}
-              customer={selectedCustomer}
-            />
-          )}
+          {/* Modals are now handled by ModalManager */}
         </div>
       </div>
     </AppLayout>

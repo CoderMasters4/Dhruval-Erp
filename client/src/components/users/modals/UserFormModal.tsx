@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { toast } from 'react-hot-toast'
 import {
-  X,
   User,
   Mail,
   Phone,
@@ -12,10 +11,11 @@ import {
   Loader2
 } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
-import { 
-  User as UserType, 
-  useCreateUserMutation, 
-  useUpdateUserMutation 
+import { Modal, ModalContent, ModalFooter } from '@/components/ui/Modal'
+import {
+  User as UserType,
+  useCreateUserMutation,
+  useUpdateUserMutation
 } from '@/lib/features/users/usersApi'
 
 interface UserFormModalProps {
@@ -26,25 +26,53 @@ interface UserFormModalProps {
 }
 
 interface FormData {
-  name: string
+  username: string
   email: string
   password: string
   confirmPassword: string
-  role: UserType['role']
+  firstName: string
+  lastName: string
   phone: string
+  role: UserType['role']
   department: string
+  designation: string
   isActive: boolean
 }
 
+// Department options
+const DEPARTMENTS = [
+  { value: 'Management', label: 'Management' },
+  { value: 'Production', label: 'Production' },
+  { value: 'Sales', label: 'Sales & Marketing' },
+  { value: 'Purchase', label: 'Purchase & Procurement' },
+  { value: 'Accounts', label: 'Accounts & Finance' },
+  { value: 'HR', label: 'Human Resources' },
+  { value: 'Quality', label: 'Quality Control' },
+  { value: 'Maintenance', label: 'Maintenance' },
+  { value: 'Security', label: 'Security' },
+  { value: 'IT', label: 'Information Technology' }
+]
+
+// Role options
+const ROLES = [
+  { value: 'user', label: 'User', description: 'Basic user with limited access' },
+  { value: 'manager', label: 'Manager', description: 'Department manager with team access' },
+  { value: 'admin', label: 'Admin', description: 'System administrator with full access' },
+  { value: 'super_admin', label: 'Super Admin', description: 'Full system access across all companies' }
+]
+
 export default function UserFormModal({ isOpen, onClose, onSuccess, user }: UserFormModalProps) {
   const [formData, setFormData] = useState<FormData>({
-    name: '',
+    username: '',
     email: '',
     password: '',
     confirmPassword: '',
-    role: 'user',
+    firstName: '',
+    lastName: '',
     phone: '',
+    role: 'user',
     department: '',
+    designation: '',
     isActive: true
   })
 
@@ -61,24 +89,30 @@ export default function UserFormModal({ isOpen, onClose, onSuccess, user }: User
   useEffect(() => {
     if (user) {
       setFormData({
-        name: user.name || '',
+        username: user.username || '',
         email: user.email || '',
         password: '',
         confirmPassword: '',
+        firstName: user.personalInfo?.firstName || '',
+        lastName: user.personalInfo?.lastName || '',
+        phone: user.personalInfo?.phone || '',
         role: user.role || 'user',
-        phone: user.phone || '',
         department: user.department || '',
+        designation: user.designation || '',
         isActive: user.isActive ?? true
       })
     } else {
       setFormData({
-        name: '',
+        username: '',
         email: '',
         password: '',
         confirmPassword: '',
-        role: 'user',
+        firstName: '',
+        lastName: '',
         phone: '',
+        role: 'user',
         department: '',
+        designation: '',
         isActive: true
       })
     }
@@ -88,14 +122,32 @@ export default function UserFormModal({ isOpen, onClose, onSuccess, user }: User
   const validateForm = (): boolean => {
     const newErrors: Partial<FormData> = {}
 
-    if (!formData.name.trim()) {
-      newErrors.name = 'Name is required'
+    if (!formData.username.trim()) {
+      newErrors.username = 'Username is required'
+    } else if (formData.username.length < 3) {
+      newErrors.username = 'Username must be at least 3 characters'
+    } else if (!/^[a-zA-Z0-9_]+$/.test(formData.username)) {
+      newErrors.username = 'Username can only contain letters, numbers, and underscores'
+    }
+
+    if (!formData.firstName.trim()) {
+      newErrors.firstName = 'First name is required'
+    }
+
+    if (!formData.lastName.trim()) {
+      newErrors.lastName = 'Last name is required'
     }
 
     if (!formData.email.trim()) {
       newErrors.email = 'Email is required'
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
       newErrors.email = 'Please enter a valid email address'
+    }
+
+    if (!formData.phone.trim()) {
+      newErrors.phone = 'Phone number is required'
+    } else if (!/^[+]?[1-9][\d\s\-\(\)]{7,15}$/.test(formData.phone)) {
+      newErrors.phone = 'Please enter a valid phone number'
     }
 
     if (!isEditing) {
@@ -128,25 +180,35 @@ export default function UserFormModal({ isOpen, onClose, onSuccess, user }: User
         await updateUser({
           id: user._id,
           user: {
-            name: formData.name,
+            username: formData.username,
             email: formData.email,
+            personalInfo: {
+              firstName: formData.firstName,
+              lastName: formData.lastName,
+              phone: formData.phone
+            },
             role: formData.role,
-            phone: formData.phone || undefined,
-            department: formData.department || undefined,
+            department: formData.department,
+            designation: formData.designation,
             isActive: formData.isActive
           }
         }).unwrap()
       } else {
         await createUser({
-          name: formData.name,
+          username: formData.username,
           email: formData.email,
           password: formData.password,
+          personalInfo: {
+            firstName: formData.firstName,
+            lastName: formData.lastName,
+            phone: formData.phone
+          },
           role: formData.role,
-          phone: formData.phone || undefined,
-          department: formData.department || undefined
+          department: formData.department,
+          designation: formData.designation
         }).unwrap()
       }
-      
+
       onSuccess()
     } catch (error: any) {
       toast.error(error?.data?.message || `Failed to ${isEditing ? 'update' : 'create'} user`)
@@ -163,42 +225,16 @@ export default function UserFormModal({ isOpen, onClose, onSuccess, user }: User
     setErrors(newErrors)
   }
 
-  if (!isOpen) return null
-
   return (
-    <div className="fixed inset-0 bg-white bg-opacity-30 backdrop-blur-md flex items-center justify-center z-[60] p-4">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden border border-sky-200">
-        {/* Header */}
-        <div className="bg-gradient-to-r from-sky-500 to-blue-600 p-6 relative overflow-hidden">
-          <div className="absolute -top-4 -right-4 w-20 h-20 bg-white bg-opacity-20 rounded-full"></div>
-          <div className="absolute -bottom-2 -left-2 w-12 h-12 bg-white bg-opacity-10 rounded-full"></div>
-          
-          <div className="relative z-10 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-white bg-opacity-20 rounded-xl">
-                <User className="w-6 h-6 text-white" />
-              </div>
-              <div>
-                <h2 className="text-2xl font-bold text-white">
-                  {isEditing ? 'Edit User' : 'Create New User'}
-                </h2>
-                <p className="text-sky-100">
-                  {isEditing ? 'Update user information' : 'Add a new user to the system'}
-                </p>
-              </div>
-            </div>
-            
-            <Button
-              onClick={onClose}
-              className="p-2 text-white hover:bg-white hover:bg-opacity-20 rounded-xl transition-colors bg-transparent border-0"
-            >
-              <X className="w-6 h-6" />
-            </Button>
-          </div>
-        </div>
-
-        {/* Form */}
-        <form onSubmit={handleSubmit} className="p-6 overflow-y-auto max-h-[calc(90vh-200px)]">
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title={isEditing ? 'Edit User' : 'Create New User'}
+      subtitle={isEditing ? 'Update user information' : 'Add a new user to the system'}
+      size="lg"
+    >
+      <ModalContent>
+        <form id="user-form" onSubmit={handleSubmit}>
           <div className="space-y-6">
             {/* Basic Information */}
             <div className="bg-sky-50 rounded-xl p-6 border border-sky-200">
@@ -210,20 +246,58 @@ export default function UserFormModal({ isOpen, onClose, onSuccess, user }: User
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-semibold text-black mb-2">
-                    Full Name *
+                    Username *
                   </label>
                   <input
                     type="text"
                     required
-                    value={formData.name}
-                    onChange={(e) => updateFormData({ name: e.target.value })}
-                    className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-all duration-200 ${
-                      errors.name ? 'border-red-300 bg-red-50' : 'border-gray-300 bg-white'
+                    value={formData.username}
+                    onChange={(e) => updateFormData({ username: e.target.value.toLowerCase() })}
+                    className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-all duration-200 text-gray-900 font-medium placeholder:text-gray-500 ${
+                      errors.username ? 'border-red-300 bg-red-50' : 'border-gray-300 bg-white'
                     }`}
-                    placeholder="Enter full name"
+                    placeholder="Enter username"
                   />
-                  {errors.name && (
-                    <p className="mt-1 text-sm text-red-600 font-medium">{errors.name}</p>
+                  {errors.username && (
+                    <p className="mt-1 text-sm text-red-600 font-medium">{errors.username}</p>
+                  )}
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-black mb-2">
+                    First Name *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={formData.firstName}
+                    onChange={(e) => updateFormData({ firstName: e.target.value })}
+                    className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-all duration-200 text-gray-900 font-medium placeholder:text-gray-500 ${
+                      errors.firstName ? 'border-red-300 bg-red-50' : 'border-gray-300 bg-white'
+                    }`}
+                    placeholder="Enter first name"
+                  />
+                  {errors.firstName && (
+                    <p className="mt-1 text-sm text-red-600 font-medium">{errors.firstName}</p>
+                  )}
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-black mb-2">
+                    Last Name *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={formData.lastName}
+                    onChange={(e) => updateFormData({ lastName: e.target.value })}
+                    className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-all duration-200 text-gray-900 font-medium placeholder:text-gray-500 ${
+                      errors.lastName ? 'border-red-300 bg-red-50' : 'border-gray-300 bg-white'
+                    }`}
+                    placeholder="Enter last name"
+                  />
+                  {errors.lastName && (
+                    <p className="mt-1 text-sm text-red-600 font-medium">{errors.lastName}</p>
                   )}
                 </div>
 
@@ -237,8 +311,8 @@ export default function UserFormModal({ isOpen, onClose, onSuccess, user }: User
                       type="email"
                       required
                       value={formData.email}
-                      onChange={(e) => updateFormData({ email: e.target.value })}
-                      className={`w-full pl-10 pr-4 py-3 border rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-all duration-200 ${
+                      onChange={(e) => updateFormData({ email: e.target.value.toLowerCase() })}
+                      className={`w-full pl-10 pr-4 py-3 border rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-all duration-200 text-gray-900 font-medium placeholder:text-gray-500 ${
                         errors.email ? 'border-red-300 bg-red-50' : 'border-gray-300 bg-white'
                       }`}
                       placeholder="Enter email address"
@@ -251,18 +325,24 @@ export default function UserFormModal({ isOpen, onClose, onSuccess, user }: User
 
                 <div>
                   <label className="block text-sm font-semibold text-black mb-2">
-                    Phone Number
+                    Phone Number *
                   </label>
                   <div className="relative">
                     <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
                     <input
                       type="tel"
+                      required
                       value={formData.phone}
                       onChange={(e) => updateFormData({ phone: e.target.value })}
-                      className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-all duration-200 bg-white"
+                      className={`w-full pl-10 pr-4 py-3 border rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-all duration-200 text-gray-900 font-medium placeholder:text-gray-500 ${
+                        errors.phone ? 'border-red-300 bg-red-50' : 'border-gray-300 bg-white'
+                      }`}
                       placeholder="Enter phone number"
                     />
                   </div>
+                  {errors.phone && (
+                    <p className="mt-1 text-sm text-red-600 font-medium">{errors.phone}</p>
+                  )}
                 </div>
 
                 <div>
@@ -271,14 +351,32 @@ export default function UserFormModal({ isOpen, onClose, onSuccess, user }: User
                   </label>
                   <div className="relative">
                     <Building2 className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-                    <input
-                      type="text"
+                    <select
                       value={formData.department}
                       onChange={(e) => updateFormData({ department: e.target.value })}
-                      className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-all duration-200 bg-white"
-                      placeholder="Enter department"
-                    />
+                      className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-all duration-200 bg-white text-gray-900 font-medium appearance-none"
+                    >
+                      <option value="">Select Department</option>
+                      {DEPARTMENTS.map((dept) => (
+                        <option key={dept.value} value={dept.value}>
+                          {dept.label}
+                        </option>
+                      ))}
+                    </select>
                   </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-black mb-2">
+                    Designation
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.designation}
+                    onChange={(e) => updateFormData({ designation: e.target.value })}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-all duration-200 bg-white text-gray-900 font-medium placeholder:text-gray-500"
+                    placeholder="Enter designation"
+                  />
                 </div>
               </div>
             </div>
@@ -299,13 +397,17 @@ export default function UserFormModal({ isOpen, onClose, onSuccess, user }: User
                     required
                     value={formData.role}
                     onChange={(e) => updateFormData({ role: e.target.value as UserType['role'] })}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-all duration-200 bg-white"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-all duration-200 bg-white text-gray-900 font-medium"
                   >
-                    <option value="user">User</option>
-                    <option value="manager">Manager</option>
-                    <option value="admin">Admin</option>
-                    <option value="super_admin">Super Admin</option>
+                    {ROLES.map((role) => (
+                      <option key={role.value} value={role.value}>
+                        {role.label}
+                      </option>
+                    ))}
                   </select>
+                  <p className="mt-1 text-xs text-gray-500">
+                    {ROLES.find(r => r.value === formData.role)?.description}
+                  </p>
                 </div>
 
                 {isEditing && (
@@ -359,7 +461,7 @@ export default function UserFormModal({ isOpen, onClose, onSuccess, user }: User
                         required
                         value={formData.password}
                         onChange={(e) => updateFormData({ password: e.target.value })}
-                        className={`w-full px-4 py-3 pr-12 border rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-all duration-200 ${
+                        className={`w-full px-4 py-3 pr-12 border rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-all duration-200 text-gray-900 font-medium placeholder:text-gray-500 ${
                           errors.password ? 'border-red-300 bg-red-50' : 'border-gray-300 bg-white'
                         }`}
                         placeholder="Enter password"
@@ -387,7 +489,7 @@ export default function UserFormModal({ isOpen, onClose, onSuccess, user }: User
                         required
                         value={formData.confirmPassword}
                         onChange={(e) => updateFormData({ confirmPassword: e.target.value })}
-                        className={`w-full px-4 py-3 pr-12 border rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-all duration-200 ${
+                        className={`w-full px-4 py-3 pr-12 border rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-all duration-200 text-gray-900 font-medium placeholder:text-gray-500 ${
                           errors.confirmPassword ? 'border-red-300 bg-red-50' : 'border-gray-300 bg-white'
                         }`}
                         placeholder="Confirm password"
@@ -409,28 +511,29 @@ export default function UserFormModal({ isOpen, onClose, onSuccess, user }: User
             )}
           </div>
 
-          {/* Actions */}
-          <div className="flex items-center justify-end gap-4 mt-8 pt-6 border-t border-gray-200">
-            <Button
-              type="button"
-              onClick={onClose}
-              disabled={isLoading}
-              className="px-6 py-3 border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 font-semibold transition-colors"
-            >
-              Cancel
-            </Button>
-            
-            <Button
-              type="submit"
-              disabled={isLoading}
-              className="bg-sky-500 hover:bg-sky-600 text-white px-8 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
-            >
-              {isLoading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-              {isEditing ? 'Update User' : 'Create User'}
-            </Button>
-          </div>
         </form>
-      </div>
-    </div>
+      </ModalContent>
+
+      <ModalFooter>
+        <Button
+          type="button"
+          onClick={onClose}
+          disabled={isLoading}
+          className="px-6 py-3 border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 font-semibold transition-colors"
+        >
+          Cancel
+        </Button>
+
+        <Button
+          type="submit"
+          form="user-form"
+          disabled={isLoading}
+          className="bg-sky-500 hover:bg-sky-600 text-white px-8 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
+        >
+          {isLoading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+          {isEditing ? 'Update User' : 'Create User'}
+        </Button>
+      </ModalFooter>
+    </Modal>
   )
 }

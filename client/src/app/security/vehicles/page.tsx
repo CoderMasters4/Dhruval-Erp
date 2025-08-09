@@ -9,7 +9,7 @@ import VehicleList from '@/components/vehicles/VehicleList'
 import VehicleFormModal from '@/components/vehicles/modals/VehicleFormModal'
 import VehicleFilters from '@/components/vehicles/VehicleFilters'
 import VehicleStats from '@/components/vehicles/VehicleStats'
-import { useGetAllVehiclesQuery, useGetVehicleStatsQuery } from '@/lib/features/vehicles/vehiclesApi'
+import { useGetAllVehiclesQuery, useGetVehicleStatsQuery, type Vehicle } from '@/lib/features/vehicles/vehiclesApi'
 import { toast } from 'react-hot-toast'
 
 export default function VehiclesPage() {
@@ -55,10 +55,18 @@ export default function VehiclesPage() {
     refetchOnFocus: true
   })
 
-  // Handle both array response and object response
-  const vehicles = Array.isArray(vehiclesResponse) ? vehiclesResponse : (vehiclesResponse?.data || [])
-  const totalPages = Array.isArray(vehiclesResponse) ? Math.ceil(vehiclesResponse.length / 10) : (vehiclesResponse?.totalPages || 1)
-  const totalVehicles = Array.isArray(vehiclesResponse) ? vehiclesResponse.length : (vehiclesResponse?.total || 0)
+  // Handle both array response and structured response
+  const vehicles: Vehicle[] = Array.isArray(vehiclesResponse)
+    ? vehiclesResponse
+    : (vehiclesResponse?.data || [])
+
+  const totalPages = Array.isArray(vehiclesResponse)
+    ? Math.ceil(vehiclesResponse.length / 10)
+    : (vehiclesResponse?.totalPages || Math.ceil(vehicles.length / 10))
+
+  const totalVehicles = Array.isArray(vehiclesResponse)
+    ? vehiclesResponse.length
+    : (vehiclesResponse?.total || vehicles.length)
 
   // Debug log to see the actual response
   console.log('Vehicles Response:', vehiclesResponse)

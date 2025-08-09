@@ -22,6 +22,43 @@ export interface VerifyTwoFactorResponse {
   message: string
 }
 
+export interface LoginTwoFactorVerifyRequest {
+  token?: string
+  backupCode?: string
+  tempToken: string
+}
+
+export interface LoginTwoFactorVerifyResponse {
+  success: boolean
+  message: string
+  data?: {
+    user: any
+    tokens: {
+      accessToken: string
+      refreshToken: string
+    }
+    companies: any[]
+    currentCompany: any
+    permissions: any
+  }
+  // Legacy fields for backward compatibility
+  user?: any
+  token?: string
+  refreshToken?: string
+  companies?: any[]
+  permissions?: any[]
+}
+
+export interface TwoFactorResetRequest {
+  tempToken?: string
+}
+
+export interface TwoFactorResetResponse {
+  success: boolean
+  message: string
+  resetToken?: string
+}
+
 export interface DisableTwoFactorRequest {
   password: string
   token?: string
@@ -115,6 +152,30 @@ export const twoFactorApi = baseApi.injectEndpoints({
         body,
       }),
     }),
+
+    // Login 2FA verification (uses different endpoint)
+    loginTwoFactorVerify: builder.mutation<
+      LoginTwoFactorVerifyResponse,
+      LoginTwoFactorVerifyRequest
+    >({
+      query: (body) => ({
+        url: '/2fa/verify',
+        method: 'POST',
+        body,
+      }),
+    }),
+
+    // 2FA reset request (for login flow)
+    twoFactorResetRequest: builder.mutation<
+      TwoFactorResetResponse,
+      TwoFactorResetRequest
+    >({
+      query: (body) => ({
+        url: '/2fa/reset-request',
+        method: 'POST',
+        body,
+      }),
+    }),
   }),
   overrideExisting: true,
 })
@@ -127,4 +188,6 @@ export const {
   useVerifyTwoFactorMutation,
   useGenerateBackupCodesMutation,
   useTestTwoFactorMutation,
+  useLoginTwoFactorVerifyMutation,
+  useTwoFactorResetRequestMutation,
 } = twoFactorApi

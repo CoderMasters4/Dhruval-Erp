@@ -1,7 +1,6 @@
 import React, { useState } from 'react'
 import { toast } from 'react-hot-toast'
 import {
-  X,
   Shield,
   Eye,
   EyeOff,
@@ -11,9 +10,10 @@ import {
   Smartphone
 } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
-import { 
-  User as UserType, 
-  useToggle2FAMutation 
+import { Modal, ModalContent, ModalFooter } from '@/components/ui/Modal'
+import {
+  User as UserType,
+  useToggle2FAMutation
 } from '@/lib/features/users/usersApi'
 
 interface Toggle2FAModalProps {
@@ -60,46 +60,25 @@ export default function Toggle2FAModal({ isOpen, onClose, onSuccess, user }: Tog
     if (error) setError('')
   }
 
-  if (!isOpen) return null
+  const userName = user.personalInfo?.displayName ||
+    (user.personalInfo?.firstName && user.personalInfo?.lastName
+      ? `${user.personalInfo.firstName} ${user.personalInfo.lastName}`
+      : user.name || user.username || 'User')
 
   return (
-    <div className="fixed inset-0 bg-white bg-opacity-30 backdrop-blur-md flex items-center justify-center z-[60] p-4">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-hidden border border-sky-200">
-        {/* Header */}
-        <div className={`bg-gradient-to-r p-6 relative overflow-hidden ${
-          isEnabling 
-            ? 'from-purple-500 to-indigo-600' 
-            : 'from-orange-500 to-red-600'
-        }`}>
-          <div className="absolute -top-4 -right-4 w-20 h-20 bg-white bg-opacity-20 rounded-full"></div>
-          <div className="absolute -bottom-2 -left-2 w-12 h-12 bg-white bg-opacity-10 rounded-full"></div>
-          
-          <div className="relative z-10 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-white bg-opacity-20 rounded-xl">
-                <Shield className="w-6 h-6 text-white" />
-              </div>
-              <div>
-                <h2 className="text-2xl font-bold text-white">
-                  {isEnabling ? 'Enable' : 'Disable'} Two-Factor Authentication
-                </h2>
-                <p className={isEnabling ? 'text-purple-100' : 'text-orange-100'}>
-                  {isEnabling ? 'Enhance account security' : 'Remove 2FA protection'} for {user.name}
-                </p>
-              </div>
-            </div>
-            
-            <Button
-              onClick={onClose}
-              className="p-2 text-white hover:bg-white hover:bg-opacity-20 rounded-xl transition-colors bg-transparent border-0"
-            >
-              <X className="w-6 h-6" />
-            </Button>
-          </div>
-        </div>
-
-        {/* Content */}
-        <div className="p-6">
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title={`${isEnabling ? 'Enable' : 'Disable'} Two-Factor Authentication`}
+      subtitle={`${isEnabling ? 'Secure' : 'Remove security from'} ${userName}'s account`}
+      size="md"
+      headerClassName={`bg-gradient-to-r ${
+        isEnabling
+          ? 'from-purple-500 to-indigo-600'
+          : 'from-orange-500 to-red-600'
+      }`}
+    >
+      <ModalContent>
           {/* User Info */}
           <div className="bg-sky-50 rounded-xl p-4 border border-sky-200 mb-6">
             <div className="flex items-center gap-3">
@@ -180,7 +159,7 @@ export default function Toggle2FAModal({ isOpen, onClose, onSuccess, user }: Tog
           </div>
 
           {/* Password Confirmation */}
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form id="toggle-2fa-form" onSubmit={handleSubmit} className="space-y-6">
             <div>
               <label className="block text-sm font-semibold text-black mb-2">
                 Admin Password Confirmation *
@@ -211,34 +190,32 @@ export default function Toggle2FAModal({ isOpen, onClose, onSuccess, user }: Tog
                 Your admin password is required to modify 2FA settings for security purposes.
               </p>
             </div>
+        </form>
+      </ModalContent>
+      <ModalFooter>
+        <Button
+          type="button"
+          onClick={onClose}
+          disabled={isLoading}
+          className="px-6 py-3 border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 font-semibold transition-colors"
+        >
+          Cancel
+        </Button>
 
-            {/* Actions */}
-            <div className="flex items-center justify-end gap-4 pt-6 border-t border-gray-200">
-              <Button
-                type="button"
-                onClick={onClose}
-                disabled={isLoading}
-                className="px-6 py-3 border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 font-semibold transition-colors"
-              >
-                Cancel
-              </Button>
-              
-              <Button
-                type="submit"
-                disabled={isLoading}
-                className={`px-8 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center text-white ${
-                  isEnabling 
-                    ? 'bg-purple-500 hover:bg-purple-600' 
-                    : 'bg-orange-500 hover:bg-orange-600'
-                }`}
-              >
-                {isLoading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                {isEnabling ? 'Enable 2FA' : 'Disable 2FA'}
-              </Button>
-            </div>
-          </form>
-        </div>
-      </div>
-    </div>
+        <Button
+          type="submit"
+          form="toggle-2fa-form"
+          disabled={isLoading}
+          className={`px-8 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center text-white ${
+            isEnabling
+              ? 'bg-purple-500 hover:bg-purple-600'
+              : 'bg-orange-500 hover:bg-orange-600'
+          }`}
+        >
+          {isLoading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+          {isEnabling ? 'Enable 2FA' : 'Disable 2FA'}
+        </Button>
+      </ModalFooter>
+    </Modal>
   )
 }

@@ -3,10 +3,10 @@
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useSelector } from 'react-redux'
-import { selectIsAuthenticated, selectCurrentUser } from '@/lib/features/auth/authSlice'
+import { selectIsAuthenticated, selectCurrentUser, selectAuthInitialized, selectAuthLoading } from '@/lib/features/auth/authSlice'
 import { usePermissions } from '@/lib/hooks/usePermissions'
 import { Actions, Subjects } from '@/lib/casl/ability'
-import { Loader2 } from 'lucide-react'
+import { CompactLoader } from '@/components/ui/LoadingSpinner'
 
 interface ProtectedRouteProps {
   children: React.ReactNode
@@ -33,9 +33,14 @@ export function ProtectedRoute({
   const router = useRouter()
   const isAuthenticated = useSelector(selectIsAuthenticated)
   const user = useSelector(selectCurrentUser)
+  const isAuthInitialized = useSelector(selectAuthInitialized)
+  const isAuthLoading = useSelector(selectAuthLoading)
   const permissions = usePermissions()
 
   useEffect(() => {
+    // Don't redirect until auth is initialized
+    if (!isAuthInitialized) return
+
     if (requireAuth && !isAuthenticated) {
       router.push(redirectTo)
       return
@@ -68,17 +73,15 @@ export function ProtectedRoute({
     requiredRoles,
     router,
     redirectTo,
-    permissions
+    permissions,
+    isAuthInitialized
   ])
 
   // Show loading while checking authentication
-  if (requireAuth && !isAuthenticated) {
+  if (!isAuthInitialized || isAuthLoading || (requireAuth && !isAuthenticated && isAuthInitialized)) {
     return fallback || (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-blue-600" />
-          <p className="text-gray-600">Loading...</p>
-        </div>
+        <CompactLoader message="Checking access..." size="lg" />
       </div>
     )
   }
@@ -140,7 +143,12 @@ export function withProtectedRoute<P extends object>(
 export function useRouteAccess(options: Omit<ProtectedRouteProps, 'children'>) {
   const isAuthenticated = useSelector(selectIsAuthenticated)
   const user = useSelector(selectCurrentUser)
+  const isAuthInitialized = useSelector(selectAuthInitialized)
   const permissions = usePermissions()
+
+  if (!isAuthInitialized) {
+    return { canAccess: false, reason: 'loading' }
+  }
 
   if (options.requireAuth !== false && !isAuthenticated) {
     return { canAccess: false, reason: 'not_authenticated' }

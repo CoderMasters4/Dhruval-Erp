@@ -182,6 +182,94 @@ export class ReportController extends BaseController<IReport> {
   }
 
   /**
+   * Generate supplier-wise purchase report
+   */
+  async generateSupplierWisePurchaseReport(req: Request, res: Response): Promise<void> {
+    try {
+      const companyId = req.user?.companyId;
+      const {
+        startDate,
+        endDate,
+        supplierId,
+        status,
+        category,
+        page = 1,
+        limit = 10,
+        format = 'json'
+      } = req.query;
+
+      if (!companyId) {
+        this.sendError(res, new Error('Company ID is required'), 'Company ID is required', 400);
+        return;
+      }
+
+      if (!startDate || !endDate) {
+        this.sendError(res, new Error('Start date and end date are required'), 'Date range is required', 400);
+        return;
+      }
+
+      const dateRange = {
+        start: new Date(startDate as string),
+        end: new Date(endDate as string)
+      };
+
+      const filters = {
+        supplierId: supplierId as string,
+        status: status as string,
+        category: category as string
+      };
+
+      const pagination = {
+        page: parseInt(page as string),
+        limit: parseInt(limit as string)
+      };
+
+      const supplierWiseReport = await this.reportService.generateSupplierWisePurchaseReport(
+        companyId.toString(),
+        dateRange,
+        filters,
+        pagination,
+        format as string
+      );
+
+      this.sendSuccess(res, supplierWiseReport, 'Supplier-wise purchase report generated successfully');
+    } catch (error) {
+      this.sendError(res, error, 'Failed to generate supplier-wise purchase report');
+    }
+  }
+
+  /**
+   * Generate purchase summary report
+   */
+  async generatePurchaseSummaryReport(req: Request, res: Response): Promise<void> {
+    try {
+      const companyId = req.user?.companyId;
+      const { startDate, endDate, format = 'json' } = req.query;
+
+      if (!companyId) {
+        this.sendError(res, new Error('Company ID is required'), 'Company ID is required', 400);
+        return;
+      }
+
+      if (!startDate || !endDate) {
+        this.sendError(res, new Error('Start date and end date are required'), 'Date range is required', 400);
+        return;
+      }
+
+      const dateRange = {
+        start: new Date(startDate as string),
+        end: new Date(endDate as string)
+      };
+
+      const purchaseSummary = await this.reportService.generatePurchaseSummaryReport(companyId.toString(), dateRange, format as string);
+
+      this.sendSuccess(res, purchaseSummary, 'Purchase summary report generated successfully');
+    } catch (error) {
+      this.sendError(res, error, 'Failed to generate purchase summary report');
+    }
+  }
+
+  /**
    * Get report by ID
    */
   async getReportById(req: Request, res: Response): Promise<void> {

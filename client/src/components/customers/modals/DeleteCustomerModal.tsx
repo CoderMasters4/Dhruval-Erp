@@ -163,8 +163,8 @@ export default function DeleteCustomerModal({ isOpen, onClose, onSuccess, custom
                 required
                 value={confirmText}
                 onChange={(e) => handleConfirmTextChange(e.target.value)}
-                className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all duration-200 font-mono ${
-                  error ? 'border-red-300 bg-red-50' : 
+                className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all duration-200 font-mono text-gray-900 font-medium placeholder:text-gray-500 ${
+                  error ? 'border-red-300 bg-red-50' :
                   confirmText && !isConfirmValid ? 'border-yellow-300 bg-yellow-50' :
                   isConfirmValid ? 'border-green-300 bg-green-50' :
                   'border-gray-300 bg-white'

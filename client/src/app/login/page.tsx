@@ -49,6 +49,15 @@ export default function LoginPage() {
   // Redirect if already authenticated
   useEffect(() => {
     if (isAuthenticated) {
+      // Check if there's an intended route to redirect to
+      if (typeof window !== 'undefined') {
+        const intendedRoute = localStorage.getItem('intendedRoute')
+        if (intendedRoute && intendedRoute !== '/login') {
+          localStorage.removeItem('intendedRoute')
+          router.push(intendedRoute)
+          return
+        }
+      }
       router.push('/dashboard')
     }
   }, [isAuthenticated, router])
@@ -65,9 +74,13 @@ export default function LoginPage() {
       const result = await login(loginData).unwrap()
 
       if (result.success) {
-        // Check if 2FA is required
-        if (result.data.requiresTwoFactor) {
-          setLoginToken(result.data.tempToken || '')
+        // Check if 2FA is required (server returns this at root level)
+        if (result.requiresTwoFactor) {
+          if (!result.tempToken) {
+            toast.error('Invalid 2FA session. Please try logging in again.')
+            return
+          }
+          setLoginToken(result.tempToken)
           setRequiresTwoFactor(true)
           toast.success('Please complete two-factor authentication')
           return
@@ -108,6 +121,16 @@ export default function LoginPage() {
         }))
 
         toast.success('Login successful!')
+
+        // Check if there's an intended route to redirect to
+        if (typeof window !== 'undefined') {
+          const intendedRoute = localStorage.getItem('intendedRoute')
+          if (intendedRoute && intendedRoute !== '/login') {
+            localStorage.removeItem('intendedRoute')
+            router.push(intendedRoute)
+            return
+          }
+        }
         router.push('/dashboard')
       }
     } catch (error: any) {

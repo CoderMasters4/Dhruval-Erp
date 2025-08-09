@@ -72,7 +72,7 @@ export const CrudModal: React.FC<CrudModalProps> = ({
             placeholder={field.placeholder}
             required={field.required}
             rows={field.rows || 3}
-            className="w-full px-3 py-2 border-2 border-sky-200 rounded-lg focus:outline-none focus:border-sky-500 bg-white text-black resize-none"
+            className="w-full px-3 py-2 border-2 border-sky-200 rounded-lg focus:outline-none focus:border-sky-500 bg-white text-gray-900 font-medium placeholder:text-gray-500 resize-none"
           />
         );
 
@@ -84,7 +84,7 @@ export const CrudModal: React.FC<CrudModalProps> = ({
             value={value}
             onChange={(e) => handleInputChange(field.name, e.target.value)}
             required={field.required}
-            className="w-full px-3 py-2 border-2 border-sky-200 rounded-lg focus:outline-none focus:border-sky-500 bg-white text-black"
+            className="w-full px-3 py-2 border-2 border-sky-200 rounded-lg focus:outline-none focus:border-sky-500 bg-white text-gray-900 font-medium"
           >
             <option value="">Select {field.label}</option>
             {field.options?.map((option) => (
@@ -106,7 +106,7 @@ export const CrudModal: React.FC<CrudModalProps> = ({
               onChange={(e) => handleInputChange(field.name, e.target.checked)}
               className="w-4 h-4 text-sky-600 bg-white border-2 border-sky-200 rounded focus:ring-sky-500 focus:ring-2"
             />
-            <label htmlFor={field.name} className="ml-2 text-sm text-black">
+            <label htmlFor={field.name} className="ml-2 text-sm text-gray-900 font-medium">
               {field.label}
             </label>
           </div>
@@ -127,7 +127,7 @@ export const CrudModal: React.FC<CrudModalProps> = ({
             maxLength={field.validation?.maxLength}
             min={field.validation?.min}
             max={field.validation?.max}
-            className="w-full px-3 py-2 border-2 border-sky-200 rounded-lg focus:outline-none focus:border-sky-500 bg-white text-black"
+            className="w-full px-3 py-2 border-2 border-sky-200 rounded-lg focus:outline-none focus:border-sky-500 bg-white text-gray-900 font-medium placeholder:text-gray-500"
           />
         );
     }

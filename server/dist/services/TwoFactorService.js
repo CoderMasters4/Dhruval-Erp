@@ -34,45 +34,53 @@ class TwoFactorService {
                 twoFactor.setupAt = new Date();
             }
             await twoFactor.save();
-            const emailPart = user.email.split('@')[0];
-            const shortLabel = emailPart.length > 4 ? emailPart.substring(0, 4) : emailPart;
-            const shortSecret = secret.base32.substring(0, 16);
-            const urlFormats = [
-                `otpauth://totp/${shortLabel}?secret=${shortSecret}`,
-                `otpauth://totp/ERP?secret=${shortSecret}`,
-                `otpauth://totp/E?secret=${shortSecret}`
-            ];
-            console.log('Original secret length:', secret.base32.length);
-            console.log('Short secret length:', shortSecret.length);
-            for (let i = 0; i < urlFormats.length; i++) {
-                const otpAuthUrl = urlFormats[i];
-                console.log(`Trying URL format ${i + 1}:`, otpAuthUrl);
-                console.log(`URL length: ${otpAuthUrl.length}`);
+            const serviceName = 'Enterprise ERP';
+            const accountName = user.email || user.username;
+            const otpAuthUrl = `otpauth://totp/${encodeURIComponent(serviceName)}:${encodeURIComponent(accountName)}?secret=${secret.base32}&issuer=${encodeURIComponent(serviceName)}`;
+            console.log('Generated TOTP URL:', otpAuthUrl);
+            console.log('Secret length:', secret.base32.length);
+            try {
+                const qrCodeUrl = await qrcode_1.default.toDataURL(otpAuthUrl, {
+                    errorCorrectionLevel: 'M',
+                    margin: 4,
+                    width: 256,
+                    color: {
+                        dark: '#000000',
+                        light: '#FFFFFF'
+                    }
+                });
+                console.log('QR Code generated successfully');
+                return {
+                    secret: secret.base32,
+                    qrCodeUrl,
+                    backupCodes: []
+                };
+            }
+            catch (qrError) {
+                console.error('QR Code generation failed:', qrError);
                 try {
-                    const qrCodeUrl = await qrcode_1.default.toDataURL(otpAuthUrl, {
+                    const simpleUrl = `otpauth://totp/${encodeURIComponent(accountName)}?secret=${secret.base32}&issuer=${encodeURIComponent(serviceName)}`;
+                    const fallbackQrCodeUrl = await qrcode_1.default.toDataURL(simpleUrl, {
                         errorCorrectionLevel: 'L',
-                        margin: 0,
-                        width: 80,
-                        scale: 1
+                        margin: 2,
+                        width: 200
                     });
-                    console.log(`QR Code generated successfully with format ${i + 1}`);
+                    console.log('Fallback QR Code generated successfully');
                     return {
                         secret: secret.base32,
-                        qrCodeUrl,
+                        qrCodeUrl: fallbackQrCodeUrl,
                         backupCodes: []
                     };
                 }
-                catch (qrError) {
-                    console.error(`QR Code generation failed for format ${i + 1}:`, qrError.message);
-                    continue;
+                catch (fallbackError) {
+                    console.error('Fallback QR Code generation also failed:', fallbackError);
+                    return {
+                        secret: secret.base32,
+                        qrCodeUrl: '',
+                        backupCodes: []
+                    };
                 }
             }
-            console.error('All QR Code generation attempts failed');
-            return {
-                secret: secret.base32,
-                qrCodeUrl: '',
-                backupCodes: []
-            };
         }
         catch (error) {
             throw new Error(`Failed to setup 2FA: ${error.message}`);

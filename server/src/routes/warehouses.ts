@@ -27,13 +27,24 @@ router.get('/', async (req: Request, res: Response) => {
     const limitNum = parseInt(limit as string)
     const searchTerm = search as string
 
-    // Get company ID
-    const companyId = user.isSuperAdmin ? req.query.companyId || user.companyId : user.companyId
+    // Get company ID - for superadmin, show all warehouses if no specific company requested
+    let query: any = { isActive: true }
 
-    // Build query
-    let query: any = { 
-      companyId: new mongoose.Types.ObjectId(companyId),
-      isActive: true 
+    if (user.isSuperAdmin) {
+      // If superadmin provides a specific companyId, filter by it
+      if (req.query.companyId) {
+        query.companyId = new mongoose.Types.ObjectId(req.query.companyId as string)
+      }
+      // If no companyId provided, show all warehouses (no companyId filter)
+    } else {
+      // Regular users can only see their company's warehouses
+      if (!user.companyId) {
+        return res.status(400).json({
+          error: 'Company ID required',
+          message: 'X-Company-ID header is required'
+        })
+      }
+      query.companyId = new mongoose.Types.ObjectId(user.companyId)
     }
 
     // Add search filter
@@ -144,16 +155,30 @@ router.get('/', async (req: Request, res: Response) => {
 router.get('/stats', async (req: Request, res: Response) => {
   try {
     const user = (req as any).user
-    const companyId = user.isSuperAdmin ? req.query.companyId || user.companyId : user.companyId
+
+    // Build match query for aggregation
+    let matchQuery: any = { isActive: true }
+
+    if (user.isSuperAdmin) {
+      // If superadmin provides a specific companyId, filter by it
+      if (req.query.companyId) {
+        matchQuery.companyId = new mongoose.Types.ObjectId(req.query.companyId as string)
+      }
+      // If no companyId provided, show stats for all warehouses
+    } else {
+      // Regular users can only see their company's warehouse stats
+      if (!user.companyId) {
+        return res.status(400).json({
+          error: 'Company ID required',
+          message: 'X-Company-ID header is required'
+        })
+      }
+      matchQuery.companyId = new mongoose.Types.ObjectId(user.companyId)
+    }
 
     // Get warehouse statistics using aggregation
     const stats = await Warehouse.aggregate([
-      { 
-        $match: { 
-          companyId: new mongoose.Types.ObjectId(companyId),
-          isActive: true 
-        } 
-      },
+      { $match: matchQuery },
       {
         $group: {
           _id: null,
@@ -167,12 +192,7 @@ router.get('/stats', async (req: Request, res: Response) => {
 
     // Get warehouse type distribution
     const typeStats = await Warehouse.aggregate([
-      { 
-        $match: { 
-          companyId: new mongoose.Types.ObjectId(companyId),
-          isActive: true 
-        } 
-      },
+      { $match: matchQuery },
       {
         $group: {
           _id: '$warehouseType',
@@ -182,10 +202,7 @@ router.get('/stats', async (req: Request, res: Response) => {
     ])
 
     // Get top warehouses by utilization
-    const topWarehouses = await Warehouse.find({
-      companyId: new mongoose.Types.ObjectId(companyId),
-      isActive: true
-    })
+    const topWarehouses = await Warehouse.find(matchQuery)
     .select('warehouseName capacity')
     .sort({ 'capacity.utilizationPercentage': -1 })
     .limit(5)
@@ -243,10 +260,28 @@ router.post('/', async (req: Request, res: Response) => {
     const user = (req as any).user
     const warehouseData = req.body
 
+    // Determine company ID
+    let companyId = user.companyId
+    if (user.isSuperAdmin) {
+      // For superadmin, use the companyId from request body or query
+      companyId = warehouseData.companyId || req.query.companyId || user.companyId
+      if (!companyId) {
+        return res.status(400).json({
+          error: 'Company ID required',
+          message: 'Company ID is required for warehouse creation'
+        })
+      }
+    } else if (!companyId) {
+      return res.status(400).json({
+        error: 'Company ID required',
+        message: 'X-Company-ID header is required'
+      })
+    }
+
     // Create new warehouse
     const newWarehouse = new Warehouse({
       ...warehouseData,
-      companyId: user.companyId,
+      companyId,
       createdBy: user.userId,
       isActive: true
     })

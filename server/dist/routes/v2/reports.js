@@ -12,6 +12,8 @@ router.get('/stats', reportController.getReportStats.bind(reportController));
 router.get('/generate/sales', reportController.generateSalesReport.bind(reportController));
 router.get('/generate/inventory', reportController.generateInventoryReport.bind(reportController));
 router.get('/generate/production', reportController.generateProductionReport.bind(reportController));
+router.get('/generate/purchase/supplier-wise', reportController.generateSupplierWisePurchaseReport.bind(reportController));
+router.get('/generate/purchase/summary', reportController.generatePurchaseSummaryReport.bind(reportController));
 router.get('/:id', reportController.getReportById.bind(reportController));
 exports.default = router;
 //# sourceMappingURL=reports.js.map

@@ -567,7 +567,7 @@ export default function CustomerFormModal({ isOpen, onClose, onSuccess, customer
                     value={formData.notes}
                     onChange={(e) => updateFormData({ notes: e.target.value })}
                     rows={3}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white text-gray-900 font-medium placeholder:text-gray-500"
                     placeholder="Enter any additional notes"
                   />
                 </div>

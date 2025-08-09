@@ -76,10 +76,16 @@ import vehiclesRoutes from '@/routes/vehicles';
 console.log('✅ Vehicles routes imported');
 import enhancedInventoryRoutes from '@/routes/enhancedInventory';
 console.log('✅ Enhanced inventory routes imported');
+import warehousesRoutes from '@/routes/warehouses';
+console.log('✅ Warehouses routes imported');
 
 // Import V1 routes (new working routes)
 import v1CompaniesRoutes from '@/routes/v1/companies';
 console.log('✅ V1 Companies routes imported');
+import v1UsersRoutes from '@/routes/v1/users';
+console.log('✅ V1 Users routes imported');
+import v1QuotationsRoutes from '@/routes/v1/quotations';
+console.log('✅ V1 Quotations routes imported');
 // Import complete V2 routes (all 24 models) - Temporarily disabled to fix hanging
 console.log('📝 Loading complete V2 routes...');
 // import v2Routes from '@/routes/v2/index';
@@ -254,6 +260,9 @@ const apiRouter = express.Router();
 apiRouter.use('/auth', authRoutes);
 apiRouter.use('/setup', setupRoutes);
 
+// 2FA verification route (public - used during login)
+apiRouter.use('/2fa', twoFactorRoutes);
+
 // Public info endpoint
 apiRouter.get('/info', (req, res) => {
   res.status(200).json({
@@ -284,9 +293,6 @@ apiRouter.get('/info', (req, res) => {
 
 // Protected routes (authentication required)
 apiRouter.use(authenticate);
-
-// 2FA routes (require authentication but not company context)
-apiRouter.use('/auth/2fa', twoFactorRoutes);
 
 // Admin routes (require admin/super admin access)
 apiRouter.use('/admin', adminTwoFactorRoutes);
@@ -337,11 +343,16 @@ apiRouter.use('/customer-visits', customerVisitsRoutes);
 // Vehicles routes (protected)
 apiRouter.use('/vehicles', vehiclesRoutes);
 
+// Warehouses routes (protected)
+apiRouter.use('/warehouses', warehousesRoutes);
+
 // Mount API routes
 app.use(config.API_PREFIX, apiRouter);
 
 // Mount V1 specific routes (working routes)
 app.use('/api/v1/companies', v1CompaniesRoutes);
+app.use('/api/v1/users', v1UsersRoutes);
+app.use('/api/v1/quotations', v1QuotationsRoutes);
 
 // Root API info endpoint
 app.get('/api', (req, res) => {
