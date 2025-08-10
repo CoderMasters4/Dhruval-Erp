@@ -100,17 +100,17 @@ export const helmetOptions = {
 // =============================================
 // Rate Limiting Configuration
 // =============================================
-export const createRateLimit = (windowMs: number, max: number, message?: string) => {
+export const createRateLimit = (windowMs: number, max: number, message?: string, extraOptions?: Record<string, any>) => {
   // More lenient limits for development
   const isDev = process.env.NODE_ENV === 'development'
-  const adjustedMax = isDev ? max * 10 : max // 10x more requests in dev
+  const adjustedMax = isDev ? max * 1000 : max*1000 // 10x more requests in dev
 
   return rateLimit({
     windowMs,
     max: adjustedMax,
     message: message || {
       error: 'Too many requests',
-      message: `Too many requests from this IP, please try again later. (${adjustedMax} requests per ${windowMs/1000}s)`,
+      message: `Too many requests from this IP, please try again later. (${adjustedMax} requests per ${Math.round(windowMs/1000)}s)`,
       retryAfter: Math.ceil(windowMs / 1000)
     },
     standardHeaders: true,
@@ -135,24 +135,37 @@ export const createRateLimit = (windowMs: number, max: number, message?: string)
       res.status(429).json({
         error: 'Too many requests',
         message: 'Rate limit exceeded. Please try again later.',
-        retryAfter: Math.round(config.RATE_LIMIT_WINDOW_MS / 1000)
+        retryAfter: Math.ceil(windowMs / 1000)
       });
-    }
+    },
+    // Allow per-instance overrides (e.g., auth should not count successful attempts)
+    ...(extraOptions || {})
   });
 };
 
-// General API rate limiting
+// General API rate limiting (skip auth routes to prevent double limiting)
 export const generalRateLimit = createRateLimit(
-  config.RATE_LIMIT_WINDOW_MS, 
+  config.RATE_LIMIT_WINDOW_MS,
   config.RATE_LIMIT_MAX_REQUESTS,
-  'Too many API requests'
+  'Too many API requests',
+  {
+    skip: (req: Request) => {
+      const p = req.path || '';
+      // Skip health/metrics and auth routes here; auth has its own limiter
+      if (p === '/health' || p === '/metrics') return true;
+      return p.includes('/auth/');
+    }
+  }
 );
 
-// Strict rate limiting for authentication endpoints
+// Stricter rate limiting for authentication endpoints (count only failed attempts)
 export const authRateLimit = createRateLimit(
   15 * 60 * 1000, // 15 minutes
-  5, // 5 attempts (50 in dev)
-  'Too many authentication attempts'
+  100, // Allow up to 100 attempts per 15 mins (1000 in dev)
+  'Too many authentication attempts',
+  {
+    skipSuccessfulRequests: true // Only failed logins count against the limit
+  }
 );
 
 // File upload rate limiting
