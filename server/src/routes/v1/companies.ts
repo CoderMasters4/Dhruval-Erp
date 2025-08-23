@@ -10,7 +10,7 @@ const router = Router();
 // COMPANIES API V1 ROUTES
 // =============================================
 
-// GET /api/v1/companies/test - Test endpoint (public)
+// GET /api/v1/companies/test - Test endpoint (COMPLETELY PUBLIC - NO AUTH)
 router.get('/test', async (req: Request, res: Response) => {
   try {
     logger.info('GET /api/v1/companies/test - Test endpoint');
@@ -67,14 +67,16 @@ router.get('/', authenticate, async (req: Request, res: Response) => {
   }
 });
 
-// GET /api/v1/companies/:id - Get company by ID
-router.get('/:id', async (req: Request, res: Response) => {
+// GET /api/v1/companies/:id - Get company by ID with detailed information (SUPERADMIN CAN ACCESS WITHOUT COMPANY ID)
+router.get('/:id', authenticate, async (req: Request, res: Response) => {
+  const { id } = req.params;
+  
   try {
-    const { id } = req.params;
     logger.info(`GET /api/v1/companies/${id} - Fetching company details`);
 
     const company = await Company.findById(id)
-      .select('companyName companyCode contactInfo addresses registrationDetails createdAt updatedAt');
+      .populate('createdBy', 'username personalInfo.firstName personalInfo.lastName email')
+      .select('-__v');
 
     if (!company) {
       return res.status(404).json({
@@ -85,6 +87,7 @@ router.get('/:id', async (req: Request, res: Response) => {
       });
     }
 
+    // For now, just return company details without users and stats
     res.status(200).json({
       success: true,
       message: 'Company retrieved successfully',
@@ -93,11 +96,51 @@ router.get('/:id', async (req: Request, res: Response) => {
     });
 
   } catch (error: any) {
-    logger.error('Error fetching company:', error);
+    logger.error('Error fetching company:', {
+      error: error.message,
+      stack: error.stack,
+      companyId: id
+    });
     res.status(500).json({
       success: false,
       error: 'Internal Server Error',
       message: 'Failed to fetch company',
+      details: error.message,
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
+// GET /api/v1/companies/stats - Get company statistics (SUPERADMIN CAN ACCESS WITHOUT COMPANY ID)
+router.get('/stats', authenticate, async (req: Request, res: Response) => {
+  try {
+    logger.info('GET /api/v1/companies/stats - Fetching company statistics');
+
+    const stats = await Company.aggregate([
+      { $match: { isActive: true } },
+      {
+        $group: {
+          _id: null,
+          totalCompanies: { $sum: 1 },
+          activeCompanies: { $sum: { $cond: [{ $eq: ['$isActive', true] }, 1, 0] } },
+          inactiveCompanies: { $sum: { $cond: [{ $eq: ['$isActive', false] }, 1, 0] } }
+        }
+      }
+    ]);
+
+    res.status(200).json({
+      success: true,
+      message: 'Company statistics retrieved successfully',
+      data: stats[0] || { totalCompanies: 0, activeCompanies: 0, inactiveCompanies: 0 },
+      timestamp: new Date().toISOString()
+    });
+
+  } catch (error: any) {
+    logger.error('Error fetching company statistics:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Internal Server Error',
+      message: 'Failed to fetch company statistics',
       timestamp: new Date().toISOString()
     });
   }
@@ -109,7 +152,7 @@ router.post('/', authenticate, async (req: Request, res: Response) => {
     const user = (req as any).user;
     logger.info('POST /api/v1/companies - Creating new company', { userId: user.id });
 
-    const { companyName, companyCode, email, phone, website } = req.body;
+    const { companyName, companyCode, email, phone, website, address, gstin, pan } = req.body;
 
     // Validation
     if (!companyName || !email) {
@@ -151,26 +194,26 @@ router.post('/', authenticate, async (req: Request, res: Response) => {
       },
       addresses: {
         registeredOffice: {
-          street: '',
-          city: '',
-          state: '',
-          country: 'India',
-          pincode: '',
+          street: address?.street || '',
+          city: address?.city || '',
+          state: address?.state || '',
+          country: address?.country || 'India',
+          pincode: address?.pincode || '',
           isActive: true
         },
         factoryAddress: {
-          street: '',
-          city: '',
-          state: '',
-          country: 'India',
-          pincode: '',
+          street: address?.street || '',
+          city: address?.city || '',
+          state: address?.state || '',
+          country: address?.country || 'India',
+          pincode: address?.pincode || '',
           isActive: true
         },
         warehouseAddresses: []
       },
       registrationDetails: {
-        gstin: '',
-        pan: ''
+        gstin: gstin || '',
+        pan: pan || ''
       },
       businessConfig: {
         currency: 'INR',
@@ -195,18 +238,15 @@ router.post('/', authenticate, async (req: Request, res: Response) => {
 
     await company.save();
 
+    // Get populated company data
+    const populatedCompany = await Company.findById(company._id)
+      .populate('createdBy', 'username personalInfo.firstName personalInfo.lastName')
+      .select('-__v');
+
     res.status(201).json({
       success: true,
       message: 'Company created successfully',
-      data: {
-        id: company._id,
-        companyName: company.companyName,
-        companyCode: company.companyCode,
-        email: company.contactInfo.emails[0]?.email,
-        phone: company.contactInfo.phones[0]?.number,
-        website: company.contactInfo.website,
-        createdAt: company.createdAt
-      },
+      data: populatedCompany,
       timestamp: new Date().toISOString()
     });
 
@@ -316,44 +356,6 @@ router.delete('/:id', authenticate, async (req: Request, res: Response) => {
   }
 });
 
-// GET /api/v1/companies/stats - Get companies statistics
-router.get('/stats', authenticate, async (req: Request, res: Response) => {
-  try {
-    logger.info('GET /api/v1/companies/stats - Fetching companies statistics');
 
-    const stats = await Company.aggregate([
-      {
-        $group: {
-          _id: null,
-          total: { $sum: 1 },
-          active: { $sum: { $cond: [{ $eq: ['$isActive', true] }, 1, 0] } },
-          inactive: { $sum: { $cond: [{ $eq: ['$isActive', false] }, 1, 0] } }
-        }
-      }
-    ]);
-
-    const result = stats[0] || { total: 0, active: 0, inactive: 0 };
-
-    res.status(200).json({
-      success: true,
-      message: 'Companies statistics retrieved successfully',
-      data: {
-        totalCompanies: result.total,
-        activeCompanies: result.active,
-        inactiveCompanies: result.inactive
-      },
-      timestamp: new Date().toISOString()
-    });
-
-  } catch (error: any) {
-    logger.error('Error fetching companies statistics:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Internal Server Error',
-      message: 'Failed to fetch companies statistics',
-      timestamp: new Date().toISOString()
-    });
-  }
-});
 
 export default router;

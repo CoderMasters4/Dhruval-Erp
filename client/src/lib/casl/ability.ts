@@ -36,6 +36,13 @@ export type Subjects =
   | 'Quotation'
   | 'FinancialTransaction'
 
+  // Human Resources Models
+  | 'Manpower'
+  | 'Attendance'
+
+  // Sticker & Label Models
+  | 'Sticker'
+
   // Security & Management Models
   | 'Visitor'
   | 'Vehicle'
@@ -77,6 +84,9 @@ const rolePermissions = {
     { action: 'manage' as Actions, subject: 'Invoice' as Subjects },
     { action: 'read' as Actions, subject: 'Report' as Subjects },
     { action: 'read' as Actions, subject: 'Settings' as Subjects },
+    { action: 'manage' as Actions, subject: 'Manpower' as Subjects },
+    { action: 'manage' as Actions, subject: 'Attendance' as Subjects },
+    { action: 'manage' as Actions, subject: 'Sticker' as Subjects },
   ],
   'manager': [
     { action: 'read' as Actions, subject: 'Dashboard' as Subjects },
@@ -91,6 +101,9 @@ const rolePermissions = {
     { action: 'manage' as Actions, subject: 'CustomerOrder' as Subjects },
     { action: 'manage' as Actions, subject: 'Invoice' as Subjects },
     { action: 'read' as Actions, subject: 'Report' as Subjects },
+    { action: 'read' as Actions, subject: 'Manpower' as Subjects },
+    { action: 'read' as Actions, subject: 'Attendance' as Subjects },
+    { action: 'read' as Actions, subject: 'Sticker' as Subjects },
   ],
   'sales': [
     { action: 'read' as Actions, subject: 'Dashboard' as Subjects },
@@ -117,6 +130,18 @@ const rolePermissions = {
     { action: 'manage' as Actions, subject: 'StockMovement' as Subjects },
     { action: 'read' as Actions, subject: 'ProductionOrder' as Subjects },
     { action: 'read' as Actions, subject: 'CustomerOrder' as Subjects },
+  ],
+  'hr': [
+    { action: 'read' as Actions, subject: 'Dashboard' as Subjects },
+    { action: 'manage' as Actions, subject: 'Manpower' as Subjects },
+    { action: 'manage' as Actions, subject: 'Attendance' as Subjects },
+    { action: 'read' as Actions, subject: 'Report' as Subjects },
+  ],
+  'employee': [
+    { action: 'read' as Actions, subject: 'Dashboard' as Subjects },
+    { action: 'read' as Actions, subject: 'Manpower' as Subjects },
+    { action: 'update' as Actions, subject: 'Attendance' as Subjects },
+    { action: 'read' as Actions, subject: 'Attendance' as Subjects },
   ],
   'accountant': [
     { action: 'read' as Actions, subject: 'Dashboard' as Subjects },

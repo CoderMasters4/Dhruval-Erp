@@ -438,8 +438,8 @@ const CompanyList: React.FC<CompanyListProps> = ({
             {/* Header with sky blue background */}
             <div className="bg-sky-500 p-6 relative overflow-hidden">
               {/* Background Pattern */}
-              <div className="absolute -top-4 -right-4 w-20 h-20 bg-white bg-opacity-20 rounded-full"></div>
-              <div className="absolute -bottom-2 -left-2 w-12 h-12 bg-white bg-opacity-10 rounded-full"></div>
+              <div className="absolute -top-4 -right-4 w-20 h-20 bg-white/20 rounded-full"></div>
+              <div className="absolute -bottom-2 -left-2 w-12 h-12 bg-white/10 rounded-full"></div>
 
               <div className="relative z-10 flex items-start justify-between">
                 <div className="flex-1 min-w-0">
@@ -447,7 +447,7 @@ const CompanyList: React.FC<CompanyListProps> = ({
                     {company.companyName}
                   </h3>
                   <div className="flex items-center gap-3">
-                    <p className="text-sky-100 text-sm font-semibold font-mono bg-white bg-opacity-20 px-3 py-1.5 rounded-full">
+                    <p className="text-sky-100 text-sm font-semibold font-mono bg-white/20 px-3 py-1.5 rounded-full">
                       {company.companyCode}
                     </p>
                     <span className="text-sky-100 text-sm">
@@ -458,21 +458,21 @@ const CompanyList: React.FC<CompanyListProps> = ({
                 <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all duration-200 ml-2">
                   <Button
                     onClick={() => onView(company)}
-                    className="p-2 text-white hover:text-sky-200 hover:bg-white hover:bg-opacity-20 rounded-xl transition-colors bg-transparent border-0"
+                    className="p-2 text-white hover:text-sky-200 hover:bg-white/20 rounded-xl transition-colors bg-transparent border-0"
                     title="View Details"
                   >
                     <Eye className="h-4 w-4" />
                   </Button>
                   <Button
                     onClick={() => onEdit(company)}
-                    className="p-2 text-white hover:text-yellow-200 hover:bg-white hover:bg-opacity-20 rounded-xl transition-colors bg-transparent border-0"
+                    className="p-2 text-white hover:text-yellow-200 hover:bg-white/20 rounded-xl transition-colors bg-transparent border-0"
                     title="Edit Company"
                   >
                     <Edit className="h-4 w-4" />
                   </Button>
                   <Button
                     onClick={() => onDelete(company)}
-                    className="p-2 text-white hover:text-red-300 hover:bg-white hover:bg-opacity-20 rounded-xl transition-colors bg-transparent border-0"
+                    className="p-2 text-white hover:text-red-300 hover:bg-white/20 rounded-xl transition-colors bg-transparent border-0"
                     title="Delete Company"
                   >
                     <Trash2 className="h-4 w-4" />

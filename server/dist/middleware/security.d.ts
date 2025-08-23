@@ -35,7 +35,7 @@ export declare const helmetOptions: {
         policy: "same-origin";
     };
 };
-export declare const createRateLimit: (windowMs: number, max: number, message?: string) => import("express-rate-limit").RateLimitRequestHandler;
+export declare const createRateLimit: (windowMs: number, max: number, message?: string, extraOptions?: Record<string, any>) => import("express-rate-limit").RateLimitRequestHandler;
 export declare const generalRateLimit: import("express-rate-limit").RateLimitRequestHandler;
 export declare const authRateLimit: import("express-rate-limit").RateLimitRequestHandler;
 export declare const uploadRateLimit: import("express-rate-limit").RateLimitRequestHandler;

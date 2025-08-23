@@ -40,11 +40,11 @@ export function AppLayout({ children }: AppLayoutProps) {
 
   return (
     <ProtectedRoute>
-      <div className="min-h-screen bg-gray-50 relative">
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 relative transition-all duration-300">
         {/* Mobile overlay */}
         {isOpen && (
           <div
-            className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
+            className="fixed inset-0 bg-black/50 dark:bg-black/70 z-40 lg:hidden transition-opacity duration-300 backdrop-blur-sm"
             onClick={() => dispatch(setSidebarOpen(false))}
           />
         )}
@@ -59,7 +59,7 @@ export function AppLayout({ children }: AppLayoutProps) {
         )}>
           <Header />
 
-          <main className="p-3 sm:p-4 lg:p-6">
+          <main className="p-3 sm:p-4 lg:p-6 transition-all duration-300">
             {/* Content root for modals to portal into, so sidebar remains interactive */}
             <div id="app-content-root" className="relative max-w-7xl mx-auto">
               {children}

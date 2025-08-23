@@ -173,7 +173,7 @@ export default function SupplierWisePurchaseReportPage() {
         <div className="bg-gradient-to-r from-blue-600 to-indigo-700 rounded-2xl shadow-xl p-6 text-white">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
             <div className="flex items-center gap-4">
-              <div className="p-3 bg-white bg-opacity-20 rounded-xl">
+              <div className="p-3 bg-white/20 rounded-xl">
                 <BarChart3 className="h-8 w-8" />
               </div>
               <div>
@@ -189,7 +189,7 @@ export default function SupplierWisePurchaseReportPage() {
             <div className="flex items-center gap-3">
               <Button
                 onClick={() => setShowFilters(!showFilters)}
-                className="bg-white bg-opacity-20 hover:bg-opacity-30 text-white border-white border px-4 py-2 rounded-xl transition-all"
+                className="bg-white/20 hover:bg-white/30 text-white border-white border px-4 py-2 rounded-xl transition-all"
               >
                 <Filter className="h-4 w-4 mr-2" />
                 Filters
@@ -198,7 +198,7 @@ export default function SupplierWisePurchaseReportPage() {
               <Button
                 onClick={() => refetchReport()}
                 disabled={reportLoading}
-                className="bg-white bg-opacity-20 hover:bg-opacity-30 text-white border-white border px-4 py-2 rounded-xl transition-all"
+                className="bg-white/20 hover:bg-white/30 text-white border-white border px-4 py-2 rounded-xl transition-all"
               >
                 <RefreshCw className={clsx("h-4 w-4 mr-2", reportLoading && "animate-spin")} />
                 Refresh
@@ -207,7 +207,7 @@ export default function SupplierWisePurchaseReportPage() {
               <div className="relative">
                 <select
                   onChange={(e) => e.target.value && handleExport(e.target.value as any)}
-                  className="bg-white bg-opacity-20 hover:bg-opacity-30 text-white border-white border px-4 py-2 rounded-xl appearance-none pr-8 cursor-pointer"
+                  className="bg-white/20 hover:bg-white/30 text-white border-white border px-4 py-2 rounded-xl appearance-none pr-8 cursor-pointer"
                   defaultValue=""
                 >
                   <option value="" disabled>Export</option>
@@ -510,7 +510,7 @@ export default function SupplierWisePurchaseReportPage() {
                   totalItems={pagination.total}
                   itemsPerPage={pagination.limit}
                   onPageChange={handlePageChange}
-                  onItemsPerPageChange={handleItemsPerPageChange}
+                  onLimitChange={handleItemsPerPageChange}
                 />
               </div>
             )}
@@ -532,13 +532,13 @@ export default function SupplierWisePurchaseReportPage() {
 
         {/* Supplier Details Modal */}
         {showSupplierDetails && selectedSupplier && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="fixed inset-0 bg-black bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
             <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden">
               {/* Modal Header */}
               <div className="bg-gradient-to-r from-blue-600 to-indigo-700 p-6 text-white">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-4">
-                    <div className="h-12 w-12 bg-white bg-opacity-20 rounded-xl flex items-center justify-center">
+                    <div className="h-12 w-12 bg-white/20 rounded-xl flex items-center justify-center">
                       <Building2 className="h-6 w-6" />
                     </div>
                     <div>
@@ -552,7 +552,7 @@ export default function SupplierWisePurchaseReportPage() {
                   </div>
                   <Button
                     onClick={() => setShowSupplierDetails(false)}
-                    className="p-2 text-white hover:bg-white hover:bg-opacity-20 rounded-xl bg-transparent border-0"
+                    className="p-2 text-white hover:bg-white/20 rounded-xl bg-transparent border-0"
                   >
                     <X className="h-6 w-6" />
                   </Button>

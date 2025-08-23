@@ -33,6 +33,8 @@ const hospitality_1 = __importDefault(require("./hospitality"));
 const dispatch_1 = __importDefault(require("./dispatch"));
 const reports_1 = __importDefault(require("./reports"));
 const spares_1 = __importDefault(require("./spares"));
+const manpower_1 = __importDefault(require("./manpower"));
+const stickers_1 = __importDefault(require("./stickers"));
 const router = (0, express_1.Router)();
 router.get('/health', (req, res) => {
     res.status(200).json({
@@ -48,12 +50,12 @@ router.get('/info', (req, res) => {
         data: {
             name: 'Factory ERP API',
             version: '2.0.0',
-            description: 'Complete Factory ERP System with 24 Models',
+            description: 'Complete Factory ERP System with 27 Models',
             features: [
                 'Multi-tenant Company Management',
                 'Advanced User Management with Dynamic Roles',
-                'Comprehensive Visitor Management',
-                'Complete Inventory Management',
+                'Complete Visitor Management',
+                'Comprehensive Inventory Management',
                 'Production Order Management',
                 'Sales & Purchase Management',
                 'Financial Transaction Management',
@@ -62,7 +64,9 @@ router.get('/info', (req, res) => {
                 'Industrial Monitoring Systems',
                 'Hospitality Management',
                 'Advanced Logistics & Dispatch',
-                'Dynamic Report Generation'
+                'Dynamic Report Generation',
+                'Manpower & Attendance Management',
+                'Barcode & Sticker System'
             ],
             endpoints: {
                 auth: '/api/v1/auth',
@@ -90,7 +94,9 @@ router.get('/info', (req, res) => {
                 hospitality: '/api/v1/hospitality',
                 dispatch: '/api/v1/dispatch',
                 reports: '/api/v1/reports',
-                spares: '/api/v1/spares'
+                spares: '/api/v1/spares',
+                manpower: '/api/v1/manpower',
+                stickers: '/api/v1/stickers'
             }
         },
         timestamp: new Date().toISOString()
@@ -123,6 +129,8 @@ router.use('/hospitality', hospitality_1.default);
 router.use('/dispatch', dispatch_1.default);
 router.use('/reports', reports_1.default);
 router.use('/spares', spares_1.default);
+router.use('/manpower', manpower_1.default);
+router.use('/stickers', stickers_1.default);
 router.get('/protected', auth_1.authenticate, (req, res) => {
     const user = req.user;
     res.status(200).json({

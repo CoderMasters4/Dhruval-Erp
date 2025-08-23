@@ -4,7 +4,7 @@ export interface Company {
   _id: string
   companyCode: string
   companyName: string
-  legalName: string
+  legalName?: string
   contactInfo: {
     phones: Array<{
       type: string
@@ -22,34 +22,42 @@ export interface Company {
   isActive: boolean
   createdAt: string
   updatedAt?: string
-  userCount: number
-  activeUsers: number
-  registrationDetails?: {
-    gstin?: string
-    pan?: string
-    cin?: string
-    udyogAadhar?: string
-  }
-  addresses?: {
-    registeredOffice?: {
-      street?: string
-      area?: string
-      city?: string
-      state?: string
-      pincode?: string
-      country?: string
+  createdBy?: {
+    _id: string
+    username: string
+    personalInfo: {
+      firstName: string
+      lastName: string
     }
-    factoryAddress?: {
-      street?: string
-      area?: string
-      city?: string
-      state?: string
-      pincode?: string
-      country?: string
+    email: string
+  }
+  lastModifiedBy?: {
+    _id: string
+    username: string
+    personalInfo: {
+      firstName: string
+      lastName: string
     }
   }
+  users?: Array<{
+    _id: string
+    username: string
+    personalInfo: {
+      firstName: string
+      lastName: string
+    }
+    email: string
+    companyAccess: Array<{
+      companyId: string
+      role: string
+      department?: string
+      isActive: boolean
+    }>
+  }>
   stats?: {
     totalUsers?: number
+    activeUsers?: number
+    roles?: Record<string, number>
     totalProducts?: number
     totalOrders?: number
     monthlyRevenue?: number
@@ -60,12 +68,86 @@ export interface Company {
     totalRevenue?: number
     monthlyGrowth?: number
   }
+  registrationDetails?: {
+    gstin?: string
+    pan?: string
+    cin?: string
+    udyogAadhar?: string
+    registrationDate?: string
+  }
+  addresses?: {
+    registeredOffice?: {
+      street?: string
+      area?: string
+      city?: string
+      state?: string
+      pincode?: string
+      country?: string
+      isActive?: boolean
+    }
+    factoryAddress?: {
+      street?: string
+      area?: string
+      city?: string
+      state?: string
+      pincode?: string
+      country?: string
+      isActive?: boolean
+    }
+    warehouseAddresses?: Array<{
+      warehouseName: string
+      street: string
+      area: string
+      city: string
+      state: string
+      pincode: string
+    }>
+  }
+  businessConfig?: {
+    currency?: string
+    timezone?: string
+    fiscalYearStart?: string
+    workingDays?: string[]
+    workingHours?: {
+      start?: string
+      end?: string
+      breakStart?: string
+      breakEnd?: string
+    }
+    gstRates?: {
+      defaultRate?: number
+      rawMaterialRate?: number
+      finishedGoodsRate?: number
+    }
+  }
+  productionCapabilities?: {
+    productTypes?: string[]
+    printingMethods?: string[]
+    qualityCertifications?: string[]
+  }
+  bankAccounts?: Array<{
+    bankName: string
+    branchName: string
+    accountNumber: string
+    ifscCode: string
+    accountType: string
+    accountHolderName: string
+    currentBalance: number
+    isActive: boolean
+    isPrimary: boolean
+  }>
+  licenses?: Array<{
+    name?: string
+    status?: string
+  }>
 }
 
 export interface CompaniesResponse {
   success: boolean
+  message: string
   data: Company[]
-  total: number
+  count: number
+  timestamp: string
 }
 
 export const companiesApi = baseApi.injectEndpoints({
@@ -103,7 +185,7 @@ export const companiesApi = baseApi.injectEndpoints({
       invalidatesTags: ['Company'],
     }),
   }),
-})
+});
 
 export const {
   useGetAllCompaniesQuery,
@@ -111,4 +193,4 @@ export const {
   useCreateCompanyMutation,
   useUpdateCompanyMutation,
   useDeleteCompanyMutation,
-} = companiesApi
+} = companiesApi;

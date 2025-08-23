@@ -24,7 +24,10 @@ import Hospitality from './Hospitality';
 import Dispatch from './Dispatch';
 import Report from './Report';
 import Spare from './Spare';
-export { Company, User, InventoryItem, StockMovement, ProductionOrder, CustomerOrder, Customer, CustomerVisit, Supplier, FinancialTransaction, AuditLog, Role, Visitor, Vehicle, SecurityLog, Warehouse, Invoice, PurchaseOrder, Quotation, BusinessAnalytics, BoilerMonitoring, ElectricityMonitoring, Hospitality, Dispatch, Report, Spare };
+import Manpower from './Manpower';
+import Attendance from './Attendance';
+import Sticker from './Sticker';
+export { Company, User, InventoryItem, StockMovement, ProductionOrder, CustomerOrder, Customer, CustomerVisit, Supplier, FinancialTransaction, AuditLog, Role, Visitor, Vehicle, SecurityLog, Warehouse, Invoice, PurchaseOrder, Quotation, BusinessAnalytics, BoilerMonitoring, ElectricityMonitoring, Hospitality, Dispatch, Report, Spare, Manpower, Attendance, Sticker };
 declare const _default: {
     Company: import("mongoose").Model<import("../types/models").ICompany, {}, {}, {}, import("mongoose").Document<unknown, {}, import("../types/models").ICompany, {}> & import("../types/models").ICompany & Required<{
         _id: import("mongoose").Types.ObjectId;
@@ -149,6 +152,460 @@ declare const _default: {
     }, any>;
     Spare: import("mongoose").Model<import("../types/models").ISpare, {}, {}, {}, import("mongoose").Document<unknown, {}, import("../types/models").ISpare, {}> & import("../types/models").ISpare & Required<{
         _id: import("mongoose").Types.ObjectId;
+    }> & {
+        __v: number;
+    }, any>;
+    Manpower: import("mongoose").Model<{
+        createdAt: NativeDate;
+        updatedAt: NativeDate;
+    } & {
+        companyId: import("mongoose").Types.ObjectId;
+        isActive: boolean;
+        employeeId: string;
+        documents: import("mongoose").Types.DocumentArray<{
+            documentType: "Other" | "ID Proof" | "Address Proof" | "Educational Certificate" | "Experience Certificate";
+            isVerified: boolean;
+            expiryDate?: NativeDate;
+            documentUrl?: string;
+            documentNumber?: string;
+        }, import("mongoose").Types.Subdocument<import("mongoose").Types.ObjectId, any, {
+            documentType: "Other" | "ID Proof" | "Address Proof" | "Educational Certificate" | "Experience Certificate";
+            isVerified: boolean;
+            expiryDate?: NativeDate;
+            documentUrl?: string;
+            documentNumber?: string;
+        }> & {
+            documentType: "Other" | "ID Proof" | "Address Proof" | "Educational Certificate" | "Experience Certificate";
+            isVerified: boolean;
+            expiryDate?: NativeDate;
+            documentUrl?: string;
+            documentNumber?: string;
+        }>;
+        skills: import("mongoose").Types.DocumentArray<{
+            skillName: string;
+            proficiency: "Beginner" | "Intermediate" | "Advanced" | "Expert";
+            yearsOfExperience?: number;
+        }, import("mongoose").Types.Subdocument<import("mongoose").Types.ObjectId, any, {
+            skillName: string;
+            proficiency: "Beginner" | "Intermediate" | "Advanced" | "Expert";
+            yearsOfExperience?: number;
+        }> & {
+            skillName: string;
+            proficiency: "Beginner" | "Intermediate" | "Advanced" | "Expert";
+            yearsOfExperience?: number;
+        }>;
+        createdBy?: import("mongoose").Types.ObjectId;
+        personalInfo?: {
+            email: string;
+            phone: string;
+            firstName: string;
+            lastName: string;
+            displayName?: string;
+            middleName?: string;
+            alternatePhone?: string;
+            dateOfBirth?: NativeDate;
+            gender?: "Male" | "Female" | "Other";
+            bloodGroup?: "A+" | "B+" | "A-" | "B-" | "AB+" | "AB-" | "O+" | "O-";
+            profilePhoto?: string;
+        };
+        emergencyContact?: {
+            phone: string;
+            name: string;
+            relationship: string;
+            address?: string;
+        };
+        companyInfo?: {
+            companyId: import("mongoose").Types.ObjectId;
+            location?: string;
+            workLocation?: string;
+        };
+        employmentInfo?: {
+            status: "Active" | "Inactive" | "Suspended" | "Terminated" | "On Leave";
+            department: "Management" | "Production" | "Sales" | "Accounts" | "Security" | "Quality" | "Purchase" | "HR" | "Maintenance" | "IT";
+            designation: string;
+            joiningDate: NativeDate;
+            employeeType: "Contract" | "Full-time" | "Part-time" | "Intern" | "Temporary";
+            reportingTo?: import("mongoose").Types.ObjectId;
+        };
+    }, {}, {}, {}, import("mongoose").Document<unknown, {}, {
+        createdAt: NativeDate;
+        updatedAt: NativeDate;
+    } & {
+        companyId: import("mongoose").Types.ObjectId;
+        isActive: boolean;
+        employeeId: string;
+        documents: import("mongoose").Types.DocumentArray<{
+            documentType: "Other" | "ID Proof" | "Address Proof" | "Educational Certificate" | "Experience Certificate";
+            isVerified: boolean;
+            expiryDate?: NativeDate;
+            documentUrl?: string;
+            documentNumber?: string;
+        }, import("mongoose").Types.Subdocument<import("mongoose").Types.ObjectId, any, {
+            documentType: "Other" | "ID Proof" | "Address Proof" | "Educational Certificate" | "Experience Certificate";
+            isVerified: boolean;
+            expiryDate?: NativeDate;
+            documentUrl?: string;
+            documentNumber?: string;
+        }> & {
+            documentType: "Other" | "ID Proof" | "Address Proof" | "Educational Certificate" | "Experience Certificate";
+            isVerified: boolean;
+            expiryDate?: NativeDate;
+            documentUrl?: string;
+            documentNumber?: string;
+        }>;
+        skills: import("mongoose").Types.DocumentArray<{
+            skillName: string;
+            proficiency: "Beginner" | "Intermediate" | "Advanced" | "Expert";
+            yearsOfExperience?: number;
+        }, import("mongoose").Types.Subdocument<import("mongoose").Types.ObjectId, any, {
+            skillName: string;
+            proficiency: "Beginner" | "Intermediate" | "Advanced" | "Expert";
+            yearsOfExperience?: number;
+        }> & {
+            skillName: string;
+            proficiency: "Beginner" | "Intermediate" | "Advanced" | "Expert";
+            yearsOfExperience?: number;
+        }>;
+        createdBy?: import("mongoose").Types.ObjectId;
+        personalInfo?: {
+            email: string;
+            phone: string;
+            firstName: string;
+            lastName: string;
+            displayName?: string;
+            middleName?: string;
+            alternatePhone?: string;
+            dateOfBirth?: NativeDate;
+            gender?: "Male" | "Female" | "Other";
+            bloodGroup?: "A+" | "B+" | "A-" | "B-" | "AB+" | "AB-" | "O+" | "O-";
+            profilePhoto?: string;
+        };
+        emergencyContact?: {
+            phone: string;
+            name: string;
+            relationship: string;
+            address?: string;
+        };
+        companyInfo?: {
+            companyId: import("mongoose").Types.ObjectId;
+            location?: string;
+            workLocation?: string;
+        };
+        employmentInfo?: {
+            status: "Active" | "Inactive" | "Suspended" | "Terminated" | "On Leave";
+            department: "Management" | "Production" | "Sales" | "Accounts" | "Security" | "Quality" | "Purchase" | "HR" | "Maintenance" | "IT";
+            designation: string;
+            joiningDate: NativeDate;
+            employeeType: "Contract" | "Full-time" | "Part-time" | "Intern" | "Temporary";
+            reportingTo?: import("mongoose").Types.ObjectId;
+        };
+    }, {}> & {
+        createdAt: NativeDate;
+        updatedAt: NativeDate;
+    } & {
+        companyId: import("mongoose").Types.ObjectId;
+        isActive: boolean;
+        employeeId: string;
+        documents: import("mongoose").Types.DocumentArray<{
+            documentType: "Other" | "ID Proof" | "Address Proof" | "Educational Certificate" | "Experience Certificate";
+            isVerified: boolean;
+            expiryDate?: NativeDate;
+            documentUrl?: string;
+            documentNumber?: string;
+        }, import("mongoose").Types.Subdocument<import("mongoose").Types.ObjectId, any, {
+            documentType: "Other" | "ID Proof" | "Address Proof" | "Educational Certificate" | "Experience Certificate";
+            isVerified: boolean;
+            expiryDate?: NativeDate;
+            documentUrl?: string;
+            documentNumber?: string;
+        }> & {
+            documentType: "Other" | "ID Proof" | "Address Proof" | "Educational Certificate" | "Experience Certificate";
+            isVerified: boolean;
+            expiryDate?: NativeDate;
+            documentUrl?: string;
+            documentNumber?: string;
+        }>;
+        skills: import("mongoose").Types.DocumentArray<{
+            skillName: string;
+            proficiency: "Beginner" | "Intermediate" | "Advanced" | "Expert";
+            yearsOfExperience?: number;
+        }, import("mongoose").Types.Subdocument<import("mongoose").Types.ObjectId, any, {
+            skillName: string;
+            proficiency: "Beginner" | "Intermediate" | "Advanced" | "Expert";
+            yearsOfExperience?: number;
+        }> & {
+            skillName: string;
+            proficiency: "Beginner" | "Intermediate" | "Advanced" | "Expert";
+            yearsOfExperience?: number;
+        }>;
+        createdBy?: import("mongoose").Types.ObjectId;
+        personalInfo?: {
+            email: string;
+            phone: string;
+            firstName: string;
+            lastName: string;
+            displayName?: string;
+            middleName?: string;
+            alternatePhone?: string;
+            dateOfBirth?: NativeDate;
+            gender?: "Male" | "Female" | "Other";
+            bloodGroup?: "A+" | "B+" | "A-" | "B-" | "AB+" | "AB-" | "O+" | "O-";
+            profilePhoto?: string;
+        };
+        emergencyContact?: {
+            phone: string;
+            name: string;
+            relationship: string;
+            address?: string;
+        };
+        companyInfo?: {
+            companyId: import("mongoose").Types.ObjectId;
+            location?: string;
+            workLocation?: string;
+        };
+        employmentInfo?: {
+            status: "Active" | "Inactive" | "Suspended" | "Terminated" | "On Leave";
+            department: "Management" | "Production" | "Sales" | "Accounts" | "Security" | "Quality" | "Purchase" | "HR" | "Maintenance" | "IT";
+            designation: string;
+            joiningDate: NativeDate;
+            employeeType: "Contract" | "Full-time" | "Part-time" | "Intern" | "Temporary";
+            reportingTo?: import("mongoose").Types.ObjectId;
+        };
+    } & {
+        _id: import("mongoose").Types.ObjectId;
+    } & {
+        __v: number;
+    }, import("mongoose").Schema<any, import("mongoose").Model<any, any, any, any, any, any>, {}, {}, {}, {}, {
+        timestamps: true;
+        collection: string;
+    }, {
+        createdAt: NativeDate;
+        updatedAt: NativeDate;
+    } & {
+        companyId: import("mongoose").Types.ObjectId;
+        isActive: boolean;
+        employeeId: string;
+        documents: import("mongoose").Types.DocumentArray<{
+            documentType: "Other" | "ID Proof" | "Address Proof" | "Educational Certificate" | "Experience Certificate";
+            isVerified: boolean;
+            expiryDate?: NativeDate;
+            documentUrl?: string;
+            documentNumber?: string;
+        }, import("mongoose").Types.Subdocument<import("mongoose").Types.ObjectId, any, {
+            documentType: "Other" | "ID Proof" | "Address Proof" | "Educational Certificate" | "Experience Certificate";
+            isVerified: boolean;
+            expiryDate?: NativeDate;
+            documentUrl?: string;
+            documentNumber?: string;
+        }> & {
+            documentType: "Other" | "ID Proof" | "Address Proof" | "Educational Certificate" | "Experience Certificate";
+            isVerified: boolean;
+            expiryDate?: NativeDate;
+            documentUrl?: string;
+            documentNumber?: string;
+        }>;
+        skills: import("mongoose").Types.DocumentArray<{
+            skillName: string;
+            proficiency: "Beginner" | "Intermediate" | "Advanced" | "Expert";
+            yearsOfExperience?: number;
+        }, import("mongoose").Types.Subdocument<import("mongoose").Types.ObjectId, any, {
+            skillName: string;
+            proficiency: "Beginner" | "Intermediate" | "Advanced" | "Expert";
+            yearsOfExperience?: number;
+        }> & {
+            skillName: string;
+            proficiency: "Beginner" | "Intermediate" | "Advanced" | "Expert";
+            yearsOfExperience?: number;
+        }>;
+        createdBy?: import("mongoose").Types.ObjectId;
+        personalInfo?: {
+            email: string;
+            phone: string;
+            firstName: string;
+            lastName: string;
+            displayName?: string;
+            middleName?: string;
+            alternatePhone?: string;
+            dateOfBirth?: NativeDate;
+            gender?: "Male" | "Female" | "Other";
+            bloodGroup?: "A+" | "B+" | "A-" | "B-" | "AB+" | "AB-" | "O+" | "O-";
+            profilePhoto?: string;
+        };
+        emergencyContact?: {
+            phone: string;
+            name: string;
+            relationship: string;
+            address?: string;
+        };
+        companyInfo?: {
+            companyId: import("mongoose").Types.ObjectId;
+            location?: string;
+            workLocation?: string;
+        };
+        employmentInfo?: {
+            status: "Active" | "Inactive" | "Suspended" | "Terminated" | "On Leave";
+            department: "Management" | "Production" | "Sales" | "Accounts" | "Security" | "Quality" | "Purchase" | "HR" | "Maintenance" | "IT";
+            designation: string;
+            joiningDate: NativeDate;
+            employeeType: "Contract" | "Full-time" | "Part-time" | "Intern" | "Temporary";
+            reportingTo?: import("mongoose").Types.ObjectId;
+        };
+    }, import("mongoose").Document<unknown, {}, import("mongoose").FlatRecord<{
+        createdAt: NativeDate;
+        updatedAt: NativeDate;
+    } & {
+        companyId: import("mongoose").Types.ObjectId;
+        isActive: boolean;
+        employeeId: string;
+        documents: import("mongoose").Types.DocumentArray<{
+            documentType: "Other" | "ID Proof" | "Address Proof" | "Educational Certificate" | "Experience Certificate";
+            isVerified: boolean;
+            expiryDate?: NativeDate;
+            documentUrl?: string;
+            documentNumber?: string;
+        }, import("mongoose").Types.Subdocument<import("mongoose").Types.ObjectId, any, {
+            documentType: "Other" | "ID Proof" | "Address Proof" | "Educational Certificate" | "Experience Certificate";
+            isVerified: boolean;
+            expiryDate?: NativeDate;
+            documentUrl?: string;
+            documentNumber?: string;
+        }> & {
+            documentType: "Other" | "ID Proof" | "Address Proof" | "Educational Certificate" | "Experience Certificate";
+            isVerified: boolean;
+            expiryDate?: NativeDate;
+            documentUrl?: string;
+            documentNumber?: string;
+        }>;
+        skills: import("mongoose").Types.DocumentArray<{
+            skillName: string;
+            proficiency: "Beginner" | "Intermediate" | "Advanced" | "Expert";
+            yearsOfExperience?: number;
+        }, import("mongoose").Types.Subdocument<import("mongoose").Types.ObjectId, any, {
+            skillName: string;
+            proficiency: "Beginner" | "Intermediate" | "Advanced" | "Expert";
+            yearsOfExperience?: number;
+        }> & {
+            skillName: string;
+            proficiency: "Beginner" | "Intermediate" | "Advanced" | "Expert";
+            yearsOfExperience?: number;
+        }>;
+        createdBy?: import("mongoose").Types.ObjectId;
+        personalInfo?: {
+            email: string;
+            phone: string;
+            firstName: string;
+            lastName: string;
+            displayName?: string;
+            middleName?: string;
+            alternatePhone?: string;
+            dateOfBirth?: NativeDate;
+            gender?: "Male" | "Female" | "Other";
+            bloodGroup?: "A+" | "B+" | "A-" | "B-" | "AB+" | "AB-" | "O+" | "O-";
+            profilePhoto?: string;
+        };
+        emergencyContact?: {
+            phone: string;
+            name: string;
+            relationship: string;
+            address?: string;
+        };
+        companyInfo?: {
+            companyId: import("mongoose").Types.ObjectId;
+            location?: string;
+            workLocation?: string;
+        };
+        employmentInfo?: {
+            status: "Active" | "Inactive" | "Suspended" | "Terminated" | "On Leave";
+            department: "Management" | "Production" | "Sales" | "Accounts" | "Security" | "Quality" | "Purchase" | "HR" | "Maintenance" | "IT";
+            designation: string;
+            joiningDate: NativeDate;
+            employeeType: "Contract" | "Full-time" | "Part-time" | "Intern" | "Temporary";
+            reportingTo?: import("mongoose").Types.ObjectId;
+        };
+    }>, {}> & import("mongoose").FlatRecord<{
+        createdAt: NativeDate;
+        updatedAt: NativeDate;
+    } & {
+        companyId: import("mongoose").Types.ObjectId;
+        isActive: boolean;
+        employeeId: string;
+        documents: import("mongoose").Types.DocumentArray<{
+            documentType: "Other" | "ID Proof" | "Address Proof" | "Educational Certificate" | "Experience Certificate";
+            isVerified: boolean;
+            expiryDate?: NativeDate;
+            documentUrl?: string;
+            documentNumber?: string;
+        }, import("mongoose").Types.Subdocument<import("mongoose").Types.ObjectId, any, {
+            documentType: "Other" | "ID Proof" | "Address Proof" | "Educational Certificate" | "Experience Certificate";
+            isVerified: boolean;
+            expiryDate?: NativeDate;
+            documentUrl?: string;
+            documentNumber?: string;
+        }> & {
+            documentType: "Other" | "ID Proof" | "Address Proof" | "Educational Certificate" | "Experience Certificate";
+            isVerified: boolean;
+            expiryDate?: NativeDate;
+            documentUrl?: string;
+            documentNumber?: string;
+        }>;
+        skills: import("mongoose").Types.DocumentArray<{
+            skillName: string;
+            proficiency: "Beginner" | "Intermediate" | "Advanced" | "Expert";
+            yearsOfExperience?: number;
+        }, import("mongoose").Types.Subdocument<import("mongoose").Types.ObjectId, any, {
+            skillName: string;
+            proficiency: "Beginner" | "Intermediate" | "Advanced" | "Expert";
+            yearsOfExperience?: number;
+        }> & {
+            skillName: string;
+            proficiency: "Beginner" | "Intermediate" | "Advanced" | "Expert";
+            yearsOfExperience?: number;
+        }>;
+        createdBy?: import("mongoose").Types.ObjectId;
+        personalInfo?: {
+            email: string;
+            phone: string;
+            firstName: string;
+            lastName: string;
+            displayName?: string;
+            middleName?: string;
+            alternatePhone?: string;
+            dateOfBirth?: NativeDate;
+            gender?: "Male" | "Female" | "Other";
+            bloodGroup?: "A+" | "B+" | "A-" | "B-" | "AB+" | "AB-" | "O+" | "O-";
+            profilePhoto?: string;
+        };
+        emergencyContact?: {
+            phone: string;
+            name: string;
+            relationship: string;
+            address?: string;
+        };
+        companyInfo?: {
+            companyId: import("mongoose").Types.ObjectId;
+            location?: string;
+            workLocation?: string;
+        };
+        employmentInfo?: {
+            status: "Active" | "Inactive" | "Suspended" | "Terminated" | "On Leave";
+            department: "Management" | "Production" | "Sales" | "Accounts" | "Security" | "Quality" | "Purchase" | "HR" | "Maintenance" | "IT";
+            designation: string;
+            joiningDate: NativeDate;
+            employeeType: "Contract" | "Full-time" | "Part-time" | "Intern" | "Temporary";
+            reportingTo?: import("mongoose").Types.ObjectId;
+        };
+    }> & {
+        _id: import("mongoose").Types.ObjectId;
+    } & {
+        __v: number;
+    }>>;
+    Attendance: import("mongoose").Model<import("./Attendance").IAttendance, {}, {}, {}, import("mongoose").Document<unknown, {}, import("./Attendance").IAttendance, {}> & import("./Attendance").IAttendance & Required<{
+        _id: unknown;
+    }> & {
+        __v: number;
+    }, any>;
+    Sticker: import("mongoose").Model<import("./Sticker").ISticker, {}, {}, {}, import("mongoose").Document<unknown, {}, import("./Sticker").ISticker, {}> & import("./Sticker").ISticker & Required<{
+        _id: unknown;
     }> & {
         __v: number;
     }, any>;

@@ -47,14 +47,38 @@ const uiSlice = createSlice({
     
     setSidebarCollapsed: (state, action: PayloadAction<boolean>) => {
       state.sidebarCollapsed = action.payload
+      
+      // Store in localStorage
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('sidebarCollapsed', JSON.stringify(action.payload))
+      }
     },
     
     setTheme: (state, action: PayloadAction<'light' | 'dark'>) => {
+      console.log('UI Slice: Setting theme to', action.payload)
       state.theme = action.payload
       
       // Store in localStorage
       if (typeof window !== 'undefined') {
         localStorage.setItem('theme', action.payload)
+        console.log('UI Slice: Saved theme to localStorage:', action.payload)
+        
+        // Apply theme to document using Tailwind's class-based approach
+        if (action.payload === 'dark') {
+          document.documentElement.classList.add('dark')
+          console.log('UI Slice: Added dark class to document')
+        } else {
+          document.documentElement.classList.remove('dark')
+          console.log('UI Slice: Removed dark class from document')
+        }
+        
+        console.log('UI Slice: Document classes after update:', document.documentElement.className)
+        
+        // Update meta theme-color for mobile browsers
+        const metaThemeColor = document.querySelector('meta[name="theme-color"]')
+        if (metaThemeColor) {
+          metaThemeColor.setAttribute('content', action.payload === 'dark' ? '#0f172a' : '#ffffff')
+        }
       }
     },
     
@@ -112,11 +136,29 @@ const uiSlice = createSlice({
     
     initializeUI: (state) => {
       if (typeof window !== 'undefined') {
-        const theme = localStorage.getItem('theme') as 'light' | 'dark' | null
-        if (theme) {
-          state.theme = theme
+        // Initialize theme
+        const savedTheme = localStorage.getItem('theme') as 'light' | 'dark' | null
+        if (savedTheme) {
+          state.theme = savedTheme
+          // Apply the saved theme to document
+          if (savedTheme === 'dark') {
+            document.documentElement.classList.add('dark')
+          } else {
+            document.documentElement.classList.remove('dark')
+          }
+        } else {
+          // Check system preference
+          const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
+          state.theme = systemPrefersDark ? 'dark' : 'light'
+          // Apply the system preference to document
+          if (systemPrefersDark) {
+            document.documentElement.classList.add('dark')
+          } else {
+            document.documentElement.classList.remove('dark')
+          }
         }
         
+        // Initialize sidebar collapsed state
         const sidebarCollapsed = localStorage.getItem('sidebarCollapsed')
         if (sidebarCollapsed) {
           state.sidebarCollapsed = JSON.parse(sidebarCollapsed)

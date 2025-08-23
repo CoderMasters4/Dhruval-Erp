@@ -105,9 +105,12 @@ router.get('/:id', authenticate, async (req: Request, res: Response) => {
 router.post('/', authenticate, async (req: Request, res: Response) => {
   try {
     const currentUser = (req as any).user;
-    logger.info('POST /api/v1/users - Creating new user', { userId: currentUser.id });
+    logger.info('POST /api/v1/users - Creating new user', { 
+      userId: currentUser?.id || currentUser?._id,
+      user: currentUser 
+    });
 
-    const { username, email, password, personalInfo, role, department, designation } = req.body;
+    const { username, email, password, personalInfo, role, department, designation, primaryCompanyId, companyAccess } = req.body;
 
     // Validation
     if (!username || !email || !password || !personalInfo?.firstName || !personalInfo?.lastName || !personalInfo?.phone) {
@@ -144,11 +147,18 @@ router.post('/', authenticate, async (req: Request, res: Response) => {
         phone: personalInfo.phone,
         displayName: `${personalInfo.firstName} ${personalInfo.lastName}`
       },
-      role: role || 'user',
-      department: department || '',
-      designation: designation || '',
+      companyAccess: companyAccess || [{
+        companyId: primaryCompanyId,
+        role: role || 'user',
+        department: department || '',
+        designation: designation || '',
+        permissions: companyAccess?.[0]?.permissions || {},
+        isActive: true,
+        joinedAt: new Date()
+      }],
+      primaryCompanyId: primaryCompanyId || null,
       isActive: true,
-      createdBy: currentUser.id
+      createdBy: currentUser?.id || currentUser?._id
     });
 
     await user.save();

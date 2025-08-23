@@ -148,7 +148,6 @@ export interface IUser extends BaseDocument {
   email: string;
   password: string;
   fullName?: string; // Virtual field
-  companyId?: Types.ObjectId; // From JWT payload
   userId?: Types.ObjectId; // From JWT payload
   
   personalInfo: {
@@ -208,6 +207,12 @@ export interface IUser extends BaseDocument {
   comparePassword?(candidatePassword: string): Promise<boolean>;
   incrementLoginAttempts?(): Promise<any>;
   resetLoginAttempts?(): Promise<any>;
+  
+  // Virtual properties for backward compatibility
+  role?: string;
+  companyId?: Types.ObjectId;
+  employeeId?: Types.ObjectId;
+  name?: string;
 }
 
 export interface ICompanyAccess {

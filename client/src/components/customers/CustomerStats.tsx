@@ -13,7 +13,7 @@ import { Customer } from '@/lib/features/customers/customersApi'
 
 interface CustomerStatsProps {
   customers: Customer[]
-  totalCustomers: number
+  totalCustomers?: number
   isLoading: boolean
 }
 
@@ -35,10 +35,13 @@ export default function CustomerStats({ customers, totalCustomers, isLoading }: 
     new Date(customer.createdAt) > thirtyDaysAgo
   ).length
 
+  // Use provided totalCustomers or calculate from customers array
+  const actualTotalCustomers = totalCustomers || customers.length
+
   const stats = [
     {
       title: 'Total Customers',
-      value: totalCustomers,
+      value: actualTotalCustomers,
       icon: Users,
       color: 'bg-sky-500',
       bgColor: 'bg-sky-50',

@@ -775,12 +775,12 @@ const CompanyFormModal: React.FC<CompanyModalProps> = ({
   }
 
   return (
-    <div className="fixed inset-0 bg-white bg-opacity-30 backdrop-blur-md flex items-center justify-center z-[60] p-2 sm:p-4">
+    <div className="fixed inset-0 bg-white/30 backdrop-blur-md flex items-center justify-center z-[60] p-2 sm:p-4">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-5xl max-h-[95vh] overflow-hidden border border-sky-200 relative mx-2 sm:mx-0">
         {/* Header */}
         <div className="flex items-center justify-between p-4 sm:p-6 border-b border-sky-200 bg-sky-500">
           <div className="flex items-center gap-3 sm:gap-4 min-w-0 flex-1">
-            <div className="p-2 sm:p-3 bg-white bg-opacity-20 rounded-xl flex-shrink-0">
+            <div className="p-2 sm:p-3 bg-white/20 rounded-xl flex-shrink-0">
               <Building2 className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
             </div>
             <div className="min-w-0 flex-1">
@@ -794,7 +794,7 @@ const CompanyFormModal: React.FC<CompanyModalProps> = ({
           </div>
           <button
             onClick={onClose}
-            className="text-white hover:text-sky-200 transition-colors p-2 hover:bg-white hover:bg-opacity-20 rounded-xl flex-shrink-0 ml-2"
+            className="text-white hover:text-sky-200 transition-colors p-2 hover:bg-white/20 rounded-xl flex-shrink-0 ml-2"
             disabled={isLoading}
           >
             <X className="w-5 h-5 sm:w-6 sm:h-6" />

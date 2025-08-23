@@ -100,6 +100,10 @@ const users_2 = __importDefault(require("@/routes/v1/users"));
 console.log('✅ V1 Users routes imported');
 const quotations_1 = __importDefault(require("@/routes/v1/quotations"));
 console.log('✅ V1 Quotations routes imported');
+const manpower_1 = __importDefault(require("@/routes/v1/manpower"));
+console.log('✅ V1 Manpower routes imported');
+const stickers_1 = __importDefault(require("@/routes/v1/stickers"));
+console.log('✅ V1 Sticker routes imported');
 console.log('📝 Loading complete V2 routes...');
 console.log('✅ V2 routes temporarily disabled to fix hanging issue');
 console.log('✅ V2 Simple routes temporarily disabled');
@@ -307,6 +311,8 @@ app.use(environment_1.default.API_PREFIX, apiRouter);
 app.use('/api/v1/companies', companies_2.default);
 app.use('/api/v1/users', users_2.default);
 app.use('/api/v1/quotations', quotations_1.default);
+app.use('/api/v1/manpower', manpower_1.default);
+app.use('/api/v1/stickers', stickers_1.default);
 app.get('/api', (req, res) => {
     res.status(200).json({
         success: true,

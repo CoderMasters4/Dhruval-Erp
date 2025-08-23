@@ -205,7 +205,7 @@ export default function SupplierDetailsPage() {
         {/* Enhanced Header with Glassmorphism */}
         <div className="relative overflow-hidden bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-700 rounded-3xl shadow-2xl">
           {/* Background Pattern */}
-          <div className="absolute inset-0 bg-white bg-opacity-10">
+          <div className="absolute inset-0 bg-white/10">
             <div className="absolute inset-0" style={{
               backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.1'%3E%3Ccircle cx='30' cy='30' r='2'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
             }} />
@@ -216,14 +216,14 @@ export default function SupplierDetailsPage() {
               <div className="flex items-center gap-6">
                 <Button
                   onClick={() => router.push('/suppliers')}
-                  className="p-3 bg-white bg-opacity-20 hover:bg-opacity-30 rounded-2xl transition-all duration-300 transform hover:scale-110 backdrop-blur-sm border border-white border-opacity-30"
+                  className="p-3 bg-white/20 hover:bg-white/30 rounded-2xl transition-all duration-300 transform hover:scale-110 backdrop-blur-sm border border-white border-white/30"
                 >
                   <ArrowLeft className="h-6 w-6" />
                 </Button>
 
                 <div className="relative">
-                  <div className="absolute inset-0 bg-white bg-opacity-20 rounded-2xl blur-xl"></div>
-                  <div className="relative p-4 bg-white bg-opacity-20 backdrop-blur-sm rounded-2xl border border-white border-opacity-30">
+                  <div className="absolute inset-0 bg-white/20 rounded-2xl blur-xl"></div>
+                  <div className="relative p-4 bg-white/20 backdrop-blur-sm rounded-2xl border border-white border-white/30">
                     <Building className="h-10 w-10 text-white drop-shadow-lg" />
                   </div>
                 </div>
@@ -236,14 +236,14 @@ export default function SupplierDetailsPage() {
                     {supplier.supplierCode} • {supplier.relationship?.supplierCategory || 'General'}
                   </p>
                   <div className="flex items-center gap-4 mt-3">
-                    <div className="flex items-center gap-2 px-3 py-1 bg-white bg-opacity-20 rounded-full backdrop-blur-sm">
+                    <div className="flex items-center gap-2 px-3 py-1 bg-white/20 rounded-full backdrop-blur-sm">
                       <span className={clsx(
                         'h-2 w-2 rounded-full',
                         supplier.isActive ? 'bg-green-400' : 'bg-red-400'
                       )}></span>
                       <span className="text-sm font-medium">{supplier.isActive ? 'ACTIVE' : 'INACTIVE'}</span>
                     </div>
-                    <div className="flex items-center gap-2 px-3 py-1 bg-white bg-opacity-20 rounded-full backdrop-blur-sm">
+                    <div className="flex items-center gap-2 px-3 py-1 bg-white/20 rounded-full backdrop-blur-sm">
                       <span className="text-sm font-medium">{supplier.relationship?.supplierType?.toUpperCase() || 'TRADER'}</span>
                     </div>
                   </div>
@@ -254,7 +254,7 @@ export default function SupplierDetailsPage() {
                 <Button
                   onClick={() => refetchSupplier()}
                   disabled={supplierLoading}
-                  className="bg-white bg-opacity-20 hover:bg-opacity-30 text-white border border-white border-opacity-30 px-5 py-3 rounded-2xl transition-all duration-300 transform hover:scale-105 backdrop-blur-sm font-medium disabled:opacity-50"
+                  className="bg-white/20 hover:bg-white/30 text-white border border-white border-white/30 px-5 py-3 rounded-2xl transition-all duration-300 transform hover:scale-105 backdrop-blur-sm font-medium disabled:opacity-50"
                 >
                   <RefreshCw className={clsx("h-5 w-5 mr-2 transition-transform", supplierLoading && "animate-spin")} />
                   Refresh
@@ -645,7 +645,7 @@ export default function SupplierDetailsPage() {
                       totalItems={ordersPagination.total}
                       itemsPerPage={ordersPagination.limit}
                       onPageChange={setOrdersPage}
-                      onItemsPerPageChange={setOrdersLimit}
+                      onLimitChange={setOrdersLimit}
                     />
                   </div>
                 )}

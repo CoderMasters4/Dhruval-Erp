@@ -450,4 +450,25 @@ UserSchema.statics.findByCompany = function(companyId: string) {
   });
 };
 
+// Add virtual properties for backward compatibility
+UserSchema.virtual('role').get(function(this: any) {
+  if (this.isSuperAdmin) return 'super_admin';
+  const primaryAccess = this.companyAccess?.find((access: any) => access.isActive);
+  return primaryAccess?.role || 'user';
+});
+
+UserSchema.virtual('companyId').get(function(this: any) {
+  if (this.isSuperAdmin) return null;
+  const primaryAccess = this.companyAccess?.find((access: any) => access.isActive);
+  return primaryAccess?.companyId || null;
+});
+
+UserSchema.virtual('employeeId').get(function(this: any) {
+  return this._id;
+});
+
+UserSchema.virtual('name').get(function(this: any) {
+  return this.fullName;
+});
+
 export default model<IUser>('User', UserSchema);

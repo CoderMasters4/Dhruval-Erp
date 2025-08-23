@@ -180,7 +180,7 @@ export function TwoFactorToggle({ className }: TwoFactorToggleProps) {
 
       {/* Setup Modal */}
       {showSetup && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-lg max-w-md w-full p-6">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">
               Enable Two-Factor Authentication
@@ -254,7 +254,7 @@ export function TwoFactorToggle({ className }: TwoFactorToggleProps) {
 
       {/* Disable Confirmation Modal */}
       {showDisable && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-lg max-w-md w-full p-6">
             <div className="flex items-center space-x-3 mb-4">
               <AlertTriangle className="h-6 w-6 text-red-600" />
@@ -335,7 +335,7 @@ export function TwoFactorToggle({ className }: TwoFactorToggleProps) {
 
       {/* Backup Codes Modal */}
       {showBackupCodes && backupCodes.length > 0 && (
-        <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-2 z-50 overflow-y-auto">
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center p-2 z-50 overflow-y-auto">
           <div className="bg-white rounded-lg max-w-sm w-full mx-2 my-4 p-4 shadow-xl border border-gray-200 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center space-x-2 mb-4">
               <ShieldCheck className="h-5 w-5 text-green-600" />

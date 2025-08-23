@@ -6,6 +6,7 @@ import { Toaster } from 'react-hot-toast'
 import { store } from '@/lib/store'
 import { AuthProvider } from '@/components/auth/AuthProvider'
 import { ModalProvider } from '@/components/providers/ModalProvider'
+import { ThemeProvider } from '@/components/providers/ThemeProvider'
 
 import { initializeUI } from '@/lib/features/ui/uiSlice'
 
@@ -22,46 +23,52 @@ export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <Provider store={store}>
       <AppInitializer>
-        <AuthProvider>
-          <ModalProvider>
-            {children}
-          </ModalProvider>
-          <Toaster
-            position="top-right"
-            toastOptions={{
-              duration: 4000,
-              style: {
-                background: '#363636',
-                color: '#fff',
-                borderRadius: '8px',
-                fontSize: '14px',
-              },
-              success: {
+        <ThemeProvider>
+          <AuthProvider>
+            <ModalProvider>
+              {children}
+            </ModalProvider>
+            <Toaster
+              position="top-right"
+              toastOptions={{
+                duration: 4000,
                 style: {
-                  background: '#10b981',
+                  background: '#ffffff',
+                  color: '#1f2937',
+                  borderRadius: '8px',
+                  fontSize: '14px',
+                  border: '1px solid #e5e7eb',
                 },
-                iconTheme: {
-                  primary: '#fff',
-                  secondary: '#10b981',
+                success: {
+                  style: {
+                    background: '#22c55e',
+                    color: '#ffffff',
+                  },
+                  iconTheme: {
+                    primary: '#ffffff',
+                    secondary: '#22c55e',
+                  },
                 },
-              },
-              error: {
-                style: {
-                  background: '#ef4444',
+                error: {
+                  style: {
+                    background: '#ef4444',
+                    color: '#ffffff',
+                  },
+                  iconTheme: {
+                    primary: '#ffffff',
+                    secondary: '#ef4444',
+                  },
                 },
-                iconTheme: {
-                  primary: '#fff',
-                  secondary: '#ef4444',
+                loading: {
+                  style: {
+                    background: '#3b82f6',
+                    color: '#ffffff',
+                  },
                 },
-              },
-              loading: {
-                style: {
-                  background: '#3b82f6',
-                },
-              },
-            }}
-          />
-        </AuthProvider>
+              }}
+            />
+          </AuthProvider>
+        </ThemeProvider>
       </AppInitializer>
     </Provider>
   )

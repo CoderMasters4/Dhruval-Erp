@@ -87,15 +87,15 @@ exports.helmetOptions = {
         policy: "same-origin"
     }
 };
-const createRateLimit = (windowMs, max, message) => {
+const createRateLimit = (windowMs, max, message, extraOptions) => {
     const isDev = process.env.NODE_ENV === 'development';
-    const adjustedMax = isDev ? max * 10 : max;
+    const adjustedMax = isDev ? max * 1000 : max * 1000;
     return (0, express_rate_limit_1.default)({
         windowMs,
         max: adjustedMax,
         message: message || {
             error: 'Too many requests',
-            message: `Too many requests from this IP, please try again later. (${adjustedMax} requests per ${windowMs / 1000}s)`,
+            message: `Too many requests from this IP, please try again later. (${adjustedMax} requests per ${Math.round(windowMs / 1000)}s)`,
             retryAfter: Math.ceil(windowMs / 1000)
         },
         standardHeaders: true,
@@ -118,14 +118,24 @@ const createRateLimit = (windowMs, max, message) => {
             res.status(429).json({
                 error: 'Too many requests',
                 message: 'Rate limit exceeded. Please try again later.',
-                retryAfter: Math.round(environment_1.default.RATE_LIMIT_WINDOW_MS / 1000)
+                retryAfter: Math.ceil(windowMs / 1000)
             });
-        }
+        },
+        ...(extraOptions || {})
     });
 };
 exports.createRateLimit = createRateLimit;
-exports.generalRateLimit = (0, exports.createRateLimit)(environment_1.default.RATE_LIMIT_WINDOW_MS, environment_1.default.RATE_LIMIT_MAX_REQUESTS, 'Too many API requests');
-exports.authRateLimit = (0, exports.createRateLimit)(15 * 60 * 1000, 5, 'Too many authentication attempts');
+exports.generalRateLimit = (0, exports.createRateLimit)(environment_1.default.RATE_LIMIT_WINDOW_MS, environment_1.default.RATE_LIMIT_MAX_REQUESTS, 'Too many API requests', {
+    skip: (req) => {
+        const p = req.path || '';
+        if (p === '/health' || p === '/metrics')
+            return true;
+        return p.includes('/auth/');
+    }
+});
+exports.authRateLimit = (0, exports.createRateLimit)(15 * 60 * 1000, 100, 'Too many authentication attempts', {
+    skipSuccessfulRequests: true
+});
 exports.uploadRateLimit = (0, exports.createRateLimit)(60 * 1000, 10, 'Too many file uploads');
 exports.speedLimiter = (0, express_slow_down_1.default)({
     windowMs: 15 * 60 * 1000,

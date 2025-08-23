@@ -81,244 +81,118 @@ export default function DashboardPage() {
 
   return (
     <AppLayout>
-      <ResponsiveContainer className="space-y-6">
-        {/* New Header */}
-        <DashboardHeader
-          title={getWelcomeMessage()}
-          description={`Welcome back, ${dashboardData?.data?.user?.name || user?.username || 'User'}! ${getRoleDescription()}`}
-          icon={<BarChart3 className="h-6 w-6 text-white" />}
-          showRefresh={true}
-          onRefresh={() => window.location.reload()}
-        />
+      <div className="min-h-screen bg-gradient-to-br from-white via-sky-50 to-sky-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 transition-all duration-300">
+        <ResponsiveContainer className="space-y-6">
+          {/* New Header */}
+          <DashboardHeader
+            title={getWelcomeMessage()}
+            description={`Welcome back, ${dashboardData?.data?.user?.name || user?.username || 'User'}! ${getRoleDescription()}`}
+            icon={<BarChart3 className="h-6 w-6 text-white" />}
+            showRefresh={true}
+            onRefresh={() => window.location.reload()}
+          />
 
-        {/* Stats */}
-        <RoleBasedStats stats={dashboardData?.data?.stats} loading={isLoading} />
+          {/* Stats */}
+          <RoleBasedStats stats={dashboardData?.data?.stats} loading={isLoading} />
 
-        {/* Main Content Grid */}
-        <ResponsiveGrid
-          cols={{ default: 1, lg: 3 }}
-          gap="lg"
-          className="items-start"
-        >
-          {/* Activity Feed - Takes 2 columns on lg+ screens, full width on mobile */}
-          <div className="lg:col-span-2 order-2 lg:order-1">
-            <RoleBasedActivity activities={dashboardData?.data?.recentActivities} loading={isLoading} />
-          </div>
-
-          {/* Quick Actions - Takes 1 column on lg+ screens, full width on mobile */}
-          <div className="lg:col-span-1 order-1 lg:order-2">
-            <RoleBasedQuickActions loading={isLoading} />
-          </div>
-        </ResponsiveGrid>
-
-        {/* Additional Role-based Content */}
-        {permissions.canViewFinancials && dashboardData?.data?.stats && (
-          <ResponsiveGrid cols={{ default: 1, lg: 2 }} gap="lg">
-            <ResponsiveCard className="border-2 border-sky-500" padding="lg">
-            <h3 className="text-base sm:text-lg font-semibold text-black mb-3 sm:mb-4">Financial Overview</h3>
-            {isLoading ? (
-              <div className="space-y-3">
-                <div className="animate-pulse">
-                  <div className="h-4 bg-sky-200 rounded w-3/4 mb-2"></div>
-                  <div className="h-4 bg-sky-200 rounded w-1/2 mb-2"></div>
-                  <div className="h-4 bg-sky-200 rounded w-2/3"></div>
-                </div>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                <div className="flex justify-between items-center">
-                  <span className="text-sm sm:text-base text-black">Monthly Revenue</span>
-                  <span className="font-semibold text-sky-600 text-sm sm:text-base">
-                    ₹{dashboardData?.data?.stats?.monthlyRevenue?.toLocaleString() || '0'}
-                  </span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-sm sm:text-base text-black">Outstanding Payments</span>
-                  <span className="font-semibold text-black text-sm sm:text-base">
-                    ₹{dashboardData?.data?.stats?.outstandingPayments?.toLocaleString() || '0'}
-                  </span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-sm sm:text-base text-black">Profit Margin</span>
-                  <span className="font-semibold text-sky-600 text-sm sm:text-base">
-                    {dashboardData?.data?.stats?.profitMargin || '0'}%
-                  </span>
-                </div>
-              </div>
-            )}
+          {/* Main Content Grid */}
+          <ResponsiveGrid
+            cols={{ default: 1, lg: 3 }}
+            gap="lg"
+          >
+            {/* Quick Actions */}
+            <ResponsiveCard className="lg:col-span-1">
+              <RoleBasedQuickActions permissions={permissions} />
             </ResponsiveCard>
 
-            <ResponsiveCard className="border-2 border-sky-500" padding="lg">
-            <h3 className="text-base sm:text-lg font-semibold text-black mb-3 sm:mb-4">Recent Orders</h3>
-            {isLoading ? (
-              <div className="space-y-3">
-                <div className="animate-pulse">
-                  <div className="h-4 bg-sky-200 rounded w-full mb-2"></div>
-                  <div className="h-4 bg-sky-200 rounded w-3/4"></div>
-                </div>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                <div className="flex justify-between items-center">
-                  <div className="min-w-0 flex-1">
-                    <p className="font-medium text-black text-sm sm:text-base truncate">ORD-2024-001</p>
-                    <p className="text-xs sm:text-sm text-black opacity-75 truncate">Reliance Industries</p>
-                  </div>
-                  <span className="px-2 py-1 bg-sky-100 text-sky-600 text-xs rounded-full ml-2 flex-shrink-0">Processing</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <div className="min-w-0 flex-1">
-                    <p className="font-medium text-black text-sm sm:text-base truncate">ORD-2024-002</p>
-                    <p className="text-xs sm:text-sm text-black opacity-75 truncate">Tata Motors</p>
-                  </div>
-                  <span className="px-2 py-1 bg-green-100 text-green-600 text-xs rounded-full ml-2 flex-shrink-0">Completed</span>
-                </div>
-              </div>
-            )}
+            {/* Recent Activity */}
+            <ResponsiveCard className="lg:col-span-2">
+              <RoleBasedActivity permissions={permissions} />
             </ResponsiveCard>
           </ResponsiveGrid>
-        )}
 
-      {/* Production Overview - For Production Managers */}
-      {permissions.canViewProduction && (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
-          <div className="bg-white rounded-xl border-2 border-sky-500 p-4 sm:p-6">
-            <h3 className="text-base sm:text-lg font-semibold text-black mb-3 sm:mb-4">Production Status</h3>
-            <div className="space-y-3">
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-black">Active Lines</span>
-                <span className="font-semibold text-sky-600">3/5</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-black">Today&apos;s Output</span>
-                <span className="font-semibold text-black">1,250 units</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-black">Efficiency</span>
-                <span className="font-semibold text-sky-600">94.5%</span>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-xl border-2 border-sky-500 p-4 sm:p-6">
-            <h3 className="text-base sm:text-lg font-semibold text-black mb-3 sm:mb-4">Quality Metrics</h3>
-            <div className="space-y-3">
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-black">Pass Rate</span>
-                <span className="font-semibold text-green-600">98.2%</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-black">Pending QC</span>
-                <span className="font-semibold text-orange-600">8 batches</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-black">Defect Rate</span>
-                <span className="font-semibold text-red-600">1.8%</span>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-xl border-2 border-sky-500 p-4 sm:p-6">
-            <h3 className="text-base sm:text-lg font-semibold text-black mb-3 sm:mb-4">Resource Status</h3>
-            <div className="space-y-3">
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-black">Raw Materials</span>
-                <span className="font-semibold text-green-600">85% Stock</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-black">Machine Health</span>
-                <span className="font-semibold text-sky-600">Good</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-black">Staff Present</span>
-                <span className="font-semibold text-black">42/45</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Inventory Overview */}
-      {permissions.canViewInventory && (
-        <div className="bg-white rounded-xl border-2 border-sky-500 p-4 sm:p-6">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4">
-            <h3 className="text-base sm:text-lg font-semibold text-black">Inventory Status</h3>
-            <button className="mt-2 sm:mt-0 px-3 py-1 bg-sky-500 text-white text-sm rounded-lg hover:bg-black transition-colors">
-              View All
-            </button>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div className="p-3 bg-sky-50 rounded-lg border border-sky-200">
+          {/* Additional Stats Grid */}
+          <ResponsiveGrid
+            cols={{ default: 1, md: 2, lg: 4 }}
+            gap="lg"
+          >
+            {/* User Stats */}
+            <ResponsiveCard className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 border-blue-200 dark:border-blue-700 transition-all duration-300">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-xs text-black opacity-75">Low Stock Items</p>
-                  <p className="text-lg font-bold text-red-600">
-                    {inventoryStats?.data?.lowStockItems || 0}
+                  <p className="text-sm font-medium text-blue-600 dark:text-blue-400">Total Users</p>
+                  <p className="text-2xl font-bold text-blue-900 dark:text-blue-100">
+                    {userStats?.data?.totalUsers || 0}
                   </p>
                 </div>
-                <div className="p-2 bg-red-100 rounded-lg">
-                  <AlertTriangle className="h-4 w-4 text-red-600" />
+                <div className="p-2 bg-blue-100 dark:bg-blue-800 rounded-lg">
+                  <TrendingUp className="h-6 w-6 text-blue-600 dark:text-blue-400" />
                 </div>
               </div>
-            </div>
+            </ResponsiveCard>
 
-            <div className="p-3 bg-sky-50 rounded-lg border border-sky-200">
+            {/* Order Stats */}
+            <ResponsiveCard className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 border-green-200 dark:border-green-700 transition-all duration-300">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-xs text-black opacity-75">Total Items</p>
-                  <p className="text-lg font-bold text-black">
-                    {inventoryStats?.data?.totalItems?.toLocaleString() || 0}
+                  <p className="text-sm font-medium text-green-600 dark:text-green-400">Total Orders</p>
+                  <p className="text-2xl font-bold text-green-900 dark:text-green-100">
+                    {orderStats?.data?.totalOrders || 0}
                   </p>
                 </div>
-                <div className="p-2 bg-sky-100 rounded-lg">
-                  <Package className="h-4 w-4 text-sky-600" />
+                <div className="p-2 bg-green-100 dark:bg-green-800 rounded-lg">
+                  <Truck className="h-6 w-6 text-green-600 dark:text-green-400" />
                 </div>
               </div>
-            </div>
+            </ResponsiveCard>
 
-            <div className="p-3 bg-sky-50 rounded-lg border border-sky-200">
+            {/* Inventory Stats */}
+            <ResponsiveCard className="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20 border-purple-200 dark:border-purple-700 transition-all duration-300">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-xs text-black opacity-75">Stock Value</p>
-                  <p className="text-lg font-bold text-sky-600">
-                    ₹{inventoryStats?.data?.totalValue ?
-                      (inventoryStats.data.totalValue / 100000).toFixed(1) + 'L' : '0'}
+                  <p className="text-sm font-medium text-purple-600 dark:text-purple-400">Inventory Items</p>
+                  <p className="text-2xl font-bold text-purple-900 dark:text-purple-100">
+                    {inventoryStats?.data?.totalItems || 0}
                   </p>
                 </div>
-                <div className="p-2 bg-green-100 rounded-lg">
-                  <TrendingUp className="h-4 w-4 text-green-600" />
+                <div className="p-2 bg-purple-100 dark:bg-purple-800 rounded-lg">
+                  <Package className="h-6 w-6 text-purple-600 dark:text-purple-400" />
                 </div>
               </div>
-            </div>
+            </ResponsiveCard>
 
-            <div className="p-3 bg-sky-50 rounded-lg border border-sky-200">
+            {/* Alerts */}
+            <ResponsiveCard className="bg-gradient-to-br from-red-50 to-red-100 dark:from-red-900/20 dark:to-red-800/20 border-red-200 dark:border-red-700 transition-all duration-300">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-xs text-black opacity-75">Recent Movements</p>
-                  <p className="text-lg font-bold text-black">
-                    {inventoryStats?.data?.recentMovements || 0}
+                  <p className="text-sm font-medium text-red-600 dark:text-red-400">Alerts</p>
+                  <p className="text-2xl font-bold text-red-900 dark:text-red-100">
+                    {inventoryAlerts?.data?.length || 0}
                   </p>
                 </div>
-                <div className="p-2 bg-orange-100 rounded-lg">
-                  <Truck className="h-4 w-4 text-orange-600" />
+                <div className="p-2 bg-red-100 dark:bg-red-800 rounded-lg">
+                  <AlertTriangle className="h-6 w-6 text-red-600 dark:text-red-400" />
                 </div>
               </div>
-            </div>
-          </div>
-        </div>
-      )}
+            </ResponsiveCard>
+          </ResponsiveGrid>
 
-      {/* Error State */}
-        {error && (
-          <ResponsiveCard className="border-2 border-red-500" padding="lg">
-            <h3 className="text-lg font-semibold text-red-600 mb-2">Error Loading Dashboard</h3>
-            <p className="text-black opacity-75">
-              Unable to load dashboard data. Please refresh the page or contact support.
-            </p>
-          </ResponsiveCard>
-        )}
-      </ResponsiveContainer>
+          {/* Error State */}
+          {error && (
+            <ResponsiveCard className="bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-700">
+              <div className="text-center py-8">
+                <AlertTriangle className="h-12 w-12 text-red-500 dark:text-red-400 mx-auto mb-4" />
+                <h3 className="text-lg font-semibold text-red-800 dark:text-red-200 mb-2">
+                  Error Loading Dashboard
+                </h3>
+                <p className="text-red-600 dark:text-red-300">
+                  There was an error loading the dashboard data. Please try refreshing the page.
+                </p>
+              </div>
+            </ResponsiveCard>
+          )}
+        </ResponsiveContainer>
+      </div>
     </AppLayout>
   )
 }

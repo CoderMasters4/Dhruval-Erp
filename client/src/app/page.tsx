@@ -1,137 +1,98 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
+import Link from 'next/link'
+import { Button } from '@/components/ui/Button'
+import { ThemeToggle } from '@/components/ui/ThemeToggle'
 import { useSelector } from 'react-redux'
-import { selectIsAuthenticated } from '@/lib/features/auth/authSlice'
-import { Building2, Shield, BarChart3 } from 'lucide-react'
-import { LoginLogo } from '@/components/ui/Logo'
+import { selectTheme } from '@/lib/features/ui/uiSlice'
 
-export default function Home() {
-  const router = useRouter()
-  const isAuthenticated = useSelector(selectIsAuthenticated)
-
-  const [showContent, setShowContent] = useState(false)
-
-  useEffect(() => {
-    // Show loading animation for a bit
-    const timer = setTimeout(() => {
-      setShowContent(true)
-    }, 500)
-
-    return () => clearTimeout(timer)
-  }, [])
-
-  useEffect(() => {
-    if (showContent) {
-      const redirectTimer = setTimeout(() => {
-        if (isAuthenticated) {
-          router.push('/dashboard')
-        } else {
-          router.push('/login')
-        }
-      }, 2000)
-
-      return () => clearTimeout(redirectTimer)
-    }
-  }, [isAuthenticated, router, showContent])
+export default function HomePage() {
+  const theme = useSelector(selectTheme)
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-sky-50 via-white to-blue-100 flex items-center justify-center relative overflow-hidden">
-      {/* Background Animation */}
-      <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-sky-200 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob"></div>
-        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-blue-200 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-2000"></div>
-        <div className="absolute top-40 left-40 w-80 h-80 bg-purple-200 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-4000"></div>
-      </div>
-
-      <div className="relative z-10 text-center">
-        {/* Logo Container */}
-        <div className={`transition-all duration-1000 ${showContent ? 'scale-100 opacity-100' : 'scale-75 opacity-0'}`}>
-          <div className="mx-auto mb-8 relative">
-            {/* Modern ERP Logo */}
-            <div className="relative w-32 h-32 mx-auto mb-6">
-              <div className="absolute inset-0 bg-gradient-to-br from-sky-400 via-sky-500 to-blue-600 rounded-3xl shadow-2xl flex items-center justify-center transform rotate-2 hover:rotate-6 transition-all duration-500 hover:scale-105">
-                {/* Custom ERP Logo Design */}
-                <div className="relative">
-                  {/* Main Building Icon */}
-                  <div className="relative z-10">
-                   <LoginLogo size="lg" />
-                  </div>
-                </div>
-              </div>
+    <div className="min-h-screen bg-gradient-to-br from-white via-sky-50 to-sky-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 transition-all duration-300">
+      {/* Header */}
+      <header className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-md border-b border-gray-200 dark:border-gray-700 shadow-sm">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
+            <div className="flex items-center space-x-4">
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">ERP System</h1>
             </div>
-          </div>
-
-          {/* Loading Spinner */}
-          <div className="mb-8 animate-fade-in-up animation-delay-400">
-            <div className="relative w-16 h-16 mx-auto mb-6">
-              <div className="absolute inset-0 border-4 border-sky-200 rounded-full"></div>
-              <div className="absolute inset-0 border-4 border-transparent border-t-sky-500 rounded-full animate-spin"></div>
-              <div className="absolute inset-2 border-4 border-transparent border-t-blue-500 rounded-full animate-spin animation-delay-150" style={{ animationDirection: 'reverse' }}></div>
-            </div>
-
-            <div className="flex items-center justify-center space-x-1 mb-4">
-              <div className="w-2 h-2 bg-sky-500 rounded-full animate-bounce"></div>
-              <div className="w-2 h-2 bg-sky-500 rounded-full animate-bounce animation-delay-100"></div>
-              <div className="w-2 h-2 bg-sky-500 rounded-full animate-bounce animation-delay-200"></div>
-            </div>
-          </div>
-
-          {/* Title */}
-          <h1 className="text-4xl md:text-6xl font-bold text-black mb-6 animate-fade-in-up">
-            <span className="bg-gradient-to-r from-sky-600 via-blue-600 to-purple-600 bg-clip-text text-transparent">
-              Enterprise ERP
-            </span>
-          </h1>
-
-          <div className="mb-8 animate-fade-in-up animation-delay-200">
-            <p className="text-xl md:text-2xl text-gray-700 font-medium mb-2">
-              Complete Business Management Solution
-            </p>
-            <p className="text-base md:text-lg text-gray-500">
-              Streamline operations • Boost productivity • Drive growth
-            </p>
-          </div>
-
-          {/* Loading Message */}
-          <div className="animate-fade-in-up animation-delay-400">
-            <p className="text-lg font-medium text-gray-600 mb-2">
-              {isAuthenticated ? 'Taking you to dashboard...' : 'Redirecting to login...'}
-            </p>
-            <div className="w-64 bg-gray-200 rounded-full h-2 mx-auto">
-              <div className="bg-gradient-to-r from-sky-500 to-blue-600 h-2 rounded-full animate-pulse" style={{ width: '70%' }}></div>
-            </div>
-          </div>
-
-          {/* Features Preview */}
-          <div className="mt-16 grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto animate-fade-in-up animation-delay-600">
-            <div className="text-center p-6 bg-white bg-opacity-70 rounded-2xl backdrop-blur-sm border border-white border-opacity-30 hover:bg-opacity-80 transition-all duration-300 hover:scale-105">
-              <div className="w-16 h-16 bg-gradient-to-br from-sky-400 to-sky-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
-                <Building2 className="w-8 h-8 text-white" />
-              </div>
-              <h3 className="font-bold text-black mb-2 text-lg">Multi-Company Management</h3>
-              <p className="text-sm text-gray-600 leading-relaxed">Efficiently manage multiple companies from a single, unified dashboard with role-based access control</p>
-            </div>
-
-            <div className="text-center p-6 bg-white bg-opacity-70 rounded-2xl backdrop-blur-sm border border-white border-opacity-30 hover:bg-opacity-80 transition-all duration-300 hover:scale-105">
-              <div className="w-16 h-16 bg-gradient-to-br from-blue-400 to-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
-                <Shield className="w-8 h-8 text-white" />
-              </div>
-              <h3 className="font-bold text-black mb-2 text-lg">Advanced Security</h3>
-              <p className="text-sm text-gray-600 leading-relaxed">Enterprise-grade security with 2FA, audit trails, and comprehensive permission management</p>
-            </div>
-
-            <div className="text-center p-6 bg-white bg-opacity-70 rounded-2xl backdrop-blur-sm border border-white border-opacity-30 hover:bg-opacity-80 transition-all duration-300 hover:scale-105">
-              <div className="w-16 h-16 bg-gradient-to-br from-purple-400 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
-                <BarChart3 className="w-8 h-8 text-white" />
-              </div>
-              <h3 className="font-bold text-black mb-2 text-lg">Real-time Analytics</h3>
-              <p className="text-sm text-gray-600 leading-relaxed">Comprehensive reporting and analytics to make data-driven decisions for your business</p>
+            <div className="flex items-center space-x-4">
+              <span className="text-sm text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 px-3 py-1 rounded-full">
+                Current Theme: {theme}
+              </span>
+              <ThemeToggle />
             </div>
           </div>
         </div>
-      </div>
+      </header>
+
+      {/* Hero Section */}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
+        <div className="text-center">
+          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-gray-900 dark:text-white mb-6">
+            Welcome to Your
+            <span className="text-sky-600 dark:text-sky-400 block">ERP System</span>
+          </h1>
+          <p className="text-xl text-gray-600 dark:text-gray-300 mb-8 max-w-3xl mx-auto">
+            A comprehensive enterprise resource planning solution designed to streamline your business operations, 
+            manage resources efficiently, and drive growth through intelligent automation.
+          </p>
+          
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Link href="/dashboard">
+              <Button className="bg-gradient-to-r from-sky-600 to-blue-600 hover:from-sky-700 hover:to-blue-700 text-white px-8 py-3 text-lg font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-200">
+                Go to Dashboard
+              </Button>
+            </Link>
+            <Link href="/test-dark-theme">
+              <Button variant="outline" className="border-2 border-sky-500 dark:border-sky-400 text-sky-600 dark:text-sky-400 hover:bg-sky-50 dark:hover:bg-sky-900/20 px-8 py-3 text-lg font-semibold rounded-xl transition-all duration-200 hover:scale-105">
+                Test Dark Theme
+              </Button>
+            </Link>
+          </div>
+        </div>
+
+        {/* Features Grid */}
+        <div className="mt-20 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm p-8 rounded-2xl shadow-lg border border-gray-200/50 dark:border-gray-700/50 hover:shadow-xl hover:scale-[1.02] transition-all duration-300">
+            <div className="w-16 h-16 bg-gradient-to-br from-sky-100 to-blue-100 dark:from-sky-900/30 dark:to-blue-900/30 rounded-xl flex items-center justify-center mb-6 mx-auto">
+              <svg className="w-8 h-8 text-sky-600 dark:text-sky-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+              </svg>
+            </div>
+            <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-4 text-center">Analytics & Reporting</h3>
+            <p className="text-gray-600 dark:text-gray-300 text-center">
+              Comprehensive insights and real-time reporting to make data-driven decisions.
+            </p>
+          </div>
+
+          <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm p-8 rounded-2xl shadow-lg border border-gray-200/50 dark:border-gray-700/50 hover:shadow-xl hover:scale-[1.02] transition-all duration-300">
+            <div className="w-16 h-16 bg-gradient-to-br from-green-100 to-emerald-100 dark:from-green-900/30 dark:to-emerald-900/30 rounded-xl flex items-center justify-center mb-6 mx-auto">
+              <svg className="w-8 h-8 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+              </svg>
+            </div>
+            <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-4 text-center">Financial Management</h3>
+            <p className="text-gray-600 dark:text-gray-300 text-center">
+              Streamlined financial operations with automated accounting and budgeting tools.
+            </p>
+          </div>
+
+          <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm p-8 rounded-2xl shadow-lg border border-gray-200/50 dark:border-gray-700/50 hover:shadow-xl hover:scale-[1.02] transition-all duration-300">
+            <div className="w-16 h-16 bg-gradient-to-br from-purple-100 to-pink-100 dark:from-purple-900/30 dark:to-pink-900/30 rounded-xl flex items-center justify-center mb-6 mx-auto">
+              <svg className="w-8 h-8 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+              </svg>
+            </div>
+            <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-4 text-center">User Management</h3>
+            <p className="text-gray-600 dark:text-gray-300 text-center">
+              Secure user authentication and role-based access control for your team.
+            </p>
+          </div>
+        </div>
+      </main>
     </div>
   )
 }

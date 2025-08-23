@@ -222,16 +222,16 @@ export default function VehicleFormModal({ isOpen, onClose, onSuccess, vehicle }
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 bg-white bg-opacity-30 backdrop-blur-md flex items-center justify-center z-[60] p-4">
+    <div className="fixed inset-0 bg-white/30 backdrop-blur-md flex items-center justify-center z-[60] p-4">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-6xl max-h-[90vh] overflow-hidden border border-gray-200">
         {/* Header */}
         <div className="bg-blue-500 p-6 relative overflow-hidden">
-          <div className="absolute -top-4 -right-4 w-20 h-20 bg-white bg-opacity-20 rounded-full"></div>
-          <div className="absolute -bottom-2 -left-2 w-12 h-12 bg-white bg-opacity-10 rounded-full"></div>
+          <div className="absolute -top-4 -right-4 w-20 h-20 bg-white/20 rounded-full"></div>
+          <div className="absolute -bottom-2 -left-2 w-12 h-12 bg-white/10 rounded-full"></div>
           
           <div className="relative z-10 flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-white bg-opacity-20 rounded-xl">
+              <div className="p-2 bg-white/20 rounded-xl">
                 <Car className="w-6 h-6 text-white" />
               </div>
               <div>
@@ -246,7 +246,7 @@ export default function VehicleFormModal({ isOpen, onClose, onSuccess, vehicle }
             
             <Button
               onClick={onClose}
-              className="p-2 text-white hover:bg-white hover:bg-opacity-20 rounded-xl transition-colors bg-transparent border-0"
+              className="p-2 text-white hover:bg-white/20 rounded-xl transition-colors bg-transparent border-0"
             >
               <X className="w-6 h-6" />
             </Button>

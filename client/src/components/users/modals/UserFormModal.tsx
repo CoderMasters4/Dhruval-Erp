@@ -44,6 +44,12 @@ interface FormData {
   designation: string
   isActive: boolean
   isSuperAdmin: boolean
+  // Permissions
+  permissions: {
+    [module: string]: {
+      [action: string]: boolean
+    }
+  }
 }
 
 // Department options
@@ -68,6 +74,46 @@ const ROLES = [
   { value: 'super_admin', label: 'Super Admin', description: 'Full system access across all companies' }
 ]
 
+// Permission presets for different roles
+const PERMISSION_PRESETS: { [key: string]: { [module: string]: { [action: string]: boolean } } } = {
+  user: {
+    inventory: { view: true, create: false, edit: false, delete: false, approve: false, viewReports: false },
+    production: { view: true, create: false, edit: false, delete: false, approve: false, viewReports: false, startProcess: false, qualityCheck: false },
+    orders: { view: true, create: false, edit: false, delete: false, approve: false, viewReports: false, dispatch: false },
+    financial: { view: false, create: false, edit: false, delete: false, approve: false, viewReports: false, bankTransactions: false },
+    security: { gateManagement: false, visitorManagement: false, vehicleTracking: false, cctvAccess: false, emergencyResponse: false },
+    hr: { viewEmployees: false, manageAttendance: false, manageSalary: false, viewReports: false },
+    admin: { userManagement: false, systemSettings: false, backupRestore: false, auditLogs: false }
+  },
+  manager: {
+    inventory: { view: true, create: true, edit: true, delete: false, approve: false, viewReports: true },
+    production: { view: true, create: true, edit: true, delete: false, approve: false, viewReports: true, startProcess: true, qualityCheck: true },
+    orders: { view: true, create: true, edit: true, delete: false, approve: false, viewReports: true, dispatch: true },
+    financial: { view: true, create: false, edit: false, delete: false, approve: false, viewReports: true, bankTransactions: false },
+    security: { gateManagement: false, visitorManagement: false, vehicleTracking: false, cctvAccess: false, emergencyResponse: false },
+    hr: { viewEmployees: true, manageAttendance: true, manageSalary: false, viewReports: true },
+    admin: { userManagement: false, systemSettings: false, backupRestore: false, auditLogs: false }
+  },
+  admin: {
+    inventory: { view: true, create: true, edit: true, delete: true, approve: true, viewReports: true },
+    production: { view: true, create: true, edit: true, delete: true, approve: true, viewReports: true, startProcess: true, qualityCheck: true },
+    orders: { view: true, create: true, edit: true, delete: true, approve: true, viewReports: true, dispatch: true },
+    financial: { view: true, create: true, edit: true, delete: true, approve: true, viewReports: true, bankTransactions: true },
+    security: { gateManagement: true, visitorManagement: true, vehicleTracking: true, cctvAccess: true, emergencyResponse: true },
+    hr: { viewEmployees: true, manageAttendance: true, manageSalary: true, viewReports: true },
+    admin: { userManagement: true, systemSettings: true, backupRestore: true, auditLogs: true }
+  },
+  super_admin: {
+    inventory: { view: true, create: true, edit: true, delete: true, approve: true, viewReports: true },
+    production: { view: true, create: true, edit: true, delete: true, approve: true, viewReports: true, startProcess: true, qualityCheck: true },
+    orders: { view: true, create: true, edit: true, delete: true, approve: true, viewReports: true, dispatch: true },
+    financial: { view: true, create: true, edit: true, delete: true, approve: true, viewReports: true, bankTransactions: true },
+    security: { gateManagement: true, visitorManagement: true, vehicleTracking: true, cctvAccess: true, emergencyResponse: true },
+    hr: { viewEmployees: true, manageAttendance: true, manageSalary: true, viewReports: true },
+    admin: { userManagement: true, systemSettings: true, backupRestore: true, auditLogs: true }
+  }
+}
+
 export default function UserFormModal({ isOpen, onClose, onSuccess, user }: UserFormModalProps) {
   const [formData, setFormData] = useState<FormData>({
     username: '',
@@ -86,7 +132,8 @@ export default function UserFormModal({ isOpen, onClose, onSuccess, user }: User
     department: '',
     designation: '',
     isActive: true,
-    isSuperAdmin: false
+    isSuperAdmin: false,
+    permissions: PERMISSION_PRESETS.user
   })
 
   const [showPassword, setShowPassword] = useState(false)
@@ -125,28 +172,30 @@ export default function UserFormModal({ isOpen, onClose, onSuccess, user }: User
         department: user.department || '',
         designation: user.designation || '',
         isActive: user.isActive ?? true,
-        isSuperAdmin: user.isSuperAdmin || false
+        isSuperAdmin: user.isSuperAdmin || false,
+        permissions: user.companyAccess?.[0]?.permissions || PERMISSION_PRESETS.user
       })
-    } else {
-      setFormData({
-        username: '',
-        email: '',
-        password: '',
-        confirmPassword: '',
-        firstName: '',
-        lastName: '',
-        middleName: '',
-        phone: '',
-        alternatePhone: '',
-        dateOfBirth: '',
-        gender: '',
-        primaryCompanyId: companies[0]?._id || '',
-        role: 'user',
-        department: '',
-        designation: '',
-        isActive: true,
-        isSuperAdmin: false
-      })
+          } else {
+        setFormData({
+          username: '',
+          email: '',
+          password: '',
+          confirmPassword: '',
+          firstName: '',
+          lastName: '',
+          middleName: '',
+          phone: '',
+          alternatePhone: '',
+          dateOfBirth: '',
+          gender: '',
+          primaryCompanyId: companies[0]?._id || '',
+          role: 'user',
+          department: '',
+          designation: '',
+          isActive: true,
+          isSuperAdmin: false,
+          permissions: PERMISSION_PRESETS.user
+        })
     }
     setErrors({})
   }, [user, isOpen, companies])
@@ -229,6 +278,15 @@ export default function UserFormModal({ isOpen, onClose, onSuccess, user }: User
               displayName: `${formData.firstName} ${formData.lastName}`
             },
             primaryCompanyId: formData.primaryCompanyId,
+            companyAccess: formData.primaryCompanyId ? [{
+              companyId: formData.primaryCompanyId,
+              role: formData.role,
+              department: formData.department,
+              designation: formData.designation,
+              permissions: formData.permissions,
+              isActive: true,
+              joinedAt: new Date().toISOString()
+            }] : [],
             isActive: formData.isActive,
             isSuperAdmin: formData.isSuperAdmin
           }
@@ -255,7 +313,11 @@ export default function UserFormModal({ isOpen, onClose, onSuccess, user }: User
           companyAccess: formData.primaryCompanyId ? [{
             companyId: formData.primaryCompanyId,
             role: formData.role,
-            permissions: {}
+            department: formData.department,
+            designation: formData.designation,
+            permissions: formData.permissions,
+            isActive: true,
+            joinedAt: new Date().toISOString()
           }] : [],
           isSuperAdmin: formData.isSuperAdmin,
           // Legacy fields for backward compatibility
@@ -295,7 +357,20 @@ export default function UserFormModal({ isOpen, onClose, onSuccess, user }: User
   }
 
   const updateFormData = (updates: Partial<FormData>) => {
-    setFormData(prev => ({ ...prev, ...updates }))
+    setFormData(prev => {
+      const newData = { ...prev, ...updates }
+      
+      // If role changes, apply permission preset
+      if (updates.role && updates.role !== prev.role) {
+        const preset = PERMISSION_PRESETS[updates.role as keyof typeof PERMISSION_PRESETS]
+        if (preset) {
+          newData.permissions = preset
+        }
+      }
+      
+      return newData
+    })
+    
     // Clear related errors
     const newErrors = { ...errors }
     Object.keys(updates).forEach(key => {
@@ -594,6 +669,356 @@ export default function UserFormModal({ isOpen, onClose, onSuccess, user }: User
                   <p className="mt-1 text-xs text-gray-500">
                     Super Admin users have full access to all companies and system settings
                   </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Permissions Section */}
+            <div className="bg-green-50 rounded-xl p-6 border border-green-200">
+              <h3 className="text-lg font-semibold text-black mb-4 flex items-center">
+                <Shield className="w-5 h-5 mr-2 text-green-600" />
+                Access & Permissions
+              </h3>
+              
+              <div className="space-y-6">
+                {/* Role-based Permission Presets */}
+                <div className="bg-white p-4 rounded-lg border border-green-200">
+                  <h4 className="text-md font-semibold text-gray-800 mb-3">Role Preset</h4>
+                  <p className="text-sm text-gray-600 mb-3">
+                    Select a role to automatically apply permission presets, or customize individual permissions below.
+                  </p>
+                  <select
+                    value={formData.role}
+                    onChange={(e) => updateFormData({ role: e.target.value as UserType['role'] })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                  >
+                    {ROLES.map((role) => (
+                      <option key={role.value} value={role.value}>
+                        {role.label} - {role.description}
+                      </option>
+                    ))}
+                  </select>
+                  
+                  {/* Permission Summary */}
+                  <div className="mt-3 p-3 bg-gray-50 rounded-lg">
+                    <h5 className="text-sm font-medium text-gray-700 mb-2">Permission Summary:</h5>
+                    <div className="grid grid-cols-2 gap-2 text-xs">
+                      <div className="flex items-center space-x-2">
+                        <span className={`w-2 h-2 rounded-full ${formData.permissions.inventory.view ? 'bg-green-500' : 'bg-gray-300'}`}></span>
+                        <span>Inventory: {formData.permissions.inventory.view ? 'View' : 'No Access'}</span>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <span className={`w-2 h-2 rounded-full ${formData.permissions.production.view ? 'bg-green-500' : 'bg-gray-300'}`}></span>
+                        <span>Production: {formData.permissions.production.view ? 'View' : 'No Access'}</span>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <span className={`w-2 h-2 rounded-full ${formData.permissions.orders.view ? 'bg-green-500' : 'bg-gray-300'}`}></span>
+                        <span>Orders: {formData.permissions.orders.view ? 'View' : 'No Access'}</span>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <span className={`w-2 h-2 rounded-full ${formData.permissions.hr.viewEmployees ? 'bg-green-500' : 'bg-gray-300'}`}></span>
+                        <span>HR: {formData.permissions.hr.viewEmployees ? 'View' : 'No Access'}</span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Quick Actions */}
+                  <div className="mt-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                    <h5 className="text-sm font-medium text-blue-700 mb-2">Quick Actions:</h5>
+                    <div className="flex flex-wrap gap-2">
+                      <button
+                        type="button"
+                        onClick={() => updateFormData({ permissions: PERMISSION_PRESETS.user })}
+                        className="px-2 py-1 text-xs bg-blue-100 text-blue-700 rounded border border-blue-300 hover:bg-blue-200 transition-colors"
+                      >
+                        Reset to User
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => updateFormData({ permissions: PERMISSION_PRESETS.manager })}
+                        className="px-2 py-1 text-xs bg-blue-100 text-blue-700 rounded border border-blue-300 hover:bg-blue-200 transition-colors"
+                      >
+                        Set Manager
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => updateFormData({ permissions: PERMISSION_PRESETS.admin })}
+                        className="px-2 py-1 text-xs bg-blue-100 text-blue-700 rounded border border-blue-300 hover:bg-blue-200 transition-colors"
+                      >
+                        Set Admin
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const allPermissions = {
+                            inventory: { view: true, create: true, edit: true, delete: true, approve: true, viewReports: true },
+                            production: { view: true, create: true, edit: true, delete: true, approve: true, viewReports: true, startProcess: true, qualityCheck: true },
+                            orders: { view: true, create: true, edit: true, delete: true, approve: true, viewReports: true, dispatch: true },
+                            financial: { view: true, create: true, edit: true, delete: true, approve: true, viewReports: true, bankTransactions: true },
+                            security: { gateManagement: true, visitorManagement: true, vehicleTracking: true, cctvAccess: true, emergencyResponse: true },
+                            hr: { viewEmployees: true, manageAttendance: true, manageSalary: true, viewReports: true },
+                            admin: { userManagement: true, systemSettings: true, backupRestore: true, auditLogs: true }
+                          }
+                          updateFormData({ permissions: allPermissions })
+                        }}
+                        className="px-2 py-1 text-xs bg-green-100 text-green-700 rounded border border-green-300 hover:bg-green-200 transition-colors"
+                      >
+                        All Permissions
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Inventory Permissions */}
+                <div className="bg-white p-4 rounded-lg border border-green-200">
+                  <h4 className="text-md font-semibold text-gray-800 mb-3">Inventory Management</h4>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                    <label className="flex items-center space-x-2">
+                      <input
+                        type="checkbox"
+                        checked={formData.permissions.inventory.view}
+                        onChange={(e) => updateFormData({
+                          permissions: {
+                            ...formData.permissions,
+                            inventory: { ...formData.permissions.inventory, view: e.target.checked }
+                          }
+                        })}
+                        className="rounded border-gray-300 text-green-600 focus:ring-green-500"
+                      />
+                      <span className="text-sm">View</span>
+                    </label>
+                    <label className="flex items-center space-x-2">
+                      <input
+                        type="checkbox"
+                        checked={formData.permissions.inventory.create}
+                        onChange={(e) => updateFormData({
+                          permissions: {
+                            ...formData.permissions,
+                            inventory: { ...formData.permissions.inventory, create: e.target.checked }
+                          }
+                        })}
+                        className="rounded border-gray-300 text-green-600 focus:ring-green-500"
+                      />
+                      <span className="text-sm">Create</span>
+                    </label>
+                    <label className="flex items-center space-x-2">
+                      <input
+                        type="checkbox"
+                        checked={formData.permissions.inventory.edit}
+                        onChange={(e) => updateFormData({
+                          permissions: {
+                            ...formData.permissions,
+                            inventory: { ...formData.permissions.inventory, edit: e.target.checked }
+                          }
+                        })}
+                        className="rounded border-gray-300 text-green-600 focus:ring-green-500"
+                      />
+                      <span className="text-sm">Edit</span>
+                    </label>
+                    <label className="flex items-center space-x-2">
+                      <input
+                        type="checkbox"
+                        checked={formData.permissions.inventory.delete}
+                        onChange={(e) => updateFormData({
+                          permissions: {
+                            ...formData.permissions,
+                            inventory: { ...formData.permissions.inventory, delete: e.target.checked }
+                          }
+                        })}
+                        className="rounded border-gray-300 text-green-600 focus:ring-green-500"
+                      />
+                      <span className="text-sm">Delete</span>
+                    </label>
+                    <label className="flex items-center space-x-2">
+                      <input
+                        type="checkbox"
+                        checked={formData.permissions.inventory.approve}
+                        onChange={(e) => updateFormData({
+                          permissions: {
+                            ...formData.permissions,
+                            inventory: { ...formData.permissions.inventory, approve: e.target.checked }
+                          }
+                        })}
+                        className="rounded border-gray-300 text-green-600 focus:ring-green-500"
+                      />
+                      <span className="text-sm">Approve</span>
+                    </label>
+                    <label className="flex items-center space-x-2">
+                      <input
+                        type="checkbox"
+                        checked={formData.permissions.inventory.viewReports}
+                        onChange={(e) => updateFormData({
+                          permissions: {
+                            ...formData.permissions,
+                            inventory: { ...formData.permissions.inventory, viewReports: e.target.checked }
+                          }
+                        })}
+                        className="rounded border-gray-300 text-green-600 focus:ring-green-500"
+                      />
+                      <span className="text-sm">Reports</span>
+                    </label>
+                  </div>
+                </div>
+
+                {/* Production Permissions */}
+                <div className="bg-white p-4 rounded-lg border border-green-200">
+                  <h4 className="text-md font-semibold text-gray-800 mb-3">Production Management</h4>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    <label className="flex items-center space-x-2">
+                      <input
+                        type="checkbox"
+                        checked={formData.permissions.production.view}
+                        onChange={(e) => updateFormData({
+                          permissions: {
+                            ...formData.permissions,
+                            production: { ...formData.permissions.production, view: e.target.checked }
+                          }
+                        })}
+                        className="rounded border-gray-300 text-green-600 focus:ring-green-500"
+                      />
+                      <span className="text-sm">View</span>
+                    </label>
+                    <label className="flex items-center space-x-2">
+                      <input
+                        type="checkbox"
+                        checked={formData.permissions.production.create}
+                        onChange={(e) => updateFormData({
+                          permissions: {
+                            ...formData.permissions,
+                            production: { ...formData.permissions.production, create: e.target.checked }
+                          }
+                        })}
+                        className="rounded border-gray-300 text-green-600 focus:ring-green-500"
+                      />
+                      <span className="text-sm">Create</span>
+                    </label>
+                    <label className="flex items-center space-x-2">
+                      <input
+                        type="checkbox"
+                        checked={formData.permissions.production.startProcess}
+                        onChange={(e) => updateFormData({
+                          permissions: {
+                            ...formData.permissions,
+                            production: { ...formData.permissions.production, startProcess: e.target.checked }
+                          }
+                        })}
+                        className="rounded border-gray-300 text-green-600 focus:ring-green-500"
+                      />
+                      <span className="text-sm">Start Process</span>
+                    </label>
+                    <label className="flex items-center space-x-2">
+                      <input
+                        type="checkbox"
+                        checked={formData.permissions.production.qualityCheck}
+                        onChange={(e) => updateFormData({
+                          permissions: {
+                            ...formData.permissions,
+                            production: { ...formData.permissions.production, qualityCheck: e.target.checked }
+                          }
+                        })}
+                        className="rounded border-gray-300 text-green-600 focus:ring-green-500"
+                      />
+                      <span className="text-sm">Quality Check</span>
+                    </label>
+                  </div>
+                </div>
+
+                {/* HR Permissions */}
+                <div className="bg-white p-4 rounded-lg border border-green-200">
+                  <h4 className="text-md font-semibold text-gray-800 mb-3">Human Resources</h4>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                    <label className="flex items-center space-x-2">
+                      <input
+                        type="checkbox"
+                        checked={formData.permissions.hr.viewEmployees}
+                        onChange={(e) => updateFormData({
+                          permissions: {
+                            ...formData.permissions,
+                            hr: { ...formData.permissions.hr, viewEmployees: e.target.checked }
+                          }
+                        })}
+                        className="rounded border-gray-300 text-green-600 focus:ring-green-500"
+                      />
+                      <span className="text-sm">View Employees</span>
+                    </label>
+                    <label className="flex items-center space-x-2">
+                      <input
+                        type="checkbox"
+                        checked={formData.permissions.hr.manageAttendance}
+                        onChange={(e) => updateFormData({
+                          permissions: {
+                            ...formData.permissions,
+                            hr: { ...formData.permissions.hr, manageAttendance: e.target.checked }
+                          }
+                        })}
+                        className="rounded border-gray-300 text-green-600 focus:ring-green-500"
+                      />
+                      <span className="text-sm">Manage Attendance</span>
+                    </label>
+                    <label className="flex items-center space-x-2">
+                      <input
+                        type="checkbox"
+                        checked={formData.permissions.hr.viewReports}
+                        onChange={(e) => updateFormData({
+                          permissions: {
+                            ...formData.permissions,
+                            hr: { ...formData.permissions.hr, viewReports: e.target.checked }
+                          }
+                        })}
+                        className="rounded border-gray-300 text-green-600 focus:ring-green-500"
+                      />
+                      <span className="text-sm">View Reports</span>
+                    </label>
+                  </div>
+                </div>
+
+                {/* Admin Permissions */}
+                <div className="bg-white p-4 rounded-lg border border-green-200">
+                  <h4 className="text-md font-semibold text-gray-800 mb-3">System Administration</h4>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                    <label className="flex items-center space-x-2">
+                      <input
+                        type="checkbox"
+                        checked={formData.permissions.admin.userManagement}
+                        onChange={(e) => updateFormData({
+                          permissions: {
+                            ...formData.permissions,
+                            admin: { ...formData.permissions.admin, userManagement: e.target.checked }
+                          }
+                        })}
+                        className="rounded border-gray-300 text-green-600 focus:ring-green-500"
+                      />
+                      <span className="text-sm">User Management</span>
+                    </label>
+                    <label className="flex items-center space-x-2">
+                      <input
+                        type="checkbox"
+                        checked={formData.permissions.admin.systemSettings}
+                        onChange={(e) => updateFormData({
+                          permissions: {
+                            ...formData.permissions,
+                            admin: { ...formData.permissions.admin, systemSettings: e.target.checked }
+                          }
+                        })}
+                        className="rounded border-gray-300 text-green-600 focus:ring-green-500"
+                      />
+                      <span className="text-sm">System Settings</span>
+                    </label>
+                    <label className="flex items-center space-x-2">
+                      <input
+                        type="checkbox"
+                        checked={formData.permissions.admin.auditLogs}
+                        onChange={(e) => updateFormData({
+                          permissions: {
+                            ...formData.permissions,
+                            admin: { ...formData.permissions.admin, auditLogs: e.target.checked }
+                          }
+                        })}
+                        className="rounded border-gray-300 text-green-600 focus:ring-green-500"
+                      />
+                      <span className="text-sm">Audit Logs</span>
+                    </label>
+                  </div>
                 </div>
               </div>
             </div>

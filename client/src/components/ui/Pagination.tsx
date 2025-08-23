@@ -9,7 +9,7 @@ interface PaginationProps {
   totalItems: number
   itemsPerPage: number
   onPageChange: (page: number) => void
-  onItemsPerPageChange?: (itemsPerPage: number) => void
+  onLimitChange?: (limit: number) => void
   showItemsPerPage?: boolean
   itemsPerPageOptions?: number[]
   className?: string
@@ -21,7 +21,7 @@ export function Pagination({
   totalItems,
   itemsPerPage,
   onPageChange,
-  onItemsPerPageChange,
+  onLimitChange,
   showItemsPerPage = true,
   itemsPerPageOptions = [10, 25, 50, 100],
   className
@@ -84,12 +84,12 @@ export function Pagination({
           Showing {startItem} to {endItem} of {totalItems} results
         </span>
         
-        {showItemsPerPage && onItemsPerPageChange && (
+        {showItemsPerPage && onLimitChange && (
           <div className="flex items-center gap-2">
             <span>Show:</span>
             <select
               value={itemsPerPage}
-              onChange={(e) => onItemsPerPageChange(Number(e.target.value))}
+              onChange={(e) => onLimitChange(Number(e.target.value))}
               className="border border-gray-300 rounded-lg px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
             >
               {itemsPerPageOptions.map((option) => (

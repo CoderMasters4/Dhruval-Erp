@@ -18,7 +18,7 @@ interface UserFilters {
 
 interface UserFiltersProps {
   filters: UserFilters
-  onFilterChange: (filters: Partial<UserFilters>) => void
+  onFiltersChange: (filters: Partial<UserFilters>) => void
   onReset: () => void
   onCreateNew: () => void
   isLoading: boolean
@@ -26,7 +26,7 @@ interface UserFiltersProps {
 
 export default function UserFilters({
   filters,
-  onFilterChange,
+  onFiltersChange,
   onReset,
   onCreateNew,
   isLoading
@@ -83,7 +83,7 @@ export default function UserFilters({
               type="text"
               placeholder="Search by name or email..."
               value={filters.search}
-              onChange={(e) => onFilterChange({ search: e.target.value })}
+              onChange={(e) => onFiltersChange({ search: e.target.value })}
               disabled={isLoading}
               className="pl-10 pr-4 py-3 w-full border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-all duration-200 disabled:bg-gray-50 disabled:cursor-not-allowed bg-white text-gray-900 font-medium placeholder:text-gray-500"
             />
@@ -97,7 +97,7 @@ export default function UserFilters({
           </label>
           <select
             value={filters.role}
-            onChange={(e) => onFilterChange({ role: e.target.value })}
+            onChange={(e) => onFiltersChange({ role: e.target.value })}
             disabled={isLoading}
             className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-all duration-200 disabled:bg-gray-50 disabled:cursor-not-allowed"
           >
@@ -116,7 +116,7 @@ export default function UserFilters({
           </label>
           <select
             value={filters.status}
-            onChange={(e) => onFilterChange({ status: e.target.value })}
+            onChange={(e) => onFiltersChange({ status: e.target.value })}
             disabled={isLoading}
             className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-all duration-200 disabled:bg-gray-50 disabled:cursor-not-allowed"
           >
@@ -135,7 +135,7 @@ export default function UserFilters({
             value={`${filters.sortBy}-${filters.sortOrder}`}
             onChange={(e) => {
               const [sortBy, sortOrder] = e.target.value.split('-')
-              onFilterChange({ sortBy, sortOrder: sortOrder as 'asc' | 'desc' })
+              onFiltersChange({ sortBy, sortOrder: sortOrder as 'asc' | 'desc' })
             }}
             disabled={isLoading}
             className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-all duration-200 disabled:bg-gray-50 disabled:cursor-not-allowed"

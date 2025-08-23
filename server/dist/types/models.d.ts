@@ -118,7 +118,6 @@ export interface IUser extends BaseDocument {
     email: string;
     password: string;
     fullName?: string;
-    companyId?: Types.ObjectId;
     userId?: Types.ObjectId;
     personalInfo: {
         firstName: string;
@@ -170,6 +169,10 @@ export interface IUser extends BaseDocument {
     comparePassword?(candidatePassword: string): Promise<boolean>;
     incrementLoginAttempts?(): Promise<any>;
     resetLoginAttempts?(): Promise<any>;
+    role?: string;
+    companyId?: Types.ObjectId;
+    employeeId?: Types.ObjectId;
+    name?: string;
 }
 export interface ICompanyAccess {
     companyId: Types.ObjectId;

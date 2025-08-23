@@ -11,7 +11,7 @@ import { User } from '@/lib/features/users/usersApi'
 
 interface UserStatsProps {
   users: User[]
-  totalUsers: number
+  totalUsers?: number
   isLoading: boolean
 }
 
@@ -28,10 +28,13 @@ export default function UserStats({ users, totalUsers, isLoading }: UserStatsPro
     return lastLogin > dayAgo
   }).length
 
+  // Use provided totalUsers or calculate from users array
+  const actualTotalUsers = totalUsers || users.length
+
   const stats = [
     {
       title: 'Total Users',
-      value: totalUsers,
+      value: actualTotalUsers,
       icon: Users,
       color: 'bg-sky-500',
       bgColor: 'bg-sky-50',
@@ -121,11 +124,11 @@ export default function UserStats({ users, totalUsers, isLoading }: UserStatsPro
         return (
           <div
             key={index}
-            className={`bg-white rounded-2xl shadow-lg ${stat.borderColor} border p-6 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1`}
+            className={`bg-white dark:bg-gray-800 rounded-2xl shadow-lg ${stat.borderColor} dark:border-gray-700 border p-6 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1`}
           >
             <div className="flex items-center justify-between mb-4">
-              <div className={`p-3 ${stat.bgColor} rounded-xl`}>
-                <Icon className={`w-6 h-6 ${stat.textColor}`} />
+              <div className={`p-3 ${stat.bgColor} dark:bg-gray-700 rounded-xl`}>
+                <Icon className={`w-6 h-6 ${stat.textColor} dark:text-gray-300`} />
               </div>
               <div className="flex items-center">
                 <TrendingUp className={`w-4 h-4 ${stat.changeColor} mr-1`} />
@@ -136,12 +139,12 @@ export default function UserStats({ users, totalUsers, isLoading }: UserStatsPro
             </div>
             
             <div className="mb-2">
-              <p className="text-2xl font-bold text-black">
-                {stat.value.toLocaleString()}
+              <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                {typeof stat.value === 'number' ? stat.value.toLocaleString() : stat.value}
               </p>
             </div>
             
-            <p className="text-sm font-medium text-gray-600">
+            <p className="text-sm font-medium text-gray-600 dark:text-gray-300">
               {stat.title}
             </p>
           </div>

@@ -235,6 +235,20 @@ export const authenticate = async (req: Request, res: Response, next: NextFuncti
         req.companyAccess = companyAccess;
         req.company = companyAccess.companyId;
       }
+    } else if (user.isSuperAdmin && !is2FARoute) {
+      // Super admin without company ID - allow access to everything
+      logger.info('Super admin access without company context - FULL ACCESS GRANTED', {
+        userId: user._id,
+        username: user.username,
+        path: req.path
+      });
+      // Super admin can access everything without company context
+      // Set a default company context for compatibility
+      if (user.companyAccess?.[0]?.companyId) {
+        req.company = user.companyAccess[0].companyId;
+        req.companyAccess = user.companyAccess[0];
+      }
+      // Continue to next middleware without requiring company ID
     } else if (!user.isSuperAdmin && !is2FARoute) {
       // Non-super admin users must have a company context (except for 2FA routes)
       return res.status(400).json({
@@ -242,10 +256,12 @@ export const authenticate = async (req: Request, res: Response, next: NextFuncti
         message: 'X-Company-ID header is required'
       });
     } else {
-      // Super admin without company ID - allow access
-      logger.info('Super admin access without company context', {
+      // 2FA routes or other special cases - allow access
+      logger.info('Special route access granted', {
         userId: user._id,
-        username: user.username
+        username: user.username,
+        path: req.path,
+        is2FARoute
       });
     }
 
@@ -285,6 +301,22 @@ export const authenticate = async (req: Request, res: Response, next: NextFuncti
       message: 'Invalid or expired access token'
     });
   }
+};
+
+// =============================================
+// Superadmin Bypass Middleware
+// =============================================
+export const allowSuperadmin = (req: Request, res: Response, next: NextFunction) => {
+  const user = req.user as any;
+  if (user?.isSuperAdmin) {
+    logger.info('Superadmin bypass - allowing access without company context', {
+      userId: user._id,
+      username: user.username,
+      path: req.path
+    });
+    return next();
+  }
+  next();
 };
 
 // =============================================

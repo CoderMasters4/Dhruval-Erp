@@ -64,11 +64,15 @@ const getStatusBadge = (status: string) => {
 interface RoleBasedActivityProps {
   activities?: Activity[]
   loading?: boolean
+  permissions?: any
 }
 
-export const RoleBasedActivity: React.FC<RoleBasedActivityProps> = ({ activities: propActivities, loading = false }) => {
-  const permissions = useDashboardPermissions()
+export const RoleBasedActivity: React.FC<RoleBasedActivityProps> = ({ activities: propActivities, loading = false, permissions }) => {
+  const dashboardPermissions = useDashboardPermissions()
   const isSuperAdmin = useSelector(selectIsSuperAdmin)
+
+  // Use provided permissions or fallback to hook
+  const actualPermissions = permissions || dashboardPermissions
 
   const getActivitiesForRole = (): Activity[] => {
     // If activities are provided as props, use them
@@ -118,7 +122,7 @@ export const RoleBasedActivity: React.FC<RoleBasedActivityProps> = ({ activities
     }
     
     // Company Owner - Business activities
-    if (permissions.canViewFinancials && permissions.canViewOrders) {
+    if (actualPermissions.canViewFinancials && actualPermissions.canViewOrders) {
       return [
         {
           id: '1',
@@ -160,7 +164,7 @@ export const RoleBasedActivity: React.FC<RoleBasedActivityProps> = ({ activities
     }
     
     // Production Manager - Production focused
-    if (permissions.canViewProduction) {
+    if (actualPermissions.canViewProduction) {
       return [
         {
           id: '1',

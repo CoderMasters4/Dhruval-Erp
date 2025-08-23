@@ -812,7 +812,7 @@ export default function SuppliersPage() {
                 totalItems={pagination.total}
                 itemsPerPage={pagination.limit}
                 onPageChange={handlePageChange}
-                onItemsPerPageChange={handleItemsPerPageChange}
+                                  onLimitChange={handleItemsPerPageChange}
                 className="bg-white rounded-2xl shadow-lg border border-sky-200 p-6"
               />
             </div>
@@ -820,12 +820,12 @@ export default function SuppliersPage() {
 
           {/* Supplier Details Modal */}
           {showSupplierDetails && selectedSupplier && (
-            <div className="fixed inset-0 bg-black bg-opacity-60 backdrop-blur-lg z-50 flex items-center justify-center p-4 animate-in fade-in duration-300">
+            <div className="fixed inset-0 bg-black/60 backdrop-blur-lg z-50 flex items-center justify-center p-4 animate-in fade-in duration-300">
             <div className="bg-white rounded-3xl shadow-2xl w-full max-w-5xl max-h-[95vh] overflow-hidden transform animate-in zoom-in-95 duration-500">
               {/* Enhanced Modal Header */}
               <div className="relative overflow-hidden bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-700">
                 {/* Background Pattern */}
-                <div className="absolute inset-0 bg-white bg-opacity-10">
+                <div className="absolute inset-0 bg-white/10">
                   <div className="absolute inset-0" style={{
                     backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.1'%3E%3Ccircle cx='30' cy='30' r='2'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
                   }} />
@@ -835,8 +835,8 @@ export default function SuppliersPage() {
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-6">
                       <div className="relative">
-                        <div className="absolute inset-0 bg-white bg-opacity-20 rounded-2xl blur-xl"></div>
-                        <div className="relative h-16 w-16 bg-white bg-opacity-20 backdrop-blur-sm rounded-2xl border border-white border-opacity-30 flex items-center justify-center">
+                        <div className="absolute inset-0 bg-white/20 rounded-2xl blur-xl"></div>
+                        <div className="relative h-16 w-16 bg-white/20 backdrop-blur-sm rounded-2xl border border-white border-white/30 flex items-center justify-center">
                           <Building className="h-8 w-8 text-white drop-shadow-lg" />
                         </div>
                       </div>
@@ -848,7 +848,7 @@ export default function SuppliersPage() {
                           {selectedSupplier.supplierCode} • {selectedSupplier.category?.replace('_', ' ')}
                         </p>
                         <div className="flex items-center gap-4 mt-3">
-                          <div className="flex items-center gap-2 px-3 py-1 bg-white bg-opacity-20 rounded-full backdrop-blur-sm">
+                          <div className="flex items-center gap-2 px-3 py-1 bg-white/20 rounded-full backdrop-blur-sm">
                             <span className={clsx(
                               'h-2 w-2 rounded-full',
                               selectedSupplier.status === 'active' ? 'bg-green-400' : 'bg-red-400'
@@ -864,7 +864,7 @@ export default function SuppliersPage() {
                     </div>
                     <Button
                       onClick={() => setShowSupplierDetails(false)}
-                      className="p-3 text-white hover:bg-white hover:bg-opacity-20 rounded-2xl bg-transparent border-0 transition-all duration-300 transform hover:scale-110"
+                      className="p-3 text-white hover:bg-white/20 rounded-2xl bg-transparent border-0 transition-all duration-300 transform hover:scale-110"
                     >
                       <X className="h-6 w-6" />
                     </Button>

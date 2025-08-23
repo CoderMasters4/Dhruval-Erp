@@ -25,9 +25,19 @@ const baseQuery = fetchBaseQuery({
       headers.set('X-Company-ID', currentCompanyId)
     } else if (user?.companyAccess?.[0]?.companyId) {
       headers.set('X-Company-ID', user.companyAccess[0].companyId)
-    } else if (user?.isSuperAdmin && state.auth.companies?.[0]?._id) {
-      // For super admin, use first available company if no specific company selected
-      headers.set('X-Company-ID', state.auth.companies[0]._id)
+    } else if (user?.isSuperAdmin) {
+      // For super admin, always ensure we have a company ID
+      if (state.auth.companies?.[0]?._id) {
+        headers.set('X-Company-ID', state.auth.companies[0]._id)
+      } else if (state.auth.currentCompanyId) {
+        headers.set('X-Company-ID', state.auth.currentCompanyId)
+      } else {
+        // If no company available, use a default one or the company ID from the URL
+        const urlCompanyId = window?.location?.pathname?.match(/\/companies\/([^\/]+)/)?.[1]
+        if (urlCompanyId) {
+          headers.set('X-Company-ID', urlCompanyId)
+        }
+      }
     }
 
     headers.set('Content-Type', 'application/json')
@@ -104,6 +114,13 @@ export const baseApi = createApi({
     'Dispatch',
     'Report',
     'Spare',
+
+    // Human Resources Models
+    'Manpower',
+    'Attendance',
+
+    // Sticker & Label Models
+    'Sticker',
 
     // Additional Tags
     'Order',

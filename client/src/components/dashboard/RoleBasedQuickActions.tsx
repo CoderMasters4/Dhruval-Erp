@@ -29,12 +29,16 @@ interface QuickAction {
 
 interface RoleBasedQuickActionsProps {
   loading?: boolean
+  permissions?: any
 }
 
-export const RoleBasedQuickActions: React.FC<RoleBasedQuickActionsProps> = ({ loading = false }) => {
-  const permissions = useDashboardPermissions()
+export const RoleBasedQuickActions: React.FC<RoleBasedQuickActionsProps> = ({ loading = false, permissions }) => {
+  const dashboardPermissions = useDashboardPermissions()
   const isSuperAdmin = useSelector(selectIsSuperAdmin)
   const router = useRouter()
+
+  // Use provided permissions or fallback to hook
+  const actualPermissions = permissions || dashboardPermissions
 
   const getActionsForRole = (): QuickAction[] => {
     // Super Admin - System management actions
@@ -72,7 +76,7 @@ export const RoleBasedQuickActions: React.FC<RoleBasedQuickActionsProps> = ({ lo
     }
     
     // Company Owner - Business management actions
-    if (permissions.canViewFinancials && permissions.canViewOrders) {
+    if (actualPermissions.canViewFinancials && actualPermissions.canViewOrders) {
       return [
         {
           title: 'New Order',
@@ -106,7 +110,7 @@ export const RoleBasedQuickActions: React.FC<RoleBasedQuickActionsProps> = ({ lo
     }
     
     // Production Manager - Production focused actions
-    if (permissions.canViewProduction) {
+    if (actualPermissions.canViewProduction) {
       return [
         {
           title: 'Start Production',

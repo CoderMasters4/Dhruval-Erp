@@ -163,7 +163,7 @@ export function CompanyCrudModal({
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
       <ResponsiveCard className="w-full max-w-4xl max-h-[90vh] overflow-y-auto" padding="lg">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-xl font-semibold flex items-center">

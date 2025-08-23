@@ -63,139 +63,167 @@
   animation: pulse-glow 2s infinite;
 }
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
+/* Base styles with comprehensive dark theme */
 body {
-  color: var(--foreground);
-  background: var(--background);
   font-family: 'Inter', system-ui, sans-serif;
+  transition: background-color 0.3s ease, color 0.3s ease;
+  @apply bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white;
 }
 
-/* Fix for input text visibility in all forms */
-input[type="text"],
-input[type="email"],
-input[type="password"],
-input[type="tel"],
-input[type="url"],
-input[type="number"],
-input[type="date"],
-input[type="datetime-local"],
-input[type="time"],
-textarea,
-select {
-  color: #111827 !important; /* text-gray-900 */
-  font-weight: 500 !important; /* font-medium */
-}
-
-input::placeholder,
-textarea::placeholder {
-  color: #6b7280 !important; /* text-gray-500 */
-}
-
-/* Fix for general text visibility */
-.text-gray-500,
-.text-gray-400,
-.text-gray-300 {
-  color: #374151 !important; /* Darker gray for better visibility */
-}
-
-/* Ensure all text elements have proper contrast */
-p, span, div, label, h1, h2, h3, h4, h5, h6 {
-  color: inherit;
-}
-
-/* Fix for modal and card text */
-.bg-white p,
-.bg-white span,
-.bg-white div,
-.bg-white label {
-  color: #111827 !important; /* text-gray-900 */
-}
-
-/* Fix for button text visibility */
-button {
-  color: inherit;
-}
-
-button.bg-white {
-  color: #111827 !important;
-}
-
-/* Fix for specific gray text classes */
-.text-gray-600 {
-  color: #4b5563 !important;
-}
-
-.text-gray-700 {
-  color: #374151 !important;
-}
-
-.text-gray-800 {
-  color: #1f2937 !important;
-}
-
-.text-gray-900 {
-  color: #111827 !important;
-}
-
-/* Custom scrollbar */
+/* Enhanced scrollbar with better dark theme */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 8px;
+  height: 8px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #f1f5f9;
-  border-radius: 3px;
+  @apply bg-gray-100 dark:bg-gray-800;
+  border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
-  border-radius: 3px;
+  @apply bg-gray-300 dark:bg-gray-600;
+  border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
+  @apply bg-gray-400 dark:bg-gray-500;
 }
 
-/* Custom components */
+/* Comprehensive dark theme components */
 @layer components {
+  /* Button variants */
   .btn-primary {
     @apply bg-gradient-to-r from-emerald-500 to-emerald-600 text-white px-4 py-2 rounded-lg font-medium hover:from-emerald-600 hover:to-emerald-700 transition-all duration-200 shadow-sm hover:shadow-md;
   }
 
   .btn-secondary {
-    @apply bg-slate-100 text-slate-700 px-4 py-2 rounded-lg font-medium hover:bg-slate-200 transition-colors duration-200;
+    @apply bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 px-4 py-2 rounded-lg font-medium hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors duration-200 border border-gray-200 dark:border-gray-600;
   }
 
+  .btn-outline {
+    @apply border-2 border-sky-500 text-sky-600 dark:text-sky-400 hover:bg-sky-50 dark:hover:bg-sky-900/20 px-4 py-2 rounded-lg font-medium transition-all duration-200;
+  }
+
+  /* Card variants */
   .card {
-    @apply bg-white rounded-xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-shadow duration-200;
+    @apply bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 hover:shadow-md transition-all duration-200;
   }
 
+  .card-hover {
+    @apply bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 hover:shadow-lg hover:scale-[1.02] transition-all duration-200;
+  }
+
+  /* Form elements */
   .input-field {
-    @apply w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-colors duration-200;
+    @apply w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent transition-all duration-200 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400;
   }
 
+  .input-field-error {
+    @apply w-full px-3 py-2 border border-red-300 dark:border-red-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all duration-200 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-red-400 dark:placeholder-red-500;
+  }
+
+  .select-field {
+    @apply w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent transition-all duration-200 bg-white dark:bg-gray-700 text-gray-900 dark:text-white;
+  }
+
+  /* Sidebar items */
   .sidebar-item {
     @apply flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-all duration-200;
   }
 
   .sidebar-item-active {
-    @apply bg-gradient-to-r from-emerald-500 to-emerald-600 text-white shadow-lg;
+    @apply bg-sky-500 text-white shadow-lg;
   }
 
   .sidebar-item-inactive {
-    @apply text-slate-700 hover:bg-slate-100 hover:text-slate-900;
+    @apply text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white transition-all duration-200;
+  }
+
+  /* Table styles */
+  .table-container {
+    @apply bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden;
+  }
+
+  .table-header {
+    @apply bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white;
+  }
+
+  .table-row {
+    @apply hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-150;
+  }
+
+  .table-cell {
+    @apply px-6 py-4 text-sm text-gray-900 dark:text-white border-b border-gray-200 dark:border-gray-700;
+  }
+
+  /* Badge variants */
+  .badge {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+  }
+
+  .badge-success {
+    @apply bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200;
+  }
+
+  .badge-warning {
+    @apply bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-200;
+  }
+
+  .badge-error {
+    @apply bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-200;
+  }
+
+  .badge-info {
+    @apply bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200;
+  }
+
+  /* Alert variants */
+  .alert {
+    @apply p-4 rounded-lg border transition-all duration-200;
+  }
+
+  .alert-success {
+    @apply bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800 text-green-800 dark:text-green-200;
+  }
+
+  .alert-warning {
+    @apply bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800 text-yellow-800 dark:text-yellow-200;
+  }
+
+  .alert-error {
+    @apply bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800 text-red-800 dark:text-red-200;
+  }
+
+  .alert-info {
+    @apply bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800 text-blue-800 dark:text-blue-200;
+  }
+
+  /* Navigation styles */
+  .nav-link {
+    @apply text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors duration-200;
+  }
+
+  .nav-link-active {
+    @apply text-sky-600 dark:text-sky-400 font-medium;
+  }
+
+  /* Modal styles */
+  .modal-overlay {
+    @apply fixed inset-0 bg-black/50 dark:bg-black/70 z-50 transition-opacity duration-300;
+  }
+
+  .modal-content {
+    @apply bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 transition-all duration-300;
+  }
+
+  /* Dropdown styles */
+  .dropdown-menu {
+    @apply bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 transition-all duration-200;
+  }
+
+  .dropdown-item {
+    @apply px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white transition-colors duration-150 cursor-pointer;
   }
 }
 
@@ -209,11 +237,45 @@ button.bg-white {
   }
 
   .glass-effect {
-    @apply bg-white/80 backdrop-blur-sm border border-white/20;
+    @apply bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border border-white/20 dark:border-gray-700/20;
   }
 
   .shadow-glow {
     box-shadow: 0 0 20px rgba(16, 185, 129, 0.15);
+  }
+
+  .dark .shadow-glow {
+    box-shadow: 0 0 20px rgba(16, 185, 129, 0.3);
+  }
+
+  /* Dark theme specific utilities */
+  .bg-gradient-light {
+    @apply bg-gradient-to-br from-white via-gray-50 to-gray-100;
+  }
+
+  .bg-gradient-dark {
+    @apply bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900;
+  }
+
+  .text-gradient-light {
+    @apply bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent;
+  }
+
+  .text-gradient-dark {
+    @apply bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent;
+  }
+
+  /* Enhanced transitions */
+  .transition-theme {
+    @apply transition-all duration-300 ease-in-out;
+  }
+
+  .transition-fast {
+    @apply transition-all duration-150 ease-in-out;
+  }
+
+  .transition-slow {
+    @apply transition-all duration-500 ease-in-out;
   }
 }
 
@@ -310,4 +372,24 @@ button.bg-white {
 
 .animation-delay-4000 {
   animation-delay: 4s;
+}
+
+/* Enhanced dark theme overrides */
+.dark {
+  /* Ensure all text is readable in dark mode */
+  color-scheme: dark;
+}
+
+/* Focus states for better accessibility */
+.focus-visible:focus {
+  @apply outline-none ring-2 ring-sky-500 ring-offset-2 ring-offset-white dark:ring-offset-gray-900;
+}
+
+/* Selection colors */
+::selection {
+  @apply bg-sky-200 dark:bg-sky-800 text-sky-900 dark:text-sky-100;
+}
+
+::-moz-selection {
+  @apply bg-sky-200 dark:bg-sky-800 text-sky-900 dark:text-sky-100;
 }

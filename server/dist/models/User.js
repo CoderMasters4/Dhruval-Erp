@@ -344,5 +344,23 @@ UserSchema.statics.findByCompany = function (companyId) {
         isActive: true
     });
 };
+UserSchema.virtual('role').get(function () {
+    if (this.isSuperAdmin)
+        return 'super_admin';
+    const primaryAccess = this.companyAccess?.find((access) => access.isActive);
+    return primaryAccess?.role || 'user';
+});
+UserSchema.virtual('companyId').get(function () {
+    if (this.isSuperAdmin)
+        return null;
+    const primaryAccess = this.companyAccess?.find((access) => access.isActive);
+    return primaryAccess?.companyId || null;
+});
+UserSchema.virtual('employeeId').get(function () {
+    return this._id;
+});
+UserSchema.virtual('name').get(function () {
+    return this.fullName;
+});
 exports.default = (0, mongoose_1.model)('User', UserSchema);
 //# sourceMappingURL=User.js.map

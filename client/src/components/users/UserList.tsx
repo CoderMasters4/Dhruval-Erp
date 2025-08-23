@@ -26,8 +26,8 @@ interface UserListProps {
   onView: (user: User) => void
   onEdit: (user: User) => void
   onDelete: (user: User) => void
-  onChangePassword: (user: User) => void
-  onToggle2FA: (user: User) => void
+  onChangePassword?: (user: User) => void
+  onToggle2FA?: (user: User) => void
 }
 
 export default function UserList({
@@ -278,7 +278,7 @@ export default function UserList({
                   </Button>
                   
                   <Button
-                    onClick={() => onChangePassword(user)}
+                    onClick={() => onChangePassword && onChangePassword(user)}
                     className="bg-green-500 hover:bg-green-600 text-white p-2 rounded-lg transition-colors"
                     title="Change Password"
                   >
@@ -286,7 +286,7 @@ export default function UserList({
                   </Button>
                   
                   <Button
-                    onClick={() => onToggle2FA(user)}
+                    onClick={() => onToggle2FA && onToggle2FA(user)}
                     className={clsx(
                       'p-2 rounded-lg transition-colors',
                       user.is2FAEnabled

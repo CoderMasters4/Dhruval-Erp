@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.registerModels = exports.Spare = exports.Report = exports.Dispatch = exports.Hospitality = exports.ElectricityMonitoring = exports.BoilerMonitoring = exports.BusinessAnalytics = exports.Quotation = exports.PurchaseOrder = exports.Invoice = exports.Warehouse = exports.SecurityLog = exports.Vehicle = exports.Visitor = exports.Role = exports.AuditLog = exports.FinancialTransaction = exports.Supplier = exports.CustomerVisit = exports.Customer = exports.CustomerOrder = exports.ProductionOrder = exports.StockMovement = exports.InventoryItem = exports.User = exports.Company = void 0;
+exports.registerModels = exports.Sticker = exports.Attendance = exports.Manpower = exports.Spare = exports.Report = exports.Dispatch = exports.Hospitality = exports.ElectricityMonitoring = exports.BoilerMonitoring = exports.BusinessAnalytics = exports.Quotation = exports.PurchaseOrder = exports.Invoice = exports.Warehouse = exports.SecurityLog = exports.Vehicle = exports.Visitor = exports.Role = exports.AuditLog = exports.FinancialTransaction = exports.Supplier = exports.CustomerVisit = exports.Customer = exports.CustomerOrder = exports.ProductionOrder = exports.StockMovement = exports.InventoryItem = exports.User = exports.Company = void 0;
 const Company_1 = __importDefault(require("./Company"));
 exports.Company = Company_1.default;
 const User_1 = __importDefault(require("./User"));
@@ -56,6 +56,12 @@ const Report_1 = __importDefault(require("./Report"));
 exports.Report = Report_1.default;
 const Spare_1 = __importDefault(require("./Spare"));
 exports.Spare = Spare_1.default;
+const Manpower_1 = __importDefault(require("./Manpower"));
+exports.Manpower = Manpower_1.default;
+const Attendance_1 = __importDefault(require("./Attendance"));
+exports.Attendance = Attendance_1.default;
+const Sticker_1 = __importDefault(require("./Sticker"));
+exports.Sticker = Sticker_1.default;
 exports.default = {
     Company: Company_1.default,
     User: User_1.default,
@@ -82,7 +88,10 @@ exports.default = {
     Hospitality: Hospitality_1.default,
     Dispatch: Dispatch_1.default,
     Report: Report_1.default,
-    Spare: Spare_1.default
+    Spare: Spare_1.default,
+    Manpower: Manpower_1.default,
+    Attendance: Attendance_1.default,
+    Sticker: Sticker_1.default
 };
 const registerModels = () => {
     console.log('📊 Registering MongoDB models...');

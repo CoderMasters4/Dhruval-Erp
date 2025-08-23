@@ -105,8 +105,8 @@ const CompanyStats: React.FC<CompanyStatsProps> = ({ stats, isLoading }) => {
             )}
           >
             {/* Background Pattern */}
-            <div className="absolute -top-4 -right-4 w-20 h-20 bg-white bg-opacity-10 rounded-full"></div>
-            <div className="absolute -bottom-2 -left-2 w-12 h-12 bg-white bg-opacity-10 rounded-full"></div>
+            <div className="absolute -top-4 -right-4 w-20 h-20 bg-white/10 rounded-full"></div>
+            <div className="absolute -bottom-2 -left-2 w-12 h-12 bg-white/10 rounded-full"></div>
 
             <div className="relative z-10 flex items-center justify-between">
               <div className="flex-1">

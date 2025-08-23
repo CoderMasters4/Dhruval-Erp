@@ -61,48 +61,6 @@ const navigationItems: NavigationItem[] = [
     permission: 'view:Dashboard'
   },
 
-  // Super Admin Only
-  // {
-  //   name: 'Super Admin',
-  //   href: '/super-admin',
-  //   icon: Shield,
-  //   permission: 'admin:systemSettings',
-  //   roles: ['super_admin']
-  // },
-  // {
-  //   name: 'System Admin',
-  //   href: '/admin',
-  //   icon: Shield,
-  //   permission: 'admin:systemSettings',
-  //   roles: ['super_admin'],
-  //   children: [
-  //     {
-  //       name: 'Companies',
-  //       href: '/admin/companies',
-  //       icon: Building2,
-  //       permission: 'admin:systemSettings'
-  //     },
-  //     {
-  //       name: 'System Users',
-  //       href: '/admin/users',
-  //       icon: Users,
-  //       permission: 'admin:systemSettings'
-  //     },
-  //     {
-  //       name: 'System Settings',
-  //       href: '/admin/settings',
-  //       icon: Settings,
-  //       permission: 'admin:systemSettings'
-  //     },
-  //     {
-  //       name: 'Security Logs',
-  //       href: '/admin/security',
-  //       icon: Shield,
-  //       permission: 'admin:systemSettings'
-  //     }
-  //   ]
-  // },
-
   // Core Business Management
   {
     name: 'Companies',
@@ -234,6 +192,34 @@ const navigationItems: NavigationItem[] = [
         href: '/warehouses',
         icon: Warehouse,
         permission: 'view:Warehouse'
+      }
+    ]
+  },
+
+  // Human Resources Management
+  {
+    name: 'Human Resources',
+    href: '/manpower',
+    icon: Users,
+    permission: 'view:Manpower',
+    children: [
+      {
+        name: 'Manpower',
+        href: '/manpower',
+        icon: Users,
+        permission: 'view:Manpower'
+      },
+      {
+        name: 'Attendance',
+        href: '/attendance',
+        icon: UserCheck,
+        permission: 'view:Attendance'
+      },
+      {
+        name: 'Stickers & Labels',
+        href: '/stickers',
+        icon: FileText,
+        permission: 'view:Sticker'
       }
     ]
   },
@@ -440,9 +426,6 @@ export function Sidebar() {
   // Get user's current role
   const currentRole = isSuperAdmin ? 'super_admin' : user?.companyAccess?.[0]?.role || 'operator'
 
-  // Debug logging
-  console.log('Sidebar Debug:', { user, isSuperAdmin, currentRole, navigationItemsCount: navigationItems.length })
-
   // Simple navigation filtering - show basic items for all users
   const filteredNavigation = navigationItems.filter((item: NavigationItem) => {
     // Always show dashboard
@@ -517,8 +500,8 @@ export function Sidebar() {
                 'w-full flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-all duration-200',
                 level > 0 && 'ml-4',
                 active
-                  ? 'bg-sky-500 text-white'
-                  : 'text-black hover:bg-sky-50 hover:text-black',
+                  ? 'bg-sky-500 text-white shadow-lg'
+                  : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-gray-800 dark:hover:text-white',
                 isCollapsed && 'justify-center'
               )}
             >
@@ -543,8 +526,8 @@ export function Sidebar() {
                 'flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-all duration-200',
                 level > 0 && 'ml-4',
                 active
-                  ? 'bg-sky-500 text-white'
-                  : 'text-black hover:bg-sky-50 hover:text-black',
+                  ? 'bg-sky-500 text-white shadow-lg'
+                  : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-gray-800 dark:hover:text-white',
                 isCollapsed && 'justify-center'
               )}
             >
@@ -568,47 +551,47 @@ export function Sidebar() {
       {/* Mobile Overlay */}
       {isOpen && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
+          className="fixed inset-0 bg-black/50 z-40 lg:hidden transition-opacity duration-300"
           onClick={() => dispatch(toggleSidebar())}
         />
       )}
 
       {/* Sidebar */}
       <div className={clsx(
-        'fixed inset-y-0 left-0 z-50 flex flex-col bg-white border-r-2 border-sky-500 transition-all duration-300 ease-in-out',
+        'fixed inset-y-0 left-0 z-50 flex flex-col bg-white dark:bg-gray-900 border-r-2 border-sky-500 transition-all duration-300 ease-in-out shadow-lg',
         isCollapsed ? 'w-16' : 'w-64',
         isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
       )}>
         {/* Header */}
-        <div className="flex items-center justify-between h-16 px-3 sm:px-4 border-b-2 border-sky-500">
+        <div className="flex items-center justify-between h-16 px-3 sm:px-4 border-b-2 border-sky-500 bg-gradient-to-r from-white to-gray-50 dark:from-gray-900 dark:to-gray-800">
           <Link href="/dashboard" className="flex items-center space-x-2">
             <SidebarLogo collapsed={isCollapsed} />
           </Link>
           
           <button
             onClick={() => dispatch(setSidebarCollapsed(!isCollapsed))}
-            className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors lg:block hidden"
+            className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-200 lg:block hidden text-gray-600 dark:text-gray-300 hover:text-sky-600 dark:hover:text-sky-400 group"
           >
-            {isCollapsed ? <ChevronRight className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
+            {isCollapsed ? <ChevronRight className="h-4 w-4 group-hover:scale-110 transition-transform" /> : <Menu className="h-4 w-4 group-hover:scale-110 transition-transform" />}
           </button>
 
           <button
             onClick={() => dispatch(toggleSidebar())}
-            className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors lg:hidden"
+            className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-200 lg:hidden text-gray-600 dark:text-gray-300 hover:text-sky-600 dark:hover:text-sky-400 group"
           >
-            <X className="h-4 w-4" />
+            <X className="h-4 w-4 group-hover:scale-110 transition-transform" />
           </button>
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 px-2 sm:px-3 py-4 space-y-1 overflow-y-auto">
+        <nav className="flex-1 px-2 sm:px-3 py-4 space-y-1 overflow-y-auto bg-gradient-to-b from-white to-gray-50 dark:from-gray-900 dark:to-gray-800">
           {finalNavigation.map((item: NavigationItem) => renderNavigationItem(item))}
         </nav>
 
         {/* Footer */}
         {!isCollapsed && (
-          <div className="p-4 border-t border-gray-200">
-            <div className="text-xs text-gray-500 text-center">
+          <div className="p-4 border-t border-gray-200 dark:border-gray-700 bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900">
+            <div className="text-xs text-gray-500 dark:text-gray-400 text-center">
               ERP System v1.0
             </div>
           </div>

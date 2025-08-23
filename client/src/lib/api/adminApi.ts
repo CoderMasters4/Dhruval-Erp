@@ -184,7 +184,7 @@ export const adminApi = baseApi.injectEndpoints({
     // Get all companies
     getCompanies: builder.query<{ success: boolean; data: Company[] }, void>({
       query: () => ({
-        url: '/companies',
+        url: '/admin/companies',
         method: 'GET',
       }),
       providesTags: ['Company'],

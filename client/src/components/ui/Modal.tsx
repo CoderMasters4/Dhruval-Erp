@@ -67,7 +67,7 @@ export function Modal({
     <div className="absolute inset-0 z-[60] flex items-center justify-center p-4">
       {/* Backdrop */}
       <div
-        className="absolute inset-0 bg-black bg-opacity-50 backdrop-blur-sm"
+        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
         onClick={closeOnOverlayClick ? onClose : undefined}
       />
 
@@ -87,8 +87,8 @@ export function Modal({
             headerClassName
           )}>
             {/* Decorative elements */}
-            <div className="absolute -top-4 -right-4 w-20 h-20 bg-white bg-opacity-20 rounded-full"></div>
-            <div className="absolute -bottom-2 -left-2 w-12 h-12 bg-white bg-opacity-10 rounded-full"></div>
+            <div className="absolute -top-4 -right-4 w-20 h-20 bg-white/20 rounded-full"></div>
+            <div className="absolute -bottom-2 -left-2 w-12 h-12 bg-white/10 rounded-full"></div>
             
             <div className="relative z-10 flex items-center justify-between">
               {title && (
@@ -103,7 +103,7 @@ export function Modal({
               {showCloseButton && (
                 <Button
                   onClick={onClose}
-                  className="p-2 text-white hover:bg-white hover:bg-opacity-20 rounded-xl transition-colors bg-transparent border-0 ml-4"
+                  className="p-2 text-white hover:bg-white/20 rounded-xl transition-colors bg-transparent border-0 ml-4"
                 >
                   <X className="w-6 h-6" />
                 </Button>

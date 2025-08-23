@@ -72,9 +72,6 @@ const config: Config = {
           800: '#991b1b',
           900: '#7f1d1d',
         },
-        // Semantic colors
-        background: "var(--background)",
-        foreground: "var(--foreground)",
       },
       fontFamily: {
         sans: ['Inter', 'system-ui', 'sans-serif'],

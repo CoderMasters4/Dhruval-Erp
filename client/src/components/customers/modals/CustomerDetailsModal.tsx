@@ -62,18 +62,18 @@ export default function CustomerDetailsModal({
   }
 
   return (
-    <div className="fixed inset-0 bg-white bg-opacity-30 backdrop-blur-md flex items-center justify-center z-[60] p-4">
+    <div className="fixed inset-0 bg-white/30 backdrop-blur-md flex items-center justify-center z-[60] p-4">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden border border-gray-200">
         {/* Header */}
         <div className="bg-blue-500 p-6 relative overflow-hidden">
-          <div className="absolute -top-4 -right-4 w-20 h-20 bg-white bg-opacity-20 rounded-full"></div>
-          <div className="absolute -bottom-2 -left-2 w-12 h-12 bg-white bg-opacity-10 rounded-full"></div>
+          <div className="absolute -top-4 -right-4 w-20 h-20 bg-white/20 rounded-full"></div>
+          <div className="absolute -bottom-2 -left-2 w-12 h-12 bg-white/10 rounded-full"></div>
           
           <div className="relative z-10 flex items-center justify-between">
             <div className="flex items-center gap-4">
               {/* Avatar */}
               <div className="flex-shrink-0">
-                <div className="h-16 w-16 bg-white bg-opacity-20 rounded-full flex items-center justify-center border-4 border-white border-opacity-30">
+                <div className="h-16 w-16 bg-white/20 rounded-full flex items-center justify-center border-4 border-white border-white/30">
                   <span className="text-white font-bold text-2xl">
                     {customer.name.charAt(0).toUpperCase()}
                   </span>
@@ -86,21 +86,21 @@ export default function CustomerDetailsModal({
                 </h2>
                 <div className="flex items-center gap-3">
                   {customer.customerCode && (
-                    <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold bg-white bg-opacity-20 text-white border border-white border-opacity-30">
+                    <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold bg-white/20 text-white border border-white border-white/30">
                       {customer.customerCode}
                     </span>
                   )}
                   
-                  <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold bg-white bg-opacity-20 text-white border border-white border-opacity-30">
+                  <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold bg-white/20 text-white border border-white border-white/30">
                     <Building2 className="w-4 h-4 mr-1" />
                     {customer.customerType.charAt(0).toUpperCase() + customer.customerType.slice(1)}
                   </span>
                   
                   <span className={clsx(
-                    'inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold border border-white border-opacity-30',
+                    'inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold border border-white border-white/30',
                     customer.isActive
-                      ? 'bg-green-500 bg-opacity-80 text-white'
-                      : 'bg-red-500 bg-opacity-80 text-white'
+                                      ? 'bg-green-500/80 text-white'
+                : 'bg-red-500/80 text-white'
                   )}>
                     {customer.isActive ? (
                       <>
@@ -120,7 +120,7 @@ export default function CustomerDetailsModal({
             
             <Button
               onClick={onClose}
-              className="p-2 text-white hover:bg-white hover:bg-opacity-20 rounded-xl transition-colors bg-transparent border-0"
+              className="p-2 text-white hover:bg-white/20 rounded-xl transition-colors bg-transparent border-0"
             >
               <X className="w-6 h-6" />
             </Button>

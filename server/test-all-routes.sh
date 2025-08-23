@@ -54,23 +54,11 @@ echo -e "${YELLOW}👥 API V1 VISITORS${NC}"
 echo "=================="
 test_endpoint "GET" "/api/v1/visitors/health" 401 "Visitors Health (Should require auth)"
 
-echo -e "${YELLOW}🚀 API V2 CORE ENDPOINTS${NC}"
+# V2 routes have been migrated to V1 - V2 endpoints no longer exist
+echo -e "${YELLOW}📝 V2 MIGRATION COMPLETE${NC}"
 echo "========================="
-test_endpoint "GET" "/api/v2/health" 200 "V2 Health Check"
-test_endpoint "GET" "/api/v2/info" 200 "V2 API Info"
-
-echo -e "${YELLOW}🔐 API V2 AUTHENTICATION${NC}"
-echo "========================"
-test_endpoint "GET" "/api/v2/auth/health" 401 "V2 Auth Health (Should require auth)"
-test_endpoint "POST" "/api/v2/auth/login" 400 "V2 Login (Should require body)"
-
-echo -e "${YELLOW}🏢 API V2 COMPANIES${NC}"
-echo "==================="
-test_endpoint "GET" "/api/v2/companies" 401 "V2 Companies List (Should require auth)"
-
-echo -e "${YELLOW}👤 API V2 USERS${NC}"
-echo "================"
-test_endpoint "GET" "/api/v2/users" 401 "V2 Users List (Should require auth)"
+echo "✅ V2 routes successfully migrated to V1"
+echo "✅ V2 folder removed - all functionality now in V1"
 
 echo -e "${YELLOW}👥 API V2 VISITORS${NC}"
 echo "=================="

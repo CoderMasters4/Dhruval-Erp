@@ -30,19 +30,9 @@ import Hospitality from './Hospitality';
 import Dispatch from './Dispatch';
 import Report from './Report';
 import Spare from './Spare';
-
-// Additional models (to be created in future)
-// import Warehouse from './Warehouse';
-// import SecurityLog from './SecurityLog';
-// import BusinessAnalytics from './BusinessAnalytics';
-// import BoilerMonitoring from './BoilerMonitoring';
-// import ElectricityMonitoring from './ElectricityMonitoring';
-// import Hospitality from './Hospitality';
-// import Dispatch from './Dispatch';
-// import Invoice from './Invoice';
-// import PurchaseOrder from './PurchaseOrder';
-// import Quotation from './Quotation';
-// import Report from './Report';
+import Manpower from './Manpower';
+import Attendance from './Attendance';
+import Sticker from './Sticker';
 
 // Export all models
 export {
@@ -71,7 +61,10 @@ export {
   Hospitality,
   Dispatch,
   Report,
-  Spare
+  Spare,
+  Manpower,
+  Attendance,
+  Sticker
 };
 
 // Default export with all models
@@ -101,7 +94,10 @@ export default {
   Hospitality,
   Dispatch,
   Report,
-  Spare
+  Spare,
+  Manpower,
+  Attendance,
+  Sticker
 };
 
 // Model registration function
