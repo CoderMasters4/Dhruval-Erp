@@ -66,7 +66,7 @@ import rolesRoutes from '@/routes/roles';
 console.log('✅ Roles routes imported');
 import setupRoutes from '@/routes/setup';
 console.log('✅ Setup routes imported');
-// import visitorRoutes from '@/routes/visitors';
+import visitorRoutes from '@/routes/visitors';
 console.log('✅ Visitor routes imported');
 import sparesRoutes from '@/routes/spares';
 console.log('✅ Spares routes imported');
@@ -444,6 +444,9 @@ apiRouter.use('/suppliers', suppliersRoutes);
 
 // Roles routes (protected)
 apiRouter.use('/roles', rolesRoutes);
+
+// Visitor routes (protected)
+apiRouter.use('/visitors', visitorRoutes);
 
 // Spares routes (protected)
 apiRouter.use('/spares', sparesRoutes);

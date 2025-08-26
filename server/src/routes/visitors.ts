@@ -3,11 +3,11 @@ import { body, param, query, validationResult } from 'express-validator';
 import Visitor from '@/models/Visitor';
 import { authenticate, requirePermission } from '@/middleware/auth';
 import { businessLogger, apiLogger } from '@/utils/logger';
-import { VisitorController } from '@/controllers/VisitorController';
-import { uploadVisitorFiles, uploadSingle, validateUploadedFiles } from '@/middleware/upload';
+// import { VisitorController } from '@/controllers/VisitorController';
+// import { uploadVisitorFiles, uploadSingle, validateUploadedFiles } from '@/middleware/upload';
 
 const router = Router();
-const visitorController = new VisitorController();
+// const visitorController = new VisitorController();
 
 // Validation middleware
 const validateVisitor = [
@@ -527,9 +527,10 @@ router.get('/reports/overstaying',
 );
 
 // =============================================
-// FILE UPLOAD ROUTES
+// FILE UPLOAD ROUTES (TEMPORARILY COMMENTED OUT)
 // =============================================
 
+/*
 // Create visitor with file uploads
 router.post(
   '/with-files',
@@ -575,5 +576,6 @@ router.get(
   requirePermission('visitors', 'view'),
   visitorController.getDownloadUrl.bind(visitorController)
 );
+*/
 
 export default router;
