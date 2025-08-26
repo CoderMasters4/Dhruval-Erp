@@ -198,7 +198,7 @@ const BusinessAnalyticsSchema = new mongoose_1.Schema({
     notes: { type: String },
     tags: [String],
     customFields: { type: mongoose_1.Schema.Types.Mixed },
-    isActive: { type: Boolean, default: true, index: true },
+    isActive: { type: Boolean, default: true },
     createdBy: { type: mongoose_1.Schema.Types.ObjectId, ref: 'User', required: true },
     lastModifiedBy: { type: mongoose_1.Schema.Types.ObjectId, ref: 'User' },
     lastCalculated: { type: Date, default: Date.now }
@@ -207,7 +207,6 @@ const BusinessAnalyticsSchema = new mongoose_1.Schema({
     collection: 'business_analytics'
 });
 BusinessAnalyticsSchema.index({ companyId: 1, analyticsId: 1 }, { unique: true });
-BusinessAnalyticsSchema.index({ companyId: 1, isActive: 1 });
 BusinessAnalyticsSchema.index({ companyId: 1, lastCalculated: -1 });
 BusinessAnalyticsSchema.index({
     analyticsName: 'text',

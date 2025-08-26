@@ -14,8 +14,7 @@ const StockMovementSchema = new mongoose_1.Schema({
     companyId: {
         type: mongoose_1.Schema.Types.ObjectId,
         ref: 'Company',
-        required: true,
-        index: true
+        required: true
     },
     movementNumber: {
         type: String,
@@ -26,22 +25,19 @@ const StockMovementSchema = new mongoose_1.Schema({
     movementDate: {
         type: Date,
         required: true,
-        default: Date.now,
-        index: true
+        default: Date.now
     },
     itemId: {
         type: mongoose_1.Schema.Types.ObjectId,
         ref: 'InventoryItem',
-        required: true,
-        index: true
+        required: true
     },
     itemCode: { type: String },
     itemName: { type: String },
     movementType: {
         type: String,
         enum: ['inward', 'outward', 'transfer', 'adjustment', 'production_consume', 'production_output', 'return', 'damage', 'theft'],
-        required: true,
-        index: true
+        required: true
     },
     referenceDocument: {
         documentType: {

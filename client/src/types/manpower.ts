@@ -208,3 +208,7 @@ export interface IAttendanceStats {
   averageWorkingHours: number;
   averageOvertimeHours: number;
 }
+
+
+
+

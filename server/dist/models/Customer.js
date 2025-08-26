@@ -38,8 +38,7 @@ const CustomerSchema = new mongoose_1.Schema({
     companyId: {
         type: mongoose_1.Schema.Types.ObjectId,
         ref: 'Company',
-        required: true,
-        index: true
+        required: true
     },
     customerCode: {
         type: String,

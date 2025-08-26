@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.refreshAccessToken = exports.optionalAuth = exports.requireSuperAdmin = exports.requireAdmin = exports.requirePermission = exports.requireRole = exports.requireCompany = exports.authenticate = exports.verifyRefreshToken = exports.verifyAccessToken = exports.generateRefreshToken = exports.generateAccessToken = void 0;
+exports.refreshAccessToken = exports.optionalAuth = exports.requireSuperAdmin = exports.requireAdmin = exports.requirePermission = exports.requireRole = exports.requireCompany = exports.allowSuperadmin = exports.authenticate = exports.verifyRefreshToken = exports.verifyAccessToken = exports.generateRefreshToken = exports.generateAccessToken = void 0;
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const mongoose_1 = require("mongoose");
 const User_1 = __importDefault(require("@/models/User"));
@@ -174,6 +174,17 @@ const authenticate = async (req, res, next) => {
                 req.company = companyAccess.companyId;
             }
         }
+        else if (user.isSuperAdmin && !is2FARoute) {
+            logger_1.default.info('Super admin access without company context - FULL ACCESS GRANTED', {
+                userId: user._id,
+                username: user.username,
+                path: req.path
+            });
+            if (user.companyAccess?.[0]?.companyId) {
+                req.company = user.companyAccess[0].companyId;
+                req.companyAccess = user.companyAccess[0];
+            }
+        }
         else if (!user.isSuperAdmin && !is2FARoute) {
             return res.status(400).json({
                 error: 'Company ID required',
@@ -181,9 +192,11 @@ const authenticate = async (req, res, next) => {
             });
         }
         else {
-            logger_1.default.info('Super admin access without company context', {
+            logger_1.default.info('Special route access granted', {
                 userId: user._id,
-                username: user.username
+                username: user.username,
+                path: req.path,
+                is2FARoute
             });
         }
         await user.updateOne({
@@ -220,6 +233,19 @@ const authenticate = async (req, res, next) => {
     }
 };
 exports.authenticate = authenticate;
+const allowSuperadmin = (req, res, next) => {
+    const user = req.user;
+    if (user?.isSuperAdmin) {
+        logger_1.default.info('Superadmin bypass - allowing access without company context', {
+            userId: user._id,
+            username: user.username,
+            path: req.path
+        });
+        return next();
+    }
+    next();
+};
+exports.allowSuperadmin = allowSuperadmin;
 const requireCompany = async (req, res, next) => {
     try {
         const companyId = req.headers['x-company-id'];

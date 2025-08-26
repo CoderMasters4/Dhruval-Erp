@@ -205,7 +205,7 @@ const InventoryBatchSchema = new Schema<IInventoryBatch>({
     default: 'active',
     index: true
   },
-  isActive: { type: Boolean, default: true, index: true },
+  isActive: { type: Boolean, default: true },
   
   // Audit
   createdBy: { type: Schema.Types.ObjectId, ref: 'User', required: true },

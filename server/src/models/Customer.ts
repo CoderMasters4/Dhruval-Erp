@@ -40,8 +40,7 @@ const CustomerSchema = new Schema<ICustomer>({
   companyId: { 
     type: Schema.Types.ObjectId, 
     ref: 'Company', 
-    required: true, 
-    index: true 
+    required: true
   },
 
   // Customer Identification

@@ -199,3 +199,6 @@ attendanceSchema.index({ companyId: 1, status: 1 });
 attendanceSchema.index({ companyId: 1, shiftType: 1 });
 
 export default mongoose.model<IAttendance>('Attendance', attendanceSchema);
+
+
+

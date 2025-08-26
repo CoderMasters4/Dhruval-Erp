@@ -302,7 +302,7 @@ const VisitorSchema = new Schema<IVisitor>({
   // Tracking & Audit
   createdBy: { type: Schema.Types.ObjectId, ref: 'User', required: true },
   lastModifiedBy: { type: Schema.Types.ObjectId, ref: 'User' },
-  isActive: { type: Boolean, default: true, index: true }
+  isActive: { type: Boolean, default: true }
 }, {
   timestamps: true,
   collection: 'visitors'

@@ -192,8 +192,9 @@ const CompanySchema = new Schema<ICompany>({
 });
 
 // Indexes for performance (companyCode and gstin already have unique indexes)
+// Note: Most indexes are now managed centrally in database-indexes.ts
+// Only keeping unique indexes that are not in the central configuration
 CompanySchema.index({ 'registrationDetails.pan': 1 });
-CompanySchema.index({ isActive: 1 });
 CompanySchema.index({ createdAt: -1 });
 
 // Virtual for display name

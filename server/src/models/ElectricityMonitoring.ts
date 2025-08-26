@@ -259,7 +259,7 @@ const ElectricityMonitoringSchema = new Schema<IElectricityMonitoring>({
   attachments: [String], // URLs to electrical drawings, certificates
 
   // Tracking & Audit
-  isActive: { type: Boolean, default: true, index: true },
+  isActive: { type: Boolean, default: true },
   createdBy: { type: Schema.Types.ObjectId, ref: 'User', required: true },
   lastModifiedBy: { type: Schema.Types.ObjectId, ref: 'User' },
   electricianInCharge: { type: Schema.Types.ObjectId, ref: 'User' },

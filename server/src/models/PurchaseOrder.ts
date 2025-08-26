@@ -285,7 +285,7 @@ const PurchaseOrderSchema = new Schema<IPurchaseOrder>({
   buyerName: { type: String },
   departmentId: { type: Schema.Types.ObjectId, ref: 'Department' },
   departmentName: { type: String },
-  isActive: { type: Boolean, default: true, index: true }
+  isActive: { type: Boolean, default: true }
 }, {
   timestamps: true,
   collection: 'purchase_orders'

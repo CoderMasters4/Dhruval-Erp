@@ -189,15 +189,13 @@ const UserSchema = new Schema<IUser>({
   // Super Admin Flag (Optional for super admin across all companies)
   isSuperAdmin: {
     type: Boolean,
-    default: false,
-    index: true
+    default: false
   },
 
   // Primary Company (for default context)
   primaryCompanyId: {
     type: Schema.Types.ObjectId,
-    ref: 'Company',
-    index: true
+    ref: 'Company'
   },
 
   // Security Settings
@@ -237,14 +235,13 @@ const UserSchema = new Schema<IUser>({
 });
 
 // Indexes for performance (username and email already have unique indexes)
+// Note: Most indexes are now managed centrally in database-indexes.ts
+// Only keeping unique indexes that are not in the central configuration
 UserSchema.index({ 'personalInfo.phone': 1 });
-UserSchema.index({ 'companyAccess.companyId': 1 });
 UserSchema.index({ 'companyAccess.role': 1 });
-UserSchema.index({ isActive: 1 });
 UserSchema.index({ createdAt: -1 });
 
-// Compound indexes
-UserSchema.index({ 'companyAccess.companyId': 1, 'companyAccess.isActive': 1 });
+// Compound indexes (keeping only those not in central config)
 UserSchema.index({ username: 1, isActive: 1 });
 UserSchema.index({ email: 1, isActive: 1 });
 

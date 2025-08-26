@@ -355,7 +355,7 @@ const HospitalitySchema = new Schema<IHospitality>({
   attachments: [String], // URLs to photos, documents
 
   // Tracking & Audit
-  isActive: { type: Boolean, default: true, index: true },
+  isActive: { type: Boolean, default: true },
   createdBy: { type: Schema.Types.ObjectId, ref: 'User', required: true },
   lastModifiedBy: { type: Schema.Types.ObjectId, ref: 'User' },
   managerId: { type: Schema.Types.ObjectId, ref: 'User' },

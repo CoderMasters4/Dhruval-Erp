@@ -301,7 +301,7 @@ const WarehouseSchema = new Schema<IWarehouse>({
   attachments: [String], // URLs to documents, images, etc.
 
   // Status & Tracking
-  isActive: { type: Boolean, default: true, index: true },
+  isActive: { type: Boolean, default: true },
   createdBy: { type: Schema.Types.ObjectId, ref: 'User', required: true },
   lastModifiedBy: { type: Schema.Types.ObjectId, ref: 'User' }
 }, {
@@ -310,10 +310,11 @@ const WarehouseSchema = new Schema<IWarehouse>({
 });
 
 // Compound Indexes
+// Note: Most indexes are now managed centrally in database-indexes.ts
+// Only keeping unique indexes that are not in the central configuration
 WarehouseSchema.index({ companyId: 1, warehouseCode: 1 }, { unique: true });
 WarehouseSchema.index({ companyId: 1, warehouseName: 1 });
 WarehouseSchema.index({ companyId: 1, warehouseType: 1 });
-WarehouseSchema.index({ companyId: 1, isActive: 1 });
 
 // Text search index
 WarehouseSchema.index({ 

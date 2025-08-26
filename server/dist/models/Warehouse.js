@@ -265,7 +265,7 @@ const WarehouseSchema = new mongoose_1.Schema({
     tags: [String],
     customFields: { type: mongoose_1.Schema.Types.Mixed },
     attachments: [String],
-    isActive: { type: Boolean, default: true, index: true },
+    isActive: { type: Boolean, default: true },
     createdBy: { type: mongoose_1.Schema.Types.ObjectId, ref: 'User', required: true },
     lastModifiedBy: { type: mongoose_1.Schema.Types.ObjectId, ref: 'User' }
 }, {
@@ -275,7 +275,6 @@ const WarehouseSchema = new mongoose_1.Schema({
 WarehouseSchema.index({ companyId: 1, warehouseCode: 1 }, { unique: true });
 WarehouseSchema.index({ companyId: 1, warehouseName: 1 });
 WarehouseSchema.index({ companyId: 1, warehouseType: 1 });
-WarehouseSchema.index({ companyId: 1, isActive: 1 });
 WarehouseSchema.index({
     warehouseName: 'text',
     warehouseCode: 'text',

@@ -222,7 +222,7 @@ const SupplierSchema = new mongoose_1.Schema({
     tags: [String],
     customFields: { type: mongoose_1.Schema.Types.Mixed },
     attachments: [String],
-    isActive: { type: Boolean, default: true, index: true },
+    isActive: { type: Boolean, default: true },
     createdBy: { type: mongoose_1.Schema.Types.ObjectId, ref: 'User', required: true },
     lastModifiedBy: { type: mongoose_1.Schema.Types.ObjectId, ref: 'User' }
 }, {

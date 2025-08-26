@@ -254,7 +254,7 @@ const QuotationSchema = new Schema<IQuotation>({
   salesPersonName: { type: String },
   teamId: { type: Schema.Types.ObjectId, ref: 'Team' },
   departmentId: { type: Schema.Types.ObjectId, ref: 'Department' },
-  isActive: { type: Boolean, default: true, index: true }
+  isActive: { type: Boolean, default: true }
 }, {
   timestamps: true,
   collection: 'quotations'

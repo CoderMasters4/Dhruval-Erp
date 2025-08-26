@@ -158,13 +158,11 @@ const UserSchema = new mongoose_1.Schema({
     companyAccess: [CompanyAccessSchema],
     isSuperAdmin: {
         type: Boolean,
-        default: false,
-        index: true
+        default: false
     },
     primaryCompanyId: {
         type: mongoose_1.Schema.Types.ObjectId,
-        ref: 'Company',
-        index: true
+        ref: 'Company'
     },
     security: {
         lastLogin: { type: Date },
@@ -198,11 +196,8 @@ const UserSchema = new mongoose_1.Schema({
     collection: 'users'
 });
 UserSchema.index({ 'personalInfo.phone': 1 });
-UserSchema.index({ 'companyAccess.companyId': 1 });
 UserSchema.index({ 'companyAccess.role': 1 });
-UserSchema.index({ isActive: 1 });
 UserSchema.index({ createdAt: -1 });
-UserSchema.index({ 'companyAccess.companyId': 1, 'companyAccess.isActive': 1 });
 UserSchema.index({ username: 1, isActive: 1 });
 UserSchema.index({ email: 1, isActive: 1 });
 UserSchema.virtual('fullName').get(function () {

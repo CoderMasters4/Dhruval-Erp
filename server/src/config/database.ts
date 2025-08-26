@@ -190,7 +190,7 @@ class DatabaseManager {
       logger.info('Setting up database indexes...');
 
       // Import models to ensure schema indexes are created
-      await import('@/models');
+      // await import('@/models'); // Commented out to prevent circular dependency issues
 
       // Create comprehensive performance indexes
       if (config.NODE_ENV !== 'test') {

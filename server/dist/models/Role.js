@@ -245,7 +245,7 @@ const RoleSchema = new mongoose_1.Schema({
         fieldLevelRestrictions: { type: mongoose_1.Schema.Types.Mixed }
     },
     isSystemRole: { type: Boolean, default: false },
-    isActive: { type: Boolean, default: true, index: true },
+    isActive: { type: Boolean, default: true },
     isDefault: { type: Boolean, default: false },
     maxUsers: { type: Number, min: 0 },
     currentUsers: { type: Number, default: 0, min: 0 },
@@ -268,9 +268,6 @@ const RoleSchema = new mongoose_1.Schema({
 });
 RoleSchema.index({ companyId: 1, roleCode: 1 }, { unique: true });
 RoleSchema.index({ companyId: 1, roleName: 1 });
-RoleSchema.index({ companyId: 1, roleType: 1, isActive: 1 });
-RoleSchema.index({ companyId: 1, department: 1, isActive: 1 });
-RoleSchema.index({ companyId: 1, roleLevel: 1, isActive: 1 });
 RoleSchema.index({
     roleName: 'text',
     roleCode: 'text',

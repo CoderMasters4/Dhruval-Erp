@@ -214,7 +214,7 @@ const InvoiceSchema = new mongoose_1.Schema({
     lastModifiedBy: { type: mongoose_1.Schema.Types.ObjectId, ref: 'User' },
     salesPersonId: { type: mongoose_1.Schema.Types.ObjectId, ref: 'User' },
     salesPersonName: { type: String },
-    isActive: { type: Boolean, default: true, index: true }
+    isActive: { type: Boolean, default: true }
 }, {
     timestamps: true,
     collection: 'invoices'

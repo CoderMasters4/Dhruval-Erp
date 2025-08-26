@@ -170,7 +170,6 @@ const CompanySchema = new mongoose_1.Schema({
     collection: 'companies'
 });
 CompanySchema.index({ 'registrationDetails.pan': 1 });
-CompanySchema.index({ isActive: 1 });
 CompanySchema.index({ createdAt: -1 });
 CompanySchema.virtual('displayName').get(function () {
     return this.companyName || this.legalName;

@@ -194,20 +194,20 @@ declare const _default: {
             proficiency: "Beginner" | "Intermediate" | "Advanced" | "Expert";
             yearsOfExperience?: number;
         }>;
-        createdBy?: import("mongoose").Types.ObjectId;
         personalInfo?: {
             email: string;
             phone: string;
             firstName: string;
             lastName: string;
-            displayName?: string;
             middleName?: string;
+            displayName?: string;
             alternatePhone?: string;
             dateOfBirth?: NativeDate;
             gender?: "Male" | "Female" | "Other";
             bloodGroup?: "A+" | "B+" | "A-" | "B-" | "AB+" | "AB-" | "O+" | "O-";
             profilePhoto?: string;
         };
+        createdBy?: import("mongoose").Types.ObjectId;
         emergencyContact?: {
             phone: string;
             name: string;
@@ -221,7 +221,7 @@ declare const _default: {
         };
         employmentInfo?: {
             status: "Active" | "Inactive" | "Suspended" | "Terminated" | "On Leave";
-            department: "Management" | "Production" | "Sales" | "Accounts" | "Security" | "Quality" | "Purchase" | "HR" | "Maintenance" | "IT";
+            department: "Management" | "Production" | "Sales" | "Accounts" | "Security" | "Quality" | "HR" | "Purchase" | "Maintenance" | "IT";
             designation: string;
             joiningDate: NativeDate;
             employeeType: "Contract" | "Full-time" | "Part-time" | "Intern" | "Temporary";
@@ -266,20 +266,20 @@ declare const _default: {
             proficiency: "Beginner" | "Intermediate" | "Advanced" | "Expert";
             yearsOfExperience?: number;
         }>;
-        createdBy?: import("mongoose").Types.ObjectId;
         personalInfo?: {
             email: string;
             phone: string;
             firstName: string;
             lastName: string;
-            displayName?: string;
             middleName?: string;
+            displayName?: string;
             alternatePhone?: string;
             dateOfBirth?: NativeDate;
             gender?: "Male" | "Female" | "Other";
             bloodGroup?: "A+" | "B+" | "A-" | "B-" | "AB+" | "AB-" | "O+" | "O-";
             profilePhoto?: string;
         };
+        createdBy?: import("mongoose").Types.ObjectId;
         emergencyContact?: {
             phone: string;
             name: string;
@@ -293,7 +293,7 @@ declare const _default: {
         };
         employmentInfo?: {
             status: "Active" | "Inactive" | "Suspended" | "Terminated" | "On Leave";
-            department: "Management" | "Production" | "Sales" | "Accounts" | "Security" | "Quality" | "Purchase" | "HR" | "Maintenance" | "IT";
+            department: "Management" | "Production" | "Sales" | "Accounts" | "Security" | "Quality" | "HR" | "Purchase" | "Maintenance" | "IT";
             designation: string;
             joiningDate: NativeDate;
             employeeType: "Contract" | "Full-time" | "Part-time" | "Intern" | "Temporary";
@@ -338,20 +338,20 @@ declare const _default: {
             proficiency: "Beginner" | "Intermediate" | "Advanced" | "Expert";
             yearsOfExperience?: number;
         }>;
-        createdBy?: import("mongoose").Types.ObjectId;
         personalInfo?: {
             email: string;
             phone: string;
             firstName: string;
             lastName: string;
-            displayName?: string;
             middleName?: string;
+            displayName?: string;
             alternatePhone?: string;
             dateOfBirth?: NativeDate;
             gender?: "Male" | "Female" | "Other";
             bloodGroup?: "A+" | "B+" | "A-" | "B-" | "AB+" | "AB-" | "O+" | "O-";
             profilePhoto?: string;
         };
+        createdBy?: import("mongoose").Types.ObjectId;
         emergencyContact?: {
             phone: string;
             name: string;
@@ -365,7 +365,7 @@ declare const _default: {
         };
         employmentInfo?: {
             status: "Active" | "Inactive" | "Suspended" | "Terminated" | "On Leave";
-            department: "Management" | "Production" | "Sales" | "Accounts" | "Security" | "Quality" | "Purchase" | "HR" | "Maintenance" | "IT";
+            department: "Management" | "Production" | "Sales" | "Accounts" | "Security" | "Quality" | "HR" | "Purchase" | "Maintenance" | "IT";
             designation: string;
             joiningDate: NativeDate;
             employeeType: "Contract" | "Full-time" | "Part-time" | "Intern" | "Temporary";
@@ -417,20 +417,20 @@ declare const _default: {
             proficiency: "Beginner" | "Intermediate" | "Advanced" | "Expert";
             yearsOfExperience?: number;
         }>;
-        createdBy?: import("mongoose").Types.ObjectId;
         personalInfo?: {
             email: string;
             phone: string;
             firstName: string;
             lastName: string;
-            displayName?: string;
             middleName?: string;
+            displayName?: string;
             alternatePhone?: string;
             dateOfBirth?: NativeDate;
             gender?: "Male" | "Female" | "Other";
             bloodGroup?: "A+" | "B+" | "A-" | "B-" | "AB+" | "AB-" | "O+" | "O-";
             profilePhoto?: string;
         };
+        createdBy?: import("mongoose").Types.ObjectId;
         emergencyContact?: {
             phone: string;
             name: string;
@@ -444,7 +444,7 @@ declare const _default: {
         };
         employmentInfo?: {
             status: "Active" | "Inactive" | "Suspended" | "Terminated" | "On Leave";
-            department: "Management" | "Production" | "Sales" | "Accounts" | "Security" | "Quality" | "Purchase" | "HR" | "Maintenance" | "IT";
+            department: "Management" | "Production" | "Sales" | "Accounts" | "Security" | "Quality" | "HR" | "Purchase" | "Maintenance" | "IT";
             designation: string;
             joiningDate: NativeDate;
             employeeType: "Contract" | "Full-time" | "Part-time" | "Intern" | "Temporary";
@@ -489,20 +489,20 @@ declare const _default: {
             proficiency: "Beginner" | "Intermediate" | "Advanced" | "Expert";
             yearsOfExperience?: number;
         }>;
-        createdBy?: import("mongoose").Types.ObjectId;
         personalInfo?: {
             email: string;
             phone: string;
             firstName: string;
             lastName: string;
-            displayName?: string;
             middleName?: string;
+            displayName?: string;
             alternatePhone?: string;
             dateOfBirth?: NativeDate;
             gender?: "Male" | "Female" | "Other";
             bloodGroup?: "A+" | "B+" | "A-" | "B-" | "AB+" | "AB-" | "O+" | "O-";
             profilePhoto?: string;
         };
+        createdBy?: import("mongoose").Types.ObjectId;
         emergencyContact?: {
             phone: string;
             name: string;
@@ -516,7 +516,7 @@ declare const _default: {
         };
         employmentInfo?: {
             status: "Active" | "Inactive" | "Suspended" | "Terminated" | "On Leave";
-            department: "Management" | "Production" | "Sales" | "Accounts" | "Security" | "Quality" | "Purchase" | "HR" | "Maintenance" | "IT";
+            department: "Management" | "Production" | "Sales" | "Accounts" | "Security" | "Quality" | "HR" | "Purchase" | "Maintenance" | "IT";
             designation: string;
             joiningDate: NativeDate;
             employeeType: "Contract" | "Full-time" | "Part-time" | "Intern" | "Temporary";
@@ -561,20 +561,20 @@ declare const _default: {
             proficiency: "Beginner" | "Intermediate" | "Advanced" | "Expert";
             yearsOfExperience?: number;
         }>;
-        createdBy?: import("mongoose").Types.ObjectId;
         personalInfo?: {
             email: string;
             phone: string;
             firstName: string;
             lastName: string;
-            displayName?: string;
             middleName?: string;
+            displayName?: string;
             alternatePhone?: string;
             dateOfBirth?: NativeDate;
             gender?: "Male" | "Female" | "Other";
             bloodGroup?: "A+" | "B+" | "A-" | "B-" | "AB+" | "AB-" | "O+" | "O-";
             profilePhoto?: string;
         };
+        createdBy?: import("mongoose").Types.ObjectId;
         emergencyContact?: {
             phone: string;
             name: string;
@@ -588,7 +588,7 @@ declare const _default: {
         };
         employmentInfo?: {
             status: "Active" | "Inactive" | "Suspended" | "Terminated" | "On Leave";
-            department: "Management" | "Production" | "Sales" | "Accounts" | "Security" | "Quality" | "Purchase" | "HR" | "Maintenance" | "IT";
+            department: "Management" | "Production" | "Sales" | "Accounts" | "Security" | "Quality" | "HR" | "Purchase" | "Maintenance" | "IT";
             designation: string;
             joiningDate: NativeDate;
             employeeType: "Contract" | "Full-time" | "Part-time" | "Intern" | "Temporary";

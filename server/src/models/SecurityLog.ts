@@ -327,7 +327,7 @@ const SecurityLogSchema = new Schema<ISecurityLog>({
   childLogIds: [{ type: Schema.Types.ObjectId, ref: 'SecurityLog' }],
 
   // Tracking & Audit
-  isActive: { type: Boolean, default: true, index: true },
+  isActive: { type: Boolean, default: true },
   createdBy: { type: Schema.Types.ObjectId, ref: 'User', required: true },
   lastModifiedBy: { type: Schema.Types.ObjectId, ref: 'User' },
   reviewedBy: { type: Schema.Types.ObjectId, ref: 'User' },

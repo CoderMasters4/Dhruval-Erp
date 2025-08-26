@@ -266,7 +266,7 @@ const VisitorSchema = new mongoose_1.Schema({
     attachments: [String],
     createdBy: { type: mongoose_1.Schema.Types.ObjectId, ref: 'User', required: true },
     lastModifiedBy: { type: mongoose_1.Schema.Types.ObjectId, ref: 'User' },
-    isActive: { type: Boolean, default: true, index: true }
+    isActive: { type: Boolean, default: true }
 }, {
     timestamps: true,
     collection: 'visitors'

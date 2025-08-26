@@ -284,3 +284,6 @@ stickerSchema.index({ barcodeData: 1 });
 stickerSchema.index({ qrCodeData: 1 });
 
 export default mongoose.model<ISticker>('Sticker', stickerSchema);
+
+
+

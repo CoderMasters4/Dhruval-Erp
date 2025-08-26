@@ -32,6 +32,7 @@ export declare const generateRefreshToken: (userId: string, tokenVersion?: numbe
 export declare const verifyAccessToken: (token: string) => JWTPayload;
 export declare const verifyRefreshToken: (token: string) => RefreshTokenPayload;
 export declare const authenticate: (req: Request, res: Response, next: NextFunction) => Promise<Response<any, Record<string, any>>>;
+export declare const allowSuperadmin: (req: Request, res: Response, next: NextFunction) => void;
 export declare const requireCompany: (req: Request, res: Response, next: NextFunction) => Promise<Response<any, Record<string, any>>>;
 export declare const requireRole: (roles: string | string[]) => (req: Request, res: Response, next: NextFunction) => void | Response<any, Record<string, any>>;
 export declare const requirePermission: (module: string, action: string, options?: {

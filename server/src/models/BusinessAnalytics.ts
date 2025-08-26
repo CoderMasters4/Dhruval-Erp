@@ -227,7 +227,7 @@ const BusinessAnalyticsSchema = new Schema<IBusinessAnalytics>({
   customFields: { type: Schema.Types.Mixed },
 
   // Tracking & Audit
-  isActive: { type: Boolean, default: true, index: true },
+  isActive: { type: Boolean, default: true },
   createdBy: { type: Schema.Types.ObjectId, ref: 'User', required: true },
   lastModifiedBy: { type: Schema.Types.ObjectId, ref: 'User' },
   lastCalculated: { type: Date, default: Date.now }
@@ -237,8 +237,9 @@ const BusinessAnalyticsSchema = new Schema<IBusinessAnalytics>({
 });
 
 // Compound Indexes
+// Note: Most indexes are now managed centrally in database-indexes.ts
+// Only keeping unique indexes that are not in the central configuration
 BusinessAnalyticsSchema.index({ companyId: 1, analyticsId: 1 }, { unique: true });
-BusinessAnalyticsSchema.index({ companyId: 1, isActive: 1 });
 BusinessAnalyticsSchema.index({ companyId: 1, lastCalculated: -1 });
 
 // Text search index

@@ -15,8 +15,7 @@ const StockMovementSchema = new Schema<IStockMovement>({
   companyId: { 
     type: Schema.Types.ObjectId, 
     ref: 'Company', 
-    required: true, 
-    index: true 
+    required: true
   },
 
   // Movement Identification
@@ -29,16 +28,14 @@ const StockMovementSchema = new Schema<IStockMovement>({
   movementDate: { 
     type: Date, 
     required: true, 
-    default: Date.now, 
-    index: true 
+    default: Date.now
   },
 
   // Item Details
   itemId: { 
     type: Schema.Types.ObjectId, 
     ref: 'InventoryItem', 
-    required: true, 
-    index: true 
+    required: true
   },
   itemCode: { type: String },
   itemName: { type: String },
@@ -47,8 +44,7 @@ const StockMovementSchema = new Schema<IStockMovement>({
   movementType: {
     type: String,
     enum: ['inward', 'outward', 'transfer', 'adjustment', 'production_consume', 'production_output', 'return', 'damage', 'theft'],
-    required: true,
-    index: true
+    required: true
   },
 
   referenceDocument: {

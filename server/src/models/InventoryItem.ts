@@ -28,8 +28,7 @@ const InventoryItemSchema = new Schema<IInventoryItem>({
   companyId: { 
     type: Schema.Types.ObjectId, 
     ref: 'Company', 
-    required: true, 
-    index: true 
+    required: true
   },
 
   // Item Identification - Company-wise Unique
@@ -78,8 +77,7 @@ const InventoryItemSchema = new Schema<IInventoryItem>({
     primary: { 
       type: String, 
       enum: ['raw_material', 'semi_finished', 'finished_goods', 'consumables', 'spare_parts'], 
-      required: true,
-      index: true
+      required: true
     },
     secondary: { type: String },
     tertiary: { type: String }
@@ -87,8 +85,7 @@ const InventoryItemSchema = new Schema<IInventoryItem>({
 
   productType: {
     type: String,
-    enum: ['saree', 'african', 'garment', 'digital_print', 'custom', 'chemical', 'dye', 'machinery', 'yarn', 'thread'],
-    index: true
+    enum: ['saree', 'african', 'garment', 'digital_print', 'custom', 'chemical', 'dye', 'machinery', 'yarn', 'thread']
   },
 
   // Design and Pattern Information
@@ -260,7 +257,7 @@ const InventoryItemSchema = new Schema<IInventoryItem>({
 
   // Status & Flags
   status: {
-    isActive: { type: Boolean, default: true, index: true },
+    isActive: { type: Boolean, default: true },
     isDiscontinued: { type: Boolean, default: false },
     isFastMoving: { type: Boolean, default: false },
     isSlowMoving: { type: Boolean, default: false },

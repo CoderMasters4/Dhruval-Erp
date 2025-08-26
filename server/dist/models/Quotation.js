@@ -220,7 +220,7 @@ const QuotationSchema = new mongoose_1.Schema({
     salesPersonName: { type: String },
     teamId: { type: mongoose_1.Schema.Types.ObjectId, ref: 'Team' },
     departmentId: { type: mongoose_1.Schema.Types.ObjectId, ref: 'Department' },
-    isActive: { type: Boolean, default: true, index: true }
+    isActive: { type: Boolean, default: true }
 }, {
     timestamps: true,
     collection: 'quotations'

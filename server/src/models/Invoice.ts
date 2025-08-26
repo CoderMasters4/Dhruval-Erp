@@ -244,7 +244,7 @@ const InvoiceSchema = new Schema<IInvoice>({
   lastModifiedBy: { type: Schema.Types.ObjectId, ref: 'User' },
   salesPersonId: { type: Schema.Types.ObjectId, ref: 'User' },
   salesPersonName: { type: String },
-  isActive: { type: Boolean, default: true, index: true }
+  isActive: { type: Boolean, default: true }
 }, {
   timestamps: true,
   collection: 'invoices'

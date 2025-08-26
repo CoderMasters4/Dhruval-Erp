@@ -138,9 +138,9 @@ export default function PWAManager() {
           icon: '📱'
         })
       } else {
-        toast('Install option not available in this browser', {
-          icon: 'ℹ️'
-        })
+        // toast('Install option not available in this browser', {
+        //   icon: 'ℹ️'
+        // })
       }
       return
     }

@@ -90,6 +90,51 @@ import v1ManpowerRoutes from '@/routes/v1/manpower';
 console.log('✅ V1 Manpower routes imported');
 import v1StickerRoutes from '@/routes/v1/stickers';
 console.log('✅ V1 Sticker routes imported');
+
+// Import all missing V1 routes
+import v1CustomersRoutes from '@/routes/v1/customers';
+console.log('✅ V1 Customers routes imported');
+import v1SuppliersRoutes from '@/routes/v1/suppliers';
+console.log('✅ V1 Suppliers routes imported');
+import v1InventoryRoutes from '@/routes/v1/inventory';
+console.log('✅ V1 Inventory routes imported');
+import v1ProductionRoutes from '@/routes/v1/production';
+console.log('✅ V1 Production routes imported');
+import v1CustomerOrdersRoutes from '@/routes/v1/customer-orders';
+console.log('✅ V1 Customer Orders routes imported');
+import v1PurchaseOrdersRoutes from '@/routes/v1/purchase-orders';
+console.log('✅ V1 Purchase Orders routes imported');
+import v1InvoicesRoutes from '@/routes/v1/invoices';
+console.log('✅ V1 Invoices routes imported');
+import v1WarehousesRoutes from '@/routes/v1/warehouses';
+console.log('✅ V1 Warehouses routes imported');
+import v1StockMovementsRoutes from '@/routes/v1/stock-movements';
+console.log('✅ V1 Stock Movements routes imported');
+import v1FinancialTransactionsRoutes from '@/routes/v1/financial-transactions';
+console.log('✅ V1 Financial Transactions routes imported');
+import v1VisitorsRoutes from '@/routes/v1/visitors';
+console.log('✅ V1 Visitors routes imported');
+import v1VehiclesRoutes from '@/routes/v1/vehicles';
+console.log('✅ V1 Vehicles routes imported');
+import v1SecurityLogsRoutes from '@/routes/v1/security-logs';
+console.log('✅ V1 Security Logs routes imported');
+import v1AuditLogsRoutes from '@/routes/v1/audit-logs';
+console.log('✅ V1 Audit Logs routes imported');
+import v1BusinessAnalyticsRoutes from '@/routes/v1/business-analytics';
+console.log('✅ V1 Business Analytics routes imported');
+import v1BoilerMonitoringRoutes from '@/routes/v1/boiler-monitoring';
+console.log('✅ V1 Boiler Monitoring routes imported');
+import v1ElectricityMonitoringRoutes from '@/routes/v1/electricity-monitoring';
+console.log('✅ V1 Electricity Monitoring routes imported');
+import v1HospitalityRoutes from '@/routes/v1/hospitality';
+console.log('✅ V1 Hospitality routes imported');
+import v1DispatchRoutes from '@/routes/v1/dispatch';
+console.log('✅ V1 Dispatch routes imported');
+import v1ReportsRoutes from '@/routes/v1/reports';
+console.log('✅ V1 Reports routes imported');
+import v1SparesRoutes from '@/routes/v1/spares';
+console.log('✅ V1 Spares routes imported');
+
 // V2 routes have been migrated to V1 and V2 folder removed
 console.log('✅ V2 routes successfully migrated to V1 - V2 folder removed');
 
@@ -415,29 +460,6 @@ apiRouter.use('/warehouses', warehousesRoutes);
 // Mount API routes
 app.use(config.API_PREFIX, apiRouter);
 
-// Import all V1 routes (migrated from V2) - Temporarily disabled due to import issues
-// import v1CustomersRoutes from '@/routes/v1/customers';
-// import v1SuppliersRoutes from '@/routes/v1/suppliers';
-// import v1InventoryRoutes from '@/routes/v1/inventory';
-// import v1ProductionRoutes from '@/routes/v1/production';
-// import v1CustomerOrdersRoutes from '@/routes/v1/customer-orders';
-// import v1PurchaseOrdersRoutes from '@/routes/v1/purchase-orders';
-// import v1InvoicesRoutes from '@/routes/v1/invoices';
-// import v1WarehousesRoutes from '@/routes/v1/warehouses';
-// import v1StockMovementsRoutes from '@/routes/v1/stock-movements';
-// import v1FinancialTransactionsRoutes from '@/routes/v1/financial-transactions';
-// import v1VisitorsRoutes from '@/routes/v1/visitors';
-// import v1VehiclesRoutes from '@/routes/v1/vehicles';
-// import v1SecurityLogsRoutes from '@/routes/v1/security-logs';
-// import v1AuditLogsRoutes from '@/routes/v1/audit-logs';
-// import v1BusinessAnalyticsRoutes from '@/routes/v1/business-analytics';
-// import v1BoilerMonitoringRoutes from '@/routes/v1/boiler-monitoring';
-// import v1ElectricityMonitoringRoutes from '@/routes/v1/electricity-monitoring';
-// import v1HospitalityRoutes from '@/routes/v1/hospitality';
-// import v1DispatchRoutes from '@/routes/v1/dispatch';
-// import v1ReportsRoutes from '@/routes/v1/reports';
-// import v1SparesRoutes from '@/routes/v1/spares';
-
 // Mount V1 specific routes (working routes) - Keep for backward compatibility
 app.use('/api/v1/companies-legacy', v1CompaniesRoutes);
 app.use('/api/v1/users-legacy', v1UsersRoutes);
@@ -501,28 +523,28 @@ app.use('/api/v1/quotations', v1QuotationsRoutes);
 app.use('/api/v1/manpower', v1ManpowerRoutes);
 app.use('/api/v1/stickers', v1StickerRoutes);
 
-// Mount all V1 routes (migrated from V2) - Temporarily disabled due to import issues
-// app.use('/api/v1/customers', v1CustomersRoutes);
-// app.use('/api/v1/suppliers', v1SuppliersRoutes);
-// app.use('/api/v1/inventory', v1InventoryRoutes);
-// app.use('/api/v1/production', v1ProductionRoutes);
-// app.use('/api/v1/customer-orders', v1CustomerOrdersRoutes);
-// app.use('/api/v1/purchase-orders', v1PurchaseOrdersRoutes);
-// app.use('/api/v1/invoices', v1InvoicesRoutes);
-// app.use('/api/v1/warehouses', v1WarehousesRoutes);
-// app.use('/api/v1/stock-movements', v1StockMovementsRoutes);
-// app.use('/api/v1/financial-transactions', v1FinancialTransactionsRoutes);
-// app.use('/api/v1/visitors', v1VisitorsRoutes);
-// app.use('/api/v1/vehicles', v1VehiclesRoutes);
-// app.use('/api/v1/security-logs', v1SecurityLogsRoutes);
-// app.use('/api/v1/audit-logs', v1AuditLogsRoutes);
-// app.use('/api/v1/business-analytics', v1BusinessAnalyticsRoutes);
-// app.use('/api/v1/boiler-monitoring', v1BoilerMonitoringRoutes);
-// app.use('/api/v1/electricity-monitoring', v1ElectricityMonitoringRoutes);
-// app.use('/api/v1/hospitality', v1HospitalityRoutes);
-// app.use('/api/v1/dispatch', v1DispatchRoutes);
-// app.use('/api/v1/reports', v1ReportsRoutes);
-// app.use('/api/v1/spares', v1SparesRoutes);
+// Mount all V1 routes (migrated from V2) - Clean and organized
+app.use('/api/v1/customers', v1CustomersRoutes);
+app.use('/api/v1/suppliers', v1SuppliersRoutes);
+app.use('/api/v1/inventory', v1InventoryRoutes);
+app.use('/api/v1/production', v1ProductionRoutes);
+app.use('/api/v1/customer-orders', v1CustomerOrdersRoutes);
+app.use('/api/v1/purchase-orders', v1PurchaseOrdersRoutes);
+app.use('/api/v1/invoices', v1InvoicesRoutes);
+app.use('/api/v1/warehouses', v1WarehousesRoutes);
+app.use('/api/v1/stock-movements', v1StockMovementsRoutes);
+app.use('/api/v1/financial-transactions', v1FinancialTransactionsRoutes);
+app.use('/api/v1/visitors', v1VisitorsRoutes);
+app.use('/api/v1/vehicles', v1VehiclesRoutes);
+app.use('/api/v1/security-logs', v1SecurityLogsRoutes);
+app.use('/api/v1/audit-logs', v1AuditLogsRoutes);
+app.use('/api/v1/business-analytics', v1BusinessAnalyticsRoutes);
+app.use('/api/v1/boiler-monitoring', v1BoilerMonitoringRoutes);
+app.use('/api/v1/electricity-monitoring', v1ElectricityMonitoringRoutes);
+app.use('/api/v1/hospitality', v1HospitalityRoutes);
+app.use('/api/v1/dispatch', v1DispatchRoutes);
+app.use('/api/v1/reports', v1ReportsRoutes);
+app.use('/api/v1/spares', v1SparesRoutes);
 
 // =============================================
 // WEBSOCKET SETUP

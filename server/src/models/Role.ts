@@ -288,7 +288,7 @@ const RoleSchema = new Schema<IRole>({
 
   // Role Metadata
   isSystemRole: { type: Boolean, default: false },
-  isActive: { type: Boolean, default: true, index: true },
+  isActive: { type: Boolean, default: true },
   isDefault: { type: Boolean, default: false },
   maxUsers: { type: Number, min: 0 }, // Maximum users that can have this role
   currentUsers: { type: Number, default: 0, min: 0 },
@@ -317,11 +317,10 @@ const RoleSchema = new Schema<IRole>({
 });
 
 // Compound Indexes
+// Note: Most indexes are now managed centrally in database-indexes.ts
+// Only keeping unique indexes that are not in the central configuration
 RoleSchema.index({ companyId: 1, roleCode: 1 }, { unique: true });
 RoleSchema.index({ companyId: 1, roleName: 1 });
-RoleSchema.index({ companyId: 1, roleType: 1, isActive: 1 });
-RoleSchema.index({ companyId: 1, department: 1, isActive: 1 });
-RoleSchema.index({ companyId: 1, roleLevel: 1, isActive: 1 });
 
 // Text search index
 RoleSchema.index({ 

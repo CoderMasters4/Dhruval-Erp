@@ -61,7 +61,6 @@ console.log('✅ Auth routes imported');
 const dashboard_1 = __importDefault(require("@/routes/dashboard"));
 console.log('✅ Dashboard routes imported');
 console.log('✅ Reports routes imported');
-const companies_1 = __importDefault(require("@/routes/companies"));
 console.log('✅ Companies routes imported');
 const users_1 = __importDefault(require("@/routes/users"));
 console.log('✅ Users routes imported');
@@ -94,7 +93,7 @@ const enhancedInventory_1 = __importDefault(require("@/routes/enhancedInventory"
 console.log('✅ Enhanced inventory routes imported');
 const warehouses_1 = __importDefault(require("@/routes/warehouses"));
 console.log('✅ Warehouses routes imported');
-const companies_2 = __importDefault(require("@/routes/v1/companies"));
+const companies_1 = __importDefault(require("@/routes/v1/companies"));
 console.log('✅ V1 Companies routes imported');
 const users_2 = __importDefault(require("@/routes/v1/users"));
 console.log('✅ V1 Users routes imported');
@@ -104,9 +103,49 @@ const manpower_1 = __importDefault(require("@/routes/v1/manpower"));
 console.log('✅ V1 Manpower routes imported');
 const stickers_1 = __importDefault(require("@/routes/v1/stickers"));
 console.log('✅ V1 Sticker routes imported');
-console.log('📝 Loading complete V2 routes...');
-console.log('✅ V2 routes temporarily disabled to fix hanging issue');
-console.log('✅ V2 Simple routes temporarily disabled');
+const customers_2 = __importDefault(require("@/routes/v1/customers"));
+console.log('✅ V1 Customers routes imported');
+const suppliers_2 = __importDefault(require("@/routes/v1/suppliers"));
+console.log('✅ V1 Suppliers routes imported');
+const inventory_2 = __importDefault(require("@/routes/v1/inventory"));
+console.log('✅ V1 Inventory routes imported');
+const production_1 = __importDefault(require("@/routes/v1/production"));
+console.log('✅ V1 Production routes imported');
+const customer_orders_1 = __importDefault(require("@/routes/v1/customer-orders"));
+console.log('✅ V1 Customer Orders routes imported');
+const purchase_orders_1 = __importDefault(require("@/routes/v1/purchase-orders"));
+console.log('✅ V1 Purchase Orders routes imported');
+const invoices_1 = __importDefault(require("@/routes/v1/invoices"));
+console.log('✅ V1 Invoices routes imported');
+const warehouses_2 = __importDefault(require("@/routes/v1/warehouses"));
+console.log('✅ V1 Warehouses routes imported');
+const stock_movements_1 = __importDefault(require("@/routes/v1/stock-movements"));
+console.log('✅ V1 Stock Movements routes imported');
+const financial_transactions_1 = __importDefault(require("@/routes/v1/financial-transactions"));
+console.log('✅ V1 Financial Transactions routes imported');
+const visitors_1 = __importDefault(require("@/routes/v1/visitors"));
+console.log('✅ V1 Visitors routes imported');
+const vehicles_2 = __importDefault(require("@/routes/v1/vehicles"));
+console.log('✅ V1 Vehicles routes imported');
+const security_logs_1 = __importDefault(require("@/routes/v1/security-logs"));
+console.log('✅ V1 Security Logs routes imported');
+const audit_logs_1 = __importDefault(require("@/routes/v1/audit-logs"));
+console.log('✅ V1 Audit Logs routes imported');
+const business_analytics_1 = __importDefault(require("@/routes/v1/business-analytics"));
+console.log('✅ V1 Business Analytics routes imported');
+const boiler_monitoring_1 = __importDefault(require("@/routes/v1/boiler-monitoring"));
+console.log('✅ V1 Boiler Monitoring routes imported');
+const electricity_monitoring_1 = __importDefault(require("@/routes/v1/electricity-monitoring"));
+console.log('✅ V1 Electricity Monitoring routes imported');
+const hospitality_1 = __importDefault(require("@/routes/v1/hospitality"));
+console.log('✅ V1 Hospitality routes imported');
+const dispatch_1 = __importDefault(require("@/routes/v1/dispatch"));
+console.log('✅ V1 Dispatch routes imported');
+const reports_1 = __importDefault(require("@/routes/v1/reports"));
+console.log('✅ V1 Reports routes imported');
+const spares_2 = __importDefault(require("@/routes/v1/spares"));
+console.log('✅ V1 Spares routes imported');
+console.log('✅ V2 routes successfully migrated to V1 - V2 folder removed');
 console.log('✅ All routes imported successfully!');
 console.log('🚀 About to create Express app...');
 console.log('🚀 Creating Express app...');
@@ -265,19 +304,39 @@ apiRouter.use('/2fa', twoFactor_1.default);
 apiRouter.get('/info', (req, res) => {
     res.status(200).json({
         success: true,
-        message: 'Dhruval Exim ERP API v1',
+        message: 'Dhruval Exim ERP API v1 - Complete Business Management System',
         version: '2.0.0',
-        description: 'Complete Factory ERP Management System',
+        description: 'Complete Factory ERP Management System with 24 Business Models',
         availableEndpoints: [
             'GET /api/v1/info - API information (public)',
             'POST /api/v1/auth/login - User login (public)',
             'POST /api/v1/auth/register - User registration (public)',
-            'GET /api/v1/companies - List companies (auth required)',
-            'GET /api/v1/users - List users (auth required)',
-            'GET /api/v1/customers - List customers (auth required)',
-            'GET /api/v1/suppliers - List suppliers (auth required)',
-            'GET /api/v1/inventory - List inventory (auth required)',
-            'GET /api/v1/orders - List orders (auth required)',
+            'GET /api/v1/companies - Company management (auth required)',
+            'GET /api/v1/users - User management (auth required)',
+            'GET /api/v1/customers - Customer management (auth required)',
+            'GET /api/v1/suppliers - Supplier management (auth required)',
+            'GET /api/v1/inventory - Inventory management (auth required)',
+            'GET /api/v1/production - Production management (auth required)',
+            'GET /api/v1/customer-orders - Customer orders (auth required)',
+            'GET /api/v1/purchase-orders - Purchase orders (auth required)',
+            'GET /api/v1/invoices - Invoice management (auth required)',
+            'GET /api/v1/quotations - Quotation management (auth required)',
+            'GET /api/v1/warehouses - Warehouse management (auth required)',
+            'GET /api/v1/stock-movements - Stock tracking (auth required)',
+            'GET /api/v1/financial-transactions - Financial management (auth required)',
+            'GET /api/v1/visitors - Visitor management (auth required)',
+            'GET /api/v1/vehicles - Vehicle management (auth required)',
+            'GET /api/v1/security-logs - Security logging (auth required)',
+            'GET /api/v1/audit-logs - Audit trail (auth required)',
+            'GET /api/v1/business-analytics - Business analytics (auth required)',
+            'GET /api/v1/boiler-monitoring - Boiler monitoring (auth required)',
+            'GET /api/v1/electricity-monitoring - Electricity monitoring (auth required)',
+            'GET /api/v1/hospitality - Hospitality management (auth required)',
+            'GET /api/v1/dispatch - Dispatch management (auth required)',
+            'GET /api/v1/reports - Report generation (auth required)',
+            'GET /api/v1/spares - Spare parts management (auth required)',
+            'GET /api/v1/manpower - Manpower management (auth required)',
+            'GET /api/v1/stickers - Sticker & label system (auth required)',
             'GET /api/v1/dashboard - Dashboard data (auth required)'
         ],
         authentication: {
@@ -295,7 +354,6 @@ apiRouter.use('/admin', adminCompanies_1.default);
 apiRouter.use('/admin/users', userManagement_1.default);
 apiRouter.use(auth_1.requireCompany);
 apiRouter.use('/dashboard', dashboard_1.default);
-apiRouter.use('/companies', companies_1.default);
 apiRouter.use('/users', users_1.default);
 apiRouter.use('/orders', orders_1.default);
 apiRouter.use('/inventory', inventory_1.default);
@@ -308,32 +366,79 @@ apiRouter.use('/customer-visits', customerVisits_1.default);
 apiRouter.use('/vehicles', vehicles_1.default);
 apiRouter.use('/warehouses', warehouses_1.default);
 app.use(environment_1.default.API_PREFIX, apiRouter);
-app.use('/api/v1/companies', companies_2.default);
-app.use('/api/v1/users', users_2.default);
-app.use('/api/v1/quotations', quotations_1.default);
-app.use('/api/v1/manpower', manpower_1.default);
-app.use('/api/v1/stickers', stickers_1.default);
+app.use('/api/v1/companies-legacy', companies_1.default);
+app.use('/api/v1/users-legacy', users_2.default);
+app.use('/api/v1/quotations-legacy', quotations_1.default);
+app.use('/api/v1/manpower-legacy', manpower_1.default);
+app.use('/api/v1/stickers-legacy', stickers_1.default);
 app.get('/api', (req, res) => {
     res.status(200).json({
         success: true,
         message: 'Dhruval Exim ERP API',
         version: '2.0.0',
-        description: 'Complete Factory ERP Management System',
+        description: 'Complete Factory ERP Management System with 24 Business Models',
         endpoints: {
             v1: '/api/v1/',
             health: '/api/v1/health',
+            info: '/api/v1/info',
             auth: '/api/v1/auth/*',
             companies: '/api/v1/companies/*',
             users: '/api/v1/users/*',
             customers: '/api/v1/customers/*',
             suppliers: '/api/v1/suppliers/*',
             inventory: '/api/v1/inventory/*',
-            orders: '/api/v1/orders/*',
+            production: '/api/v1/production/*',
+            orders: '/api/v1/customer-orders/*',
+            purchaseOrders: '/api/v1/purchase-orders/*',
+            invoices: '/api/v1/invoices/*',
+            quotations: '/api/v1/quotations/*',
+            warehouses: '/api/v1/warehouses/*',
+            stockMovements: '/api/v1/stock-movements/*',
+            financial: '/api/v1/financial-transactions/*',
+            visitors: '/api/v1/visitors/*',
+            vehicles: '/api/v1/vehicles/*',
+            security: '/api/v1/security-logs/*',
+            audit: '/api/v1/audit-logs/*',
+            analytics: '/api/v1/business-analytics/*',
+            boiler: '/api/v1/boiler-monitoring/*',
+            electricity: '/api/v1/electricity-monitoring/*',
+            hospitality: '/api/v1/hospitality/*',
+            dispatch: '/api/v1/dispatch/*',
+            reports: '/api/v1/reports/*',
+            spares: '/api/v1/spares/*',
+            manpower: '/api/v1/manpower/*',
+            stickers: '/api/v1/stickers/*',
             dashboard: '/api/v1/dashboard/*'
         },
         timestamp: new Date().toISOString()
     });
 });
+app.use('/api/v1/companies', companies_1.default);
+app.use('/api/v1/users', users_2.default);
+app.use('/api/v1/quotations', quotations_1.default);
+app.use('/api/v1/manpower', manpower_1.default);
+app.use('/api/v1/stickers', stickers_1.default);
+app.use('/api/v1/customers', customers_2.default);
+app.use('/api/v1/suppliers', suppliers_2.default);
+app.use('/api/v1/inventory', inventory_2.default);
+app.use('/api/v1/production', production_1.default);
+app.use('/api/v1/customer-orders', customer_orders_1.default);
+app.use('/api/v1/purchase-orders', purchase_orders_1.default);
+app.use('/api/v1/invoices', invoices_1.default);
+app.use('/api/v1/warehouses', warehouses_2.default);
+app.use('/api/v1/stock-movements', stock_movements_1.default);
+app.use('/api/v1/financial-transactions', financial_transactions_1.default);
+app.use('/api/v1/visitors', visitors_1.default);
+app.use('/api/v1/vehicles', vehicles_2.default);
+app.use('/api/v1/security-logs', security_logs_1.default);
+app.use('/api/v1/audit-logs', audit_logs_1.default);
+app.use('/api/v1/business-analytics', business_analytics_1.default);
+app.use('/api/v1/boiler-monitoring', boiler_monitoring_1.default);
+app.use('/api/v1/electricity-monitoring', electricity_monitoring_1.default);
+app.use('/api/v1/hospitality', hospitality_1.default);
+app.use('/api/v1/dispatch', dispatch_1.default);
+app.use('/api/v1/reports', reports_1.default);
+app.use('/api/v1/spares', spares_2.default);
 const httpServer = (0, http_1.createServer)(app);
 exports.httpServer = httpServer;
 let io = null;

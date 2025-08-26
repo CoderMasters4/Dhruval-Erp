@@ -210,3 +210,7 @@ export const CompanyHeader: React.FC<CompanyHeaderProps> = ({
     </div>
   );
 };
+
+
+
+

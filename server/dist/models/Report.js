@@ -254,7 +254,7 @@ const ReportSchema = new mongoose_1.Schema({
         default: 'draft',
         index: true
     },
-    isActive: { type: Boolean, default: true, index: true },
+    isActive: { type: Boolean, default: true },
     isTemplate: { type: Boolean, default: false },
     templateId: { type: mongoose_1.Schema.Types.ObjectId, ref: 'Report' },
     publishedAt: { type: Date },

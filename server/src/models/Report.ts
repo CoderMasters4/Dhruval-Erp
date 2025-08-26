@@ -285,7 +285,7 @@ const ReportSchema = new Schema<IReport>({
     default: 'draft',
     index: true
   },
-  isActive: { type: Boolean, default: true, index: true },
+  isActive: { type: Boolean, default: true },
   isTemplate: { type: Boolean, default: false },
   templateId: { type: Schema.Types.ObjectId, ref: 'Report' },
   publishedAt: { type: Date },

@@ -26,8 +26,7 @@ const InventoryItemSchema = new mongoose_1.Schema({
     companyId: {
         type: mongoose_1.Schema.Types.ObjectId,
         ref: 'Company',
-        required: true,
-        index: true
+        required: true
     },
     itemCode: {
         type: String,
@@ -70,16 +69,14 @@ const InventoryItemSchema = new mongoose_1.Schema({
         primary: {
             type: String,
             enum: ['raw_material', 'semi_finished', 'finished_goods', 'consumables', 'spare_parts'],
-            required: true,
-            index: true
+            required: true
         },
         secondary: { type: String },
         tertiary: { type: String }
     },
     productType: {
         type: String,
-        enum: ['saree', 'african', 'garment', 'digital_print', 'custom', 'chemical', 'dye', 'machinery', 'yarn', 'thread'],
-        index: true
+        enum: ['saree', 'african', 'garment', 'digital_print', 'custom', 'chemical', 'dye', 'machinery', 'yarn', 'thread']
     },
     designInfo: {
         designNumber: { type: String, trim: true, index: true },
@@ -211,7 +208,7 @@ const InventoryItemSchema = new mongoose_1.Schema({
         totalAdjustments: { type: Number, default: 0 }
     },
     status: {
-        isActive: { type: Boolean, default: true, index: true },
+        isActive: { type: Boolean, default: true },
         isDiscontinued: { type: Boolean, default: false },
         isFastMoving: { type: Boolean, default: false },
         isSlowMoving: { type: Boolean, default: false },

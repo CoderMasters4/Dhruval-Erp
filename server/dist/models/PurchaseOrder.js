@@ -251,7 +251,7 @@ const PurchaseOrderSchema = new mongoose_1.Schema({
     buyerName: { type: String },
     departmentId: { type: mongoose_1.Schema.Types.ObjectId, ref: 'Department' },
     departmentName: { type: String },
-    isActive: { type: Boolean, default: true, index: true }
+    isActive: { type: Boolean, default: true }
 }, {
     timestamps: true,
     collection: 'purchase_orders'
