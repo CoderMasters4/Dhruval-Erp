@@ -215,8 +215,7 @@ const CustomerVisitSchema = new Schema<ICustomerVisit>({
 
   approvalStatus: {
     type: String,
-    default: 'pending',
-    index: true
+    default: 'pending'
   },
   createdBy: {
     type: Schema.Types.ObjectId,

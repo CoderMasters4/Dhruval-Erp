@@ -177,11 +177,10 @@ const ServiceSchema = new Schema<IService>({
 }, { _id: false });
 
 const HospitalitySchema = new Schema<IHospitality>({
-  companyId: { 
-    type: Schema.Types.ObjectId, 
-    ref: 'Company', 
-    required: true, 
-    index: true 
+  companyId: {
+    type: Schema.Types.ObjectId,
+    ref: 'Company',
+    required: true
   },
 
   // Facility Identification

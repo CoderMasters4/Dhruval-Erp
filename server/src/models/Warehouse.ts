@@ -85,11 +85,10 @@ const WarehouseZoneSchema = new Schema<IWarehouseZone>({
 }, { _id: false });
 
 const WarehouseSchema = new Schema<IWarehouse>({
-  companyId: { 
-    type: Schema.Types.ObjectId, 
-    ref: 'Company', 
-    required: true, 
-    index: true 
+  companyId: {
+    type: Schema.Types.ObjectId,
+    ref: 'Company',
+    required: true
   },
 
   // Warehouse Identification

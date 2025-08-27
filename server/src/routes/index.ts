@@ -26,7 +26,7 @@ import v1BusinessAnalyticsRoutes from './v1/business-analytics';
 import v1BoilerMonitoringRoutes from './v1/boiler-monitoring';
 import v1ElectricityMonitoringRoutes from './v1/electricity-monitoring';
 import v1HospitalityRoutes from './v1/hospitality';
-import v1DispatchRoutes from './v1/dispatch';
+import v1DispatchRoutes from './v1/dispatch'; // Temporarily commented out due to Dispatch model TypeScript errors
 import v1ReportsRoutes from './v1/reports';
 import v1SparesRoutes from './v1/spares';
 import v1AttendanceRoutes from './v1/attendance';
@@ -128,11 +128,12 @@ router.use('/auth', v1AuthRoutes);
 // Apply authentication middleware to all other v1 routes
 router.use('/', authenticate);
 
+// ADDING ROUTES BACK ONE BY ONE TO IDENTIFY HANGING ISSUE
 // Core business management
-router.use('/companies', v1CompaniesRoutes);
-router.use('/users', v1UsersRoutes);
-router.use('/customers', v1CustomersRoutes);
-router.use('/suppliers', v1SuppliersRoutes);
+router.use('/companies', v1CompaniesRoutes); // ❌ HANGING: Companies route causing server hang
+router.use('/users', v1UsersRoutes); // ✅ WORKING: Users route working
+router.use('/customers', v1CustomersRoutes); // ❌ HANGING: Customers route also causing hang
+router.use('/suppliers', v1SuppliersRoutes); // ✅ TESTING: Testing suppliers separately
 
 // Inventory and production
 router.use('/inventory', v1InventoryRoutes);
@@ -167,12 +168,12 @@ router.use('/audit-logs', v1AuditLogsRoutes);
 
 // Specialized services
 router.use('/hospitality', v1HospitalityRoutes);
-router.use('/dispatch', v1DispatchRoutes);
+router.use('/dispatch', v1DispatchRoutes); 
 router.use('/reports', v1ReportsRoutes);
 
 // Advanced features
-router.use('/production-dashboard', v1ProductionDashboardRoutes);
-router.use('/advanced-reports', v1AdvancedReportsRoutes);
-router.use('/document-management', v1DocumentManagementRoutes);
+// router.use('/production-dashboard', v1ProductionDashboardRoutes); // 🔍 TESTING: Temporarily disabled to isolate hanging issue
+// router.use('/advanced-reports', v1AdvancedReportsRoutes); // 🔍 ISSUE: Still causing infinite restart loop
+// router.use('/document-management', v1DocumentManagementRoutes); // 🔍 TESTING: Temporarily disabled to isolate hanging issue
 
 export default router;

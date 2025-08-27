@@ -61,11 +61,10 @@ const SpareUsageHistorySchema = new Schema<ISpareUsageHistory>({
 }, { _id: false });
 
 const SpareSchema = new Schema<ISpare>({
-  companyId: { 
-    type: Schema.Types.ObjectId, 
-    ref: 'Company', 
-    required: true, 
-    index: true 
+  companyId: {
+    type: Schema.Types.ObjectId,
+    ref: 'Company',
+    required: true
   },
 
   // Basic Information

@@ -44,11 +44,10 @@ const QuotationTermSchema = new Schema<IQuotationTerm>({
 }, { _id: false });
 
 const QuotationSchema = new Schema<IQuotation>({
-  companyId: { 
-    type: Schema.Types.ObjectId, 
-    ref: 'Company', 
-    required: true, 
-    index: true 
+  companyId: {
+    type: Schema.Types.ObjectId,
+    ref: 'Company',
+    required: true
   },
 
   // Quotation Identification
@@ -58,11 +57,10 @@ const QuotationSchema = new Schema<IQuotation>({
     uppercase: true,
     trim: true
   },
-  quotationDate: { 
-    type: Date, 
-    required: true, 
-    default: Date.now,
-    index: true
+  quotationDate: {
+    type: Date,
+    required: true,
+    default: Date.now
   },
   validUntil: { type: Date, required: true },
   revision: { type: Number, default: 0, min: 0 },
@@ -72,8 +70,7 @@ const QuotationSchema = new Schema<IQuotation>({
   quotationType: {
     type: String,
     enum: ['sales', 'purchase', 'service', 'rental', 'maintenance', 'project'],
-    required: true,
-    index: true
+    required: true
   },
   category: {
     type: String,

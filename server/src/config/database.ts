@@ -144,9 +144,9 @@ class DatabaseManager {
   }
 
   private setupEventListeners(): void {
-    // Disable Mongoose debug logging for index creation (only show errors)
+    // Configure Mongoose debug logging
     if (config.NODE_ENV === 'development') {
-      mongoose.set('debug', false); // Disable all debug logs
+      mongoose.set('debug', false); // Disable debug logs to reduce noise
     }
 
     mongoose.connection.on('connected', () => {
@@ -190,15 +190,10 @@ class DatabaseManager {
       logger.info('Setting up database indexes...');
 
       // Import models to ensure schema indexes are created
-      // await import('@/models'); // Commented out to prevent circular dependency issues
+      await import('@/models');
 
-      // Create comprehensive performance indexes
-      if (config.NODE_ENV !== 'test') {
-        logger.info('Starting database index creation...');
-        await createDatabaseIndexes();
-      }
-
-      logger.info('✅ Database indexes setup completed successfully');
+      // Skip manual index creation to avoid duplicates - schema indexes are sufficient
+      logger.info('✅ Database indexes setup completed successfully (using schema-defined indexes only)');
     } catch (error) {
       logger.error('❌ Error setting up database indexes', {
         error: error instanceof Error ? error.message : 'Unknown error'
@@ -268,9 +263,7 @@ class DatabaseManager {
 mongoose.set('strictQuery', true);
 mongoose.set('sanitizeFilter', true);
 
-// Enable debugging in development
-if (config.NODE_ENV === 'development') {
-  mongoose.set('debug', true);
-}
+// Disable debugging to prevent duplicate index warnings
+mongoose.set('debug', false);
 
 export default DatabaseManager.getInstance();

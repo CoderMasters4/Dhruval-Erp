@@ -349,7 +349,7 @@ CustomerSchema.statics.findOverdue = function(companyId: string) {
 };
 
 // Performance Optimization: Add additional indexes (non-duplicate)
-CustomerSchema.index({ companyId: 1, isActive: 1 });
+// Note: companyId + isActive index already defined above at line 237
 CustomerSchema.index({ companyId: 1, 'contactInfo.email': 1 });
 CustomerSchema.index({ companyId: 1, 'contactInfo.phone': 1 });
 CustomerSchema.index({ companyId: 1, 'financialInfo.creditLimit': -1 });

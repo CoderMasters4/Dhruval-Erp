@@ -74,11 +74,10 @@ const DocumentAccessSchema = new Schema({
 
 // Document Management Schema
 const DocumentManagementSchema = new Schema({
-  companyId: { 
-    type: Schema.Types.ObjectId, 
-    ref: 'Company', 
-    required: true, 
-    index: true 
+  companyId: {
+    type: Schema.Types.ObjectId,
+    ref: 'Company',
+    required: true
   },
   
   // Document Identification
@@ -91,16 +90,15 @@ const DocumentManagementSchema = new Schema({
   },
   documentName: { type: String, required: true },
   documentDescription: { type: String },
-  documentType: { 
-    type: String, 
+  documentType: {
+    type: String,
     enum: [
       'invoice', 'packing_list', 'courier_slip', 'fabric_photo', 'sample_image',
       'purchase_order', 'sales_order', 'contract', 'agreement', 'certificate',
       'quality_report', 'test_report', 'compliance_document', 'manual',
       'drawing', 'blueprint', 'specification', 'other'
     ],
-    required: true,
-    index: true
+    required: true
   },
   
   // Document Category

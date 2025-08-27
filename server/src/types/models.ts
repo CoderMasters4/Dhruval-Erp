@@ -4547,6 +4547,7 @@ export interface IDispatch extends AuditableDocument {
   financials: IDispatchFinancials;
   customerFeedback: ICustomerFeedback;
   performance: IDispatchPerformance;
+  rtoDetails: IRTODetails;
   specialInstructions?: string;
   internalNotes?: string;
   customerNotes?: string;
@@ -4772,6 +4773,23 @@ export interface IDispatchPerformance {
   customerSatisfaction?: number;
   costPerKg?: number;
   costPerKm?: number;
+}
+
+export interface IRTODetails {
+  isRTO: boolean;
+  rtoReason?: 'wrong_address' | 'customer_unavailable' | 'customer_rejected' | 'damaged_goods' | 'wrong_items' | 'delivery_delay' | 'other';
+  rtoDate?: Date;
+  rtoLocation?: string;
+  rtoNotes?: string;
+  returnTrackingNumber?: string;
+  returnCourierName?: string;
+  returnCharges: number;
+  returnStatus: 'pending' | 'in_transit' | 'returned' | 'disposed' | 'resold';
+  returnReceivedAt?: Date;
+  returnReceivedBy?: string;
+  returnCondition?: 'good' | 'damaged' | 'partial' | 'unusable';
+  returnAction?: 'resell' | 'repair' | 'dispose' | 'refund' | 'exchange';
+  returnNotes?: string;
 }
 
 // =============================================

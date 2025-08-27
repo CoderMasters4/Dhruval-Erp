@@ -64,7 +64,7 @@ export function Modal({
   }
 
   const modalContent = (
-    <div className="absolute inset-0 z-[60] flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
       {/* Backdrop */}
       <div
         className="absolute inset-0 bg-black/50 backdrop-blur-sm"
@@ -123,9 +123,9 @@ export function Modal({
     </div>
   )
 
-  // Use portal to render modal at the end of body or inside provided container
-  const target = (typeof window !== 'undefined' && document.getElementById(portalTargetId)) || document.body
-  return createPortal(modalContent, target)
+  // Use portal to render modal at the end of body for better z-index handling
+  const target = typeof window !== 'undefined' ? document.body : null
+  return target ? createPortal(modalContent, target) : null
 }
 
 // Modal content sections for better organization

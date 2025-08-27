@@ -60,11 +60,10 @@ const EmployeePerformanceSchema = new Schema({
 }, { _id: false });
 
 const EmployeeSchema = new Schema<IEmployee>({
-  companyId: { 
-    type: Schema.Types.ObjectId, 
-    ref: 'Company', 
-    required: true, 
-    index: true 
+  companyId: {
+    type: Schema.Types.ObjectId,
+    ref: 'Company',
+    required: true
   },
 
   // Employee Identification
@@ -190,11 +189,10 @@ const EmployeeSchema = new Schema<IEmployee>({
   attachments: [String], // S3 URLs to additional documents
 
   // Status & Tracking
-  employmentStatus: { 
-    type: String, 
-    enum: ['active', 'inactive', 'terminated', 'resigned', 'retired'], 
-    default: 'active',
-    index: true
+  employmentStatus: {
+    type: String,
+    enum: ['active', 'inactive', 'terminated', 'resigned', 'retired'],
+    default: 'active'
   },
 
   // Tracking & Audit

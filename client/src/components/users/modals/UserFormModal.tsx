@@ -153,29 +153,31 @@ export default function UserFormModal({ isOpen, onClose, onSuccess, user }: User
   // Helper function to get user ID
   const getUserId = (user: UserType) => user.id || user._id
 
+  // Reset form when modal opens/closes or user changes
   useEffect(() => {
-    if (user) {
-      setFormData({
-        username: user.username || '',
-        email: user.email || '',
-        password: '',
-        confirmPassword: '',
-        firstName: user.personalInfo?.firstName || '',
-        lastName: user.personalInfo?.lastName || '',
-        middleName: user.personalInfo?.middleName || '',
-        phone: user.personalInfo?.phone || '',
-        alternatePhone: user.personalInfo?.alternatePhone || '',
-        dateOfBirth: user.personalInfo?.dateOfBirth || '',
-        gender: user.personalInfo?.gender || '',
-        primaryCompanyId: user.primaryCompanyId || user.companyAccess?.[0]?.companyId || '',
-        role: user.companyAccess?.[0]?.role || user.role || 'user',
-        department: user.department || '',
-        designation: user.designation || '',
-        isActive: user.isActive ?? true,
-        isSuperAdmin: user.isSuperAdmin || false,
-        permissions: user.companyAccess?.[0]?.permissions || PERMISSION_PRESETS.user
-      })
-          } else {
+    if (isOpen) {
+      if (user) {
+        setFormData({
+          username: user.username || '',
+          email: user.email || '',
+          password: '',
+          confirmPassword: '',
+          firstName: user.personalInfo?.firstName || '',
+          lastName: user.personalInfo?.lastName || '',
+          middleName: user.personalInfo?.middleName || '',
+          phone: user.personalInfo?.phone || '',
+          alternatePhone: user.personalInfo?.alternatePhone || '',
+          dateOfBirth: user.personalInfo?.dateOfBirth || '',
+          gender: user.personalInfo?.gender || '',
+          primaryCompanyId: user.primaryCompanyId || user.companyAccess?.[0]?.companyId || '',
+          role: user.companyAccess?.[0]?.role || user.role || 'user',
+          department: user.department || '',
+          designation: user.designation || '',
+          isActive: user.isActive ?? true,
+          isSuperAdmin: user.isSuperAdmin || false,
+          permissions: user.companyAccess?.[0]?.permissions || PERMISSION_PRESETS.user
+        })
+      } else {
         setFormData({
           username: '',
           email: '',
@@ -188,7 +190,7 @@ export default function UserFormModal({ isOpen, onClose, onSuccess, user }: User
           alternatePhone: '',
           dateOfBirth: '',
           gender: '',
-          primaryCompanyId: companies[0]?._id || '',
+          primaryCompanyId: '',
           role: 'user',
           department: '',
           designation: '',
@@ -196,9 +198,20 @@ export default function UserFormModal({ isOpen, onClose, onSuccess, user }: User
           isSuperAdmin: false,
           permissions: PERMISSION_PRESETS.user
         })
+      }
+      setErrors({})
     }
-    setErrors({})
-  }, [user, isOpen, companies])
+  }, [user, isOpen])
+
+  // Set default company when companies are loaded and no user is being edited
+  useEffect(() => {
+    if (!user && companies.length > 0 && !formData.primaryCompanyId) {
+      setFormData(prev => ({
+        ...prev,
+        primaryCompanyId: companies[0]?._id || ''
+      }))
+    }
+  }, [companies, user, formData.primaryCompanyId])
 
   const validateForm = (): boolean => {
     const newErrors: Partial<FormData> = {}

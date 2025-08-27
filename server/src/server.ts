@@ -12,8 +12,9 @@ import config from '@/config/environment';
 import database from '@/config/database';
 import logger from '@/utils/logger';
 
-// Configure Mongoose to suppress verbose index creation logs
+// Configure Mongoose to suppress verbose logs and prevent duplicate index warnings
 mongoose.set('debug', false);
+mongoose.set('autoIndex', false); // Disable automatic index creation
 
 // Import middleware
 import { securityMiddleware, requestLogger, securityErrorHandler } from '@/middleware/security';
