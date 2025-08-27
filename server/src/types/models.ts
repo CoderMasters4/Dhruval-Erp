@@ -5024,3 +5024,248 @@ export interface IChangeLog {
   changedBy: string;
   changeDescription: string;
 }
+
+// =============================================
+// EMPLOYEE MANAGEMENT INTERFACES
+// =============================================
+
+export interface IEmployee extends AuditableDocument {
+  employeeCode: string;
+  employeeId: string;
+  personalInfo: IEmployeePersonalInfo;
+  contactInfo: IEmployeeContactInfo;
+  addresses: IEmployeeAddresses;
+  identityDocuments: IEmployeeIdentityDocuments;
+  employmentInfo: IEmployeeEmploymentInfo;
+  salaryInfo: IEmployeeSalary[];
+  skills: IEmployeeSkill[];
+  certifications: IEmployeeCertification[];
+  shifts: IEmployeeShift[];
+  performanceRecords: IEmployeePerformance[];
+  bankInfo: IEmployeeBankInfo;
+  governmentRegistrations: IEmployeeGovernmentRegistrations;
+  notes?: string;
+  tags: string[];
+  customFields?: any;
+  attachments: string[];
+  employmentStatus: 'active' | 'inactive' | 'terminated' | 'resigned' | 'retired';
+
+  // Methods
+  isCurrentlyEmployed?(): boolean;
+  getCurrentSalary?(): IEmployeeSalary | null;
+  getCurrentShift?(): IEmployeeShift | null;
+  getYearsOfService?(): number;
+  isOnProbation?(): boolean;
+}
+
+export interface IEmployeePersonalInfo {
+  firstName: string;
+  lastName: string;
+  middleName?: string;
+  fullName?: string;
+  fatherName?: string;
+  dateOfBirth: Date;
+  gender: 'male' | 'female' | 'other';
+  maritalStatus?: 'single' | 'married' | 'divorced' | 'widowed';
+  bloodGroup?: string;
+  profilePhoto?: string;
+  signature?: string;
+}
+
+export interface IEmployeeContactInfo {
+  primaryPhone: string;
+  alternatePhone?: string;
+  email?: string;
+  emergencyContactName: string;
+  emergencyContactPhone: string;
+  emergencyContactRelationship?: string;
+}
+
+export interface IEmployeeAddresses {
+  permanentAddress: IEmployeeAddress;
+  currentAddress: IEmployeeAddress;
+}
+
+export interface IEmployeeAddress {
+  addressLine1: string;
+  addressLine2?: string;
+  city: string;
+  state: string;
+  pincode: string;
+  country: string;
+}
+
+export interface IEmployeeIdentityDocuments {
+  aadharNumber: string;
+  panNumber: string;
+  passportNumber?: string;
+  passportExpiryDate?: Date;
+  drivingLicenseNumber?: string;
+  drivingLicenseExpiryDate?: Date;
+}
+
+export interface IEmployeeEmploymentInfo {
+  designation: string;
+  department: string;
+  reportingManagerId?: Types.ObjectId;
+  reportingManagerName?: string;
+  employmentType: 'permanent' | 'contract' | 'temporary' | 'intern';
+  salaryType: 'monthly' | 'daily' | 'hourly' | 'piece_rate';
+  joiningDate: Date;
+  confirmationDate?: Date;
+  resignationDate?: Date;
+  lastWorkingDate?: Date;
+  noticePeriod: number;
+  probationPeriod: number;
+}
+
+export interface IEmployeeSalary {
+  basicSalary: number;
+  hra: number;
+  da: number;
+  otherAllowances: number;
+  pfDeduction: number;
+  esiDeduction: number;
+  otherDeductions: number;
+  effectiveDate: Date;
+  isActive: boolean;
+}
+
+export interface IEmployeeSkill {
+  skillName: string;
+  skillLevel: 'beginner' | 'intermediate' | 'advanced' | 'expert';
+  yearsOfExperience?: number;
+  certification?: string;
+  certificationDate?: Date;
+  expiryDate?: Date;
+  isActive: boolean;
+}
+
+export interface IEmployeeCertification {
+  certificationName: string;
+  issuingAuthority: string;
+  certificationNumber: string;
+  issueDate: Date;
+  expiryDate?: Date;
+  isActive: boolean;
+  documentUrl?: string;
+  notes?: string;
+}
+
+export interface IEmployeeShift {
+  shiftId: Types.ObjectId;
+  shiftName: string;
+  startTime: string;
+  endTime: string;
+  isNightShift: boolean;
+  effectiveDate: Date;
+  isActive: boolean;
+}
+
+export interface IEmployeePerformance {
+  reviewPeriod: string;
+  reviewDate: Date;
+  performanceRating: number;
+  strengths: string[];
+  areasOfImprovement: string[];
+  goals: string[];
+  achievements: string[];
+  reviewerId: Types.ObjectId;
+  reviewerName: string;
+  reviewNotes?: string;
+  nextReviewDate?: Date;
+  isActive: boolean;
+}
+
+export interface IEmployeeBankInfo {
+  bankName: string;
+  accountNumber: string;
+  ifscCode: string;
+  branchName?: string;
+  accountType: 'savings' | 'current';
+}
+
+export interface IEmployeeGovernmentRegistrations {
+  pfNumber?: string;
+  esiNumber?: string;
+  uanNumber?: string;
+  esicNumber?: string;
+}
+
+// =============================================
+// SHIFT MANAGEMENT INTERFACES
+// =============================================
+
+export interface IShift extends AuditableDocument {
+  shiftCode: string;
+  shiftName: string;
+  shiftType: 'day' | 'night' | 'general' | 'rotating' | 'flexible' | 'split';
+  shiftCategory: 'production' | 'office' | 'security' | 'maintenance' | 'other';
+  startTime: string;
+  endTime: string;
+  totalHours: number;
+  breaks: IShiftBreak[];
+  totalBreakTime: number;
+  netWorkingHours: number;
+  rules: IShiftRule[];
+  overtimeThreshold: number;
+  overtimeRate: number;
+  flexibleStartTime: number;
+  flexibleEndTime: number;
+  weeklySchedule: IShiftSchedule[];
+  rotationPattern: 'none' | 'weekly' | 'monthly' | 'quarterly' | 'custom';
+  rotationDays: number;
+  applicableDepartments: string[];
+  applicableDesignations: string[];
+  minimumEmployees: number;
+  maximumEmployees: number;
+  isNightShift: boolean;
+  nightShiftAllowance: number;
+  weeklyOffDays: number;
+  statutoryHolidays: number;
+  hourlyCost: number;
+  additionalCosts: number;
+  costCenter?: string;
+  isDefault: boolean;
+  priority: number;
+  description?: string;
+  notes?: string;
+  tags: string[];
+  customFields?: any;
+
+  // Methods
+  isCurrentlyActive?(): boolean;
+  getWorkingDays?(): string[];
+  getNonWorkingDays?(): string[];
+  calculateOvertime?(actualHours: number): number;
+  getShiftCost?(hours: number): number;
+  timeToMinutes?(timeString: string): number;
+}
+
+export interface IShiftBreak {
+  breakName: string;
+  startTime: string;
+  endTime: string;
+  duration: number;
+  isPaid: boolean;
+  isMandatory: boolean;
+}
+
+export interface IShiftRule {
+  ruleName: string;
+  ruleType: 'overtime' | 'late_arrival' | 'early_departure' | 'break' | 'other';
+  value: number;
+  unit: 'minutes' | 'hours' | 'percentage';
+  description?: string;
+  isActive: boolean;
+}
+
+export interface IShiftSchedule {
+  dayOfWeek: 'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday' | 'saturday' | 'sunday';
+  isWorkingDay: boolean;
+  startTime: string;
+  endTime: string;
+  totalHours: number;
+  breaks: IShiftBreak[];
+  isActive: boolean;
+}

@@ -30,19 +30,9 @@ import Hospitality from './Hospitality';
 import Dispatch from './Dispatch';
 import Report from './Report';
 import Spare from './Spare';
-
-// Additional models (to be created in future)
-// import Warehouse from './Warehouse';
-// import SecurityLog from './SecurityLog';
-// import BusinessAnalytics from './BusinessAnalytics';
-// import BoilerMonitoring from './BoilerMonitoring';
-// import ElectricityMonitoring from './ElectricityMonitoring';
-// import Hospitality from './Hospitality';
-// import Dispatch from './Dispatch';
-// import Invoice from './Invoice';
-// import PurchaseOrder from './PurchaseOrder';
-// import Quotation from './Quotation';
-// import Report from './Report';
+import ProductionDashboard from './ProductionDashboard';
+import AdvancedReport from './AdvancedReport';
+import DocumentManagement from './DocumentManagement';
 
 // Export all models
 export {
@@ -71,7 +61,10 @@ export {
   Hospitality,
   Dispatch,
   Report,
-  Spare
+  Spare,
+  ProductionDashboard,
+  AdvancedReport,
+  DocumentManagement
 };
 
 // Default export with all models
@@ -101,7 +94,10 @@ export default {
   Hospitality,
   Dispatch,
   Report,
-  Spare
+  Spare,
+  ProductionDashboard,
+  AdvancedReport,
+  DocumentManagement
 };
 
 // Model registration function
@@ -137,7 +133,10 @@ export const registerModels = () => {
     'Hospitality',
     'Dispatch',
     'Report',
-    'Spare'
+    'Spare',
+    'ProductionDashboard',
+    'AdvancedReport',
+    'DocumentManagement'
   ];
 
   console.log(`✅ Registered ${models.length} models: ${models.join(', ')}`);

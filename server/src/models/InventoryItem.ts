@@ -85,7 +85,7 @@ const InventoryItemSchema = new Schema<IInventoryItem>({
 
   productType: {
     type: String,
-    enum: ['saree', 'african', 'garment', 'digital_print', 'custom', 'chemical', 'dye', 'machinery', 'yarn', 'thread']
+    enum: ['saree', 'african', 'garment', 'digital_print', 'custom', 'chemical', 'dye', 'machinery', 'yarn', 'thread', 'fent_bleach', 'longation_bleach']
   },
 
   // Design and Pattern Information
@@ -126,6 +126,21 @@ const InventoryItemSchema = new Schema<IInventoryItem>({
     concentration: { type: Number, min: 0, max: 100 },
     purity: { type: Number, min: 0, max: 100 },
     phLevel: { type: Number, min: 0, max: 14 },
+    
+    // Special Bleach Specifications (Fent/Longation)
+    bleachType: { type: String, enum: ['fent_bleach', 'longation_bleach', 'regular_bleach', 'other'] },
+    bleachStrength: { type: Number, min: 0, max: 100 }, // Percentage strength
+    activeIngredient: { type: String }, // Chemical composition
+    dilutionRatio: { type: String }, // e.g., "1:10", "1:20"
+    applicationMethod: { type: String, enum: ['spray', 'immersion', 'brush', 'other'] },
+    temperatureRange: {
+      min: { type: Number, min: 0 },
+      max: { type: Number, min: 100 }
+    },
+    processingTime: { type: Number, min: 0 }, // Minutes
+    safetyPrecautions: [String], // Safety instructions
+    msdsRequired: { type: Boolean, default: true }, // Material Safety Data Sheet
+    msdsUrl: { type: String }, // URL to MSDS document
 
     // Batch Information
     batchNumber: { type: String, trim: true, index: true },

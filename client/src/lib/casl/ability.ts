@@ -39,6 +39,9 @@ export type Subjects =
   // Human Resources Models
   | 'Manpower'
   | 'Attendance'
+  | 'Employee'
+  | 'Shift'
+  | 'Batch'
 
   // Sticker & Label Models
   | 'Sticker'
@@ -87,6 +90,9 @@ const rolePermissions = {
     { action: 'manage' as Actions, subject: 'Manpower' as Subjects },
     { action: 'manage' as Actions, subject: 'Attendance' as Subjects },
     { action: 'manage' as Actions, subject: 'Sticker' as Subjects },
+    { action: 'manage' as Actions, subject: 'Employee' as Subjects },
+    { action: 'manage' as Actions, subject: 'Shift' as Subjects },
+    { action: 'manage' as Actions, subject: 'Batch' as Subjects },
   ],
   'manager': [
     { action: 'read' as Actions, subject: 'Dashboard' as Subjects },
@@ -104,6 +110,9 @@ const rolePermissions = {
     { action: 'read' as Actions, subject: 'Manpower' as Subjects },
     { action: 'read' as Actions, subject: 'Attendance' as Subjects },
     { action: 'read' as Actions, subject: 'Sticker' as Subjects },
+    { action: 'read' as Actions, subject: 'Employee' as Subjects },
+    { action: 'read' as Actions, subject: 'Shift' as Subjects },
+    { action: 'read' as Actions, subject: 'Batch' as Subjects },
   ],
   'sales': [
     { action: 'read' as Actions, subject: 'Dashboard' as Subjects },
@@ -135,6 +144,8 @@ const rolePermissions = {
     { action: 'read' as Actions, subject: 'Dashboard' as Subjects },
     { action: 'manage' as Actions, subject: 'Manpower' as Subjects },
     { action: 'manage' as Actions, subject: 'Attendance' as Subjects },
+    { action: 'manage' as Actions, subject: 'Employee' as Subjects },
+    { action: 'manage' as Actions, subject: 'Shift' as Subjects },
     { action: 'read' as Actions, subject: 'Report' as Subjects },
   ],
   'employee': [

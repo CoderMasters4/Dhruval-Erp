@@ -20,9 +20,7 @@ import { securityMiddleware, requestLogger, securityErrorHandler } from '@/middl
 import { errorHandler, notFoundHandler } from '@/middleware/errorHandler';
 
 // Import consolidated routes
-import apiRoutes from './routes';
-
-// Automated reports will be integrated later
+import apiRoutes from '@/routes';
 
 // Initialize Express app
 const app = express();
@@ -163,67 +161,6 @@ app.get('/live', (req: Request, res: Response) => {
   res.status(200).json({ status: 'alive' });
 });
 
-// Automated Reports Health Check
-app.get('/health/automated-reports', async (req: Request, res: Response) => {
-  try {
-    // Check if automated reports system is available
-    const status = {
-      isRunning: true,
-      activeTasks: 0,
-      lastRun: new Date(),
-      nextRun: new Date(Date.now() + 24 * 60 * 60 * 1000), // Next day
-      configuration: {
-        dailyTime: '09:00',
-        weeklyTime: '10:00',
-        monthlyTime: '11:00',
-        formats: ['excel', 'csv'],
-        recipients: {}
-      }
-    };
-    
-    res.status(200).json({
-      success: true,
-      data: status
-    });
-  } catch (error) {
-    res.status(503).json({
-      success: false,
-      error: 'Automated reports system unavailable'
-    });
-  }
-});
-
-// Manual Report Trigger Endpoint
-app.post('/api/trigger-report', async (req: Request, res: Response) => {
-  try {
-    const { companyId, reportType, formats, recipients, customFilters } = req.body;
-    
-    // Validate request
-    if (!companyId || !reportType) {
-      return res.status(400).json({
-        success: false,
-        error: 'Company ID and report type are required'
-      });
-    }
-    
-    // Simulate report generation
-    const reportResult = {
-      success: true,
-      message: `${reportType} report triggered successfully for company ${companyId}`,
-      reportId: `report_${Date.now()}`,
-      status: 'generating',
-      estimatedCompletion: new Date(Date.now() + 5 * 60 * 1000) // 5 minutes
-    };
-    
-    res.status(200).json(reportResult);
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      error: 'Failed to trigger report generation'
-    });
-  }
-});
-
 // =============================================
 // CORS PREFLIGHT HANDLER
 // =============================================
@@ -282,11 +219,7 @@ app.get('/api', (req, res) => {
       spares: '/api/v1/spares/*',
       manpower: '/api/v1/manpower/*',
       stickers: '/api/v1/stickers/*',
-      dashboard: '/api/v1/dashboard/*',
-      productionDashboard: '/api/v1/production-dashboard/*',
-      advancedReports: '/api/v1/advanced-reports/*',
-      documentManagement: '/api/v1/documents/*',
-      automatedReports: '/health/automated-reports'
+      dashboard: '/api/v1/dashboard/*'
     },
     timestamp: new Date().toISOString()
   });
@@ -453,12 +386,6 @@ const startServer = async () => {
         websockets: config.ENABLE_WEBSOCKETS,
         cors: config.CORS_ORIGIN,
         apiPrefix: config.API_PREFIX
-      });
-      
-      // Log automated reports endpoints
-      logger.info('📊 Automated Reports endpoints available:', {
-        health: '/health/automated-reports',
-        trigger: '/api/trigger-report'
       });
     });
 

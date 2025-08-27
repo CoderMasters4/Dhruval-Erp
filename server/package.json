@@ -34,8 +34,17 @@
     "db:seed:simple": "ts-node -r tsconfig-paths/register src/scripts/simple-seed.ts",
     "db:seed:user-companies": "ts-node -r tsconfig-paths/register src/scripts/seedUserCompanies.ts",
     "db:seed:comprehensive": "ts-node -r tsconfig-paths/register src/scripts/comprehensive-seed.ts",
+    "db:seed:erp": "dotenvx run --env-file=.env.local -- ts-node -r tsconfig-paths/register src/scripts/comprehensive-erp-seed.ts",
     "db:migrate": "ts-node src/scripts/migrate.ts",
-    "health": "curl http://localhost:4000/health"
+    "health": "curl http://localhost:4000/health",
+    "reports:setup": "chmod +x scripts/setup-automated-reports.sh && ./scripts/setup-automated-reports.sh",
+    "reports:test": "node scripts/test-automated-reports.js",
+    "reports:cleanup": "./scripts/cleanup-reports.sh",
+    "reports:start": "pm2 start ecosystem-automated-reports.config.js",
+    "reports:stop": "pm2 stop erp-automated-reports",
+    "reports:restart": "pm2 restart erp-automated-reports",
+    "reports:logs": "pm2 logs erp-automated-reports",
+    "reports:status": "pm2 status erp-automated-reports"
   },
   "keywords": [
     "erp",

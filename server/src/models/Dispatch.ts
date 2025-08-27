@@ -297,6 +297,37 @@ const DispatchSchema = new Schema<IDispatch>({
     wouldRecommend: { type: Boolean }
   },
 
+  // RTO & Return Management
+  rtoDetails: {
+    isRTO: { type: Boolean, default: false },
+    rtoReason: { type: String, enum: ['wrong_address', 'customer_unavailable', 'customer_rejected', 'damaged_goods', 'wrong_items', 'delivery_delay', 'other'] },
+    rtoDate: { type: Date },
+    rtoLocation: { type: String },
+    rtoNotes: { type: String },
+    returnTrackingNumber: { type: String },
+    returnCourierName: { type: String },
+    returnCharges: { type: Number, default: 0, min: 0 },
+    returnStatus: { type: String, enum: ['pending', 'in_transit', 'returned', 'disposed', 'resold'], default: 'pending' },
+    returnInstructions: { type: String },
+    returnApprovalRequired: { type: Boolean, default: false },
+    returnApprovedBy: { type: Schema.Types.ObjectId, ref: 'User' },
+    returnApprovedAt: { type: Date }
+  },
+
+  // Wrong Return Record
+  wrongReturnDetails: {
+    isWrongReturn: { type: Boolean, default: false },
+    wrongReturnReason: { type: String, enum: ['wrong_customer', 'wrong_items', 'wrong_quantity', 'wrong_address', 'customer_error', 'system_error', 'other'] },
+    wrongReturnDate: { type: Date },
+    wrongReturnNotes: { type: String },
+    correctCustomerId: { type: Schema.Types.ObjectId, ref: 'Customer' },
+    correctCustomerName: { type: String },
+    correctAddress: { type: String },
+    correctionRequired: { type: Boolean, default: false },
+    correctionNotes: { type: String },
+    correctionStatus: { type: String, enum: ['pending', 'in_progress', 'corrected', 'cancelled'], default: 'pending' }
+  },
+
   // Performance Metrics
   performance: {
     plannedDeliveryTime: { type: Date },

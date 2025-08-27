@@ -1,5 +1,28 @@
 'use client'
 
+/**
+ * Enhanced Sidebar with Complete ERP Module Navigation
+ * 
+ * NEW MODULES ADDED:
+ * 1. Employee Management - Complete HR operations with role-based access
+ * 2. Shift Management - Work schedule and shift operations
+ * 3. Batch Management - Production batch tracking and quality control
+ * 4. Quality Management - Comprehensive quality control system
+ * 5. Maintenance & Equipment - Machine and equipment management
+ * 6. Security & Monitoring - Enhanced security with CCTV and guard management
+ * 7. Analytics & Reports - Comprehensive reporting system
+ * 
+ * ROLE-BASED PERMISSIONS:
+ * - Super Admin: Full access to all modules
+ * - Admin: Full access to core modules
+ * - Manager: Read access to all, manage operations
+ * - HR: Full access to Employee and Shift management
+ * - Production: Access to production and batch management
+ * - Quality: Access to quality control and batch quality
+ * - Security: Access to security and monitoring
+ * - Maintenance: Access to machine and equipment management
+ */
+
 import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
@@ -35,7 +58,11 @@ import {
   Quote,
   DollarSign,
   ShoppingBag,
-  Layers
+  Layers,
+  Clock,
+  Plus,
+  Calendar,
+  Moon
 } from 'lucide-react'
 import { selectSidebarCollapsed, selectSidebarOpen, toggleSidebar, setSidebarCollapsed } from '@/lib/features/ui/uiSlice'
 import { selectCurrentUser, selectIsSuperAdmin } from '@/lib/features/auth/authSlice'
@@ -204,16 +231,37 @@ const navigationItems: NavigationItem[] = [
     permission: 'view:Manpower',
     children: [
       {
-        name: 'Manpower',
+        name: 'HR Overview',
         href: '/manpower',
         icon: Users,
         permission: 'view:Manpower'
       },
       {
-        name: 'Attendance',
+        name: 'Employee Management',
+        href: '/employees',
+        icon: UserPlus,
+        permission: 'view:Employee',
+        roles: ['admin', 'hr', 'manager']
+      },
+      {
+        name: 'Shift Management',
+        href: '/shifts',
+        icon: Clock,
+        permission: 'view:Shift',
+        roles: ['admin', 'hr', 'manager']
+      },
+      {
+        name: 'Attendance Tracking',
         href: '/attendance',
         icon: UserCheck,
         permission: 'view:Attendance'
+      },
+      {
+        name: 'Performance Reviews',
+        href: '/employees/performance',
+        icon: TrendingUp,
+        permission: 'view:Employee',
+        roles: ['admin', 'hr', 'manager']
       },
       {
         name: 'Stickers & Labels',
@@ -224,17 +272,65 @@ const navigationItems: NavigationItem[] = [
     ]
   },
 
-  // Production & Orders
+  // Employee Management
   {
-    name: 'Production',
+    name: 'Employee Management',
+    href: '/employees',
+    icon: UserPlus,
+    permission: 'view:Employee',
+    roles: ['admin', 'hr', 'manager'],
+    children: [
+      {
+        name: 'Employee Directory',
+        href: '/employees',
+        icon: Users,
+        permission: 'view:Employee'
+      },
+      {
+        name: 'Add Employee',
+        href: '/employees/add',
+        icon: UserPlus,
+        permission: 'create:Employee'
+      },
+      {
+        name: 'Employee Performance',
+        href: '/employees/performance',
+        icon: TrendingUp,
+        permission: 'view:Employee'
+      },
+      {
+        name: 'Salary Management',
+        href: '/employees/salary',
+        icon: DollarSign,
+        permission: 'view:Employee',
+        roles: ['admin', 'hr']
+      },
+      {
+        name: 'Employee Reports',
+        href: '/employees/reports',
+        icon: BarChart3,
+        permission: 'view:Employee'
+      }
+    ]
+  },
+
+  // Operations Management
+  {
+    name: 'Operations',
     href: '/production',
     icon: Factory,
     permission: 'view:ProductionOrder',
     children: [
       {
-        name: 'Basic Production',
+        name: 'Production Overview',
         href: '/production',
         icon: Factory,
+        permission: 'view:ProductionOrder'
+      },
+      {
+        name: 'Production Orders',
+        href: '/production/orders',
+        icon: FileText,
         permission: 'view:ProductionOrder'
       },
       {
@@ -242,19 +338,73 @@ const navigationItems: NavigationItem[] = [
         href: '/production/enhanced',
         icon: BarChart3,
         permission: 'view:ProductionOrder'
+      },
+      {
+        name: 'Machine Management',
+        href: '/machines',
+        icon: Settings,
+        permission: 'view:Machine',
+        roles: ['admin', 'manager', 'production']
+      },
+      {
+        name: 'Production Reports',
+        href: '/production/reports',
+        icon: BarChart3,
+        permission: 'view:ProductionOrder'
+      }
+    ]
+  },
+
+  // Shift Management
+  {
+    name: 'Shift Management',
+    href: '/shifts',
+    icon: Clock,
+    permission: 'view:Shift',
+    roles: ['admin', 'hr', 'manager'],
+    children: [
+      {
+        name: 'Shift Overview',
+        href: '/shifts',
+        icon: Clock,
+        permission: 'view:Shift'
+      },
+      {
+        name: 'Create Shift',
+        href: '/shifts/create',
+        icon: Plus,
+        permission: 'create:Shift'
+      },
+      {
+        name: 'Shift Scheduling',
+        href: '/shifts/schedule',
+        icon: Calendar,
+        permission: 'view:Shift'
+      },
+      {
+        name: 'Night Shifts',
+        href: '/shifts/night',
+        icon: Moon,
+        permission: 'view:Shift'
+      },
+      {
+        name: 'Shift Reports',
+        href: '/shifts/reports',
+        icon: BarChart3,
+        permission: 'view:Shift'
       }
     ]
   },
 
   // Dispatch & Logistics
   {
-    name: 'Dispatch',
+    name: 'Dispatch & Logistics',
     href: '/dispatch',
     icon: Send,
     permission: 'view:Dispatch',
     children: [
       {
-        name: 'Basic Dispatch',
+        name: 'Dispatch Overview',
         href: '/dispatch',
         icon: Send,
         permission: 'view:Dispatch'
@@ -270,20 +420,70 @@ const navigationItems: NavigationItem[] = [
         href: '/dispatch/awb',
         icon: FileText,
         permission: 'view:Dispatch'
+      },
+      {
+        name: 'Route Optimization',
+        href: '/dispatch/routes',
+        icon: TrendingUp,
+        permission: 'view:Dispatch',
+        roles: ['admin', 'manager', 'logistics']
       }
     ]
   },
 
-  // Quality Control
+  // Maintenance & Equipment
   {
-    name: 'Quality',
+    name: 'Maintenance',
+    href: '/maintenance',
+    icon: Settings,
+    permission: 'view:Machine',
+    children: [
+      {
+        name: 'Machine Management',
+        href: '/machines',
+        icon: Settings,
+        permission: 'view:Machine',
+        roles: ['admin', 'manager', 'maintenance']
+      },
+      {
+        name: 'Preventive Maintenance',
+        href: '/maintenance/preventive',
+        icon: Clock,
+        permission: 'view:Machine',
+        roles: ['admin', 'manager', 'maintenance']
+      },
+      {
+        name: 'Breakdown Reports',
+        href: '/maintenance/breakdowns',
+        icon: AlertTriangle,
+        permission: 'view:Machine',
+        roles: ['admin', 'manager', 'maintenance']
+      },
+      {
+        name: 'Spare Parts',
+        href: '/spares',
+        icon: Package,
+        permission: 'view:Spare'
+      }
+    ]
+  },
+
+  // Quality Management
+  {
+    name: 'Quality Management',
     href: '/quality',
     icon: AlertTriangle,
     permission: 'view:QualityCheck',
     children: [
       {
-        name: 'Quality Checks',
+        name: 'Quality Overview',
         href: '/quality',
+        icon: AlertTriangle,
+        permission: 'view:QualityCheck'
+      },
+      {
+        name: 'Quality Checks',
+        href: '/quality/checks',
         icon: AlertTriangle,
         permission: 'view:QualityCheck'
       },
@@ -292,6 +492,55 @@ const navigationItems: NavigationItem[] = [
         href: '/quality/defects',
         icon: FileSearch,
         permission: 'view:QualityCheck'
+      },
+      {
+        name: 'Quality Standards',
+        href: '/quality/standards',
+        icon: FileText,
+        permission: 'view:QualityCheck',
+        roles: ['admin', 'manager', 'quality']
+      },
+      {
+        name: 'Quality Reports',
+        href: '/quality/reports',
+        icon: BarChart3,
+        permission: 'view:QualityCheck'
+      }
+    ]
+  },
+
+  // Batch Management
+  {
+    name: 'Batch Management',
+    href: '/batches',
+    icon: Package,
+    permission: 'view:Batch',
+    children: [
+      {
+        name: 'Production Batches',
+        href: '/batches',
+        icon: Package,
+        permission: 'view:Batch'
+      },
+      {
+        name: 'Quality Control',
+        href: '/batches/quality',
+        icon: AlertTriangle,
+        permission: 'view:Batch',
+        roles: ['admin', 'manager', 'quality']
+      },
+      {
+        name: 'Batch Analytics',
+        href: '/batches/analytics',
+        icon: BarChart3,
+        permission: 'view:Batch',
+        roles: ['admin', 'manager', 'production']
+      },
+      {
+        name: 'Batch Reports',
+        href: '/batches/reports',
+        icon: FileText,
+        permission: 'view:Batch'
       }
     ]
   },
@@ -318,24 +567,44 @@ const navigationItems: NavigationItem[] = [
     ]
   },
 
-  // Security & Management
+  // Security & Monitoring
   {
-    name: 'Security',
+    name: 'Security & Monitoring',
     href: '/security',
     icon: Shield,
     permission: 'view:SecurityLog',
     children: [
       {
-        name: 'Visitors',
-        href: '/security/visitors',
+        name: 'Security Overview',
+        href: '/security',
+        icon: Shield,
+        permission: 'view:SecurityLog'
+      },
+      {
+        name: 'Visitor Management',
+        href: '/visitors',
         icon: UserPlus,
         permission: 'view:Visitor'
       },
       {
-        name: 'Vehicles',
-        href: '/security/vehicles',
+        name: 'Vehicle Management',
+        href: '/vehicles',
         icon: Car,
         permission: 'view:Vehicle'
+      },
+      {
+        name: 'CCTV Monitoring',
+        href: '/security/cctv',
+        icon: AlertTriangle,
+        permission: 'view:SecurityLog',
+        roles: ['admin', 'security', 'manager']
+      },
+      {
+        name: 'Guard Management',
+        href: '/security/guards',
+        icon: Users,
+        permission: 'view:SecurityLog',
+        roles: ['admin', 'security', 'manager']
       },
       {
         name: 'Security Logs',
@@ -352,15 +621,15 @@ const navigationItems: NavigationItem[] = [
     ]
   },
 
-  // Advanced Operations
+  // Advanced Operations & Monitoring
   {
-    name: 'Operations',
+    name: 'Operations & Monitoring',
     href: '/operations',
     icon: TrendingUp,
     permission: 'view:BusinessAnalytics',
     children: [
       {
-        name: 'Analytics',
+        name: 'Business Analytics',
         href: '/operations/analytics',
         icon: TrendingUp,
         permission: 'view:BusinessAnalytics'
@@ -372,20 +641,20 @@ const navigationItems: NavigationItem[] = [
         permission: 'view:BoilerMonitoring'
       },
       {
-        name: 'Electricity',
+        name: 'Electricity Monitoring',
         href: '/operations/electricity',
         icon: Zap,
         permission: 'view:ElectricityMonitoring'
       },
       {
-        name: 'Hospitality',
+        name: 'Hospitality Management',
         href: '/operations/hospitality',
         icon: Hotel,
         permission: 'view:Hospitality'
       },
       {
-        name: 'Dispatch',
-        href: '/operations/dispatch',
+        name: 'Dispatch Operations',
+        href: '/dispatch',
         icon: Send,
         permission: 'view:Dispatch'
       },
@@ -400,11 +669,61 @@ const navigationItems: NavigationItem[] = [
 
   // Advanced Reports & Analytics
   {
-    name: 'Advanced Reports',
+    name: 'Analytics & Reports',
     href: '/reports',
     icon: BarChart3,
     permission: 'view:Report',
-    roles: ['super_admin', 'owner', 'manager', 'production_manager']
+    children: [
+      {
+        name: 'Business Analytics',
+        href: '/reports/business',
+        icon: TrendingUp,
+        permission: 'view:Report',
+        roles: ['admin', 'manager']
+      },
+      {
+        name: 'Production Analytics',
+        href: '/reports/production',
+        icon: Factory,
+        permission: 'view:Report',
+        roles: ['admin', 'manager', 'production']
+      },
+      {
+        name: 'Batch Analytics',
+        href: '/reports/batches',
+        icon: Package,
+        permission: 'view:Batch',
+        roles: ['admin', 'manager', 'production', 'quality']
+      },
+      {
+        name: 'Employee Analytics',
+        href: '/reports/employees',
+        icon: Users,
+        permission: 'view:Employee',
+        roles: ['admin', 'hr', 'manager']
+      },
+      {
+        name: 'Quality Reports',
+        href: '/reports/quality',
+        icon: AlertTriangle,
+        permission: 'view:QualityCheck',
+        roles: ['admin', 'manager', 'quality']
+      },
+      {
+        name: 'Financial Reports',
+        href: '/reports/financial',
+        icon: DollarSign,
+        permission: 'view:FinancialTransaction',
+        roles: ['admin', 'manager', 'finance']
+      },
+      {
+        name: 'Automated Reports',
+        href: '/reports/automated',
+        icon: BarChart3,
+        permission: 'view:Report',
+        roles: ['admin', 'manager']
+      }
+    ]
   },
   {
     name: 'Settings',

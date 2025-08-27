@@ -50,7 +50,9 @@
     "node_modules",
     "dist",
     "**/*.test.ts",
-    "**/*.spec.ts"
+    "**/*.spec.ts",
+    "src/routes/legacy/**/*",
+    "**/server-backup-*.ts"
   ],
   "ts-node": {
     "require": ["tsconfig-paths/register"]

@@ -31,11 +31,7 @@ export const DATABASE_INDEXES: IndexConfig[] = [
         options: { unique: true },
         description: 'Unique company code lookup'
       },
-      {
-        fields: { email: 1 },
-        options: { unique: true },
-        description: 'Unique email lookup'
-      },
+
       {
         fields: { isActive: 1, createdAt: -1 },
         description: 'Active companies with recent first'

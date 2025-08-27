@@ -193,7 +193,37 @@ const CustomerOrderSchema = new Schema<ICustomerOrder>({
       index: true
     },
     dueDate: { type: Date },
-    paymentHistory: [PaymentHistorySchema]
+    paymentHistory: [PaymentHistorySchema],
+    
+    // Enhanced Payment Tracking
+    paymentSummary: {
+      totalAmount: { type: Number, min: 0 },
+      totalReceived: { type: Number, default: 0, min: 0 },
+      totalPending: { type: Number, min: 0 },
+      totalOverdue: { type: Number, default: 0, min: 0 },
+      lastPaymentDate: { type: Date },
+      nextPaymentDue: { type: Date },
+      overdueDays: { type: Number, default: 0, min: 0 }
+    },
+    
+    // Payment Alerts
+    paymentAlerts: {
+      isOverdue: { type: Boolean, default: false },
+      overdueAmount: { type: Number, default: 0, min: 0 },
+      overdueDays: { type: Number, default: 0, min: 0 },
+      lastAlertSent: { type: Date },
+      alertFrequency: { type: String, enum: ['daily', 'weekly', 'monthly'], default: 'weekly' },
+      nextAlertDate: { type: Date }
+    },
+    
+    // Collection Management
+    collection: {
+      assignedTo: { type: Schema.Types.ObjectId, ref: 'User' },
+      collectionNotes: [String],
+      followUpRequired: { type: Boolean, default: false },
+      followUpDate: { type: Date },
+      collectionStatus: { type: String, enum: ['active', 'on_hold', 'escalated', 'legal_action'], default: 'active' }
+    }
   },
 
   // Delivery Management

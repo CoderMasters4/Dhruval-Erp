@@ -59,6 +59,7 @@ export default function ReportsPage() {
   const tabs = [
     { id: 'user-analytics', name: 'User Analytics', icon: Users, available: true },
     { id: 'purchase-reports', name: 'Purchase Reports', icon: BarChart3, available: true },
+    { id: 'automated-reports', name: 'Automated Reports', icon: BarChart3, available: true },
     { id: 'company-performance', name: 'Company Performance', icon: Building2, available: isSuperAdmin },
     { id: 'system-health', name: 'System Health', icon: Activity, available: isSuperAdmin },
   ].filter(tab => tab.available)
@@ -351,6 +352,102 @@ export default function ReportsPage() {
                   <div className="text-2xl font-bold text-orange-600">📊</div>
                   <div className="text-sm text-gray-600 mt-2">Performance Metrics</div>
                   <div className="text-lg font-semibold text-black">Detailed analytics available</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Automated Reports Tab */}
+        {activeTab === 'automated-reports' && (
+          <div className="space-y-6">
+            {/* Automated Reports Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {/* Automated Reports Dashboard */}
+              <div 
+                className="bg-white rounded-xl border-2 border-sky-500 p-6 cursor-pointer hover:bg-sky-50 transition-colors"
+                onClick={() => window.location.href = '/reports/automated'}>
+                <div className="text-center">
+                  <div className="text-3xl mb-3">📊</div>
+                  <h3 className="text-lg font-semibold text-black mb-2">Automated Reports Dashboard</h3>
+                  <p className="text-sm text-gray-600 mb-4">Monitor automated report generation, scheduling, and delivery</p>
+                  <span className="inline-flex items-center px-3 py-1 bg-sky-100 text-sky-800 text-sm font-medium rounded-full">
+                    View Dashboard
+                  </span>
+                </div>
+              </div>
+
+              {/* Production Dashboard */}
+              <div 
+                className="bg-white rounded-xl border-2 border-sky-500 p-6 cursor-pointer hover:bg-sky-50 transition-colors"
+                onClick={() => window.location.href = '/production/dashboard'}>
+                <div className="text-center">
+                  <div className="text-3xl mb-3">🏭</div>
+                  <h3 className="text-lg font-semibold text-black mb-2">Production Dashboard</h3>
+                  <p className="text-sm text-gray-600 mb-4">Real-time production monitoring and machine status</p>
+                  <span className="inline-flex items-center px-3 py-1 bg-sky-100 text-sky-800 text-sm font-medium rounded-full">
+                    View Dashboard
+                  </span>
+                </div>
+              </div>
+
+              {/* Report Configuration */}
+              <div 
+                className="bg-white rounded-xl border-2 border-sky-500 p-6 cursor-pointer hover:bg-sky-50 transition-colors"
+                onClick={() => window.location.href = '/reports/configuration'}>
+                <div className="text-center">
+                  <div className="text-3xl mb-3">⚙️</div>
+                  <h3 className="text-lg font-semibold text-black mb-2">Report Configuration</h3>
+                  <p className="text-sm text-gray-600 mb-4">Configure automated report schedules and recipients</p>
+                  <span className="inline-flex items-center px-3 py-1 bg-sky-100 text-sky-800 text-sm font-medium rounded-full">
+                    Configure
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Quick Actions */}
+            <div className="bg-white rounded-xl border-2 border-sky-500 p-6">
+              <h3 className="text-lg font-semibold text-black mb-4">Quick Actions</h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <button className="flex items-center justify-center px-4 py-3 bg-sky-500 text-white rounded-lg hover:bg-sky-600 transition-colors">
+                  <Play className="h-5 w-5 mr-2" />
+                  Generate Daily Report
+                </button>
+                <button className="flex items-center justify-center px-4 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors">
+                  <Calendar className="h-5 w-5 mr-2" />
+                  Schedule Weekly Report
+                </button>
+                <button className="flex items-center justify-center px-4 py-3 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors">
+                  <Settings className="h-5 w-5 mr-2" />
+                  Configure Alerts
+                </button>
+              </div>
+            </div>
+
+            {/* System Status */}
+            <div className="bg-white rounded-xl border-2 border-sky-500 p-6">
+              <h3 className="text-lg font-semibold text-black mb-4">Automated Reports System Status</h3>
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div className="text-center p-4 bg-green-50 rounded-xl">
+                  <div className="text-2xl font-bold text-green-600">✅</div>
+                  <div className="text-sm text-gray-600 mt-2">System Status</div>
+                  <div className="text-lg font-semibold text-black">Running</div>
+                </div>
+                <div className="text-center p-4 bg-blue-50 rounded-xl">
+                  <div className="text-2xl font-bold text-blue-600">📅</div>
+                  <div className="text-sm text-gray-600 mt-2">Daily Reports</div>
+                  <div className="text-lg font-semibold text-black">09:00 IST</div>
+                </div>
+                <div className="text-center p-4 bg-purple-50 rounded-xl">
+                  <div className="text-2xl font-bold text-purple-600">📊</div>
+                  <div className="text-sm text-gray-600 mt-2">Weekly Reports</div>
+                  <div className="text-lg font-semibold text-black">Monday 10:00</div>
+                </div>
+                <div className="text-center p-4 bg-orange-50 rounded-xl">
+                  <div className="text-2xl font-bold text-orange-600">📈</div>
+                  <div className="text-sm text-gray-600 mt-2">Monthly Reports</div>
+                  <div className="text-lg font-semibold text-black">1st of Month</div>
                 </div>
               </div>
             </div>
