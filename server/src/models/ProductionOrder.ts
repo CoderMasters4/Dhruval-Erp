@@ -208,10 +208,10 @@ const ProductionOrderSchema = new Schema<IProductionOrder>({
 
   // Product Specifications
   product: {
-    productType: { 
-      type: String, 
-      enum: ['saree', 'african_cotton', 'garment_fabric', 'digital_print', 'custom'], 
-      required: true 
+    productType: {
+      type: String,
+      enum: ['saree', 'african', 'garment', 'digital_print', 'custom'],
+      required: true
     },
     design: { type: String },
     designCode: { type: String },

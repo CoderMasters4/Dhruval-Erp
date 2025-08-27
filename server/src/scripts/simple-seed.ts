@@ -814,7 +814,7 @@ class SimpleSeed {
             primary: getRandomElement(['raw_material', 'semi_finished', 'finished_goods', 'consumables', 'spare_parts'])
           },
 
-          productType: getRandomElement(['saree', 'african_cotton', 'garment_fabric', 'digital_print', 'custom']),
+          productType: getRandomElement(['saree', 'african', 'garment', 'digital_print', 'custom']),
 
           // Specifications
           specifications: {
@@ -904,7 +904,7 @@ class SimpleSeed {
 
           // Required product information
           product: {
-            productType: getRandomElement(['saree', 'african_cotton', 'garment_fabric', 'digital_print', 'custom']),
+            productType: getRandomElement(['saree', 'african', 'garment', 'digital_print', 'custom']),
             design: faker.commerce.productAdjective(),
             color: faker.color.human(),
             gsm: faker.number.int({ min: 100, max: 500 }),
