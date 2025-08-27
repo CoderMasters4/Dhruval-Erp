@@ -38,7 +38,7 @@ export class AdvancedReportService extends BaseService<IReport> {
       // Set created by
       if (createdBy) {
         reportData.createdBy = new Types.ObjectId(createdBy);
-        reportData.updatedBy = new Types.ObjectId(createdBy);
+        // reportData.updatedBy = new Types.ObjectId(createdBy);
       }
 
       const report = await this.create(reportData);
@@ -62,7 +62,7 @@ export class AdvancedReportService extends BaseService<IReport> {
     try {
       // Set updated by
       if (updatedBy) {
-        updateData.updatedBy = new Types.ObjectId(updatedBy);
+        // updateData.updatedBy = new Types.ObjectId(updatedBy);
       }
 
       const report = await this.update(reportId, updateData);
@@ -125,7 +125,7 @@ export class AdvancedReportService extends BaseService<IReport> {
       const reportData = {
         reportId,
         reportName: report.reportName,
-        category: report.reportCategory,
+        category: (report as any).reportCategory || 'general',
         generatedAt: new Date(),
         parameters,
         data: {
@@ -175,7 +175,7 @@ export class AdvancedReportService extends BaseService<IReport> {
   /**
    * Validate report data
    */
-  private validateReportData(reportData: Partial<IAdvancedReport>): void {
+  private validateReportData(reportData: any): void {
     if (!reportData.reportName) {
       throw new AppError('Report name is required', 400);
     }

@@ -1,6 +1,6 @@
 import * as cron from 'node-cron';
 import { AutomatedReportService, ReportData } from './AutomatedReportService';
-import { Company } from '../models/Company';
+import Company from '../models/Company';
 import { AdvancedReport } from '../models/AdvancedReport';
 
 export interface CronJobConfig {
@@ -505,10 +505,10 @@ export class CronJobScheduler {
   /**
    * Get cron job status
    */
-  getStatus(): { isRunning: boolean; tasks: any[] } {
+  getStatus(): { isRunning: boolean; tasks: any } {
     return {
       isRunning: this.isRunning,
-      tasks: cron.getTasks()
+      tasks: Array.from(cron.getTasks().entries()).map(([name, task]) => ({ name, task }))
     };
   }
 

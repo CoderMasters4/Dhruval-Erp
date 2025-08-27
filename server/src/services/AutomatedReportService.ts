@@ -1,12 +1,12 @@
 import { AdvancedReport } from '../models/AdvancedReport';
-import { InventoryItem } from '../models/InventoryItem';
-import { ProductionOrder } from '../models/ProductionOrder';
-import { CustomerOrder } from '../models/CustomerOrder';
-import { FinancialTransaction } from '../models/FinancialTransaction';
-import { Dispatch } from '../models/Dispatch';
-import { Customer } from '../models/Customer';
-import { Supplier } from '../models/Supplier';
-import { StockMovement } from '../models/StockMovement';
+import InventoryItem from '../models/InventoryItem';
+import ProductionOrder from '../models/ProductionOrder';
+import CustomerOrder from '../models/CustomerOrder';
+import FinancialTransaction from '../models/FinancialTransaction';
+import Dispatch from '../models/Dispatch';
+import Customer from '../models/Customer';
+import Supplier from '../models/Supplier';
+import StockMovement from '../models/StockMovement';
 import * as ExcelJS from 'exceljs';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -14,11 +14,11 @@ import * as nodemailer from 'nodemailer';
 import { createObjectCsvWriter } from 'csv-writer';
 
 export interface ReportData {
-  inventory: any[];
-  production: any[];
-  sales: any[];
-  financial: any[];
-  logistics: any[];
+  inventory: any;
+  production: any;
+  sales: any;
+  financial: any;
+  logistics: any;
   summary: any;
 }
 
@@ -37,7 +37,7 @@ export class AutomatedReportService {
   private exportDir: string;
 
   constructor(emailConfig: EmailConfig) {
-    this.emailTransporter = nodemailer.createTransporter(emailConfig);
+    this.emailTransporter = nodemailer.createTransport(emailConfig);
     this.exportDir = path.join(process.cwd(), 'exports');
     this.ensureExportDirectory();
   }
@@ -66,7 +66,7 @@ export class AutomatedReportService {
         this.getInventoryData(companyId, startDate, endDate),
         this.getProductionData(companyId, startDate, endDate),
         this.getSalesData(companyId, startDate, endDate),
-        this.getFinancialData(companyId, startDate, weekEnd),
+        this.getFinancialData(companyId, startDate, endDate),
         this.getLogisticsData(companyId, startDate, endDate)
       ]);
 
@@ -100,7 +100,7 @@ export class AutomatedReportService {
         this.getInventoryData(companyId, weekStart, weekEnd),
         this.getProductionData(companyId, weekStart, weekEnd),
         this.getSalesData(companyId, weekStart, weekEnd),
-        this.getFinancialData(companyId, weekStart, endDate),
+        this.getFinancialData(companyId, weekStart, weekEnd),
         this.getLogisticsData(companyId, weekStart, weekEnd)
       ]);
 

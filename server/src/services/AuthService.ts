@@ -1,6 +1,7 @@
 import User from '@/models/User';
 import Company from '@/models/Company';
 import { logger } from '@/utils/logger';
+import { generateTokenPair, setTokenCookies, clearTokenCookies, type JWTPayload } from '@/utils/jwt';
 
 export interface LoginCredentials {
   username: string;
@@ -29,7 +30,7 @@ class AuthService {
   /**
    * User login with validation and security checks
    */
-  async login(credentials: LoginCredentials, req: any): Promise<AuthResponse> {
+  async login(credentials: LoginCredentials, req: any, res: any): Promise<AuthResponse> {
     try {
       const { username, password, companyCode } = credentials;
 
@@ -83,6 +84,21 @@ class AuthService {
         userAgent: req.get('User-Agent')
       });
 
+      // Generate JWT tokens
+      const tokenPayload: JWTPayload = {
+        userId: user._id.toString(),
+        username: user.username,
+        email: user.email,
+        isSuperAdmin: user.isSuperAdmin || false,
+        companyId: user.primaryCompanyId?.toString(),
+        role: user.companyAccess?.[0]?.role || 'user'
+      };
+
+      const tokens = generateTokenPair(tokenPayload);
+
+      // Set tokens as HTTP-only cookies
+      setTokenCookies(res, tokens);
+
       // Remove sensitive data from response
       const userResponse = user.toObject();
       delete userResponse.password;
@@ -90,7 +106,13 @@ class AuthService {
       return {
         success: true,
         message: 'Login successful',
-        data: userResponse
+        data: {
+          user: userResponse,
+          tokens: {
+            accessToken: tokens.accessToken,
+            expiresIn: '15m'
+          }
+        }
       };
 
     } catch (error) {
@@ -99,6 +121,33 @@ class AuthService {
         success: false,
         error: 'Internal server error',
         message: 'Login failed'
+      };
+    }
+  }
+
+  /**
+   * User logout - clear cookies
+   */
+  async logout(req: any, res: any): Promise<AuthResponse> {
+    try {
+      // Clear JWT cookies
+      clearTokenCookies(res);
+
+      logger.info('User logged out', {
+        ip: req.ip,
+        userAgent: req.get('User-Agent')
+      });
+
+      return {
+        success: true,
+        message: 'Logout successful'
+      };
+    } catch (error) {
+      logger.error('Error in logout service:', error);
+      return {
+        success: false,
+        error: 'Internal server error',
+        message: 'Logout failed'
       };
     }
   }
@@ -237,26 +286,7 @@ class AuthService {
     }
   }
 
-  /**
-   * Logout user
-   */
-  async logout(userId: string): Promise<AuthResponse> {
-    try {
-      // In a real application, you might want to blacklist the token
-      // For now, we'll just return success
-      return {
-        success: true,
-        message: 'Logout successful'
-      };
-    } catch (error) {
-      logger.error('Error in logout service:', error);
-      return {
-        success: false,
-        error: 'Internal server error',
-        message: 'Logout failed'
-      };
-    }
-  }
+
 }
 
 export default new AuthService(); 

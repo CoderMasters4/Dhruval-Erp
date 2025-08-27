@@ -20,7 +20,7 @@ class AuthController {
         return;
       }
 
-      const result = await AuthService.login({ username, password, companyCode }, req);
+      const result = await AuthService.login({ username, password, companyCode }, req, res);
       
       if (result.success) {
         res.status(200).json(result);
@@ -34,6 +34,28 @@ class AuthController {
         success: false,
         error: 'Internal Server Error',
         message: 'Login failed'
+      });
+    }
+  }
+
+  /**
+   * User logout
+   */
+  async logout(req: Request, res: Response): Promise<void> {
+    try {
+      const result = await AuthService.logout(req, res);
+
+      if (result.success) {
+        res.status(200).json(result);
+      } else {
+        res.status(500).json(result);
+      }
+    } catch (error) {
+      logger.error('Error in logout controller:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Internal Server Error',
+        message: 'Logout failed'
       });
     }
   }
@@ -123,34 +145,7 @@ class AuthController {
     }
   }
 
-  /**
-   * Logout user
-   */
-  async logout(req: Request, res: Response): Promise<void> {
-    try {
-      const userId = (req as any).user?.id || (req as any).user?._id;
-      
-      if (!userId) {
-        res.status(401).json({
-          success: false,
-          error: 'Unauthorized',
-          message: 'User not authenticated'
-        });
-        return;
-      }
 
-      const result = await AuthService.logout(userId);
-      res.status(200).json(result);
-
-    } catch (error) {
-      logger.error('Error in logout controller:', error);
-      res.status(500).json({
-        success: false,
-        error: 'Internal Server Error',
-        message: 'Logout failed'
-      });
-    }
-  }
 
   /**
    * Health check

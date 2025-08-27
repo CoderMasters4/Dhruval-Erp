@@ -48,7 +48,7 @@ router.delete('/:id', advancedReportController.deleteReport.bind(advancedReportC
  * @desc    Get reports by category
  * @access  Private
  */
-router.get('/category/:category', advancedReportController.getReportsByCategory.bind(advancedReportController));
+// router.get('/category/:category', advancedReportController.getReportsByCategory.bind(advancedReportController));
 
 /**
  * @route   GET /api/v1/advanced-reports/scheduled

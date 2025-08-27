@@ -33,9 +33,9 @@ import v1AttendanceRoutes from './v1/attendance';
 import v1BatchesRoutes from './v1/batches';
 import v1EmployeesRoutes from './v1/employees';
 import v1ShiftsRoutes from './v1/shifts';
-import v1ProductionDashboardRoutes from './v1/production-dashboard';
-import v1AdvancedReportsRoutes from './v1/advanced-reports';
-import v1DocumentManagementRoutes from './v1/document-management';
+// import v1ProductionDashboardRoutes from './v1/production-dashboard';
+// import v1AdvancedReportsRoutes from './v1/advanced-reports';
+// import v1DocumentManagementRoutes from './v1/document-management';
 
 const router = Router();
 

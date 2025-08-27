@@ -1,0 +1,574 @@
+m$ pnpm build
+
+> factory-erp-server@1.0.0 build /Users/rim/Documents/Dhruval-Erp/server
+> tsc
+
+src/controllers/AuthController.ts:44:9 - error TS2393: Duplicate function implementation.
+
+44   async logout(req: Request, res: Response): Promise<void> {
+           ~~~~~~
+
+src/controllers/AuthController.ts:151:9 - error TS2393: Duplicate function implementation.
+
+151   async logout(req: Request, res: Response): Promise<void> {
+            ~~~~~~
+
+src/controllers/ProductionDashboardController.ts:3:29 - error TS2307: Cannot find module '../types/api' or its corresponding type declarations.
+
+3 import { ApiResponse } from '../types/api';
+                              ~~~~~~~~~~~~~~
+
+src/controllers/ProductionDashboardController.ts:13:51 - error TS2339: Property 'findByCompany' does not exist on type 'Model<{ companyId: ObjectId; createdAt: NativeDate; updatedAt: NativeDate; alerts: DocumentArray<{ message: string; createdAt: NativeDate; severity: "low" | "medium" | "high" | "critical"; ... 11 more ...; orderId?: ObjectId; }, Subdocument<...> & { ...; }>; ... 6 more ...; dashboardConfig?: { ...; }; }, ... 4 more ...'.
+
+13       const dashboard = await ProductionDashboard.findByCompany(companyId);
+                                                     ~~~~~~~~~~~~~
+
+src/controllers/ProductionDashboardController.ts:48:59 - error TS2339: Property 'findByCompany' does not exist on type 'Model<{ companyId: ObjectId; createdAt: NativeDate; updatedAt: NativeDate; alerts: DocumentArray<{ message: string; createdAt: NativeDate; severity: "low" | "medium" | "high" | "critical"; ... 11 more ...; orderId?: ObjectId; }, Subdocument<...> & { ...; }>; ... 6 more ...; dashboardConfig?: { ...; }; }, ... 4 more ...'.
+
+48       const existingDashboard = await ProductionDashboard.findByCompany(companyId);
+                                                             ~~~~~~~~~~~~~
+
+src/controllers/ProductionDashboardController.ts:89:51 - error TS2339: Property 'getMachineStatus' does not exist on type 'Model<{ companyId: ObjectId; createdAt: NativeDate; updatedAt: NativeDate; alerts: DocumentArray<{ message: string; createdAt: NativeDate; severity: "low" | "medium" | "high" | "critical"; ... 11 more ...; orderId?: ObjectId; }, Subdocument<...> & { ...; }>; ... 6 more ...; dashboardConfig?: { ...; }; }, ... 4 more ...'.
+
+89       const dashboard = await ProductionDashboard.getMachineStatus(companyId, machineId);
+                                                     ~~~~~~~~~~~~~~~~
+
+src/controllers/ProductionDashboardController.ts:124:51 - error TS2339: Property 'findByCompany' does not exist on type 'Model<{ companyId: ObjectId; createdAt: NativeDate; updatedAt: NativeDate; alerts: DocumentArray<{ message: string; createdAt: NativeDate; severity: "low" | "medium" | "high" | "critical"; ... 11 more ...; orderId?: ObjectId; }, Subdocument<...> & { ...; }>; ... 6 more ...; dashboardConfig?: { ...; }; }, ... 4 more ...'.
+
+124       const dashboard = await ProductionDashboard.findByCompany(companyId);
+                                                      ~~~~~~~~~~~~~
+
+src/controllers/ProductionDashboardController.ts:161:51 - error TS2339: Property 'getDailySummary' does not exist on type 'Model<{ companyId: ObjectId; createdAt: NativeDate; updatedAt: NativeDate; alerts: DocumentArray<{ message: string; createdAt: NativeDate; severity: "low" | "medium" | "high" | "critical"; ... 11 more ...; orderId?: ObjectId; }, Subdocument<...> & { ...; }>; ... 6 more ...; dashboardConfig?: { ...; }; }, ... 4 more ...'.
+
+161       const dashboard = await ProductionDashboard.getDailySummary(companyId, targetDate);
+                                                      ~~~~~~~~~~~~~~~
+
+src/controllers/ProductionDashboardController.ts:188:51 - error TS2339: Property 'findByCompany' does not exist on type 'Model<{ companyId: ObjectId; createdAt: NativeDate; updatedAt: NativeDate; alerts: DocumentArray<{ message: string; createdAt: NativeDate; severity: "low" | "medium" | "high" | "critical"; ... 11 more ...; orderId?: ObjectId; }, Subdocument<...> & { ...; }>; ... 6 more ...; dashboardConfig?: { ...; }; }, ... 4 more ...'.
+
+188       const dashboard = await ProductionDashboard.findByCompany(companyId);
+                                                      ~~~~~~~~~~~~~
+
+src/controllers/ProductionDashboardController.ts:228:51 - error TS2339: Property 'findByCompany' does not exist on type 'Model<{ companyId: ObjectId; createdAt: NativeDate; updatedAt: NativeDate; alerts: DocumentArray<{ message: string; createdAt: NativeDate; severity: "low" | "medium" | "high" | "critical"; ... 11 more ...; orderId?: ObjectId; }, Subdocument<...> & { ...; }>; ... 6 more ...; dashboardConfig?: { ...; }; }, ... 4 more ...'.
+
+228       const dashboard = await ProductionDashboard.findByCompany(companyId);
+                                                      ~~~~~~~~~~~~~
+
+src/controllers/ProductionDashboardController.ts:263:51 - error TS2339: Property 'findByCompany' does not exist on type 'Model<{ companyId: ObjectId; createdAt: NativeDate; updatedAt: NativeDate; alerts: DocumentArray<{ message: string; createdAt: NativeDate; severity: "low" | "medium" | "high" | "critical"; ... 11 more ...; orderId?: ObjectId; }, Subdocument<...> & { ...; }>; ... 6 more ...; dashboardConfig?: { ...; }; }, ... 4 more ...'.
+
+263       const dashboard = await ProductionDashboard.findByCompany(companyId);
+                                                      ~~~~~~~~~~~~~
+
+src/controllers/ProductionDashboardController.ts:316:51 - error TS2339: Property 'getActiveAlerts' does not exist on type 'Model<{ companyId: ObjectId; createdAt: NativeDate; updatedAt: NativeDate; alerts: DocumentArray<{ message: string; createdAt: NativeDate; severity: "low" | "medium" | "high" | "critical"; ... 11 more ...; orderId?: ObjectId; }, Subdocument<...> & { ...; }>; ... 6 more ...; dashboardConfig?: { ...; }; }, ... 4 more ...'.
+
+316       const dashboard = await ProductionDashboard.getActiveAlerts(companyId);
+                                                      ~~~~~~~~~~~~~~~
+
+src/controllers/ProductionDashboardController.ts:343:51 - error TS2339: Property 'findByCompany' does not exist on type 'Model<{ companyId: ObjectId; createdAt: NativeDate; updatedAt: NativeDate; alerts: DocumentArray<{ message: string; createdAt: NativeDate; severity: "low" | "medium" | "high" | "critical"; ... 11 more ...; orderId?: ObjectId; }, Subdocument<...> & { ...; }>; ... 6 more ...; dashboardConfig?: { ...; }; }, ... 4 more ...'.
+
+343       const dashboard = await ProductionDashboard.findByCompany(companyId);
+                                                      ~~~~~~~~~~~~~
+
+src/controllers/ProductionDashboardController.ts:380:51 - error TS2339: Property 'findByCompany' does not exist on type 'Model<{ companyId: ObjectId; createdAt: NativeDate; updatedAt: NativeDate; alerts: DocumentArray<{ message: string; createdAt: NativeDate; severity: "low" | "medium" | "high" | "critical"; ... 11 more ...; orderId?: ObjectId; }, Subdocument<...> & { ...; }>; ... 6 more ...; dashboardConfig?: { ...; }; }, ... 4 more ...'.
+
+380       const dashboard = await ProductionDashboard.findByCompany(companyId);
+                                                      ~~~~~~~~~~~~~
+
+src/controllers/ProductionDashboardController.ts:417:51 - error TS2339: Property 'findByCompany' does not exist on type 'Model<{ companyId: ObjectId; createdAt: NativeDate; updatedAt: NativeDate; alerts: DocumentArray<{ message: string; createdAt: NativeDate; severity: "low" | "medium" | "high" | "critical"; ... 11 more ...; orderId?: ObjectId; }, Subdocument<...> & { ...; }>; ... 6 more ...; dashboardConfig?: { ...; }; }, ... 4 more ...'.
+
+417       const dashboard = await ProductionDashboard.findByCompany(companyId);
+                                                      ~~~~~~~~~~~~~
+
+src/controllers/ProductionDashboardController.ts:452:51 - error TS2339: Property 'findByCompany' does not exist on type 'Model<{ companyId: ObjectId; createdAt: NativeDate; updatedAt: NativeDate; alerts: DocumentArray<{ message: string; createdAt: NativeDate; severity: "low" | "medium" | "high" | "critical"; ... 11 more ...; orderId?: ObjectId; }, Subdocument<...> & { ...; }>; ... 6 more ...; dashboardConfig?: { ...; }; }, ... 4 more ...'.
+
+452       const dashboard = await ProductionDashboard.findByCompany(companyId);
+                                                      ~~~~~~~~~~~~~
+
+src/controllers/ProductionDashboardController.ts:486:51 - error TS2339: Property 'findByCompany' does not exist on type 'Model<{ companyId: ObjectId; createdAt: NativeDate; updatedAt: NativeDate; alerts: DocumentArray<{ message: string; createdAt: NativeDate; severity: "low" | "medium" | "high" | "critical"; ... 11 more ...; orderId?: ObjectId; }, Subdocument<...> & { ...; }>; ... 6 more ...; dashboardConfig?: { ...; }; }, ... 4 more ...'.
+
+486       const dashboard = await ProductionDashboard.findByCompany(companyId);
+                                                      ~~~~~~~~~~~~~
+
+src/controllers/ProductionDashboardController.ts:527:51 - error TS2339: Property 'findByCompany' does not exist on type 'Model<{ companyId: ObjectId; createdAt: NativeDate; updatedAt: NativeDate; alerts: DocumentArray<{ message: string; createdAt: NativeDate; severity: "low" | "medium" | "high" | "critical"; ... 11 more ...; orderId?: ObjectId; }, Subdocument<...> & { ...; }>; ... 6 more ...; dashboardConfig?: { ...; }; }, ... 4 more ...'.
+
+527       const dashboard = await ProductionDashboard.findByCompany(companyId);
+                                                      ~~~~~~~~~~~~~
+
+src/controllers/ProductionDashboardController.ts:561:51 - error TS2339: Property 'findByCompany' does not exist on type 'Model<{ companyId: ObjectId; createdAt: NativeDate; updatedAt: NativeDate; alerts: DocumentArray<{ message: string; createdAt: NativeDate; severity: "low" | "medium" | "high" | "critical"; ... 11 more ...; orderId?: ObjectId; }, Subdocument<...> & { ...; }>; ... 6 more ...; dashboardConfig?: { ...; }; }, ... 4 more ...'.
+
+561       const dashboard = await ProductionDashboard.findByCompany(companyId);
+                                                      ~~~~~~~~~~~~~
+
+src/routes/v1/advanced-reports.ts:51:60 - error TS2339: Property 'getReportsByCategory' does not exist on type 'AdvancedReportController'.
+
+51 router.get('/category/:category', advancedReportController.getReportsByCategory.bind(advancedReportController));
+                                                              ~~~~~~~~~~~~~~~~~~~~
+
+src/routes/v1/advanced-reports.ts:58:51 - error TS2551: Property 'getScheduledReports' does not exist on type 'AdvancedReportController'. Did you mean 'scheduleReport'?
+
+58 router.get('/scheduled', advancedReportController.getScheduledReports.bind(advancedReportController));
+                                                     ~~~~~~~~~~~~~~~~~~~
+
+  src/controllers/AdvancedReportController.ts:199:9
+    199   async scheduleReport(req: Request, res: Response) {
+                ~~~~~~~~~~~~~~
+    'scheduleReport' is declared here.
+
+src/routes/v1/advanced-reports.ts:65:51 - error TS2339: Property 'getReportTemplates' does not exist on type 'AdvancedReportController'.
+
+65 router.get('/templates', advancedReportController.getReportTemplates.bind(advancedReportController));
+                                                     ~~~~~~~~~~~~~~~~~~
+
+src/routes/v1/advanced-reports.ts:72:48 - error TS2339: Property 'getPublicReports' does not exist on type 'AdvancedReportController'.
+
+72 router.get('/public', advancedReportController.getPublicReports.bind(advancedReportController));
+                                                  ~~~~~~~~~~~~~~~~
+
+src/routes/v1/advanced-reports.ts:93:52 - error TS2339: Property 'cloneReport' does not exist on type 'AdvancedReportController'.
+
+93 router.post('/:id/clone', advancedReportController.cloneReport.bind(advancedReportController));
+                                                      ~~~~~~~~~~~
+
+src/routes/v1/advanced-reports.ts:100:52 - error TS2339: Property 'getReportStatus' does not exist on type 'AdvancedReportController'.
+
+100 router.get('/:id/status', advancedReportController.getReportStatus.bind(advancedReportController));
+                                                       ~~~~~~~~~~~~~~~
+
+src/routes/v1/advanced-reports.ts:107:54 - error TS2339: Property 'updateSchedule' does not exist on type 'AdvancedReportController'.
+
+107 router.put('/:id/schedule', advancedReportController.updateSchedule.bind(advancedReportController));
+                                                         ~~~~~~~~~~~~~~
+
+src/routes/v1/advanced-reports.ts:114:58 - error TS2339: Property 'updateDistribution' does not exist on type 'AdvancedReportController'.
+
+114 router.put('/:id/distribution', advancedReportController.updateDistribution.bind(advancedReportController));
+                                                             ~~~~~~~~~~~~~~~~~~
+
+src/routes/v1/advanced-reports.ts:121:60 - error TS2339: Property 'updateAccessControl' does not exist on type 'AdvancedReportController'.
+
+121 router.put('/:id/access-control', advancedReportController.updateAccessControl.bind(advancedReportController));
+                                                               ~~~~~~~~~~~~~~~~~~~
+
+src/routes/v1/advanced-reports.ts:128:55 - error TS2339: Property 'getReportAnalytics' does not exist on type 'AdvancedReportController'.
+
+128 router.get('/:id/analytics', advancedReportController.getReportAnalytics.bind(advancedReportController));
+                                                          ~~~~~~~~~~~~~~~~~~
+
+src/routes/v1/advanced-reports.ts:135:53 - error TS2339: Property 'grantAccess' does not exist on type 'AdvancedReportController'.
+
+135 router.post('/:id/access', advancedReportController.grantAccess.bind(advancedReportController));
+                                                        ~~~~~~~~~~~
+
+src/routes/v1/advanced-reports.ts:142:63 - error TS2339: Property 'revokeAccess' does not exist on type 'AdvancedReportController'.
+
+142 router.delete('/:id/access/:userId', advancedReportController.revokeAccess.bind(advancedReportController));
+                                                                  ~~~~~~~~~~~~
+
+src/routes/v1/advanced-reports.ts:149:48 - error TS2339: Property 'searchReports' does not exist on type 'AdvancedReportController'.
+
+149 router.get('/search', advancedReportController.searchReports.bind(advancedReportController));
+                                                   ~~~~~~~~~~~~~
+
+src/routes/v1/document-management.ts:51:64 - error TS2551: Property 'getDocumentsByType' does not exist on type 'DocumentManagementController'. Did you mean 'getDocumentById'?
+
+51 router.get('/type/:documentType', documentManagementController.getDocumentsByType.bind(documentManagementController));
+                                                                  ~~~~~~~~~~~~~~~~~~
+
+  src/controllers/DocumentManagementController.ts:80:9
+    80   async getDocumentById(req: Request, res: Response) {
+               ~~~~~~~~~~~~~~~
+    'getDocumentById' is declared here.
+
+src/routes/v1/document-management.ts:58:64 - error TS2339: Property 'getDocumentsByCategory' does not exist on type 'DocumentManagementController'.
+
+58 router.get('/category/:category', documentManagementController.getDocumentsByCategory.bind(documentManagementController));
+                                                                  ~~~~~~~~~~~~~~~~~~~~~~
+
+src/routes/v1/document-management.ts:65:62 - error TS2339: Property 'getPendingApproval' does not exist on type 'DocumentManagementController'.
+
+65 router.get('/pending-approval', documentManagementController.getPendingApproval.bind(documentManagementController));
+                                                                ~~~~~~~~~~~~~~~~~~
+
+src/routes/v1/document-management.ts:72:63 - error TS2339: Property 'getOverdueApprovals' does not exist on type 'DocumentManagementController'.
+
+72 router.get('/overdue-approvals', documentManagementController.getOverdueApprovals.bind(documentManagementController));
+                                                                 ~~~~~~~~~~~~~~~~~~~
+
+src/routes/v1/document-management.ts:79:57 - error TS2339: Property 'uploadDocument' does not exist on type 'DocumentManagementController'.
+
+79 router.post('/:id/upload', documentManagementController.uploadDocument.bind(documentManagementController));
+                                                           ~~~~~~~~~~~~~~
+
+src/routes/v1/document-management.ts:86:58 - error TS2339: Property 'addVersion' does not exist on type 'DocumentManagementController'.
+
+86 router.post('/:id/version', documentManagementController.addVersion.bind(documentManagementController));
+                                                            ~~~~~~~~~~
+
+src/routes/v1/document-management.ts:93:58 - error TS2339: Property 'getDocumentVersions' does not exist on type 'DocumentManagementController'.
+
+93 router.get('/:id/versions', documentManagementController.getDocumentVersions.bind(documentManagementController));
+                                                            ~~~~~~~~~~~~~~~~~~~
+
+src/routes/v1/document-management.ts:100:59 - error TS2339: Property 'requestApproval' does not exist on type 'DocumentManagementController'.
+
+100 router.post('/:id/approval', documentManagementController.requestApproval.bind(documentManagementController));
+                                                              ~~~~~~~~~~~~~~~
+
+src/routes/v1/document-management.ts:107:57 - error TS2339: Property 'approveDocument' does not exist on type 'DocumentManagementController'.
+
+107 router.put('/:id/approve', documentManagementController.approveDocument.bind(documentManagementController));
+                                                            ~~~~~~~~~~~~~~~
+
+src/routes/v1/document-management.ts:114:56 - error TS2339: Property 'rejectDocument' does not exist on type 'DocumentManagementController'.
+
+114 router.put('/:id/reject', documentManagementController.rejectDocument.bind(documentManagementController));
+                                                           ~~~~~~~~~~~~~~
+
+src/routes/v1/document-management.ts:121:57 - error TS2339: Property 'grantAccess' does not exist on type 'DocumentManagementController'.
+
+121 router.post('/:id/access', documentManagementController.grantAccess.bind(documentManagementController));
+                                                            ~~~~~~~~~~~
+
+src/routes/v1/document-management.ts:128:67 - error TS2339: Property 'revokeAccess' does not exist on type 'DocumentManagementController'.
+
+128 router.delete('/:id/access/:userId', documentManagementController.revokeAccess.bind(documentManagementController));
+                                                                      ~~~~~~~~~~~~
+
+src/routes/v1/document-management.ts:135:56 - error TS2339: Property 'getDocumentAccess' does not exist on type 'DocumentManagementController'.
+
+135 router.get('/:id/access', documentManagementController.getDocumentAccess.bind(documentManagementController));
+                                                           ~~~~~~~~~~~~~~~~~
+
+src/routes/v1/document-management.ts:142:55 - error TS2339: Property 'recordView' does not exist on type 'DocumentManagementController'.
+
+142 router.post('/:id/view', documentManagementController.recordView.bind(documentManagementController));
+                                                          ~~~~~~~~~~
+
+src/routes/v1/document-management.ts:149:59 - error TS2339: Property 'recordDownload' does not exist on type 'DocumentManagementController'.
+
+149 router.post('/:id/download', documentManagementController.recordDownload.bind(documentManagementController));
+                                                              ~~~~~~~~~~~~~~
+
+src/routes/v1/document-management.ts:156:59 - error TS2339: Property 'getDocumentAnalytics' does not exist on type 'DocumentManagementController'.
+
+156 router.get('/:id/analytics', documentManagementController.getDocumentAnalytics.bind(documentManagementController));
+                                                              ~~~~~~~~~~~~~~~~~~~~
+
+src/routes/v1/document-management.ts:170:58 - error TS2339: Property 'processDocument' does not exist on type 'DocumentManagementController'.
+
+170 router.post('/:id/process', documentManagementController.processDocument.bind(documentManagementController));
+                                                             ~~~~~~~~~~~~~~~
+
+src/routes/v1/document-management.ts:177:57 - error TS2339: Property 'getDocumentPreview' does not exist on type 'DocumentManagementController'.
+
+177 router.get('/:id/preview', documentManagementController.getDocumentPreview.bind(documentManagementController));
+                                                            ~~~~~~~~~~~~~~~~~~
+
+src/routes/v1/document-management.ts:184:59 - error TS2339: Property 'getDocumentThumbnail' does not exist on type 'DocumentManagementController'.
+
+184 router.get('/:id/thumbnail', documentManagementController.getDocumentThumbnail.bind(documentManagementController));
+                                                              ~~~~~~~~~~~~~~~~~~~~
+
+src/routes/v1/document-management.ts:191:56 - error TS2339: Property 'shareDocument' does not exist on type 'DocumentManagementController'.
+
+191 router.post('/:id/share', documentManagementController.shareDocument.bind(documentManagementController));
+                                                           ~~~~~~~~~~~~~
+
+src/routes/v1/document-management.ts:198:57 - error TS2551: Property 'archiveDocument' does not exist on type 'DocumentManagementController'. Did you mean 'searchDocuments'?
+
+198 router.put('/:id/archive', documentManagementController.archiveDocument.bind(documentManagementController));
+                                                            ~~~~~~~~~~~~~~~
+
+  src/controllers/DocumentManagementController.ts:231:9
+    231   async searchDocuments(req: Request, res: Response) {
+                ~~~~~~~~~~~~~~~
+    'searchDocuments' is declared here.
+
+src/routes/v1/document-management.ts:205:57 - error TS2551: Property 'restoreDocument' does not exist on type 'DocumentManagementController'. Did you mean 'createDocument'?
+
+205 router.put('/:id/restore', documentManagementController.restoreDocument.bind(documentManagementController));
+                                                            ~~~~~~~~~~~~~~~
+
+  src/controllers/DocumentManagementController.ts:53:9
+    53   async createDocument(req: Request, res: Response) {
+               ~~~~~~~~~~~~~~
+    'createDocument' is declared here.
+
+src/routes/v1/document-management.ts:212:58 - error TS2339: Property 'bulkUpload' does not exist on type 'DocumentManagementController'.
+
+212 router.post('/bulk-upload', documentManagementController.bulkUpload.bind(documentManagementController));
+                                                             ~~~~~~~~~~
+
+src/routes/v1/document-management.ts:219:59 - error TS2339: Property 'bulkApprove' does not exist on type 'DocumentManagementController'.
+
+219 router.post('/bulk-approve', documentManagementController.bulkApprove.bind(documentManagementController));
+                                                              ~~~~~~~~~~~
+
+src/services/AdvancedReportService.ts:41:20 - error TS2339: Property 'updatedBy' does not exist on type 'Partial<IReport>'.
+
+41         reportData.updatedBy = new Types.ObjectId(createdBy);
+                      ~~~~~~~~~
+
+src/services/AdvancedReportService.ts:65:20 - error TS2339: Property 'updatedBy' does not exist on type 'Partial<IReport>'.
+
+65         updateData.updatedBy = new Types.ObjectId(updatedBy);
+                      ~~~~~~~~~
+
+src/services/AdvancedReportService.ts:128:26 - error TS2339: Property 'reportCategory' does not exist on type 'IReport'.
+
+128         category: report.reportCategory,
+                             ~~~~~~~~~~~~~~
+
+src/services/AdvancedReportService.ts:178:50 - error TS2304: Cannot find name 'IAdvancedReport'.
+
+178   private validateReportData(reportData: Partial<IAdvancedReport>): void {
+                                                     ~~~~~~~~~~~~~~~
+
+src/services/AuthService.ts:131:9 - error TS2393: Duplicate function implementation.
+
+131   async logout(req: any, res: any): Promise<AuthResponse> {
+            ~~~~~~
+
+src/services/AuthService.ts:292:9 - error TS2393: Duplicate function implementation.
+
+292   async logout(userId: string): Promise<AuthResponse> {
+            ~~~~~~
+
+src/services/AutomatedReportService.ts:2:10 - error TS2614: Module '"../models/InventoryItem"' has no exported member 'InventoryItem'. Did you mean to use 'import InventoryItem from "../models/InventoryItem"' instead?
+
+2 import { InventoryItem } from '../models/InventoryItem';
+           ~~~~~~~~~~~~~
+
+src/services/AutomatedReportService.ts:3:10 - error TS2614: Module '"../models/ProductionOrder"' has no exported member 'ProductionOrder'. Did you mean to use 'import ProductionOrder from "../models/ProductionOrder"' instead?
+
+3 import { ProductionOrder } from '../models/ProductionOrder';
+           ~~~~~~~~~~~~~~~
+
+src/services/AutomatedReportService.ts:4:10 - error TS2614: Module '"../models/CustomerOrder"' has no exported member 'CustomerOrder'. Did you mean to use 'import CustomerOrder from "../models/CustomerOrder"' instead?
+
+4 import { CustomerOrder } from '../models/CustomerOrder';
+           ~~~~~~~~~~~~~
+
+src/services/AutomatedReportService.ts:5:10 - error TS2614: Module '"../models/FinancialTransaction"' has no exported member 'FinancialTransaction'. Did you mean to use 'import FinancialTransaction from "../models/FinancialTransaction"' instead?
+
+5 import { FinancialTransaction } from '../models/FinancialTransaction';
+           ~~~~~~~~~~~~~~~~~~~~
+
+src/services/AutomatedReportService.ts:6:10 - error TS2614: Module '"../models/Dispatch"' has no exported member 'Dispatch'. Did you mean to use 'import Dispatch from "../models/Dispatch"' instead?
+
+6 import { Dispatch } from '../models/Dispatch';
+           ~~~~~~~~
+
+src/services/AutomatedReportService.ts:7:10 - error TS2614: Module '"../models/Customer"' has no exported member 'Customer'. Did you mean to use 'import Customer from "../models/Customer"' instead?
+
+7 import { Customer } from '../models/Customer';
+           ~~~~~~~~
+
+src/services/AutomatedReportService.ts:8:10 - error TS2614: Module '"../models/Supplier"' has no exported member 'Supplier'. Did you mean to use 'import Supplier from "../models/Supplier"' instead?
+
+8 import { Supplier } from '../models/Supplier';
+           ~~~~~~~~
+
+src/services/AutomatedReportService.ts:9:10 - error TS2614: Module '"../models/StockMovement"' has no exported member 'StockMovement'. Did you mean to use 'import StockMovement from "../models/StockMovement"' instead?
+
+9 import { StockMovement } from '../models/StockMovement';
+           ~~~~~~~~~~~~~
+
+src/services/AutomatedReportService.ts:40:40 - error TS2551: Property 'createTransporter' does not exist on type 'typeof import("/Users/rim/Documents/Dhruval-Erp/server/node_modules/.pnpm/@types+nodemailer@6.4.17/node_modules/@types/nodemailer/index")'. Did you mean 'createTransport'?
+
+40     this.emailTransporter = nodemailer.createTransporter(emailConfig);
+                                          ~~~~~~~~~~~~~~~~~
+
+  node_modules/.pnpm/@types+nodemailer@6.4.17/node_modules/@types/nodemailer/index.d.ts:45:17
+    45 export function createTransport(
+                       ~~~~~~~~~~~~~~~
+    'createTransport' is declared here.
+
+src/services/AutomatedReportService.ts:69:53 - error TS2304: Cannot find name 'weekEnd'.
+
+69         this.getFinancialData(companyId, startDate, weekEnd),
+                                                       ~~~~~~~
+
+src/services/AutomatedReportService.ts:77:9 - error TS2740: Type '{ currentInventory: any; stockMovements: any; lowStockItems: any; newItems: any; }' is missing the following properties from type 'any[]': length, pop, push, concat, and 29 more.
+
+77         inventory,
+           ~~~~~~~~~
+
+  src/services/AutomatedReportService.ts:17:3
+    17   inventory: any[];
+         ~~~~~~~~~
+    The expected type comes from property 'inventory' which is declared here on type 'ReportData'
+
+src/services/AutomatedReportService.ts:78:9 - error TS2740: Type '{ totalOrders: any; completedOrders: any; pendingOrders: any; inProgressOrders: any; totalProduction: any; efficiency: number; }' is missing the following properties from type 'any[]': length, pop, push, concat, and 29 more.
+
+78         production,
+           ~~~~~~~~~~
+
+  src/services/AutomatedReportService.ts:18:3
+    18   production: any[];
+         ~~~~~~~~~~
+    The expected type comes from property 'production' which is declared here on type 'ReportData'
+
+src/services/AutomatedReportService.ts:79:9 - error TS2740: Type '{ totalOrders: any; totalRevenue: any; newCustomers: any; pendingPayments: any; orderStatuses: any; }' is missing the following properties from type 'any[]': length, pop, push, concat, and 29 more.
+
+79         sales,
+           ~~~~~
+
+  src/services/AutomatedReportService.ts:19:3
+    19   sales: any[];
+         ~~~~~
+    The expected type comes from property 'sales' which is declared here on type 'ReportData'
+
+src/services/AutomatedReportService.ts:80:9 - error TS2740: Type '{ totalIncome: any; totalExpenses: any; netProfit: number; transactions: any; categoryBreakdown: any; }' is missing the following properties from type 'any[]': length, pop, push, concat, and 29 more.
+
+80         financial,
+           ~~~~~~~~~
+
+  src/services/AutomatedReportService.ts:20:3
+    20   financial: any[];
+         ~~~~~~~~~
+    The expected type comes from property 'financial' which is declared here on type 'ReportData'
+
+src/services/AutomatedReportService.ts:81:9 - error TS2740: Type '{ totalDispatch: any; totalDeliveries: any; pendingDeliveries: any; rtoCount: any; dispatchStatuses: any; }' is missing the following properties from type 'any[]': length, pop, push, concat, and 29 more.
+
+81         logistics,
+           ~~~~~~~~~
+
+  src/services/AutomatedReportService.ts:21:3
+    21   logistics: any[];
+         ~~~~~~~~~
+    The expected type comes from property 'logistics' which is declared here on type 'ReportData'
+
+src/services/AutomatedReportService.ts:103:53 - error TS2304: Cannot find name 'endDate'.
+
+103         this.getFinancialData(companyId, weekStart, endDate),
+                                                        ~~~~~~~
+
+src/services/AutomatedReportService.ts:110:9 - error TS2740: Type '{ currentInventory: any; stockMovements: any; lowStockItems: any; newItems: any; }' is missing the following properties from type 'any[]': length, pop, push, concat, and 29 more.
+
+110         inventory,
+            ~~~~~~~~~
+
+  src/services/AutomatedReportService.ts:17:3
+    17   inventory: any[];
+         ~~~~~~~~~
+    The expected type comes from property 'inventory' which is declared here on type 'ReportData'
+
+src/services/AutomatedReportService.ts:111:9 - error TS2740: Type '{ totalOrders: any; completedOrders: any; pendingOrders: any; inProgressOrders: any; totalProduction: any; efficiency: number; }' is missing the following properties from type 'any[]': length, pop, push, concat, and 29 more.
+
+111         production,
+            ~~~~~~~~~~
+
+  src/services/AutomatedReportService.ts:18:3
+    18   production: any[];
+         ~~~~~~~~~~
+    The expected type comes from property 'production' which is declared here on type 'ReportData'
+
+src/services/AutomatedReportService.ts:112:9 - error TS2740: Type '{ totalOrders: any; totalRevenue: any; newCustomers: any; pendingPayments: any; orderStatuses: any; }' is missing the following properties from type 'any[]': length, pop, push, concat, and 29 more.
+
+112         sales,
+            ~~~~~
+
+  src/services/AutomatedReportService.ts:19:3
+    19   sales: any[];
+         ~~~~~
+    The expected type comes from property 'sales' which is declared here on type 'ReportData'
+
+src/services/AutomatedReportService.ts:113:9 - error TS2740: Type '{ totalIncome: any; totalExpenses: any; netProfit: number; transactions: any; categoryBreakdown: any; }' is missing the following properties from type 'any[]': length, pop, push, concat, and 29 more.
+
+113         financial,
+            ~~~~~~~~~
+
+  src/services/AutomatedReportService.ts:20:3
+    20   financial: any[];
+         ~~~~~~~~~
+    The expected type comes from property 'financial' which is declared here on type 'ReportData'
+
+src/services/AutomatedReportService.ts:114:9 - error TS2740: Type '{ totalDispatch: any; totalDeliveries: any; pendingDeliveries: any; rtoCount: any; dispatchStatuses: any; }' is missing the following properties from type 'any[]': length, pop, push, concat, and 29 more.
+
+114         logistics,
+            ~~~~~~~~~
+
+  src/services/AutomatedReportService.ts:21:3
+    21   logistics: any[];
+         ~~~~~~~~~
+    The expected type comes from property 'logistics' which is declared here on type 'ReportData'
+
+src/services/AutomatedReportService.ts:142:9 - error TS2740: Type '{ currentInventory: any; stockMovements: any; lowStockItems: any; newItems: any; }' is missing the following properties from type 'any[]': length, pop, push, concat, and 29 more.
+
+142         inventory,
+            ~~~~~~~~~
+
+  src/services/AutomatedReportService.ts:17:3
+    17   inventory: any[];
+         ~~~~~~~~~
+    The expected type comes from property 'inventory' which is declared here on type 'ReportData'
+
+src/services/AutomatedReportService.ts:143:9 - error TS2740: Type '{ totalOrders: any; completedOrders: any; pendingOrders: any; inProgressOrders: any; totalProduction: any; efficiency: number; }' is missing the following properties from type 'any[]': length, pop, push, concat, and 29 more.
+
+143         production,
+            ~~~~~~~~~~
+
+  src/services/AutomatedReportService.ts:18:3
+    18   production: any[];
+         ~~~~~~~~~~
+    The expected type comes from property 'production' which is declared here on type 'ReportData'
+
+src/services/AutomatedReportService.ts:144:9 - error TS2740: Type '{ totalOrders: any; totalRevenue: any; newCustomers: any; pendingPayments: any; orderStatuses: any; }' is missing the following properties from type 'any[]': length, pop, push, concat, and 29 more.
+
+144         sales,
+            ~~~~~
+
+  src/services/AutomatedReportService.ts:19:3
+    19   sales: any[];
+         ~~~~~
+    The expected type comes from property 'sales' which is declared here on type 'ReportData'
+
+src/services/AutomatedReportService.ts:145:9 - error TS2740: Type '{ totalIncome: any; totalExpenses: any; netProfit: number; transactions: any; categoryBreakdown: any; }' is missing the following properties from type 'any[]': length, pop, push, concat, and 29 more.
+
+145         financial,
+            ~~~~~~~~~
+
+  src/services/AutomatedReportService.ts:20:3
+    20   financial: any[];
+         ~~~~~~~~~
+    The expected type comes from property 'financial' which is declared here on type 'ReportData'
+
+src/services/AutomatedReportService.ts:146:9 - error TS2740: Type '{ totalDispatch: any; totalDeliveries: any; pendingDeliveries: any; rtoCount: any; dispatchStatuses: any; }' is missing the following properties from type 'any[]': length, pop, push, concat, and 29 more.
+
+146         logistics,
+            ~~~~~~~~~
+
+  src/services/AutomatedReportService.ts:21:3
+    21   logistics: any[];
+         ~~~~~~~~~
+    The expected type comes from property 'logistics' which is declared here on type 'ReportData'
+
+src/services/CronJobScheduler.ts:3:10 - error TS2614: Module '"../models/Company"' has no exported member 'Company'. Did you mean to use 'import Company from "../models/Company"' instead?
+
+3 import { Company } from '../models/Company';
+           ~~~~~~~
+
+src/services/CronJobScheduler.ts:511:7 - error TS2740: Type 'Map<string, ScheduledTask>' is missing the following properties from type 'any[]': length, pop, push, concat, and 24 more.
+
+511       tasks: cron.getTasks()
+          ~~~~~
+
+  src/services/CronJobScheduler.ts:508:38
+    508   getStatus(): { isRunning: boolean; tasks: any[] } {
+                                             ~~~~~
+    The expected type comes from property 'tasks' which is declared here on type '{ isRunning: boolean; tasks: any[]; }'
+
+
+Found 90 errors in 8 files.
+
+Errors  Files
+     2  src/controllers/AuthController.ts:44
+    17  src/controllers/ProductionDashboardController.ts:3
+    13  src/routes/v1/advanced-reports.ts:51
+    24  src/routes/v1/document-management.ts:51
+     4  src/services/AdvancedReportService.ts:41
+     2  src/services/AuthService.ts:131
+    26  src/services/AutomatedReportService.ts:2
+     2  src/services/CronJobScheduler.ts:3
+ ELIFECYCLE  Command failed with exit code 2.
+MacBookPro:server rim$ 

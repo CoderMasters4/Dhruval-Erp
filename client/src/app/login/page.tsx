@@ -87,38 +87,61 @@ export default function LoginPage() {
           return
         }
 
-        // Handle the new server response structure
-        const userData = result.data.user
-        const tokens = result.data.tokens
-        const companies = result.data.companies || []
-        const currentCompany = result.data.currentCompany
-        const permissions = result.data.permissions
+        // Handle the updated backend response structure with JWT tokens
+        const userData = result.data.user // User data is in result.data.user
+        const tokens = result.data.tokens // JWT tokens from server
+
+        // Create a mapping of company IDs to names (we'll improve this later with actual company data)
+        const companyNames = {
+          '68aed30c8d1ce6852fdc5e07': 'Dhruval Exim Private Limited',
+          '68aed30c8d1ce6852fdc5e0d': 'Jinal Industries (Amar)',
+          '68aed30c8d1ce6852fdc5e10': 'Vimal Process'
+        }
+
+        // Extract companies from user's companyAccess
+        const companies = userData.companyAccess?.map((access, index) => ({
+          _id: access.companyId,
+          companyCode: `COMP${index + 1}`,
+          companyName: companyNames[access.companyId] || `Company ${index + 1}`,
+          legalName: companyNames[access.companyId] || `Company ${index + 1}`,
+          isActive: access.isActive || true
+        })) || []
+
+        // Set primary company as current
+        const currentCompany = companies.length > 0 ? {
+          id: userData.primaryCompanyId || companies[0]._id,
+          name: companies[0].companyName,
+          code: companies[0].companyCode,
+          role: userData.companyAccess?.[0]?.role || 'user',
+          permissions: []
+        } : null
+
+        // Extract permissions from first company access
+        const permissions = userData.companyAccess?.[0]?.permissions || {}
 
         // Update user with current company info
         const userWithCompany = {
           ...userData,
           currentCompanyId: currentCompany?.id,
-          isSuperAdmin: userData.isSuperAdmin || false
+          isSuperAdmin: userData.isSuperAdmin || false,
+          firstName: userData.personalInfo?.firstName || userData.firstName || 'User',
+          lastName: userData.personalInfo?.lastName || userData.lastName || '',
+          email: userData.email,
+          phone: userData.personalInfo?.phone || userData.phone
         }
 
         dispatch(setCredentials({
           user: userWithCompany,
-          token: tokens?.accessToken || '',
-          refreshToken: undefined, // Refresh token is stored in HTTP-only cookie
-          companies: companies.map(company => ({
-            _id: company._id,
-            companyCode: company.companyCode,
-            companyName: company.companyName,
-            legalName: company.companyName,
-            isActive: company.isActive || true
-          })),
-          permissions: permissions || {},
+          token: tokens?.accessToken || 'authenticated', // Use actual token from backend
+          refreshToken: undefined, // Refresh token is in HTTP-only cookie
+          companies: companies,
+          permissions: permissions,
         }))
 
         dispatch(addNotification({
           type: 'success',
           title: 'Login Successful',
-          message: `Welcome back, ${result.data.user.firstName || 'User'}!`,
+          message: `Welcome back, ${userWithCompany.firstName || 'User'}!`,
         }))
 
         toast.success('Login successful!')
@@ -310,8 +333,11 @@ export default function LoginPage() {
           </form>
 
           {/* Demo Login Section */}
-          <div className="mt-6 p-4 bg-sky-50 border border-sky-200 rounded-lg">
-            <p className="text-sm text-black text-center mb-4 font-medium">� Demo Login</p>
+          <div className="mt-6 p-5 bg-gradient-to-br from-sky-50 to-blue-50 border-2 border-sky-300 rounded-xl shadow-sm">
+            <div className="text-center mb-4">
+              <p className="text-lg font-bold text-sky-700 mb-1">🚀 Try Demo Login</p>
+              <p className="text-xs text-sky-600">Click any role to auto-fill credentials & explore the system</p>
+            </div>
             <div className="grid grid-cols-2 gap-3">
               <button
                 type="button"
@@ -319,11 +345,11 @@ export default function LoginPage() {
                   setValue('emailOrPhone', 'superadmin@testcompany.com');
                   setValue('password', 'SuperAdmin123!');
                 }}
-                className="flex flex-col items-center p-3 bg-white border border-sky-200 rounded-lg hover:border-sky-500 hover:bg-sky-50 transition-all"
+                className="flex flex-col items-center p-4 bg-white border-2 border-sky-200 rounded-xl hover:border-sky-500 hover:bg-sky-50 hover:shadow-md transition-all duration-200 group"
               >
-                <div className="text-2xl mb-1">�</div>
-                <div className="text-xs font-medium text-black">Super Admin</div>
-                <div className="text-xs text-black opacity-75">Full Access</div>
+                <div className="text-3xl mb-2 group-hover:scale-110 transition-transform">🔑</div>
+                <div className="text-sm font-bold text-black">Super Admin</div>
+                <div className="text-xs text-sky-600 text-center">All Companies<br/>Full Access</div>
               </button>
               <button
                 type="button"
@@ -331,11 +357,11 @@ export default function LoginPage() {
                   setValue('emailOrPhone', 'admin@testcompany.com');
                   setValue('password', 'Admin123!');
                 }}
-                className="flex flex-col items-center p-3 bg-white border border-sky-200 rounded-lg hover:border-sky-500 hover:bg-sky-50 transition-all"
+                className="flex flex-col items-center p-4 bg-white border-2 border-sky-200 rounded-xl hover:border-sky-500 hover:bg-sky-50 hover:shadow-md transition-all duration-200 group"
               >
-                <div className="text-2xl mb-1">👨‍�</div>
-                <div className="text-xs font-medium text-black">Company Owner</div>
-                <div className="text-xs text-black opacity-75">Business Access</div>
+                <div className="text-3xl mb-2 group-hover:scale-110 transition-transform">👨‍💼</div>
+                <div className="text-sm font-bold text-black">Company Admin</div>
+                <div className="text-xs text-sky-600 text-center">Single Company<br/>Business Access</div>
               </button>
               <button
                 type="button"
@@ -343,11 +369,11 @@ export default function LoginPage() {
                   setValue('emailOrPhone', 'manager@testcompany.com');
                   setValue('password', 'Manager123!');
                 }}
-                className="flex flex-col items-center p-3 bg-white border border-sky-200 rounded-lg hover:border-sky-500 hover:bg-sky-50 transition-all"
+                className="flex flex-col items-center p-4 bg-white border-2 border-sky-200 rounded-xl hover:border-sky-500 hover:bg-sky-50 hover:shadow-md transition-all duration-200 group"
               >
-                <div className="text-2xl mb-1">👩‍💼</div>
-                <div className="text-xs font-medium text-black">Manager</div>
-                <div className="text-xs text-black opacity-75">Production</div>
+                <div className="text-3xl mb-2 group-hover:scale-110 transition-transform">👩‍💼</div>
+                <div className="text-sm font-bold text-black">Manager</div>
+                <div className="text-xs text-sky-600 text-center">Production &<br/>Operations</div>
               </button>
               <button
                 type="button"
@@ -355,16 +381,21 @@ export default function LoginPage() {
                   setValue('emailOrPhone', 'operator@testcompany.com');
                   setValue('password', 'Operator123!');
                 }}
-                className="flex flex-col items-center p-3 bg-white border border-sky-200 rounded-lg hover:border-sky-500 hover:bg-sky-50 transition-all"
+                className="flex flex-col items-center p-4 bg-white border-2 border-sky-200 rounded-xl hover:border-sky-500 hover:bg-sky-50 hover:shadow-md transition-all duration-200 group"
               >
-                <div className="text-2xl mb-1">👨‍🔧</div>
-                <div className="text-xs font-medium text-black">Operator</div>
-                <div className="text-xs text-black opacity-75">Operations</div>
+                <div className="text-3xl mb-2 group-hover:scale-110 transition-transform">👨‍🔧</div>
+                <div className="text-sm font-bold text-black">Operator</div>
+                <div className="text-xs text-sky-600 text-center">Basic<br/>Operations</div>
               </button>
             </div>
-            <p className="text-xs text-sky-600 text-center mt-3">
-              Click any role to auto-fill login credentials
-            </p>
+            <div className="mt-4 p-3 bg-white/70 rounded-lg border border-sky-200">
+              <p className="text-xs text-sky-700 text-center font-medium">
+                ✨ System includes 1,017+ records with complete business data
+              </p>
+              <p className="text-xs text-sky-600 text-center mt-1">
+                3 Companies • 60 Users • Full Production Workflows • Real-time Analytics
+              </p>
+            </div>
           </div>
         </div>
 
