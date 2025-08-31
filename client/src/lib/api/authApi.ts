@@ -111,7 +111,7 @@ export const authApi = baseApi.injectEndpoints({
     // Refresh token
     refreshToken: builder.mutation<LoginResponse, void>({
       query: () => ({
-        url: '/auth/refresh',
+        url: '/auth/refresh-token',
         method: 'POST',
       }),
     }),
@@ -215,7 +215,7 @@ export const authApi = baseApi.injectEndpoints({
     // Get all companies (Super Admin only)
     getAllCompanies: builder.query<{ success: boolean; data: Company[] }, void>({
       query: () => ({
-        url: '/companies/all',
+        url: '/companies',
         method: 'GET',
       }),
       providesTags: ['Company'],

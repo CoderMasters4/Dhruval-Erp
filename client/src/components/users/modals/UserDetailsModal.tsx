@@ -66,10 +66,21 @@ export default function UserDetailsModal({
     switch (role) {
       case 'super_admin':
         return 'bg-red-100 text-red-800 border-red-200'
-      case 'admin':
+      case 'owner':
         return 'bg-purple-100 text-purple-800 border-purple-200'
       case 'manager':
+      case 'production_manager':
         return 'bg-blue-100 text-blue-800 border-blue-200'
+      case 'operator':
+        return 'bg-green-100 text-green-800 border-green-200'
+      case 'helper':
+        return 'bg-emerald-100 text-emerald-800 border-emerald-200'
+      case 'accountant':
+        return 'bg-yellow-100 text-yellow-800 border-yellow-200'
+      case 'sales_executive':
+        return 'bg-indigo-100 text-indigo-800 border-indigo-200'
+      case 'security_guard':
+        return 'bg-orange-100 text-orange-800 border-orange-200'
       default:
         return 'bg-gray-100 text-gray-800 border-gray-200'
     }
@@ -106,22 +117,22 @@ export default function UserDetailsModal({
                   </div>
                 </div>
                 
-                {user.phone && (
+                {user.personalInfo?.phone && (
                   <div className="flex items-center gap-3 p-3 bg-white rounded-lg border border-sky-100">
                     <Phone className="w-5 h-5 text-sky-600" />
                     <div>
                       <p className="text-sm font-medium text-gray-600">Phone</p>
-                      <p className="text-black font-semibold">{user.phone}</p>
+                      <p className="text-black font-semibold">{user.personalInfo.phone}</p>
                     </div>
                   </div>
                 )}
                 
-                {user.department && (
+                {user.companyAccess?.[0]?.department && (
                   <div className="flex items-center gap-3 p-3 bg-white rounded-lg border border-sky-100">
                     <Building2 className="w-5 h-5 text-sky-600" />
                     <div>
                       <p className="text-sm font-medium text-gray-600">Department</p>
-                      <p className="text-black font-semibold">{user.department}</p>
+                      <p className="text-black font-semibold">{user.companyAccess[0].department}</p>
                     </div>
                   </div>
                 )}
@@ -148,7 +159,7 @@ export default function UserDetailsModal({
                   <Clock className="w-5 h-5 text-green-600" />
                   <div>
                     <p className="text-sm font-medium text-gray-600">Last Login</p>
-                    <p className="text-black font-semibold">{formatLastLogin(user.lastLogin)}</p>
+                    <p className="text-black font-semibold">{formatLastLogin(user.security?.lastLogin)}</p>
                   </div>
                 </div>
                 
@@ -171,9 +182,9 @@ export default function UserDetailsModal({
                     <p className="text-sm font-medium text-gray-600">Two-Factor Auth</p>
                     <p className={clsx(
                       'font-semibold',
-                      user.is2FAEnabled ? 'text-green-600' : 'text-gray-600'
+                      (user.is2FAEnabled || user.twoFactorEnabled) ? 'text-green-600' : 'text-gray-600'
                     )}>
-                      {user.is2FAEnabled ? 'Enabled' : 'Disabled'}
+                      {(user.is2FAEnabled || user.twoFactorEnabled) ? 'Enabled' : 'Disabled'}
                     </p>
                   </div>
                 </div>
@@ -181,7 +192,7 @@ export default function UserDetailsModal({
             </div>
 
             {/* Security Alerts */}
-            {(!user.isEmailVerified || user.loginAttempts && user.loginAttempts > 0) && (
+            {(!user.isEmailVerified || (user.security?.failedLoginAttempts && user.security.failedLoginAttempts > 0)) && (
               <div className="bg-yellow-50 rounded-xl p-6 border border-yellow-200">
                 <h3 className="text-lg font-semibold text-black mb-4 flex items-center">
                   <AlertTriangle className="w-5 h-5 mr-2 text-yellow-600" />
@@ -199,11 +210,11 @@ export default function UserDetailsModal({
                     </div>
                   )}
                   
-                  {user.loginAttempts && user.loginAttempts > 0 && (
+                  {user.security?.failedLoginAttempts && user.security.failedLoginAttempts > 0 && (
                     <div className="flex items-center gap-3 p-3 bg-white rounded-lg border border-yellow-100">
                       <AlertTriangle className="w-5 h-5 text-yellow-600" />
                       <div>
-                        <p className="text-sm font-medium text-yellow-800">Failed login attempts: {user.loginAttempts}</p>
+                        <p className="text-sm font-medium text-yellow-800">Failed login attempts: {user.security.failedLoginAttempts}</p>
                         <p className="text-xs text-yellow-600">Monitor for suspicious activity</p>
                       </div>
                     </div>
@@ -228,13 +239,13 @@ export default function UserDetailsModal({
           onClick={onToggle2FA}
           className={clsx(
             'px-6 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-200 flex items-center',
-            user.is2FAEnabled
+            (user.is2FAEnabled || user.twoFactorEnabled)
               ? 'bg-orange-500 hover:bg-orange-600 text-white'
               : 'bg-purple-500 hover:bg-purple-600 text-white'
           )}
         >
           <Shield className="w-4 h-4 mr-2" />
-          {user.is2FAEnabled ? 'Disable 2FA' : 'Enable 2FA'}
+          {(user.is2FAEnabled || user.twoFactorEnabled) ? 'Disable 2FA' : 'Enable 2FA'}
         </Button>
 
         <Button

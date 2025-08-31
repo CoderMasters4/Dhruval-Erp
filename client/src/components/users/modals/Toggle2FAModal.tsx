@@ -29,7 +29,7 @@ export default function Toggle2FAModal({ isOpen, onClose, onSuccess, user }: Tog
 
   const [toggle2FA, { isLoading }] = useToggle2FAMutation()
 
-  const isEnabling = !user.is2FAEnabled
+  const isEnabling = !(user.is2FAEnabled || user.twoFactorEnabled)
 
   // Helper function to get user ID
   const getUserId = (user: UserType) => user.id || user._id
@@ -106,12 +106,12 @@ export default function Toggle2FAModal({ isOpen, onClose, onSuccess, user }: Tog
                 <p className="text-sm text-gray-600">{user.email}</p>
                 <div className="flex items-center gap-2 mt-1">
                   <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold ${
-                    user.is2FAEnabled 
+                    (user.is2FAEnabled || user.twoFactorEnabled)
                       ? 'bg-green-100 text-green-800 border border-green-200'
                       : 'bg-gray-100 text-gray-800 border border-gray-200'
                   }`}>
                     <Shield className="w-3 h-3 mr-1" />
-                    2FA {user.is2FAEnabled ? 'Enabled' : 'Disabled'}
+                    2FA {(user.is2FAEnabled || user.twoFactorEnabled) ? 'Enabled' : 'Disabled'}
                   </span>
                 </div>
               </div>

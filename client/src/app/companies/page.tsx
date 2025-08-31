@@ -70,8 +70,11 @@ export default function CompaniesPage() {
       company.registrationDetails?.gstin?.toLowerCase().includes(filters.search.toLowerCase())
 
     const matchesStatus = filters.status === 'all' ||
-                         (filters.status === 'active' && company.isActive) ||
-                         (filters.status === 'inactive' && !company.isActive)
+                         (filters.status === 'active' && company.status === 'active') ||
+                         (filters.status === 'inactive' && company.status === 'inactive') ||
+                         (filters.status === 'suspended' && company.status === 'suspended') ||
+                         (filters.status === 'pending_approval' && company.status === 'pending_approval') ||
+                         (filters.status === 'under_review' && company.status === 'under_review')
 
     const matchesLocation = !filters.location ||
       company.addresses?.registeredOffice?.city?.toLowerCase().includes(filters.location.toLowerCase()) ||
@@ -92,8 +95,11 @@ export default function CompaniesPage() {
   // Stats calculation
   const stats = {
     totalCompanies: companies.length,
-    activeCompanies: companies.filter((c: any) => c.isActive).length,
-    inactiveCompanies: companies.filter((c: any) => !c.isActive).length,
+    activeCompanies: companies.filter((c: any) => c.status === 'active').length,
+    inactiveCompanies: companies.filter((c: any) => c.status === 'inactive').length,
+    suspendedCompanies: companies.filter((c: any) => c.status === 'suspended').length,
+    pendingApproval: companies.filter((c: any) => c.status === 'pending_approval').length,
+    underReview: companies.filter((c: any) => c.status === 'under_review').length,
     newThisMonth: companies.filter((c: any) =>
       c.createdAt && new Date(c.createdAt).getMonth() === new Date().getMonth()
     ).length

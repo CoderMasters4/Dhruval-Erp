@@ -321,6 +321,22 @@ const CompanyList: React.FC<CompanyListProps> = ({
                               </>
                             )}
                           </div>
+                          {company.status && (
+                            <div className={clsx(
+                              'inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold',
+                              company.status === 'active' ? 'bg-blue-100 text-blue-700 border border-blue-200' :
+                              company.status === 'suspended' ? 'bg-red-100 text-red-700 border border-red-200' :
+                              company.status === 'pending_approval' ? 'bg-yellow-100 text-yellow-700 border border-yellow-200' :
+                              company.status === 'under_review' ? 'bg-purple-100 text-purple-700 border border-purple-200' :
+                              'bg-gray-100 text-gray-700 border border-gray-200'
+                            )}>
+                              {company.status === 'active' ? 'Active' :
+                               company.status === 'suspended' ? 'Suspended' :
+                               company.status === 'pending_approval' ? 'Pending Approval' :
+                               company.status === 'under_review' ? 'Under Review' :
+                               'Inactive'}
+                            </div>
+                          )}
                           <span className="text-xs text-gray-600">
                             {company.userCount || 0} users
                           </span>

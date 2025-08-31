@@ -42,10 +42,9 @@ router.get('/', authenticate, async (req: Request, res: Response) => {
   try {
     logger.info('GET /api/v1/companies - Fetching companies list');
 
-    // For now, return a simple response to test the endpoint
+    // Return companies with proper structure including status
     const companies = await Company.find({ isActive: true })
-      .select('companyName companyCode contactInfo addresses registrationDetails')
-      .limit(10)
+      .select('companyName companyCode contactInfo addresses registrationDetails status isActive createdAt')
       .sort({ createdAt: -1 });
 
     res.status(200).json({
@@ -188,9 +187,10 @@ router.post('/', authenticate, async (req: Request, res: Response) => {
       companyCode: companyCode || companyName.toUpperCase().replace(/\s+/g, ''),
       legalName: companyName,
       contactInfo: {
-        emails: [{ email, type: 'primary', isPrimary: true }],
-        phones: phone ? [{ number: phone, type: 'primary', isPrimary: true }] : [],
-        website: website || ''
+        emails: [{ type: email, label: 'Primary' }],
+        phones: phone ? [{ type: phone, label: 'Primary' }] : [],
+        website: website || '',
+        socialMedia: {}
       },
       addresses: {
         registeredOffice: {
@@ -198,22 +198,21 @@ router.post('/', authenticate, async (req: Request, res: Response) => {
           city: address?.city || '',
           state: address?.state || '',
           country: address?.country || 'India',
-          pincode: address?.pincode || '',
-          isActive: true
+          pincode: address?.pincode || ''
         },
         factoryAddress: {
           street: address?.street || '',
           city: address?.city || '',
           state: address?.state || '',
           country: address?.country || 'India',
-          pincode: address?.pincode || '',
-          isActive: true
+          pincode: address?.pincode || ''
         },
         warehouseAddresses: []
       },
       registrationDetails: {
         gstin: gstin || '',
-        pan: pan || ''
+        pan: pan || '',
+        registrationDate: new Date()
       },
       businessConfig: {
         currency: 'INR',
@@ -232,6 +231,7 @@ router.post('/', authenticate, async (req: Request, res: Response) => {
           finishedGoodsRate: 18
         }
       },
+      status: 'active',
       createdBy: user.id,
       isActive: true
     });

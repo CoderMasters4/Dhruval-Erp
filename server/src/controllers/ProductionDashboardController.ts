@@ -77,4 +77,45 @@ export class ProductionDashboardController {
   async updateDowntimeAnalysis(req: any, res: any) {
     res.status(501).json({ success: false, message: 'Not implemented yet' });
   }
+
+  // Add missing methods that are called in routes
+  async addDailySummary(req: any, res: any) {
+    res.status(501).json({ success: false, message: 'Not implemented yet' });
+  }
+
+  async getPrintingStatus(req: any, res: any) {
+    res.status(501).json({ success: false, message: 'Not implemented yet' });
+  }
+
+  async updatePrintingStatus(req: any, res: any) {
+    res.status(501).json({ success: false, message: 'Not implemented yet' });
+  }
+
+  async addAlert(req: any, res: any) {
+    res.status(501).json({ success: false, message: 'Not implemented yet' });
+  }
+
+  async acknowledgeAlert(req: any, res: any) {
+    res.status(501).json({ success: false, message: 'Not implemented yet' });
+  }
+
+  async resolveAlert(req: any, res: any) {
+    res.status(501).json({ success: false, message: 'Not implemented yet' });
+  }
+
+  async getPerformanceMetrics(req: any, res: any) {
+    res.status(501).json({ success: false, message: 'Not implemented yet' });
+  }
+
+  async updatePerformanceMetrics(req: any, res: any) {
+    res.status(501).json({ success: false, message: 'Not implemented yet' });
+  }
+
+  async getDashboardConfig(req: any, res: any) {
+    res.status(501).json({ success: false, message: 'Not implemented yet' });
+  }
+
+  async updateDashboardConfig(req: any, res: any) {
+    res.status(501).json({ success: false, message: 'Not implemented yet' });
+  }
 }

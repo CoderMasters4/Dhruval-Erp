@@ -23,6 +23,10 @@ import v1VehiclesRoutes from './v1/vehicles';
 import v1SecurityLogsRoutes from './v1/security-logs';
 import v1AuditLogsRoutes from './v1/audit-logs';
 import v1BusinessAnalyticsRoutes from './v1/business-analytics';
+import v1AnalyticsRoutes from './v1/analytics';
+import v1SalesAnalyticsRoutes from './v1/salesAnalytics';
+import v1PurchaseAnalyticsRoutes from './v1/purchaseAnalytics';
+import v1ProductionTrackingRoutes from './v1/productionTracking';
 import v1BoilerMonitoringRoutes from './v1/boiler-monitoring';
 import v1ElectricityMonitoringRoutes from './v1/electricity-monitoring';
 import v1HospitalityRoutes from './v1/hospitality';
@@ -33,9 +37,11 @@ import v1AttendanceRoutes from './v1/attendance';
 import v1BatchesRoutes from './v1/batches';
 import v1EmployeesRoutes from './v1/employees';
 import v1ShiftsRoutes from './v1/shifts';
-// import v1ProductionDashboardRoutes from './v1/production-dashboard';
-// import v1AdvancedReportsRoutes from './v1/advanced-reports';
-// import v1DocumentManagementRoutes from './v1/document-management';
+import v1ProductionDashboardRoutes from './v1/production-dashboard';
+import v1AdvancedReportsRoutes from './v1/advanced-reports';
+import v1DocumentManagementRoutes from './v1/document-management';
+import v1DashboardRoutes from './v1/dashboard';
+import v1OrdersRoutes from './v1/orders';
 
 const router = Router();
 
@@ -95,6 +101,10 @@ router.get('/info', (req, res) => {
       'GET /api/v1/security-logs - Security logging (auth required)',
       'GET /api/v1/audit-logs - Audit trail (auth required)',
       'GET /api/v1/business-analytics - Business analytics (auth required)',
+      'GET /api/v1/analytics - Comprehensive analytics & reports (auth required)',
+      'GET /api/v1/sales-analytics - Customer-wise sales analytics (auth required)',
+      'GET /api/v1/purchase-analytics - Supplier-wise purchase analytics (auth required)',
+      'GET /api/v1/production-tracking - Real-time production tracking (auth required)',
       'GET /api/v1/boiler-monitoring - Boiler monitoring (auth required)',
       'GET /api/v1/electricity-monitoring - Electricity monitoring (auth required)',
       'GET /api/v1/hospitality - Hospitality management (auth required)',
@@ -135,6 +145,10 @@ router.use('/users', v1UsersRoutes); // ✅ WORKING: Users route working
 router.use('/customers', v1CustomersRoutes); // ❌ HANGING: Customers route also causing hang
 router.use('/suppliers', v1SuppliersRoutes); // ✅ TESTING: Testing suppliers separately
 
+// Dashboard and orders
+router.use('/dashboard', v1DashboardRoutes);
+router.use('/orders', v1OrdersRoutes);
+
 // Inventory and production
 router.use('/inventory', v1InventoryRoutes);
 router.use('/production', v1ProductionRoutes);
@@ -163,6 +177,10 @@ router.use('/shifts', v1ShiftsRoutes);
 router.use('/boiler-monitoring', v1BoilerMonitoringRoutes);
 router.use('/electricity-monitoring', v1ElectricityMonitoringRoutes);
 router.use('/business-analytics', v1BusinessAnalyticsRoutes);
+router.use('/analytics', v1AnalyticsRoutes);
+router.use('/sales-analytics', v1SalesAnalyticsRoutes);
+router.use('/purchase-analytics', v1PurchaseAnalyticsRoutes);
+router.use('/production-tracking', v1ProductionTrackingRoutes);
 router.use('/security-logs', v1SecurityLogsRoutes);
 router.use('/audit-logs', v1AuditLogsRoutes);
 
@@ -172,8 +190,9 @@ router.use('/dispatch', v1DispatchRoutes);
 router.use('/reports', v1ReportsRoutes);
 
 // Advanced features
-// router.use('/production-dashboard', v1ProductionDashboardRoutes); // 🔍 TESTING: Temporarily disabled to isolate hanging issue
-// router.use('/advanced-reports', v1AdvancedReportsRoutes); // 🔍 ISSUE: Still causing infinite restart loop
-// router.use('/document-management', v1DocumentManagementRoutes); // 🔍 TESTING: Temporarily disabled to isolate hanging issue
+
+router.use('/production-dashboard', v1ProductionDashboardRoutes); // 🔍 TESTING: Temporarily disabled to isolate hanging issue
+router.use('/advanced-reports', v1AdvancedReportsRoutes); // 🔍 ISSUE: Still causing infinite restart loop
+router.use('/document-management', v1DocumentManagementRoutes); // 🔍 TESTING: Temporarily disabled to isolate hanging issue
 
 export default router;

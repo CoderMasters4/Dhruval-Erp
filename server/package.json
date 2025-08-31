@@ -16,7 +16,7 @@
     "@/validators": "dist/validators"
   },
   "scripts": {
-    "dev": "dotenvx run --env-file=.env.local -- nodemon src/server.ts",
+    "dev": "nodemon -r dotenv/config src/server.ts dotenv_config_path=.env.local",
     "build": "tsc",
     "start": "node -r tsconfig-paths/register dist/start.js",
     "start:prod": "NODE_ENV=production node -r tsconfig-paths/register dist/start.js",

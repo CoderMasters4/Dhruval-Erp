@@ -34,6 +34,8 @@ class AuthService {
     try {
       const { username, password, companyCode } = credentials;
 
+      console.log('AuthService: Login attempt for username:', username);
+
       // Find user by username, email, or phone
       const user = await User.findOne({
         $or: [
@@ -45,6 +47,7 @@ class AuthService {
       });
 
       if (!user) {
+        console.log('AuthService: User not found for username:', username);
         logger.warn('Login attempt with invalid username', {
           username,
           ip: req.ip,
@@ -58,10 +61,13 @@ class AuthService {
         };
       }
 
+      console.log('AuthService: User found:', user.username, 'ID:', user._id);
+
       // Verify password
       const isPasswordValid = await user.comparePassword(password);
       
       if (!isPasswordValid) {
+        console.log('AuthService: Invalid password for user:', user.username);
         logger.warn('Login attempt with invalid password', {
           userId: user._id,
           username: user.username,
@@ -75,6 +81,8 @@ class AuthService {
           message: 'Username or password is incorrect'
         };
       }
+
+      console.log('AuthService: Password verified successfully for user:', user.username);
 
       // Log successful login
       logger.info('Successful login', {
@@ -94,14 +102,27 @@ class AuthService {
         role: user.companyAccess?.[0]?.role || 'user'
       };
 
+      console.log('AuthService: Generating tokens for user:', user._id);
+
       const tokens = generateTokenPair(tokenPayload);
 
+      console.log('AuthService: Generated tokens:', {
+        accessTokenLength: tokens.accessToken.length,
+        refreshTokenLength: tokens.refreshToken.length,
+        userId: user._id
+      });
+
       // Set tokens as HTTP-only cookies
+      console.log('AuthService: Setting cookies...');
       setTokenCookies(res, tokens);
+
+      console.log('AuthService: Cookies set, preparing response');
 
       // Remove sensitive data from response
       const userResponse = user.toObject();
       delete userResponse.password;
+
+      console.log('AuthService: Login successful, returning response');
 
       return {
         success: true,
@@ -110,13 +131,13 @@ class AuthService {
           user: userResponse,
           tokens: {
             accessToken: tokens.accessToken,
-            expiresIn: '15m'
+            expiresIn: '15d'
           }
         }
       };
 
     } catch (error) {
-      logger.error('Error in login service:', error);
+      console.error('AuthService: Error in login service:', error);
       return {
         success: false,
         error: 'Internal server error',
@@ -265,24 +286,87 @@ class AuthService {
   }
 
   /**
-   * Refresh access token (placeholder for now)
+   * Refresh access token
    */
   async refreshToken(refreshToken: string): Promise<AuthResponse> {
     try {
-      // For now, just return a placeholder response
-      // In a real implementation, you would verify the refresh token
-      return {
-        success: false,
-        error: 'Not implemented',
-        message: 'Token refresh not implemented yet'
+      console.log('AuthService: Processing refresh token request');
+      
+      // Verify the refresh token
+      const decoded = await this.verifyRefreshToken(refreshToken);
+      
+      if (!decoded) {
+        console.log('AuthService: Invalid refresh token');
+        return {
+          success: false,
+          error: 'Invalid refresh token',
+          message: 'Refresh token is invalid or expired'
+        };
+      }
+
+      console.log('AuthService: Refresh token verified for user:', decoded.userId);
+
+      // Get user from database
+      const user = await User.findById(decoded.userId).select('-password');
+      
+      if (!user || !user.isActive) {
+        console.log('AuthService: User not found or inactive:', decoded.userId);
+        return {
+          success: false,
+          error: 'User not found',
+          message: 'User account is inactive or not found'
+        };
+      }
+
+      console.log('AuthService: User found:', user.username);
+
+      // Generate new access token
+      const tokenPayload: JWTPayload = {
+        userId: user._id.toString(),
+        username: user.username,
+        email: user.email,
+        isSuperAdmin: user.isSuperAdmin || false,
+        companyId: user.primaryCompanyId?.toString(),
+        role: user.companyAccess?.[0]?.role || 'user'
       };
+
+      const newAccessToken = generateTokenPair(tokenPayload).accessToken;
+
+      // Log successful token refresh
+      console.log('AuthService: Token refresh successful for user:', user.username);
+
+      return {
+        success: true,
+        message: 'Token refreshed successfully',
+        data: {
+          accessToken: newAccessToken,
+          expiresIn: '15d',
+          userId: user._id.toString()
+        }
+      };
+
     } catch (error) {
-      logger.error('Error refreshing token:', error);
+      console.error('AuthService: Error refreshing token:', error);
       return {
         success: false,
         error: 'Internal server error',
         message: 'Token refresh failed'
       };
+    }
+  }
+
+  /**
+   * Verify refresh token
+   */
+  private async verifyRefreshToken(token: string): Promise<any> {
+    try {
+      // Use the proper JWT verification function from the jwt utility
+      const { verifyRefreshToken } = require('@/utils/jwt');
+      const decoded = verifyRefreshToken(token);
+      return decoded;
+    } catch (error) {
+      console.error('AuthService: Error verifying refresh token:', error);
+      return null;
     }
   }
 

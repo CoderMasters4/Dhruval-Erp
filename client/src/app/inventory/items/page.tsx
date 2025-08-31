@@ -65,8 +65,16 @@ export default function InventoryItemsPage() {
   const [updateItem] = useUpdateInventoryItemMutation()
   const [deleteItem] = useDeleteInventoryItemMutation()
 
-  const items = inventoryData?.data || []
-  const pagination = inventoryData?.pagination
+  const items = inventoryData?.data?.data || []
+  const rawPagination = inventoryData?.data?.pagination
+  
+  // Convert pagination structure to match DataTable expectations
+  const pagination = rawPagination ? {
+    page: rawPagination.page,
+    limit: rawPagination.limit,
+    total: rawPagination.total,
+    pages: rawPagination.totalPages
+  } : undefined
 
   // Form fields for create/edit
   const itemFields = [
@@ -375,7 +383,7 @@ export default function InventoryItemsPage() {
         {/* New Header */}
         <InventoryHeader
           title="Inventory Items"
-          description={`Manage and track all inventory items (${items.length} items)`}
+          description={`Manage and track all inventory items (${items?.length || 0} items)`}
           icon={<Package className="h-6 w-6 text-white" />}
           showRefresh={true}
           onRefresh={() => window.location.reload()}

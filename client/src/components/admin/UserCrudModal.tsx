@@ -72,16 +72,21 @@ export function UserCrudModal({
     password: '',
     confirmPassword: '',
     companyId: '',
-    role: 'user',
+    role: 'helper',
     department: '',
     designation: '',
     isActive: true
   })
 
   const roles = [
-    { value: 'user', label: 'User' },
+    { value: 'helper', label: 'Helper' },
+    { value: 'operator', label: 'Operator' },
+    { value: 'production_manager', label: 'Production Manager' },
     { value: 'manager', label: 'Manager' },
-    { value: 'admin', label: 'Admin' },
+    { value: 'accountant', label: 'Accountant' },
+    { value: 'sales_executive', label: 'Sales Executive' },
+    { value: 'security_guard', label: 'Security Guard' },
+    { value: 'owner', label: 'Owner' },
     ...(currentUser?.isSuperAdmin ? [{ value: 'super_admin', label: 'Super Admin' }] : [])
   ]
 
@@ -97,7 +102,7 @@ export function UserCrudModal({
           password: '',
           confirmPassword: '',
           companyId: user.companyAccess?.[0]?.companyId || '',
-          role: user.companyAccess?.[0]?.role || 'user',
+          role: user.companyAccess?.[0]?.role || 'helper',
           department: user.companyAccess?.[0]?.department || '',
           designation: user.companyAccess?.[0]?.designation || '',
           isActive: user.isActive ?? true

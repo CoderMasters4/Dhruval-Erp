@@ -23,6 +23,13 @@ router.post('/', customerController.createCustomer.bind(customerController));
 router.get('/', customerController.getCustomersByCompany.bind(customerController));
 
 /**
+ * @route   GET /api/v2/customers/all
+ * @desc    Get all customers across companies (Super Admin only)
+ * @access  Private
+ */
+router.get('/all', customerController.getAllCustomers.bind(customerController));
+
+/**
  * @route   GET /api/v2/customers/search
  * @desc    Search customers
  * @access  Private

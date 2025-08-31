@@ -1,0 +1,95 @@
+npx tsc --noEmit --skipLibCheck
+src/app/inventory/movements/page.tsx:505:35 - error TS2339: Property 'totalPages' does not exist on type '{ page: number; limit: number; total: number; pages: number; }'.
+
+505         {pagination && pagination.totalPages > 1 && (
+                                      ~~~~~~~~~~
+
+src/app/inventory/movements/page.tsx:520:57 - error TS2339: Property 'totalPages' does not exist on type '{ page: number; limit: number; total: number; pages: number; }'.
+
+520                   Page {pagination.page} of {pagination.totalPages}
+                                                            ~~~~~~~~~~
+
+src/app/inventory/movements/page.tsx:524:48 - error TS2339: Property 'totalPages' does not exist on type '{ page: number; limit: number; total: number; pages: number; }'.
+
+524                   disabled={page >= pagination.totalPages}
+                                                   ~~~~~~~~~~
+
+src/app/inventory/movements/page.tsx:586:20 - error TS2304: Cannot find name 'Button'.
+
+586                   <Button
+                       ~~~~~~
+
+src/app/inventory/movements/page.tsx:592:21 - error TS2304: Cannot find name 'Button'.
+
+592                   </Button>
+                        ~~~~~~
+
+src/app/inventory/movements/page.tsx:593:20 - error TS2304: Cannot find name 'Button'.
+
+593                   <Button
+                       ~~~~~~
+
+src/app/inventory/movements/page.tsx:609:21 - error TS2304: Cannot find name 'Button'.
+
+609                   </Button>
+                        ~~~~~~
+
+src/components/inventory/StockMovementForm.tsx:71:17 - error TS7006: Parameter 'prev' implicitly has an 'any' type.
+
+71       setErrors(prev => ({
+                   ~~~~
+
+src/components/inventory/StockMovementForm.tsx:83:12 - error TS7053: Element implicitly has an 'any' type because expression of type 'string' can't be used to index type '{ movementType: any; itemId: any; quantity: any; fromLocation: any; toLocation: any; referenceDocument: { type: any; number: any; date: any; }; notes: any; movementDate: string; requiresApproval: any; priority: any; }'.
+  No index signature with a parameter of type 'string' was found on type '{ movementType: any; itemId: any; quantity: any; fromLocation: any; toLocation: any; referenceDocument: { type: any; number: any; date: any; }; notes: any; movementDate: string; requiresApproval: any; priority: any; }'.
+
+83         ...prev[parentField],
+              ~~~~~~~~~~~~~~~~~
+
+src/components/inventory/StockMovementForm.tsx:262:62 - error TS2551: Property 'location' does not exist on type 'InventoryItem'. Did you mean 'locations'?
+
+262                   <p className="text-gray-900">{selectedItem.location || 'N/A'}</p>
+                                                                 ~~~~~~~~
+
+  src/lib/api/inventoryApi.ts:91:3
+    91   locations: string[]
+         ~~~~~~~~~
+    'locations' is declared here.
+
+src/components/warehouses/WarehouseForm.tsx:119:12 - error TS2304: Cannot find name 'isSuperAdmin'.
+
+119       if (!isSuperAdmin) return
+               ~~~~~~~~~~~~
+
+src/components/warehouses/WarehouseForm.tsx:121:7 - error TS2304: Cannot find name 'setLoadingCompanies'.
+
+121       setLoadingCompanies(true)
+          ~~~~~~~~~~~~~~~~~~~
+
+src/components/warehouses/WarehouseForm.tsx:134:13 - error TS2552: Cannot find name 'setCompanies'. Did you mean 'fetchCompanies'?
+
+134             setCompanies(data.data || [])
+                ~~~~~~~~~~~~
+
+  src/components/warehouses/WarehouseForm.tsx:118:11
+    118     const fetchCompanies = async () => {
+                  ~~~~~~~~~~~~~~
+    'fetchCompanies' is declared here.
+
+src/components/warehouses/WarehouseForm.tsx:140:9 - error TS2304: Cannot find name 'setLoadingCompanies'.
+
+140         setLoadingCompanies(false)
+            ~~~~~~~~~~~~~~~~~~~
+
+src/components/warehouses/WarehouseForm.tsx:145:7 - error TS2304: Cannot find name 'isSuperAdmin'.
+
+145   }, [isSuperAdmin])
+          ~~~~~~~~~~~~
+
+
+Found 15 errors in 3 files.
+
+Errors  Files
+     7  src/app/inventory/movements/page.tsx:505
+     3  src/components/inventory/StockMovementForm.tsx:71
+     5  src/components/warehouses/WarehouseForm.tsx:119
+rim@rims-MacBook-Pro client % 

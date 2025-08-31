@@ -15,39 +15,95 @@ interface CustomerStatsProps {
   customers: Customer[]
   totalCustomers?: number
   isLoading: boolean
+  currentCompany?: string
+  isSuperAdmin?: boolean
 }
 
-export default function CustomerStats({ customers, totalCustomers, isLoading }: CustomerStatsProps) {
-  // Calculate stats from customers data
-  const activeCustomers = customers.filter(customer => customer.isActive).length
-  const inactiveCustomers = customers.filter(customer => !customer.isActive).length
-  const businessCustomers = customers.filter(customer => customer.customerType === 'business').length
-  const individualCustomers = customers.filter(customer => customer.customerType === 'individual').length
+export default function CustomerStats({ customers, totalCustomers, isLoading, currentCompany, isSuperAdmin }: CustomerStatsProps) {
+  // Ensure customers is an array
+  const customersArray = Array.isArray(customers) ? customers : []
   
-  // Calculate totals
-  const totalOrders = customers.reduce((sum, customer) => sum + (customer.totalOrders || 0), 0)
-  const totalRevenue = customers.reduce((sum, customer) => sum + (customer.totalSpent || 0), 0)
-  const averageOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0
+  // Basic counts
+  const activeCustomers = customersArray.filter(customer => customer.isActive).length
+  const inactiveCustomers = customersArray.filter(customer => !customer.isActive).length
+  
+  // Business type analysis
+  const businessTypes = customersArray.reduce((acc, customer) => {
+    const type = customer.businessInfo?.businessType || 'unknown'
+    acc[type] = (acc[type] || 0) + 1
+    return acc
+  }, {} as Record<string, number>)
+  
+  const privateLimited = businessTypes['private_limited'] || 0
+  const publicLimited = businessTypes['public_limited'] || 0
+  const proprietorship = businessTypes['proprietorship'] || 0
+  const partnership = businessTypes['partnership'] || 0
+  const individual = businessTypes['individual'] || 0
+  
+  // Industry analysis
+  const industries = customersArray.reduce((acc, customer) => {
+    const industry = customer.businessInfo?.industry || 'Unknown'
+    acc[industry] = (acc[industry] || 0) + 1
+    return acc
+  }, {} as Record<string, number>)
+  
+  const topIndustries = Object.entries(industries)
+    .sort(([,a], [,b]) => (b as number) - (a as number))
+    .slice(0, 3)
+    .map(([industry, count]) => ({ industry, count }))
+  
+  // Financial analysis
+  const totalOrders = customersArray.reduce((sum, customer) => 
+    sum + (customer.purchaseHistory?.totalOrders || 0), 0
+  )
+  const totalOrderValue = customersArray.reduce((sum, customer) => 
+    sum + (customer.purchaseHistory?.totalOrderValue || 0), 0
+  )
+  const averageOrderValue = totalOrders > 0 ? totalOrderValue / totalOrders : 0
+  
+  // Customer relationship analysis
+  const customerTypes = customersArray.reduce((acc, customer) => {
+    const type = customer.relationship?.customerType || 'unknown'
+    acc[type] = (acc[type] || 0) + 1
+    return acc
+  }, {} as Record<string, number>)
+  
+  const prospects = customerTypes['prospect'] || 0
+  const regular = customerTypes['regular'] || 0
+  const vip = customerTypes['vip'] || 0
+  
+  // Compliance analysis
+  const kycPending = customersArray.filter(customer => 
+    customer.compliance?.kycStatus === 'pending'
+  ).length
+  const kycCompleted = customersArray.filter(customer => 
+    customer.compliance?.kycStatus === 'completed'
+  ).length
   
   // Recent customers (last 30 days)
   const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
-  const recentCustomers = customers.filter(customer => 
+  const recentCustomers = customersArray.filter(customer => 
     new Date(customer.createdAt) > thirtyDaysAgo
   ).length
 
+  // Company-specific stats
+  const companyCustomers = currentCompany && !isSuperAdmin 
+    ? customersArray.filter(customer => customer.company === currentCompany)
+    : customersArray
+  
   // Use provided totalCustomers or calculate from customers array
-  const actualTotalCustomers = totalCustomers || customers.length
+  const actualTotalCustomers = totalCustomers || companyCustomers.length
 
   const stats = [
     {
-      title: 'Total Customers',
+      title: isSuperAdmin ? 'Total Customers' : 'Company Customers',
       value: actualTotalCustomers,
       icon: Users,
       color: 'bg-sky-500',
       bgColor: 'bg-sky-50',
       borderColor: 'border-sky-200',
       textColor: 'text-sky-600',
-      change: '+12%',
+      change: `${activeCustomers > 0 ? Math.round((activeCustomers / actualTotalCustomers) * 100) : 0}%`,
       changeColor: 'text-green-600'
     },
     {
@@ -58,19 +114,19 @@ export default function CustomerStats({ customers, totalCustomers, isLoading }: 
       bgColor: 'bg-green-50',
       borderColor: 'border-green-200',
       textColor: 'text-green-600',
-      change: '+8%',
+      change: `${recentCustomers > 0 ? Math.round((recentCustomers / actualTotalCustomers) * 100) : 0}%`,
       changeColor: 'text-green-600'
     },
     {
-      title: 'Business Customers',
-      value: businessCustomers,
+      title: 'Private Limited',
+      value: privateLimited,
       icon: Building2,
       color: 'bg-blue-500',
       bgColor: 'bg-blue-50',
       borderColor: 'border-blue-200',
       textColor: 'text-blue-600',
-      change: '+15%',
-      changeColor: 'text-green-600'
+      change: `${privateLimited > 0 ? Math.round((privateLimited / actualTotalCustomers) * 100) : 0}%`,
+      changeColor: 'text-blue-600'
     },
     {
       title: 'Total Orders',
@@ -80,30 +136,30 @@ export default function CustomerStats({ customers, totalCustomers, isLoading }: 
       bgColor: 'bg-purple-50',
       borderColor: 'border-purple-200',
       textColor: 'text-purple-600',
-      change: '+22%',
-      changeColor: 'text-green-600'
+      change: `${totalOrders > 0 ? Math.round((totalOrders / actualTotalCustomers)) : 0}`,
+      changeColor: 'text-purple-600'
     },
     {
-      title: 'Total Revenue',
-      value: `₹${totalRevenue.toLocaleString()}`,
+      title: 'Order Value',
+      value: `₹${totalOrderValue.toLocaleString()}`,
       icon: DollarSign,
       color: 'bg-yellow-500',
       bgColor: 'bg-yellow-50',
       borderColor: 'border-yellow-200',
       textColor: 'text-yellow-600',
-      change: '+18%',
-      changeColor: 'text-green-600'
+      change: `₹${averageOrderValue.toLocaleString()}`,
+      changeColor: 'text-yellow-600'
     },
     {
-      title: 'New This Month',
-      value: recentCustomers,
+      title: 'KYC Pending',
+      value: kycPending,
       icon: Calendar,
-      color: 'bg-indigo-500',
-      bgColor: 'bg-indigo-50',
-      borderColor: 'border-indigo-200',
-      textColor: 'text-indigo-600',
-      change: '+25%',
-      changeColor: 'text-green-600'
+      color: 'bg-orange-500',
+      bgColor: 'bg-orange-50',
+      borderColor: 'border-orange-200',
+      textColor: 'text-orange-600',
+      change: `${kycPending > 0 ? Math.round((kycPending / actualTotalCustomers) * 100) : 0}%`,
+      changeColor: 'text-orange-600'
     }
   ]
 
@@ -140,7 +196,12 @@ export default function CustomerStats({ customers, totalCustomers, isLoading }: 
               <div className="flex items-center">
                 <TrendingUp className={`w-4 h-4 ${stat.changeColor} mr-1`} />
                 <span className={`text-sm font-semibold ${stat.changeColor}`}>
-                  {stat.change}
+                  {stat.title === 'Total Customers' ? 'Active Rate' : 
+                   stat.title === 'Active Customers' ? 'New This Month' :
+                   stat.title === 'Private Limited' ? 'Company Share' :
+                   stat.title === 'Total Orders' ? 'Per Customer' :
+                   stat.title === 'Order Value' ? 'Avg Order' :
+                   'Pending Rate'}
                 </span>
               </div>
             </div>

@@ -12,6 +12,7 @@ interface CustomerFilters {
   search: string
   customerType: string
   status: string
+  companyId: string
   sortBy: string
   sortOrder: 'asc' | 'desc'
 }
@@ -22,6 +23,8 @@ interface CustomerFiltersProps {
   onReset: () => void
   onCreateNew: () => void
   isLoading: boolean
+  companies?: Array<{ _id: string; companyCode: string; companyName: string }>
+  isSuperAdmin?: boolean
 }
 
 export default function CustomerFilters({
@@ -29,9 +32,11 @@ export default function CustomerFilters({
   onFilterChange,
   onReset,
   onCreateNew,
-  isLoading
+  isLoading,
+  companies = [],
+  isSuperAdmin = false
 }: CustomerFiltersProps) {
-  const hasActiveFilters = filters.search || filters.customerType !== 'all' || filters.status !== 'all'
+  const hasActiveFilters = filters.search || filters.customerType !== 'all' || filters.status !== 'all' || filters.companyId !== 'all'
 
   return (
     <div className="bg-white rounded-2xl shadow-lg border border-sky-200 p-6 mb-8">
@@ -71,7 +76,7 @@ export default function CustomerFilters({
       </div>
 
       {/* Filters */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
         {/* Search */}
         <div>
           <label className="block text-sm font-semibold text-gray-700 mb-2">
@@ -124,6 +129,28 @@ export default function CustomerFilters({
           </select>
         </div>
 
+        {/* Company Filter - Only for Super Admins */}
+        {isSuperAdmin && (
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
+              Company
+            </label>
+            <select
+              value={filters.companyId}
+              onChange={(e) => onFilterChange({ companyId: e.target.value })}
+              disabled={isLoading}
+              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-all duration-200 disabled:bg-gray-50 disabled:cursor-not-allowed"
+            >
+              <option value="all">All Companies</option>
+              {companies.map((company) => (
+                <option key={company._id} value={company._id}>
+                  {company.companyName} ({company.companyCode})
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
+
         {/* Sort */}
         <div>
           <label className="block text-sm font-semibold text-gray-700 mb-2">
@@ -171,6 +198,12 @@ export default function CustomerFilters({
             {filters.status !== 'all' && (
               <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 border border-green-200">
                 Status: {filters.status.charAt(0).toUpperCase() + filters.status.slice(1)}
+              </span>
+            )}
+            
+            {filters.companyId !== 'all' && (
+              <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800 border border-purple-200">
+                Company: {companies.find(c => c._id === filters.companyId)?.companyName || filters.companyId}
               </span>
             )}
           </div>

@@ -64,6 +64,8 @@ export const analyticsApi = baseApi.injectEndpoints({
         companyId?: string
         departments?: string[]
         metrics?: string[]
+        startDate?: string
+        endDate?: string
       }
     >({
       query: (params = {}) => ({
@@ -211,15 +213,171 @@ export const analyticsApi = baseApi.injectEndpoints({
       providesTags: ['Analytics'],
     }),
 
+    // Get daily reports
+    getDailyReports: builder.query<
+      { success: boolean; data: any },
+      { 
+        date?: string
+        companyId?: string
+        departments?: string[]
+        metrics?: string[]
+        includeDetails?: boolean
+      }
+    >({
+      query: (params = {}) => ({
+        url: '/analytics/reports/daily',
+        method: 'GET',
+        params,
+      }),
+      providesTags: ['Analytics'],
+    }),
+
+    // Get weekly reports
+    getWeeklyReports: builder.query<
+      { success: boolean; data: any },
+      { 
+        weekStart?: string
+        weekEnd?: string
+        companyId?: string
+        departments?: string[]
+        metrics?: string[]
+        includeDetails?: boolean
+      }
+    >({
+      query: (params = {}) => ({
+        url: '/analytics/reports/weekly',
+        method: 'GET',
+        params,
+      }),
+      providesTags: ['Analytics'],
+    }),
+
+    // Get monthly reports
+    getMonthlyReports: builder.query<
+      { success: boolean; data: any },
+      { 
+        year?: number
+        month?: number
+        companyId?: string
+        departments?: string[]
+        metrics?: string[]
+        includeDetails?: boolean
+      }
+    >({
+      query: (params = {}) => ({
+        url: '/analytics/reports/monthly',
+        method: 'GET',
+        params,
+      }),
+      providesTags: ['Analytics'],
+    }),
+
+    // Get custom filtered reports
+    getCustomReports: builder.query<
+      { success: boolean; data: any },
+      { 
+        startDate: string
+        endDate: string
+        companyId?: string
+        departments?: string[]
+        products?: string[]
+        statuses?: string[]
+        metrics?: string[]
+        groupBy?: string
+        sortBy?: string
+        sortOrder?: 'asc' | 'desc'
+        page?: number
+        limit?: number
+      }
+    >({
+      query: (params) => ({
+        url: '/analytics/reports/custom',
+        method: 'GET',
+        params,
+      }),
+      providesTags: ['Analytics'],
+    }),
+
+    // Get filter options
+    getFilterOptions: builder.query<
+      { success: boolean; data: any },
+      { companyId?: string }
+    >({
+      query: (params = {}) => ({
+        url: '/analytics/filters',
+        method: 'GET',
+        params,
+      }),
+      providesTags: ['Analytics'],
+    }),
+
+    // Get report templates
+    getReportTemplates: builder.query<
+      { success: boolean; data: any },
+      { companyId?: string }
+    >({
+      query: (params = {}) => ({
+        url: '/analytics/templates',
+        method: 'GET',
+        params,
+      }),
+      providesTags: ['Analytics'],
+    }),
+
+    // Save report template
+    saveReportTemplate: builder.mutation<
+      { success: boolean; data: any },
+      {
+        name: string
+        description?: string
+        filters: any
+        metrics: string[]
+        groupBy?: string
+        sortBy?: string
+        sortOrder?: 'asc' | 'desc'
+        companyId?: string
+      }
+    >({
+      query: (params) => ({
+        url: '/analytics/templates',
+        method: 'POST',
+        body: params,
+      }),
+      invalidatesTags: ['Analytics'],
+    }),
+
+    // Get real-time analytics
+    getRealTimeAnalytics: builder.query<
+      { success: boolean; data: any },
+      { 
+        companyId?: string
+        metrics?: string[]
+        refreshInterval?: number
+      }
+    >({
+      query: (params = {}) => ({
+        url: '/analytics/realtime',
+        method: 'GET',
+        params,
+      }),
+      providesTags: ['Analytics'],
+    }),
+
     // Export analytics report
     exportAnalyticsReport: builder.mutation<
       { success: boolean; data: { downloadUrl: string }; message: string },
       {
-        reportType: 'dashboard' | 'kpi' | 'financial' | 'operational'
+        reportType: 'dashboard' | 'kpi' | 'financial' | 'operational' | 'custom'
         format: 'pdf' | 'excel' | 'csv'
-        timeRange: string
+        timeRange?: string
+        startDate?: string
+        endDate?: string
         companyId?: string
+        departments?: string[]
+        products?: string[]
+        statuses?: string[]
         includeCharts?: boolean
+        includeDetails?: boolean
       }
     >({
       query: (params) => ({
@@ -241,5 +399,13 @@ export const {
   useGetInventoryDistributionQuery,
   useGetOperationalMetricsQuery,
   useGetFinancialAnalysisQuery,
+  useGetDailyReportsQuery,
+  useGetWeeklyReportsQuery,
+  useGetMonthlyReportsQuery,
+  useGetCustomReportsQuery,
+  useGetFilterOptionsQuery,
+  useGetReportTemplatesQuery,
+  useSaveReportTemplateMutation,
+  useGetRealTimeAnalyticsQuery,
   useExportAnalyticsReportMutation,
 } = analyticsApi

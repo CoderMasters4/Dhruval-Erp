@@ -20,6 +20,15 @@ export class InventoryController extends BaseController<IInventoryItem> {
     try {
       const itemData = req.body;
       const createdBy = req.user?.id;
+      const companyId = req.user?.companyId;
+
+      if (!companyId) {
+        this.sendError(res, new Error('Company ID is required'), 'Company ID is required', 400);
+        return;
+      }
+
+      // Add company ID to item data
+      itemData.companyId = companyId;
 
       const item = await this.inventoryService.createInventoryItem(itemData, createdBy);
 
@@ -236,6 +245,50 @@ export class InventoryController extends BaseController<IInventoryItem> {
       this.sendSuccess(res, stats, 'Inventory statistics retrieved successfully');
     } catch (error) {
       this.sendError(res, error, 'Failed to get inventory statistics');
+    }
+  }
+
+  /**
+   * Get inventory alerts
+   */
+  async getInventoryAlerts(req: Request, res: Response): Promise<void> {
+    try {
+      const companyId = req.user?.companyId;
+
+      if (!companyId) {
+        this.sendError(res, new Error('Company ID is required'), 'Company ID is required', 400);
+        return;
+      }
+
+      // For now, return mock alerts since we don't have the actual alert models yet
+      // This will be replaced with real database queries when the models are available
+      const alerts = [
+        {
+          id: '1',
+          type: 'low_stock',
+          severity: 'warning',
+          message: 'Item XYZ is running low on stock',
+          itemCode: 'XYZ001',
+          currentStock: 5,
+          reorderLevel: 10,
+          createdAt: new Date(),
+          acknowledged: false
+        },
+        {
+          id: '2',
+          type: 'expiry_warning',
+          severity: 'info',
+          message: 'Item ABC will expire in 30 days',
+          itemCode: 'ABC002',
+          expiryDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+          createdAt: new Date(),
+          acknowledged: false
+        }
+      ];
+
+      this.sendSuccess(res, { alerts }, 'Inventory alerts retrieved successfully');
+    } catch (error) {
+      this.sendError(res, error, 'Failed to get inventory alerts');
     }
   }
 

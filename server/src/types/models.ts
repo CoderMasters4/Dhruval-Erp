@@ -86,6 +86,10 @@ export interface ICompany extends BaseDocument {
   };
   
   licenses: ILicense[];
+  
+  // Company Status
+  status: 'active' | 'inactive' | 'suspended' | 'pending_approval' | 'under_review';
+  
   isActive: boolean;
   createdBy: Types.ObjectId;
 }

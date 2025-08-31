@@ -252,11 +252,20 @@ UserSchema.virtual('fullName').get(function(this: any) {
 });
 
 // Pre-save middleware for password hashing
+// This hook only runs during document.save() operations, NOT during findByIdAndUpdate()
+// This prevents double hashing during updates while ensuring passwords are hashed during creation
 UserSchema.pre('save', async function(this: any, next) {
   // Only hash password if it's modified
   if (!this.isModified('password')) return next();
 
   try {
+    // Safety check: Don't hash if password is already hashed
+    // bcrypt hashes start with '$2a$', '$2b$', or '$2y$'
+    if (this.password && (this.password.startsWith('$2a$') || this.password.startsWith('$2b$') || this.password.startsWith('$2y$'))) {
+      // Password is already hashed, skip hashing
+      return next();
+    }
+
     // Hash password
     const salt = await bcrypt.genSalt(config.BCRYPT_SALT_ROUNDS);
     this.password = await bcrypt.hash(this.password, salt);

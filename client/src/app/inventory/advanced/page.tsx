@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { AppLayout } from '@/components/layout/AppLayout'
 import { DashboardHeader } from '@/components/ui/DashboardHeader'
 import { ResponsiveContainer, ResponsiveGrid } from '@/components/ui/ResponsiveLayout'
@@ -108,6 +108,14 @@ const inventoryData = {
 export default function AdvancedInventoryPage() {
   const [activeTab, setActiveTab] = useState('fent')
   const [searchTerm, setSearchTerm] = useState('')
+  
+  // Add client-side state to prevent hydration mismatch
+  const [isClient, setIsClient] = useState(false)
+
+  // Set client-side state after hydration
+  useEffect(() => {
+    setIsClient(true)
+  }, [])
 
   const getStageColor = (stage: string) => {
     switch (stage) {
@@ -124,6 +132,25 @@ export default function AdvancedInventoryPage() {
     if (days > 60) return 'bg-red-100 text-red-800'
     if (days > 30) return 'bg-yellow-100 text-yellow-800'
     return 'bg-green-100 text-green-800'
+  }
+
+  // Don't render until client-side hydration is complete
+  if (!isClient) {
+    return (
+      <AppLayout>
+        <div className="space-y-6">
+          <div className="animate-pulse">
+            <div className="h-16 bg-gray-200 rounded-lg mb-6"></div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+              {[1, 2, 3, 4].map((i) => (
+                <div key={i} className="h-24 bg-gray-200 rounded-lg"></div>
+              ))}
+            </div>
+            <div className="h-96 bg-gray-200 rounded-lg"></div>
+          </div>
+        </div>
+      </AppLayout>
+    )
   }
 
   return (

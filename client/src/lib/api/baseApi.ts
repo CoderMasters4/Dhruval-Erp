@@ -3,41 +3,72 @@ import type { RootState } from '../store'
 
 const baseQuery = fetchBaseQuery({
   baseUrl: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api/v1',
-  credentials: 'include',
+  credentials: 'include', // This ensures cookies are sent with requests
   prepareHeaders: (headers, { getState }) => {
-    // Try to get token from state first, then fallback to localStorage
     const state = getState() as RootState
-    let token = state.auth.token
+    let token = null
     const currentCompanyId = state.auth.currentCompanyId
     const user = state.auth.user
 
-    // Fallback to localStorage if token not in state
-    if (!token && typeof window !== 'undefined') {
+    // First try to get token from localStorage (client-side storage)
+    if (typeof window !== 'undefined') {
       token = localStorage.getItem('token')
     }
+    
+    // Fallback to Redux state if localStorage doesn't have token
+    if (!token) {
+      token = state.auth.token
+    }
 
+    // If we have a token, set it in Authorization header
     if (token) {
       headers.set('authorization', `Bearer ${token}`)
+      console.log('baseApi: Token found and set in headers:', token.substring(0, 20) + '...')
+    } else {
+      console.log('baseApi: No token found - relying on HTTP-only cookies for authentication')
+      // Don't set Authorization header - let the server use HTTP-only cookies
     }
 
     // Add company ID header - super admin can switch companies, others use their company
+    let companyId = null
+    
     if (currentCompanyId) {
-      headers.set('X-Company-ID', currentCompanyId)
+      companyId = currentCompanyId
     } else if (user?.companyAccess?.[0]?.companyId) {
-      headers.set('X-Company-ID', user.companyAccess[0].companyId)
+      companyId = user.companyAccess[0].companyId
     } else if (user?.isSuperAdmin) {
       // For super admin, always ensure we have a company ID
       if (state.auth.companies?.[0]?._id) {
-        headers.set('X-Company-ID', state.auth.companies[0]._id)
+        companyId = state.auth.companies[0]._id
       } else if (state.auth.currentCompanyId) {
-        headers.set('X-Company-ID', state.auth.currentCompanyId)
+        companyId = state.auth.currentCompanyId
       } else {
         // If no company available, use a default one or the company ID from the URL
         const urlCompanyId = window?.location?.pathname?.match(/\/companies\/([^\/]+)/)?.[1]
         if (urlCompanyId) {
-          headers.set('X-Company-ID', urlCompanyId)
+          companyId = urlCompanyId
         }
       }
+    }
+    
+    if (companyId) {
+      headers.set('X-Company-ID', companyId)
+      console.log('baseApi: Company ID set in headers:', companyId)
+    } else {
+      console.log('baseApi: No company ID found - this might cause 401 errors')
+    }
+
+    // Log all headers for debugging
+    console.log('baseApi: Request headers:', {
+      authorization: !!headers.get('authorization'),
+      'x-company-id': headers.get('x-company-id'),
+      'content-type': headers.get('content-type'),
+      credentials: 'include'
+    })
+
+    // Log cookies for debugging (if available)
+    if (typeof document !== 'undefined') {
+      console.log('baseApi: Available cookies:', document.cookie);
     }
 
     headers.set('Content-Type', 'application/json')
@@ -45,25 +76,77 @@ const baseQuery = fetchBaseQuery({
   },
 })
 
+// Create a separate base query for refresh endpoint that doesn't send Authorization header
+const baseQueryWithoutAuth = fetchBaseQuery({
+  baseUrl: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api/v1',
+  credentials: 'include', // Still include cookies for refresh token
+  prepareHeaders: (headers) => {
+    // For refresh endpoint, do NOT send Authorization header or company ID, rely only on HTTP-only cookie
+    headers.set('Content-Type', 'application/json')
+    
+    // No additional headers - just rely on the refresh token cookie
+    return headers
+  },
+})
+
 const baseQueryWithReauth = async (args: any, api: any, extraOptions: any) => {
   let result = await baseQuery(args, api, extraOptions)
-  
+
   if (result?.error?.status === 401) {
-    // Try to get a new token
-    const refreshResult = await baseQuery('/auth/refresh', api, extraOptions)
-    
-    if (refreshResult?.data) {
-      // Store the new token
-      api.dispatch({ type: 'auth/setCredentials', payload: refreshResult.data })
-      
-      // Retry the original query with new token
-      result = await baseQuery(args, api, extraOptions)
-    } else {
+    console.log('baseApi: 401 error detected, attempting token refresh...')
+
+    try {
+      // Try to get a new token using baseQueryWithoutAuth (no Authorization header)
+      const refreshResult = await baseQueryWithoutAuth('/auth/refresh-token', api, extraOptions)
+
+      if (refreshResult?.data) {
+        console.log('baseApi: Token refresh successful, retrying original request...')
+        
+        // Extract the new access token from the response
+        const newAccessToken = (refreshResult.data as any)?.accessToken
+        
+        if (newAccessToken) {
+          // Store the new token in localStorage and Redux state
+          if (typeof window !== 'undefined') {
+            localStorage.setItem('token', newAccessToken)
+            console.log('baseApi: New token stored in localStorage')
+          }
+          
+          // Update Redux state with new token
+          api.dispatch({ 
+            type: 'auth/setCredentials', 
+            payload: { 
+              user: api.getState().auth.user,
+              token: newAccessToken,
+              companies: api.getState().auth.companies,
+              permissions: api.getState().auth.permissions
+            } 
+          })
+
+          // Retry the original query with new token
+          result = await baseQuery(args, api, extraOptions)
+        } else {
+          console.log('baseApi: No access token in refresh response')
+          api.dispatch({ type: 'auth/logout' })
+        }
+      } else {
+        console.log('baseApi: Token refresh failed, logging out user...')
+        console.log('baseApi: Refresh result details:', {
+          data: refreshResult?.data,
+          error: refreshResult?.error,
+          status: refreshResult?.error?.status,
+          message: (refreshResult?.error?.data as any)?.message || 'No error message'
+        })
+        // Refresh failed, logout user
+        api.dispatch({ type: 'auth/logout' })
+      }
+    } catch (error) {
+      console.error('baseApi: Error during token refresh:', error)
       // Refresh failed, logout user
       api.dispatch({ type: 'auth/logout' })
     }
   }
-  
+
   return result
 }
 
@@ -80,6 +163,7 @@ export const baseApi = createApi({
     'InventoryItem',
     'StockMovement',
     'Warehouse',
+    'WarehouseStats',
     'Batch',
     'ProductionOrder',
     'CustomerOrder',
@@ -141,8 +225,12 @@ export const baseApi = createApi({
     // Enhanced Features
     'Sales',
     'SalesStats',
+    'SalesAnalytics',
+    'SalesReports',
     'Purchase',
     'PurchaseStats',
+    'PurchaseAnalytics',
+    'PurchaseReports',
     'AdvancedInventory',
     'FentInventory',
     'ProcessTracking',
@@ -153,7 +241,24 @@ export const baseApi = createApi({
     'EnhancedDispatch',
     'PackingList',
     'RTOTracking',
-    'TwoFactor'
+    'TwoFactor',
+    'PrintingStatus',
+    'JobWorkTracking',
+    'ProductionSummary',
+    'MachineSummary',
+    'ProductionAlerts',
+    'ProductionEfficiency',
+    'RealTimeProduction',
+
+    // Additional Missing Tag Types
+    'Employee',
+    'Shift',
+    'AutomatedReport',
+    'ProductionDashboard',
+    'AdvancedReport',
+    'Document',
+    'EnhancedOrder',
+    'EnhancedOrderStats'
 
   ],
   endpoints: () => ({}),

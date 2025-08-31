@@ -19,8 +19,98 @@ export class StockMovementController extends BaseController<IStockMovement> {
     try {
       const movementData = req.body;
       const createdBy = req.user?.id;
+      
+      // Auto-detect company ID and unit from warehouse or item
+      let companyId = req.user?.companyId;
+      let unit = movementData.unit;
+      
+      // If user doesn't have company ID (super admin), extract from warehouse or item
+      if (!companyId) {
+        if (movementData.warehouseId) {
+          // Get company ID from warehouse
+          const Warehouse = require('@/models/Warehouse').default;
+          const warehouse = await Warehouse.findById(movementData.warehouseId).select('companyId');
+          if (warehouse?.companyId) {
+            companyId = warehouse.companyId.toString();
+            console.log('StockMovementController: Company ID extracted from warehouse:', companyId);
+          }
+        }
+        
+        if (!companyId && movementData.itemId) {
+          // Get company ID from item
+          const InventoryItem = require('@/models/InventoryItem').default;
+          const item = await InventoryItem.findById(movementData.itemId).select('companyId');
+          if (item?.companyId) {
+            companyId = item.companyId.toString();
+            console.log('StockMovementController: Company ID extracted from item:', companyId);
+          }
+        }
+      }
+      
+      if (!companyId) {
+        this.sendError(res, new Error('Company ID could not be determined from warehouse, item, or user profile'), 'Company ID is required', 400);
+        return;
+      }
 
-      const movement = await this.stockMovementService.createStockMovement(movementData, createdBy);
+      // Auto-extract unit from item if not provided
+      if (!unit && movementData.itemId) {
+        const InventoryItem = require('@/models/InventoryItem').default;
+        const item = await InventoryItem.findById(movementData.itemId).select('stock.unit');
+        if (item?.stock?.unit) {
+          unit = item.stock.unit;
+          console.log('StockMovementController: Unit extracted from item:', unit);
+        }
+      }
+      
+      if (!unit) {
+        this.sendError(res, new Error('Unit could not be determined from item'), 'Unit is required', 400);
+        return;
+      }
+
+      // Convert string locations to proper object structure if needed
+      let fromLocation = movementData.fromLocation;
+      let toLocation = movementData.toLocation;
+      
+      // If locations are strings, convert them to proper objects
+      if (typeof fromLocation === 'string') {
+        fromLocation = {
+          warehouseName: fromLocation,
+          isExternal: ['Supplier', 'Production', 'Customer', 'Scrap/Disposal'].includes(fromLocation)
+        };
+      }
+      
+      if (typeof toLocation === 'string') {
+        toLocation = {
+          warehouseName: toLocation,
+          isExternal: ['Supplier', 'Production', 'Customer', 'Scrap/Disposal'].includes(toLocation)
+        };
+      }
+
+      // Fix reference document structure if needed
+      let referenceDocument = movementData.referenceDocument;
+      if (referenceDocument && referenceDocument.type && !referenceDocument.documentType) {
+        referenceDocument = {
+          ...referenceDocument,
+          documentType: referenceDocument.type,
+          documentNumber: referenceDocument.number
+        };
+      }
+
+      // Ensure company ID and unit are set in the movement data
+      const enrichedMovementData = {
+        ...movementData,
+        companyId: companyId.toString(),
+        unit: unit,
+        fromLocation: fromLocation,
+        toLocation: toLocation,
+        referenceDocument: referenceDocument
+      };
+
+      console.log('StockMovementController: Creating movement with company ID:', companyId);
+      console.log('StockMovementController: Original movement data:', movementData);
+      console.log('StockMovementController: Enriched movement data:', enrichedMovementData);
+
+      const movement = await this.stockMovementService.createStockMovement(enrichedMovementData, createdBy);
 
       this.sendSuccess(res, movement, 'Stock movement created successfully', 201);
     } catch (error) {

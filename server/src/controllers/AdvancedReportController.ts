@@ -222,4 +222,185 @@ export class AdvancedReportController extends BaseController<IReport> {
       this.sendError(res, error);
     }
   }
+
+  /**
+   * Get scheduled reports
+   */
+  async getScheduledReports(req: Request, res: Response) {
+    try {
+      const { companyId } = req.user!;
+      const scheduledReports = await this.advancedReportService.getScheduledReports(companyId.toString());
+      this.sendSuccess(res, scheduledReports, 'Scheduled reports retrieved successfully');
+    } catch (error) {
+      console.error('Error getting scheduled reports:', error);
+      this.sendError(res, error);
+    }
+  }
+
+  /**
+   * Get report templates
+   */
+  async getReportTemplates(req: Request, res: Response) {
+    try {
+      const { companyId } = req.user!;
+      const templates = await this.advancedReportService.getReportTemplates(companyId.toString());
+      this.sendSuccess(res, templates, 'Report templates retrieved successfully');
+    } catch (error) {
+      console.error('Error getting report templates:', error);
+      this.sendError(res, error);
+    }
+  }
+
+  /**
+   * Get public reports
+   */
+  async getPublicReports(req: Request, res: Response) {
+    try {
+      const { companyId } = req.user!;
+      const publicReports = await this.advancedReportService.getPublicReports(companyId.toString());
+      this.sendSuccess(res, publicReports, 'Public reports retrieved successfully');
+    } catch (error) {
+      console.error('Error getting public reports:', error);
+      this.sendError(res, error);
+    }
+  }
+
+  /**
+   * Clone report
+   */
+  async cloneReport(req: Request, res: Response) {
+    try {
+      const { companyId, userId } = req.user!;
+      const { id } = req.params;
+      const clonedReport = await this.advancedReportService.cloneReport(id, userId.toString());
+      this.sendSuccess(res, clonedReport, 'Report cloned successfully');
+    } catch (error) {
+      console.error('Error cloning report:', error);
+      this.sendError(res, error);
+    }
+  }
+
+  /**
+   * Get report status
+   */
+  async getReportStatus(req: Request, res: Response) {
+    try {
+      const { companyId } = req.user!;
+      const { id } = req.params;
+      const status = await this.advancedReportService.getReportStatus(id);
+      this.sendSuccess(res, status, 'Report status retrieved successfully');
+    } catch (error) {
+      console.error('Error getting report status:', error);
+      this.sendError(res, error);
+    }
+  }
+
+  /**
+   * Update schedule
+   */
+  async updateSchedule(req: Request, res: Response) {
+    try {
+      const { companyId, userId } = req.user!;
+      const { id } = req.params;
+      const { schedule } = req.body;
+      const updatedSchedule = await this.advancedReportService.updateSchedule(id, schedule, userId.toString());
+      this.sendSuccess(res, updatedSchedule, 'Schedule updated successfully');
+    } catch (error) {
+      console.error('Error updating schedule:', error);
+      this.sendError(res, error);
+    }
+  }
+
+  /**
+   * Update distribution
+   */
+  async updateDistribution(req: Request, res: Response) {
+    try {
+      const { companyId, userId } = req.user!;
+      const { id } = req.params;
+      const { distribution } = req.body;
+      const updatedDistribution = await this.advancedReportService.updateDistribution(id, distribution, userId.toString());
+      this.sendSuccess(res, updatedDistribution, 'Distribution updated successfully');
+    } catch (error) {
+      console.error('Error updating distribution:', error);
+      this.sendError(res, error);
+    }
+  }
+
+  /**
+   * Update access control
+   */
+  async updateAccessControl(req: Request, res: Response) {
+    try {
+      const { companyId, userId } = req.user!;
+      const { id } = req.params;
+      const { accessControl } = req.body;
+      const updatedAccessControl = await this.advancedReportService.updateAccessControl(id, accessControl, userId.toString());
+      this.sendSuccess(res, updatedAccessControl, 'Access control updated successfully');
+    } catch (error) {
+      console.error('Error updating access control:', error);
+      this.sendError(res, error);
+    }
+  }
+
+  /**
+   * Get report analytics
+   */
+  async getReportAnalytics(req: Request, res: Response) {
+    try {
+      const { companyId } = req.user!;
+      const { id } = req.params;
+      const analytics = await this.advancedReportService.getReportAnalytics(id);
+      this.sendSuccess(res, analytics, 'Report analytics retrieved successfully');
+    } catch (error) {
+      console.error('Error getting report analytics:', error);
+      this.sendError(res, error);
+    }
+  }
+
+  /**
+   * Grant access
+   */
+  async grantAccess(req: Request, res: Response) {
+    try {
+      const { companyId, userId } = req.user!;
+      const { id } = req.params;
+      const { targetUserId, permissions } = req.body;
+      const accessGranted = await this.advancedReportService.grantAccess(id, targetUserId, permissions, userId.toString());
+      this.sendSuccess(res, accessGranted, 'Access granted successfully');
+    } catch (error) {
+      console.error('Error granting access:', error);
+      this.sendError(res, error);
+    }
+  }
+
+  /**
+   * Revoke access
+   */
+  async revokeAccess(req: Request, res: Response) {
+    try {
+      const { companyId, userId } = req.user!;
+      const { id, userId: targetUserId } = req.params;
+      await this.advancedReportService.revokeAccess(id, targetUserId, userId.toString());
+      this.sendSuccess(res, null, 'Access revoked successfully');
+    } catch (error) {
+      console.error('Error revoking access:', error);
+      this.sendError(res, error);
+    }
+  }
+
+  /**
+   * Search reports
+   */
+  async searchReports(req: Request, res: Response) {
+    try {
+      const { companyId } = req.user!;
+      const { query, filters } = req.query;
+      const searchResults = await this.advancedReportService.searchReports(companyId.toString(), query as string, filters as any);
+      this.sendSuccess(res, searchResults, 'Search results retrieved successfully');
+    } catch (error) {
+      console.error('Error searching reports:', error);
+      this.sendError(res, error);
+    }
+  }
 }

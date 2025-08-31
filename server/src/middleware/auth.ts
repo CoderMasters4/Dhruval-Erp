@@ -116,19 +116,46 @@ export const verifyRefreshToken = (token: string): RefreshTokenPayload => {
 // =============================================
 export const authenticate = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const authHeader = req.headers.authorization;
+    let token = null;
     
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    // Log request details for debugging
+    console.log('Authentication middleware: Request received:', {
+      path: req.path,
+      method: req.method,
+      hasAuthHeader: !!req.headers.authorization,
+      authHeaderValue: req.headers.authorization,
+      hasCookies: !!req.cookies,
+      cookieKeys: req.cookies ? Object.keys(req.cookies) : [],
+      userAgent: req.get('User-Agent'),
+      origin: req.get('Origin')
+    });
+    
+    // First try to get token from Authorization header
+    const authHeader = req.headers.authorization;
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      token = authHeader.substring(7); // Remove 'Bearer ' prefix
+      console.log('Authentication middleware: Token found in Authorization header, length:', token.length);
+    }
+    
+    // If no token in header, try to get from HTTP-only cookies
+    if (!token && req.cookies && req.cookies.accessToken) {
+      token = req.cookies.accessToken;
+      console.log('Authentication middleware: Token found in HTTP-only cookies, length:', token.length);
+    }
+    
+    if (!token) {
+      console.log('Authentication middleware: No authentication token found');
       return res.status(401).json({
         error: 'Authentication required',
-        message: 'Please provide a valid access token'
+        message: 'Please provide a valid access token or ensure cookies are enabled'
       });
     }
-
-    const token = authHeader.substring(7); // Remove 'Bearer ' prefix
+    
+    console.log('Authentication middleware: Token found, length:', token.length);
     
     // Verify token
     const decoded = verifyAccessToken(token);
+    console.log('Authentication middleware: Token verified successfully for user:', decoded.userId);
     
     // Find user
     const user = await User.findById(decoded.userId)
@@ -136,11 +163,14 @@ export const authenticate = async (req: Request, res: Response, next: NextFuncti
       .populate('companyAccess.companyId', 'companyName companyCode isActive');
     
     if (!user || !user.isActive) {
+      console.log('User not found or inactive:', decoded.userId);
       return res.status(401).json({
         error: 'User not found',
         message: 'User account not found or inactive'
       });
     }
+
+    console.log('User found:', user.username, 'isSuperAdmin:', user.isSuperAdmin);
 
     // Check if account is locked
     if (user.security.accountLocked) {
@@ -173,6 +203,13 @@ export const authenticate = async (req: Request, res: Response, next: NextFuncti
       userId: decoded.userId,
       companyId: targetCompanyId
     };
+
+    console.log('Authentication middleware: User attached to request:', {
+      userId: (req as any).user.userId,
+      companyId: (req as any).user.companyId,
+      username: (req as any).user.username,
+      isSuperAdmin: (req as any).user.isSuperAdmin
+    });
 
     // Skip company validation for 2FA routes (user-level functionality)
     const is2FARoute = req.path.includes('/2fa/');
@@ -298,7 +335,7 @@ export const authenticate = async (req: Request, res: Response, next: NextFuncti
 
     return res.status(401).json({
       error: 'Authentication failed',
-      message: 'Invalid or expired access token'
+      message: 'Invalid or expired authentication token'
     });
   }
 };
@@ -322,14 +359,17 @@ export const allowSuperadmin = (req: Request, res: Response, next: NextFunction)
 // =============================================
 // Company Context Middleware
 // =============================================
-export const requireCompany = async (req: Request, res: Response, next: NextFunction) => {
+export const requireCompany = async (req: Request, res: Response, next: Function) => {
   try {
-    const companyId = req.headers['x-company-id'] as string;
+    // Get company ID from header or from the user object that was set by authenticate middleware
+    const headerCompanyId = req.headers['x-company-id'] as string;
+    const userCompanyId = (req as any).user?.companyId;
+    const companyId = headerCompanyId || userCompanyId;
     
     if (!companyId) {
       return res.status(400).json({
         error: 'Company ID required',
-        message: 'X-Company-ID header is required'
+        message: 'Company context is required. Please ensure you are logged in with a valid company.'
       });
     }
 
@@ -341,7 +381,14 @@ export const requireCompany = async (req: Request, res: Response, next: NextFunc
     }
 
     // Check if user has access to this company
-    const user = req.user!;
+    const user = (req as any).user;
+    if (!user) {
+      return res.status(401).json({
+        error: 'User not authenticated',
+        message: 'Please log in to access this resource'
+      });
+    }
+
     let companyAccess = null;
 
     // Super admin can access any company

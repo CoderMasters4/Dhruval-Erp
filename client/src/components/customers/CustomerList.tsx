@@ -48,10 +48,16 @@ export default function CustomerList({
 
   const getCustomerTypeColor = (type: string) => {
     switch (type) {
-      case 'business':
+      case 'private_limited':
         return 'bg-blue-100 text-blue-800 border-blue-200'
-      case 'individual':
+      case 'public_limited':
+        return 'bg-green-100 text-green-800 border-green-200'
+      case 'proprietorship':
         return 'bg-purple-100 text-purple-800 border-purple-200'
+      case 'partnership':
+        return 'bg-orange-100 text-orange-800 border-orange-200'
+      case 'individual':
+        return 'bg-indigo-100 text-indigo-800 border-indigo-200'
       default:
         return 'bg-gray-100 text-gray-800 border-gray-200'
     }
@@ -59,7 +65,10 @@ export default function CustomerList({
 
   const getCustomerTypeIcon = (type: string) => {
     switch (type) {
-      case 'business':
+      case 'private_limited':
+      case 'public_limited':
+      case 'proprietorship':
+      case 'partnership':
         return Building2
       case 'individual':
         return User
@@ -118,7 +127,7 @@ export default function CustomerList({
                   <div className="flex-shrink-0">
                     <div className="h-12 w-12 bg-blue-500 rounded-full flex items-center justify-center border-2 border-blue-200">
                       <span className="text-white font-semibold text-lg">
-                        {customer.name?.charAt(0)?.toUpperCase() || 'C'}
+                        {customer.customerName?.charAt(0)?.toUpperCase() || customer.displayName?.charAt(0)?.toUpperCase() || 'C'}
                       </span>
                     </div>
                   </div>
@@ -127,7 +136,7 @@ export default function CustomerList({
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-3 mb-2">
                       <h3 className="text-lg font-bold text-black truncate">
-                        {customer.name || 'Unnamed Customer'}
+                        {customer.customerName || customer.displayName || 'Unnamed Customer'}
                       </h3>
                       
                       {customer.customerCode && (
@@ -136,14 +145,21 @@ export default function CustomerList({
                         </span>
                       )}
                       
-                      {/* Type Badge */}
+                      {/* Business Type Badge */}
                       <span className={clsx(
                         'inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold border',
-                        getCustomerTypeColor(customer.customerType)
+                        getCustomerTypeColor(customer.businessInfo?.businessType || 'unknown')
                       )}>
                         <TypeIcon className="w-3 h-3 mr-1" />
-                        {customer.customerType?.charAt(0)?.toUpperCase() + customer.customerType?.slice(1) || 'Unknown'}
+                        {customer.businessInfo?.businessType?.replace('_', ' ')?.replace(/\b\w/g, l => l.toUpperCase()) || 'Unknown'}
                       </span>
+                      
+                      {/* Industry Badge */}
+                      {customer.businessInfo?.industry && (
+                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold bg-purple-100 text-purple-800 border border-purple-200">
+                          {customer.businessInfo.industry}
+                        </span>
+                      )}
 
                       {/* Status Badge */}
                       <div className={clsx(
@@ -169,25 +185,36 @@ export default function CustomerList({
                     <div className="flex items-center gap-6 text-sm text-gray-600 mb-3">
                       <div className="flex items-center gap-1">
                         <Mail className="w-4 h-4" />
-                        <span className="truncate max-w-xs">{customer.email}</span>
+                        <span className="truncate max-w-xs">{customer.contactInfo?.primaryEmail || 'No email'}</span>
                       </div>
                       
                       <div className="flex items-center gap-1">
                         <Phone className="w-4 h-4" />
-                        <span>{customer.phone}</span>
+                        <span>{customer.contactInfo?.primaryPhone || 'No phone'}</span>
                       </div>
                       
+                      {/* Customer Type */}
+                      <div className="flex items-center gap-1">
+                        <Users className="w-4 h-4" />
+                        <span className="capitalize">{customer.relationship?.customerType || 'Unknown'}</span>
+                      </div>
+                      
+                      {/* Company Information - Show if customer has company */}
                       {customer.company && (
                         <div className="flex items-center gap-1">
                           <Building2 className="w-4 h-4" />
-                          <span className="truncate max-w-xs">{customer.company}</span>
+                          <span className="text-xs font-semibold px-2 py-1 rounded-full bg-blue-100 text-blue-800 border border-blue-200">
+                            Company: {customer.company}
+                          </span>
                         </div>
                       )}
                       
-                      {customer.address?.city && (
+                      {/* Priority */}
+                      {customer.relationship?.priority && (
                         <div className="flex items-center gap-1">
-                          <MapPin className="w-4 h-4" />
-                          <span>{customer.address.city}, {customer.address.state}</span>
+                          <span className="text-xs font-semibold px-2 py-1 rounded-full bg-orange-100 text-orange-800 border border-orange-200">
+                            {customer.relationship.priority} Priority
+                          </span>
                         </div>
                       )}
                       
@@ -201,22 +228,36 @@ export default function CustomerList({
                     <div className="flex items-center gap-6 text-sm">
                       <div className="flex items-center gap-1 text-purple-600">
                         <ShoppingCart className="w-4 h-4" />
-                        <span className="font-semibold text-black">{customer.totalOrders || 0}</span>
+                        <span className="font-semibold text-black">{customer.purchaseHistory?.totalOrders || 0}</span>
                         <span className="text-gray-600">orders</span>
                       </div>
                       
                       <div className="flex items-center gap-1 text-green-600">
                         <DollarSign className="w-4 h-4" />
-                        <span className="font-semibold text-black">{formatCurrency(customer.totalSpent || 0)}</span>
+                        <span className="font-semibold text-black">{formatCurrency(customer.purchaseHistory?.totalOrderValue || 0)}</span>
                         <span className="text-gray-600">spent</span>
                       </div>
                       
-                      {customer.averageOrderValue && (
+                      {customer.purchaseHistory?.averageOrderValue && customer.purchaseHistory.averageOrderValue > 0 && (
                         <div className="flex items-center gap-1 text-yellow-600">
                           <span className="text-gray-600">Avg:</span>
-                          <span className="font-semibold text-black">{formatCurrency(customer.averageOrderValue)}</span>
+                          <span className="font-semibold text-black">{formatCurrency(customer.purchaseHistory.averageOrderValue)}</span>
                         </div>
                       )}
+                      
+                      {/* KYC Status */}
+                      <div className="flex items-center gap-1">
+                        <span className={clsx(
+                          'text-xs font-semibold px-2 py-1 rounded-full border',
+                          customer.compliance?.kycStatus === 'completed' 
+                            ? 'bg-green-100 text-green-800 border-green-200'
+                            : customer.compliance?.kycStatus === 'pending'
+                            ? 'bg-yellow-100 text-yellow-800 border-yellow-200'
+                            : 'bg-red-100 text-red-800 border-red-200'
+                        )}>
+                          KYC: {customer.compliance?.kycStatus ? customer.compliance.kycStatus.charAt(0).toUpperCase() + customer.compliance.kycStatus.slice(1) : 'Unknown'}
+                        </span>
+                      </div>
                     </div>
                   </div>
                 </div>

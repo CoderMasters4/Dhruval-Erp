@@ -1,5 +1,6 @@
 'use client'
 
+import React from 'react'
 import { TrendingUp, TrendingDown, Minus } from 'lucide-react'
 import clsx from 'clsx'
 
@@ -11,7 +12,7 @@ interface StatCard {
     type: 'increase' | 'decrease' | 'neutral'
     label?: string
   }
-  icon: React.ReactNode
+  icon: React.ReactNode | React.ComponentType<any>
   color: 'blue' | 'green' | 'yellow' | 'red' | 'purple' | 'indigo' | 'pink' | 'gray'
   loading?: boolean
 }
@@ -151,7 +152,7 @@ export function StatsCards({ cards, className }: StatsCardsProps) {
                 colorClasses.bg
               )}>
                 <div className={colorClasses.icon}>
-                  {card.icon}
+                  {typeof card.icon === 'function' ? React.createElement(card.icon) : card.icon}
                 </div>
               </div>
             </div>

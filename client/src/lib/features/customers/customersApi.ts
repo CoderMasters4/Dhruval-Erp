@@ -36,6 +36,31 @@ export interface Customer {
   totalOrders?: number
   totalSpent?: number
   averageOrderValue?: number
+  
+  // Additional properties for enhanced customer management
+  customerName?: string
+  displayName?: string
+  businessInfo?: {
+    businessType: string
+    industry?: string
+  }
+  contactInfo?: {
+    primaryEmail?: string
+    primaryPhone?: string
+  }
+  relationship?: {
+    customerType?: string
+    priority?: string
+  }
+  purchaseHistory?: {
+    totalOrders?: number
+    totalOrderValue?: number
+    averageOrderValue?: number
+  }
+  compliance?: {
+    kycStatus?: 'pending' | 'completed' | 'failed'
+  }
+  companyId?: string
 }
 
 export interface CustomersResponse {
@@ -47,41 +72,58 @@ export interface CustomersResponse {
 }
 
 export interface CreateCustomerRequest {
-  name: string
-  email: string
-  phone: string
-  company?: string
-  contactPerson?: string
-  customerType: Customer['customerType']
-  creditLimit?: number
-  paymentTerms?: string
-  taxId?: string
-  website?: string
-  address: {
-    street?: string
-    city?: string
-    state?: string
-    country?: string
-    zipCode?: string
+  customerName: string
+  companyId: string
+  businessInfo: {
+    businessType: 'private_limited' | 'public_limited' | 'proprietorship' | 'partnership' | 'individual'
+    industry: string
   }
-  billingAddress?: {
-    street?: string
-    city?: string
-    state?: string
-    country?: string
-    zipCode?: string
+  contactInfo: {
+    primaryPhone: string
+    alternatePhone?: string
+    primaryEmail: string
+    alternateEmail?: string
   }
-  notes?: string
+  financialInfo?: {
+    creditLimit?: number
+    creditDays?: number
+    securityDeposit?: number
+    outstandingAmount?: number
+    advanceAmount?: number
+    totalPurchases?: number
+    currency?: string
+    discountPercentage?: number
+    taxExempt?: boolean
+  }
+  marketing?: {
+    marketingConsent?: boolean
+    emailMarketing?: boolean
+    smsMarketing?: boolean
+    whatsappMarketing?: boolean
+    language?: string
+  }
+  relationship?: {
+    customerType?: 'prospect' | 'regular' | 'vip'
+    priority?: 'low' | 'medium' | 'high'
+    loyaltyPoints?: number
+  }
+  compliance?: {
+    kycStatus?: 'pending' | 'completed' | 'rejected'
+    kycDocuments?: string[]
+    riskCategory?: 'low' | 'medium' | 'high'
+    blacklisted?: boolean
+  }
   tags?: string[]
-}
-
-export interface UpdateCustomerRequest {
+  addresses?: any[]
+  contactPersons?: any[]
+  
+  // Legacy fields for backward compatibility
   name?: string
   email?: string
   phone?: string
   company?: string
   contactPerson?: string
-  customerType?: Customer['customerType']
+  customerType?: 'individual' | 'business'
   creditLimit?: number
   paymentTerms?: string
   taxId?: string
@@ -101,8 +143,81 @@ export interface UpdateCustomerRequest {
     zipCode?: string
   }
   notes?: string
+}
+
+export interface UpdateCustomerRequest {
+  customerName?: string
+  companyId?: string
+  businessInfo?: {
+    businessType?: 'private_limited' | 'public_limited' | 'proprietorship' | 'partnership' | 'individual'
+    industry?: string
+  }
+  contactInfo?: {
+    primaryPhone?: string
+    alternatePhone?: string
+    primaryEmail?: string
+    alternateEmail?: string
+  }
+  financialInfo?: {
+    creditLimit?: number
+    creditDays?: number
+    securityDeposit?: number
+    outstandingAmount?: number
+    advanceAmount?: number
+    totalPurchases?: number
+    currency?: string
+    discountPercentage?: number
+    taxExempt?: boolean
+  }
+  marketing?: {
+    marketingConsent?: boolean
+    emailMarketing?: boolean
+    smsMarketing?: boolean
+    whatsappMarketing?: boolean
+    language?: string
+  }
+  relationship?: {
+    customerType?: 'prospect' | 'regular' | 'vip'
+    priority?: 'low' | 'medium' | 'high'
+    loyaltyPoints?: number
+  }
+  compliance?: {
+    kycStatus?: 'pending' | 'completed' | 'rejected'
+    kycDocuments?: string[]
+    riskCategory?: 'low' | 'medium' | 'high'
+    blacklisted?: boolean
+  }
   tags?: string[]
+  addresses?: any[]
+  contactPersons?: any[]
   isActive?: boolean
+  
+  // Legacy fields for backward compatibility
+  name?: string
+  email?: string
+  phone?: string
+  company?: string
+  contactPerson?: string
+  customerType?: 'individual' | 'business'
+  creditLimit?: number
+  paymentTerms?: string
+  taxId?: string
+  website?: string
+  address?: {
+    street?: string
+    city?: string
+    state?: string
+    country?: string
+    zipCode?: string
+  }
+  billingAddress?: {
+    street?: string
+    city?: string
+    state?: string
+    country?: string
+    zipCode?: string
+  }
+  notes?: string
 }
 
 export const customersApi = baseApi.injectEndpoints({
@@ -113,6 +228,7 @@ export const customersApi = baseApi.injectEndpoints({
       search?: string
       customerType?: string
       status?: string
+      companyId?: string
       sortBy?: string
       sortOrder?: 'asc' | 'desc'
     }>({

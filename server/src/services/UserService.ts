@@ -14,6 +14,23 @@ export class UserService extends BaseService<IUser> {
   }
 
   /**
+   * Override update method to prevent password updates through general updates
+   * Passwords should only be updated through dedicated password update methods
+   */
+  async update(id: string, data: any, userId?: string): Promise<IUser | null> {
+    // Prevent password updates through general update method
+    if (data.password || data['user.password']) {
+      throw new AppError(
+        'Password updates are not allowed through general updates. Use updatePassword() or resetPassword() methods instead.',
+        400
+      );
+    }
+
+    // Call parent update method
+    return super.update(id, data, userId);
+  }
+
+  /**
    * Create a new user with validation
    */
   async createUser(userData: Partial<IUser>, createdBy?: string): Promise<IUser> {
@@ -33,11 +50,13 @@ export class UserService extends BaseService<IUser> {
         throw new AppError('Email already exists', 400);
       }
 
-      // Hash password
-      if (userData.password) {
-        const salt = await bcrypt.genSalt(config.BCRYPT_SALT_ROUNDS);
-        userData.password = await bcrypt.hash(userData.password, salt);
-      }
+      // Note: Password hashing is handled by the User model's pre-save hook
+      // No need to hash here to avoid double hashing
+      // 
+      // IMPORTANT: During updates, the BaseService.update() method uses findByIdAndUpdate
+      // which does NOT trigger pre-save hooks, so passwords are never double-hashed
+      // during updates. Only explicit password update methods (updatePassword, resetPassword)
+      // handle password hashing manually.
 
       // Set default values
       const userToCreate = {

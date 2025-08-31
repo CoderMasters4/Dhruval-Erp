@@ -1,17 +1,25 @@
 import { baseApi } from '@/lib/api/baseApi'
 
 export interface CompanyAccess {
-  companyId: string
-  companyName?: string
+  _id?: string
+  companyId: {
+    _id: string
+    companyCode: string
+    companyName: string
+  }
   role: string
+  department?: string
+  designation?: string
+  employeeId?: string
+  joiningDate?: string
   permissions?: {
     [module: string]: {
       [action: string]: boolean
     }
   }
   isActive: boolean
-  joinedAt: Date
-  leftAt?: Date
+  joinedAt: string
+  leftAt?: string
   remarks?: string
 }
 
@@ -60,12 +68,17 @@ export interface User {
     companyName: string
   }
   security?: {
-    isEmailVerified: boolean
-    is2FAEnabled: boolean
+    isEmailVerified?: boolean
+    is2FAEnabled?: boolean
     lastLogin?: string
-    loginAttempts: number
+    loginAttempts?: number
+    failedLoginAttempts?: number
     lockUntil?: string
     passwordChangedAt?: string
+    passwordLastChanged?: string
+    accountLocked?: boolean
+    lastLoginIP?: string
+    mustChangePassword?: boolean
   }
   preferences?: {
     language: string
@@ -102,16 +115,22 @@ export interface User {
   lockUntil?: string
   passwordChangedAt?: string
   isOnline?: boolean
+  
+  // Additional fields from API response
+  twoFactorEnabled?: boolean
+  backupCodesCount?: number
 }
 
 export interface UsersResponse {
   success: boolean
-  data: User[]
-  pagination: {
-    page: number
-    limit: number
-    total: number
-    pages: number
+  data: {
+    users: User[]
+    pagination: {
+      page: number
+      limit: number
+      total: number
+      pages: number
+    }
   }
 }
 
@@ -180,11 +199,76 @@ export interface Toggle2FARequest {
   password: string
 }
 
+export interface UserStatsResponse {
+  success: boolean
+  data: {
+    overview: {
+      totalUsers: number
+      activeUsers: number
+      inactiveUsers: number
+      superAdmins: number
+      twoFactorEnabled: number
+      newUsers30d: number
+    }
+    activity: {
+      recentLogins24h: number
+      recentLogins7d: number
+      recentLogins30d: number
+      recentActivityPercentage: number
+    }
+    percentages: {
+      activePercentage: number
+      twoFactorPercentage: number
+      recentActivityPercentage: number
+    }
+    roleDistribution: Array<{
+      _id: string
+      count: number
+    }>
+    departmentDistribution: Array<{
+      _id: string
+      count: number
+    }>
+    designationDistribution: Array<{
+      _id: string
+      count: number
+    }>
+    companyStats?: {
+      companyId: string
+      companyName: string
+      companyCode: string
+    }
+    lastUpdated: string
+  }
+}
+
 export const usersApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
-    getAllUsers: builder.query<UsersResponse, { page?: number; limit?: number; search?: string; role?: string; status?: string }>({
+    getAllUsers: builder.query<UsersResponse, { page?: number; limit?: number; search?: string; role?: string; status?: string; companyId?: string }>({
       query: (params = {}) => ({
         url: '/users',
+        params: {
+          page: params.page || 1,
+          limit: params.limit || 10,
+          ...params
+        },
+      }),
+      providesTags: ['User'],
+    }),
+    getCompaniesForFiltering: builder.query<{ success: boolean; data: Array<{ _id: string; companyCode: string; companyName: string; isActive: boolean }> }, void>({
+      query: () => '/companies',
+      providesTags: ['Company'],
+    }),
+    getUserStats: builder.query<UserStatsResponse, { companyId?: string }>({
+      query: (params = {}) => ({
+        url: '/users/stats/overview',
+        params: params.companyId ? { companyId: params.companyId } : {},
+      }),
+      providesTags: ['User'],
+    }),
+    getUsersByCompany: builder.query<UsersResponse, { companyId: string; page?: number; limit?: number; search?: string; role?: string; status?: string }>({
+      query: ({ companyId, ...params }) => ({
+        url: `/users/company/${companyId}`,
         params: {
           page: params.page || 1,
           limit: params.limit || 10,
@@ -273,4 +357,7 @@ export const {
   useChangeUserPasswordMutation,
   useToggle2FAMutation,
   useToggleUserStatusMutation,
+  useGetCompaniesForFilteringQuery,
+  useGetUsersByCompanyQuery,
+  useGetUserStatsQuery,
 } = usersApi

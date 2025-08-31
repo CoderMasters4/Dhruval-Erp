@@ -278,7 +278,7 @@ export function Header() {
                   {user?.firstName} {user?.lastName}
                 </p>
                 <p className="text-xs text-gray-500 dark:text-gray-400">
-                  {isSuperAdmin ? 'Super Admin' : user?.companyAccess?.[0]?.role || 'User'}
+                  {isSuperAdmin ? 'Super Admin' : user?.companyAccess?.[0]?.role || 'Helper'}
                 </p>
               </div>
             </div>
@@ -309,7 +309,7 @@ export function Header() {
                     </p>
                     <p className="text-xs text-gray-500 dark:text-gray-400">{user?.email}</p>
                     <p className="text-xs text-gray-500 dark:text-gray-400">
-                      {isSuperAdmin ? 'Super Admin' : user?.companyAccess?.[0]?.role || 'User'}
+                      {isSuperAdmin ? 'Super Admin' : user?.companyAccess?.[0]?.role || 'Helper'}
                     </p>
                   </div>
                 </div>

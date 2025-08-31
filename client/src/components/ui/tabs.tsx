@@ -12,7 +12,9 @@ const TabsContext = createContext<TabsContextType | undefined>(undefined)
 
 interface TabsProps extends HTMLAttributes<HTMLDivElement> {
   children: ReactNode
-  defaultValue: string
+  defaultValue?: string
+  value?: string
+  onValueChange?: (value: string) => void
   className?: string
 }
 
@@ -33,8 +35,17 @@ interface TabsContentProps extends HTMLAttributes<HTMLDivElement> {
   className?: string
 }
 
-export function Tabs({ children, defaultValue, className, ...props }: TabsProps) {
-  const [activeTab, setActiveTab] = useState(defaultValue)
+export function Tabs({ children, defaultValue, value, onValueChange, className, ...props }: TabsProps) {
+  const [internalActiveTab, setInternalActiveTab] = useState(defaultValue || '')
+  const activeTab = value !== undefined ? value : internalActiveTab
+  
+  const setActiveTab = (tab: string) => {
+    if (onValueChange) {
+      onValueChange(tab)
+    } else {
+      setInternalActiveTab(tab)
+    }
+  }
 
   return (
     <TabsContext.Provider value={{ activeTab, setActiveTab }}>

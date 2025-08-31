@@ -103,9 +103,9 @@ export default function DeleteUserModal({ isOpen, onClose, onSuccess, user }: De
                 <div className="flex items-center gap-2 mt-1">
                   <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold bg-red-100 text-red-800 border border-red-200">
                     <User className="w-3 h-3 mr-1" />
-                    {user.role?.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase()) || 'User'}
+                    {user.role?.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase()) || 'Helper'}
                   </span>
-                  {user.is2FAEnabled && (
+                  {(user.is2FAEnabled || user.twoFactorEnabled) && (
                     <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold bg-yellow-100 text-yellow-800 border border-yellow-200">
                       <Shield className="w-3 h-3 mr-1" />
                       2FA Enabled

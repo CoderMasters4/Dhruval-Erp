@@ -254,7 +254,7 @@ export default function ProfilePage() {
                 <div className="bg-slate-50 rounded-lg px-4 py-3 border border-slate-200">
                   <div className="flex items-center gap-3">
                     <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-600 text-white">
-                      {typeof user?.roles?.[0] === 'string' ? user.roles[0] : user?.roles?.[0]?.roleId || 'User'}
+                      {typeof user?.roles?.[0] === 'string' ? user.roles[0] : user?.roles[0]?.roleId || 'Helper'}
                     </span>
                     {user?.isActive && (
                       <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-600 text-white">
@@ -346,7 +346,7 @@ export default function ProfilePage() {
                   </label>
                   <div className="bg-slate-50 rounded-lg px-4 py-3 border border-slate-200">
                     <p className="text-slate-900 font-medium">
-                      {user?.companyAccess?.[0]?.role?.replace('_', ' ').toUpperCase() || 'User'}
+                      {user?.companyAccess?.[0]?.role?.replace('_', ' ').toUpperCase() || 'Helper'}
                     </p>
                   </div>
                 </div>

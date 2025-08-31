@@ -148,10 +148,10 @@ const config: EnvironmentConfig = {
   // JWT
   JWT_SECRET: process.env.JWT_SECRET || 'your-super-secret-jwt-key-change-in-production',
   JWT_REFRESH_SECRET: process.env.JWT_REFRESH_SECRET || 'your-super-secret-refresh-key-change-in-production',
-  JWT_EXPIRE: process.env.JWT_EXPIRE || '15m',
-  JWT_REFRESH_EXPIRE: process.env.JWT_REFRESH_EXPIRE || '7d',
-  JWT_ISSUER: process.env.JWT_ISSUER || 'factory-erp',
-  JWT_AUDIENCE: process.env.JWT_AUDIENCE || 'factory-erp-users',
+  JWT_EXPIRE: process.env.JWT_EXPIRE || '15d',
+  JWT_REFRESH_EXPIRE: process.env.JWT_REFRESH_EXPIRE || '30d',
+  JWT_ISSUER: process.env.JWT_ISSUER || 'dhruval-erp',
+  JWT_AUDIENCE: process.env.JWT_AUDIENCE || 'dhruval-erp-users',
 
   // Session
   SESSION_SECRET: process.env.SESSION_SECRET || 'your-super-secret-session-key-change-in-production',
@@ -163,7 +163,7 @@ const config: EnvironmentConfig = {
   COOKIE_DOMAIN: process.env.COOKIE_DOMAIN || 'localhost',
   COOKIE_SECURE: process.env.COOKIE_SECURE === 'true',
   COOKIE_HTTP_ONLY: process.env.COOKIE_HTTP_ONLY !== 'false',
-  COOKIE_SAME_SITE: (process.env.COOKIE_SAME_SITE as 'strict' | 'lax' | 'none') || 'strict',
+  COOKIE_SAME_SITE: (process.env.COOKIE_SAME_SITE as 'strict' | 'lax' | 'none') || 'lax', // Changed default to 'lax' for development
 
   // CORS
   CORS_ORIGIN: process.env.CORS_ORIGIN?.split(',') || ['http://localhost:3000'],

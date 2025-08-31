@@ -4,20 +4,95 @@ export interface InventoryItem {
   _id: string
   itemCode: string
   itemName: string
-  category: string
-  description: string
-  currentStock: number
-  minStock: number
-  maxStock: number
-  unit: string
-  unitPrice: number
-  totalValue: number
-  supplier: string
-  location: string
-  lastUpdated: string
-  status: 'low_stock' | 'overstock' | 'normal'
+  itemDescription: string
+  companyItemCode: string
+  category: {
+    primary: string
+  }
+  productType: string
+  designInfo: {
+    colorVariants: string[]
+    sizeVariants: string[]
+  }
+  specifications: {
+    gsm: number
+    width: number
+    length: number
+    weight: number
+    color: string
+    design: string
+    finish: string
+    safetyPrecautions: string[]
+    msdsRequired: boolean
+  }
+  stock: {
+    currentStock: number
+    reservedStock: number
+    availableStock: number
+    unit: string
+    reorderLevel: number
+    maxStockLevel: number
+    inTransitStock: number
+    damagedStock: number
+    conversionFactor: number
+    minStockLevel: number
+    valuationMethod: string
+    averageCost: number
+    totalValue: number
+  }
+  pricing: {
+    costPrice: number
+    sellingPrice: number
+    mrp: number
+    currency: string
+  }
+  quality: {
+    qualityGrade: string
+    defectPercentage: number
+    qualityCheckRequired: boolean
+    qualityParameters: string[]
+    certifications: string[]
+  }
+  ageing: {
+    ageInDays: number
+    ageCategory: string
+    turnoverRate: number
+    daysInStock: number
+    slowMovingThreshold: number
+    obsoleteThreshold: number
+    lastMovementDate: string
+  }
+  qualityControl: {
+    qualityGrade: string
+    qualityScore: number
+    defectRate: number
+    requiresInspection: boolean
+    qualityNotes: string[]
+  }
+  tracking: {
+    createdBy: string
+    lastModifiedBy: string
+    lastStockUpdate: string
+    totalInward: number
+    totalOutward: number
+    totalAdjustments: number
+  }
+  status: {
+    isActive: boolean
+    isDiscontinued: boolean
+    isFastMoving: boolean
+    isSlowMoving: boolean
+    isObsolete: boolean
+    requiresApproval: boolean
+  }
+  tags: string[]
+  images: string[]
+  documents: string[]
+  locations: string[]
+  suppliers: string[]
   companyId: string
   createdAt: string
+  updatedAt: string
 }
 
 export interface InventoryStats {
@@ -68,16 +143,34 @@ export interface StockMovement {
 }
 
 export interface CreateInventoryItemRequest {
-  itemCode: string
+  itemCode?: string
   itemName: string
   category: string
-  description: string
-  minStock: number
-  maxStock: number
-  unit: string
-  unitPrice: number
-  supplier: string
-  location: string
+  itemDescription?: string
+  productType?: string
+  warehouseId: string
+  reorderPoint: number
+  reorderQuantity: number
+  stockingMethod: 'fifo' | 'lifo' | 'average' | 'specific'
+  initialStockLevel?: number
+  unitOfMeasure?: string
+  specifications?: {
+    gsm?: number
+    width?: number
+    color?: string
+    design?: string
+    finish?: string
+    length?: number
+  }
+  pricing?: {
+    costPrice?: number
+    sellingPrice?: number
+    mrp?: number
+  }
+  quality?: {
+    qualityGrade?: string
+    qualityCheckRequired?: boolean
+  }
 }
 
 export const inventoryApi = baseApi.injectEndpoints({
@@ -86,12 +179,16 @@ export const inventoryApi = baseApi.injectEndpoints({
     getInventoryItems: builder.query<
       {
         success: boolean
-        data: InventoryItem[]
-        pagination: {
-          page: number
-          limit: number
-          total: number
-          pages: number
+        data: {
+          data: InventoryItem[]
+          pagination: {
+            page: number
+            limit: number
+            total: number
+            totalPages: number
+            hasNext: boolean
+            hasPrev: boolean
+          }
         }
       },
       {
@@ -181,12 +278,16 @@ export const inventoryApi = baseApi.injectEndpoints({
     getInventoryMovements: builder.query<
       {
         success: boolean
-        data: StockMovement[]
-        pagination: {
-          page: number
-          limit: number
-          total: number
-          pages: number
+        data: {
+          data: StockMovement[]
+          pagination: {
+            page: number
+            limit: number
+            total: number
+            totalPages: number
+            hasNext: boolean
+            hasPrev: boolean
+          }
         }
       },
       {
@@ -202,14 +303,61 @@ export const inventoryApi = baseApi.injectEndpoints({
       }
     >({
       query: (params = {}) => ({
-        url: '/inventory/movements',
+        url: '/stock-movements',
         method: 'GET',
         params,
       }),
       providesTags: ['Inventory'],
     }),
 
-    // Record stock movement
+    // Create stock movement
+    createStockMovement: builder.mutation<
+      { success: boolean; data: StockMovement; message: string },
+      any
+    >({
+      query: (movementData) => ({
+        url: '/stock-movements',
+        method: 'POST',
+        body: movementData,
+      }),
+      invalidatesTags: ['Inventory'],
+    }),
+
+    // Get stock movement by ID
+    getStockMovementById: builder.query<
+      { success: boolean; data: StockMovement; message: string },
+      string
+    >({
+      query: (id) => `/stock-movements/${id}`,
+      providesTags: (result, error, id) => [{ type: 'Inventory', id }],
+    }),
+
+    // Update stock movement
+    updateStockMovement: builder.mutation<
+      { success: boolean; data: StockMovement; message: string },
+      { id: string; data: any }
+    >({
+      query: ({ id, data }) => ({
+        url: `/stock-movements/${id}`,
+        method: 'PUT',
+        body: data,
+      }),
+      invalidatesTags: (result, error, { id }) => [{ type: 'Inventory', id }],
+    }),
+
+    // Delete stock movement
+    deleteStockMovement: builder.mutation<
+      { success: boolean; message: string },
+      string
+    >({
+      query: (id) => ({
+        url: `/stock-movements/${id}`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: ['Inventory'],
+    }),
+
+    // Record stock movement (legacy - keeping for backward compatibility)
     recordStockMovement: builder.mutation<
       { success: boolean; data: StockMovement; message: string },
       {
@@ -220,8 +368,8 @@ export const inventoryApi = baseApi.injectEndpoints({
         notes?: string
       }
     >({
-      query: ({ itemId, ...movementData }) => ({
-        url: `/inventory/${itemId}/movement`,
+      query: (movementData) => ({
+        url: '/stock-movements',
         method: 'POST',
         body: movementData,
       }),
@@ -252,4 +400,9 @@ export const {
   useUpdateInventoryItemMutation,
   useRecordStockMovementMutation,
   useDeleteInventoryItemMutation,
+  // Stock Movement CRUD
+  useCreateStockMovementMutation,
+  useGetStockMovementByIdQuery,
+  useUpdateStockMovementMutation,
+  useDeleteStockMovementMutation,
 } = inventoryApi

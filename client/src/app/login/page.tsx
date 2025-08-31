@@ -65,6 +65,12 @@ export default function LoginPage() {
 
   const onSubmit = async (data: LoginFormData) => {
     try {
+      console.log('Login: Attempting login with credentials:', {
+        username: data.emailOrPhone,
+        hasPassword: !!data.password,
+        rememberMe: data.rememberMe
+      });
+
       // Send email or phone as username since backend expects username field
       const loginData = {
         username: data.emailOrPhone,  // Backend accepts email or phone in username field
@@ -73,6 +79,13 @@ export default function LoginPage() {
       }
 
       const result = await login(loginData).unwrap()
+
+      console.log('Login: Login API response:', {
+        success: result.success,
+        hasUser: !!result.data?.user,
+        hasToken: !!result.data?.tokens?.accessToken,
+        message: result.message
+      });
 
       if (result.success) {
         // Check if 2FA is required (server returns this at root level)
@@ -91,8 +104,10 @@ export default function LoginPage() {
         const userData = result.data.user // User data is in result.data.user
         const tokens = result.data.tokens // JWT tokens from server
 
+        console.log('Login: Processing successful login for user:', userData._id);
+
         // Create a mapping of company IDs to names (we'll improve this later with actual company data)
-        const companyNames = {
+        const companyNames: Record<string, string> = {
           '68aed30c8d1ce6852fdc5e07': 'Dhruval Exim Private Limited',
           '68aed30c8d1ce6852fdc5e0d': 'Jinal Industries (Amar)',
           '68aed30c8d1ce6852fdc5e10': 'Vimal Process'
@@ -108,16 +123,30 @@ export default function LoginPage() {
         })) || []
 
         // Set primary company as current
+        const primaryCompanyId = (userData as any).primaryCompanyId
+        const primaryCompany = companies.find(c => c._id === primaryCompanyId) || companies[0]
+        
         const currentCompany = companies.length > 0 ? {
-          id: userData.primaryCompanyId || companies[0]._id,
-          name: companies[0].companyName,
-          code: companies[0].companyCode,
-          role: userData.companyAccess?.[0]?.role || 'user',
+          id: primaryCompany._id,
+          name: primaryCompany.companyName,
+          code: primaryCompany.companyCode,
+          role: userData.companyAccess?.find(c => c.companyId === primaryCompanyId)?.role || userData.companyAccess?.[0]?.role || 'helper',
           permissions: []
         } : null
 
-        // Extract permissions from first company access
-        const permissions = userData.companyAccess?.[0]?.permissions || {}
+        // Extract and transform permissions from first company access
+        const rawPermissions = (userData.companyAccess?.[0]?.permissions as any) || {}
+        const permissions: { [module: string]: string[] } = {}
+        
+        // Transform boolean permissions to string arrays
+        Object.keys(rawPermissions).forEach(module => {
+          const modulePermissions = rawPermissions[module]
+          if (typeof modulePermissions === 'object' && modulePermissions !== null) {
+            permissions[module] = Object.keys(modulePermissions).filter(key => 
+              (modulePermissions as any)[key] === true
+            )
+          }
+        })
 
         // Update user with current company info
         const userWithCompany = {
@@ -130,43 +159,76 @@ export default function LoginPage() {
           phone: userData.personalInfo?.phone || userData.phone
         }
 
+        // Store token in localStorage first to ensure it's available
+        if (typeof window !== 'undefined' && tokens?.accessToken) {
+          localStorage.setItem('token', tokens.accessToken)
+          console.log('Login: Token stored in localStorage, length:', tokens.accessToken.length);
+        }
+        
+        // Store user data
+        if (typeof window !== 'undefined' && userWithCompany) {
+          localStorage.setItem('user', JSON.stringify(userWithCompany))
+          console.log('Login: User data stored in localStorage');
+        }
+        
+        // Store companies if available
+        if (typeof window !== 'undefined' && companies.length > 0) {
+          localStorage.setItem('companies', JSON.stringify(companies))
+          console.log('Login: Companies stored in localStorage, count:', companies.length);
+        }
+        
+        // Store permissions if available
+        if (typeof window !== 'undefined' && Object.keys(permissions).length > 0) {
+          localStorage.setItem('permissions', JSON.stringify(permissions))
+          console.log('Login: Permissions stored in localStorage, modules:', Object.keys(permissions));
+        }
+        
+        // Set current company if available
+        if (typeof window !== 'undefined' && currentCompany) {
+          localStorage.setItem('currentCompany', JSON.stringify(currentCompany))
+          localStorage.setItem('currentCompanyId', currentCompany.id)
+          console.log('Login: Current company set:', currentCompany.name);
+        }
+
+        // Now dispatch the Redux action to update the authentication state
+        console.log('Login: Dispatching setCredentials to Redux...');
         dispatch(setCredentials({
           user: userWithCompany,
-          token: tokens?.accessToken || 'authenticated', // Use actual token from backend
-          refreshToken: undefined, // Refresh token is in HTTP-only cookie
+          token: tokens.accessToken,
           companies: companies,
-          permissions: permissions,
-        }))
+          permissions: permissions
+        }));
 
-        dispatch(addNotification({
-          type: 'success',
-          title: 'Login Successful',
-          message: `Welcome back, ${userWithCompany.firstName || 'User'}!`,
-        }))
-
-        toast.success('Login successful!')
-
-        // Check if there's an intended route to redirect to
-        if (typeof window !== 'undefined') {
-          const intendedRoute = localStorage.getItem('intendedRoute')
-          if (intendedRoute && intendedRoute !== '/login') {
-            localStorage.removeItem('intendedRoute')
-            router.push(intendedRoute)
-            return
-          }
+        // Also dispatch companies and permissions separately to ensure they're set
+        if (companies.length > 0) {
+          dispatch(setCompanies(companies));
         }
+        if (Object.keys(permissions).length > 0) {
+          dispatch(setPermissions(permissions));
+        }
+
+        console.log('Login: Login successful, redirecting...')
+
+        // Test if cookies are being received
+        if (typeof document !== 'undefined') {
+          console.log('Login: Available cookies after login:', document.cookie);
+          
+          // Test the server's cookie endpoint
+        
+        }
+
+        // Wait for state to be updated
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        // Redirect to dashboard
         router.push('/dashboard')
+      } else {
+        console.error('Login: Login failed, no token received');
+        toast.error(result.message || 'Login failed')
       }
     } catch (error: any) {
-      const errorMessage = error?.data?.message || 'Login failed. Please try again.'
-
-      dispatch(addNotification({
-        type: 'error',
-        title: 'Login Failed',
-        message: errorMessage,
-      }))
-
-      toast.error(errorMessage)
+      console.error('Login: Login error:', error);
+      toast.error(error?.data?.message || error?.message || 'Login failed')
     }
   }
 

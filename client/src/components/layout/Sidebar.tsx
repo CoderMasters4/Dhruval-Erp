@@ -1,16 +1,13 @@
 'use client'
 
 /**
- * Enhanced Sidebar with Complete ERP Module Navigation
+ * Clean & Organized ERP Sidebar Navigation
  * 
- * NEW MODULES ADDED:
- * 1. Employee Management - Complete HR operations with role-based access
- * 2. Shift Management - Work schedule and shift operations
- * 3. Batch Management - Production batch tracking and quality control
- * 4. Quality Management - Comprehensive quality control system
- * 5. Maintenance & Equipment - Machine and equipment management
- * 6. Security & Monitoring - Enhanced security with CCTV and guard management
- * 7. Analytics & Reports - Comprehensive reporting system
+ * FEATURES:
+ * - Only enhanced/latest versions of modules
+ * - No duplicates or redundant sections
+ * - Proper role-based access control
+ * - Clean and organized structure
  * 
  * ROLE-BASED PERMISSIONS:
  * - Super Admin: Full access to all modules
@@ -50,7 +47,6 @@ import {
   AlertTriangle,
   FileSearch,
   TrendingUp,
-  List,
   Thermometer,
   Zap,
   Hotel,
@@ -60,9 +56,9 @@ import {
   ShoppingBag,
   Layers,
   Clock,
-  Plus,
   Calendar,
-  Moon
+  Activity,
+  RotateCcw
 } from 'lucide-react'
 import { selectSidebarCollapsed, selectSidebarOpen, toggleSidebar, setSidebarCollapsed } from '@/lib/features/ui/uiSlice'
 import { selectCurrentUser, selectIsSuperAdmin } from '@/lib/features/auth/authSlice'
@@ -75,7 +71,6 @@ interface NavigationItem {
   href: string
   icon: React.ComponentType<{ className?: string }>
   permission?: string
-  role?: string
   roles?: string[]
   children?: NavigationItem[]
 }
@@ -96,6 +91,7 @@ const navigationItems: NavigationItem[] = [
     permission: 'view:Company',
     roles: ['owner']
   },
+
   {
     name: 'Users & Access',
     href: '/users',
@@ -124,6 +120,7 @@ const navigationItems: NavigationItem[] = [
     icon: Users,
     permission: 'view:Customer'
   },
+
   {
     name: 'Sales',
     href: '/sales',
@@ -137,8 +134,15 @@ const navigationItems: NavigationItem[] = [
         permission: 'view:Sale'
       },
       {
-        name: 'Orders',
-        href: '/orders',
+        name: 'Sales Analytics',
+        href: '/sales/analytics',
+        icon: BarChart3,
+        permission: 'view:Sale',
+        roles: ['admin', 'manager', 'sales']
+      },
+      {
+        name: 'Enhanced Orders',
+        href: '/orders/enhanced',
         icon: FileText,
         permission: 'view:Order'
       },
@@ -150,6 +154,7 @@ const navigationItems: NavigationItem[] = [
       }
     ]
   },
+
   {
     name: 'Purchase',
     href: '/purchase',
@@ -161,6 +166,13 @@ const navigationItems: NavigationItem[] = [
         href: '/purchase',
         icon: ShoppingCart,
         permission: 'view:Purchase'
+      },
+      {
+        name: 'Purchase Analytics',
+        href: '/purchase/analytics',
+        icon: BarChart3,
+        permission: 'view:Purchase',
+        roles: ['admin', 'manager', 'purchase']
       },
       {
         name: 'Purchase Orders',
@@ -185,34 +197,36 @@ const navigationItems: NavigationItem[] = [
     permission: 'view:InventoryItem',
     children: [
       {
-        name: 'Items',
+        name: 'Inventory',
         href: '/inventory/enhanced',
         icon: Package,
         permission: 'view:InventoryItem'
       },
+      // {
+      //   name: 'Advanced Inventory',
+      //   href: '/inventory/advanced',
+      //   icon: Layers,
+      //   permission: 'view:InventoryItem'
+      // }
+      
       {
-        name: 'Basic View',
-        href: '/inventory',
-        icon: List,
-        permission: 'view:InventoryItem'
-      },
-      {
-        name: 'Advanced Inventory',
-        href: '/inventory/advanced',
-        icon: Layers,
-        permission: 'view:InventoryItem'
-      },
-      {
-        name: 'Spares',
-        href: '/spares',
-        icon: Settings,
-        permission: 'view:Spare'
+        name: 'Process-wise Stock',
+        href: '/process-wise-stock',
+        icon: Package,
+        permission: 'view:InventoryItem',
+        roles: ['admin', 'manager', 'production']
       },
       {
         name: 'Stock Movements',
         href: '/inventory/movements',
         icon: BarChart3,
         permission: 'view:StockMovement'
+      },
+      {
+        name: 'Spares',
+        href: '/spares',
+        icon: Settings,
+        permission: 'view:Spare'
       },
       {
         name: 'Warehouses',
@@ -257,13 +271,6 @@ const navigationItems: NavigationItem[] = [
         permission: 'view:Attendance'
       },
       {
-        name: 'Performance Reviews',
-        href: '/employees/performance',
-        icon: TrendingUp,
-        permission: 'view:Employee',
-        roles: ['admin', 'hr', 'manager']
-      },
-      {
         name: 'Stickers & Labels',
         href: '/stickers',
         icon: FileText,
@@ -272,72 +279,38 @@ const navigationItems: NavigationItem[] = [
     ]
   },
 
-  // Employee Management
+  // Production Management
   {
-    name: 'Employee Management',
-    href: '/employees',
-    icon: UserPlus,
-    permission: 'view:Employee',
-    roles: ['admin', 'hr', 'manager'],
-    children: [
-      {
-        name: 'Employee Directory',
-        href: '/employees',
-        icon: Users,
-        permission: 'view:Employee'
-      },
-      {
-        name: 'Add Employee',
-        href: '/employees/add',
-        icon: UserPlus,
-        permission: 'create:Employee'
-      },
-      {
-        name: 'Employee Performance',
-        href: '/employees/performance',
-        icon: TrendingUp,
-        permission: 'view:Employee'
-      },
-      {
-        name: 'Salary Management',
-        href: '/employees/salary',
-        icon: DollarSign,
-        permission: 'view:Employee',
-        roles: ['admin', 'hr']
-      },
-      {
-        name: 'Employee Reports',
-        href: '/employees/reports',
-        icon: BarChart3,
-        permission: 'view:Employee'
-      }
-    ]
-  },
-
-  // Operations Management
-  {
-    name: 'Operations',
-    href: '/production',
+    name: 'Production',
+    href: '/production/enhanced',
     icon: Factory,
     permission: 'view:ProductionOrder',
     children: [
       {
-        name: 'Production Overview',
-        href: '/production',
+        name: 'Enhanced Production',
+        href: '/production/enhanced',
         icon: Factory,
         permission: 'view:ProductionOrder'
       },
       {
-        name: 'Production Orders',
-        href: '/production/orders',
-        icon: FileText,
-        permission: 'view:ProductionOrder'
+        name: 'Production Tracking',
+        href: '/production-tracking',
+        icon: Activity,
+        permission: 'view:ProductionOrder',
+        roles: ['admin', 'manager', 'production']
       },
       {
-        name: 'Enhanced Tracking',
-        href: '/production/enhanced',
-        icon: BarChart3,
-        permission: 'view:ProductionOrder'
+        name: 'Real-time Production',
+        href: '/real-time-production',
+        icon: Activity,
+        permission: 'view:ProductionOrder',
+        roles: ['admin', 'manager', 'production']
+      },
+      {
+        name: 'Batch Management',
+        href: '/batches',
+        icon: Package,
+        permission: 'view:Batch'
       },
       {
         name: 'Machine Management',
@@ -345,53 +318,6 @@ const navigationItems: NavigationItem[] = [
         icon: Settings,
         permission: 'view:Machine',
         roles: ['admin', 'manager', 'production']
-      },
-      {
-        name: 'Production Reports',
-        href: '/production/reports',
-        icon: BarChart3,
-        permission: 'view:ProductionOrder'
-      }
-    ]
-  },
-
-  // Shift Management
-  {
-    name: 'Shift Management',
-    href: '/shifts',
-    icon: Clock,
-    permission: 'view:Shift',
-    roles: ['admin', 'hr', 'manager'],
-    children: [
-      {
-        name: 'Shift Overview',
-        href: '/shifts',
-        icon: Clock,
-        permission: 'view:Shift'
-      },
-      {
-        name: 'Create Shift',
-        href: '/shifts/create',
-        icon: Plus,
-        permission: 'create:Shift'
-      },
-      {
-        name: 'Shift Scheduling',
-        href: '/shifts/schedule',
-        icon: Calendar,
-        permission: 'view:Shift'
-      },
-      {
-        name: 'Night Shifts',
-        href: '/shifts/night',
-        icon: Moon,
-        permission: 'view:Shift'
-      },
-      {
-        name: 'Shift Reports',
-        href: '/shifts/reports',
-        icon: BarChart3,
-        permission: 'view:Shift'
       }
     ]
   },
@@ -399,71 +325,27 @@ const navigationItems: NavigationItem[] = [
   // Dispatch & Logistics
   {
     name: 'Dispatch & Logistics',
-    href: '/dispatch',
+    href: '/operations/dispatch/enhanced',
     icon: Send,
     permission: 'view:Dispatch',
     children: [
       {
-        name: 'Dispatch Overview',
-        href: '/dispatch',
+        name: 'Enhanced Dispatch',
+        href: '/operations/dispatch/enhanced',
         icon: Send,
         permission: 'view:Dispatch'
       },
       {
-        name: 'Enhanced Tracking',
-        href: '/dispatch/enhanced',
-        icon: Truck,
+        name: 'RTO Tracking',
+        href: '/operations/dispatch/rto',
+        icon: RotateCcw,
         permission: 'view:Dispatch'
       },
       {
-        name: 'AWB Management',
-        href: '/dispatch/awb',
-        icon: FileText,
-        permission: 'view:Dispatch'
-      },
-      {
-        name: 'Route Optimization',
-        href: '/dispatch/routes',
-        icon: TrendingUp,
-        permission: 'view:Dispatch',
-        roles: ['admin', 'manager', 'logistics']
-      }
-    ]
-  },
-
-  // Maintenance & Equipment
-  {
-    name: 'Maintenance',
-    href: '/maintenance',
-    icon: Settings,
-    permission: 'view:Machine',
-    children: [
-      {
-        name: 'Machine Management',
-        href: '/machines',
-        icon: Settings,
-        permission: 'view:Machine',
-        roles: ['admin', 'manager', 'maintenance']
-      },
-      {
-        name: 'Preventive Maintenance',
-        href: '/maintenance/preventive',
-        icon: Clock,
-        permission: 'view:Machine',
-        roles: ['admin', 'manager', 'maintenance']
-      },
-      {
-        name: 'Breakdown Reports',
-        href: '/maintenance/breakdowns',
-        icon: AlertTriangle,
-        permission: 'view:Machine',
-        roles: ['admin', 'manager', 'maintenance']
-      },
-      {
-        name: 'Spare Parts',
-        href: '/spares',
+        name: 'Packing Management',
+        href: '/operations/dispatch/packing',
         icon: Package,
-        permission: 'view:Spare'
+        permission: 'view:Dispatch'
       }
     ]
   },
@@ -494,53 +376,10 @@ const navigationItems: NavigationItem[] = [
         permission: 'view:QualityCheck'
       },
       {
-        name: 'Quality Standards',
-        href: '/quality/standards',
-        icon: FileText,
-        permission: 'view:QualityCheck',
-        roles: ['admin', 'manager', 'quality']
-      },
-      {
         name: 'Quality Reports',
         href: '/quality/reports',
         icon: BarChart3,
         permission: 'view:QualityCheck'
-      }
-    ]
-  },
-
-  // Batch Management
-  {
-    name: 'Batch Management',
-    href: '/batches',
-    icon: Package,
-    permission: 'view:Batch',
-    children: [
-      {
-        name: 'Production Batches',
-        href: '/batches',
-        icon: Package,
-        permission: 'view:Batch'
-      },
-      {
-        name: 'Quality Control',
-        href: '/batches/quality',
-        icon: AlertTriangle,
-        permission: 'view:Batch',
-        roles: ['admin', 'manager', 'quality']
-      },
-      {
-        name: 'Batch Analytics',
-        href: '/batches/analytics',
-        icon: BarChart3,
-        permission: 'view:Batch',
-        roles: ['admin', 'manager', 'production']
-      },
-      {
-        name: 'Batch Reports',
-        href: '/batches/reports',
-        icon: FileText,
-        permission: 'view:Batch'
       }
     ]
   },
@@ -593,20 +432,6 @@ const navigationItems: NavigationItem[] = [
         permission: 'view:Vehicle'
       },
       {
-        name: 'CCTV Monitoring',
-        href: '/security/cctv',
-        icon: AlertTriangle,
-        permission: 'view:SecurityLog',
-        roles: ['admin', 'security', 'manager']
-      },
-      {
-        name: 'Guard Management',
-        href: '/security/guards',
-        icon: Users,
-        permission: 'view:SecurityLog',
-        roles: ['admin', 'security', 'manager']
-      },
-      {
         name: 'Security Logs',
         href: '/security/logs',
         icon: AlertTriangle,
@@ -621,7 +446,7 @@ const navigationItems: NavigationItem[] = [
     ]
   },
 
-  // Advanced Operations & Monitoring
+  // Operations & Monitoring
   {
     name: 'Operations & Monitoring',
     href: '/operations',
@@ -651,23 +476,11 @@ const navigationItems: NavigationItem[] = [
         href: '/operations/hospitality',
         icon: Hotel,
         permission: 'view:Hospitality'
-      },
-      {
-        name: 'Dispatch Operations',
-        href: '/dispatch',
-        icon: Send,
-        permission: 'view:Dispatch'
-      },
-      {
-        name: 'Enhanced Dispatch',
-        href: '/dispatch/enhanced',
-        icon: Truck,
-        permission: 'view:Dispatch'
       }
     ]
   },
 
-  // Advanced Reports & Analytics
+  // Analytics & Reports
   {
     name: 'Analytics & Reports',
     href: '/reports',
@@ -689,25 +502,18 @@ const navigationItems: NavigationItem[] = [
         roles: ['admin', 'manager', 'production']
       },
       {
-        name: 'Batch Analytics',
-        href: '/reports/batches',
-        icon: Package,
-        permission: 'view:Batch',
-        roles: ['admin', 'manager', 'production', 'quality']
+        name: 'Sales Analytics',
+        href: '/sales/analytics',
+        icon: BarChart3,
+        permission: 'view:Sale',
+        roles: ['admin', 'manager', 'sales']
       },
       {
-        name: 'Employee Analytics',
-        href: '/reports/employees',
-        icon: Users,
-        permission: 'view:Employee',
-        roles: ['admin', 'hr', 'manager']
-      },
-      {
-        name: 'Quality Reports',
-        href: '/reports/quality',
-        icon: AlertTriangle,
-        permission: 'view:QualityCheck',
-        roles: ['admin', 'manager', 'quality']
+        name: 'Purchase Analytics',
+        href: '/purchase/analytics',
+        icon: BarChart3,
+        permission: 'view:Purchase',
+        roles: ['admin', 'manager', 'purchase']
       },
       {
         name: 'Financial Reports',
@@ -725,6 +531,7 @@ const navigationItems: NavigationItem[] = [
       }
     ]
   },
+
   {
     name: 'Settings',
     href: '/settings',
@@ -743,7 +550,7 @@ export function Sidebar() {
   const [expandedItems, setExpandedItems] = useState<string[]>([])
 
   // Get user's current role
-  const currentRole = isSuperAdmin ? 'super_admin' : user?.companyAccess?.[0]?.role || 'operator'
+  const currentRole = isSuperAdmin ? 'super_admin' : user?.companyAccess?.[0]?.role || 'helper'
 
   // Simple navigation filtering - show basic items for all users
   const filteredNavigation = navigationItems.filter((item: NavigationItem) => {
@@ -757,7 +564,12 @@ export function Sidebar() {
     if (!user) return item.name === 'Dashboard'
 
     // Show basic business modules for all authenticated users
-    const basicModules = ['Dashboard', 'Companies', 'Users & Access', 'Customers', 'Sales', 'Purchase', 'Inventory', 'Production', 'Dispatch', 'Quality', 'Financial', 'Security', 'Advanced Reports']
+    const basicModules = [
+      'Dashboard', 'Companies', 'Users & Access', 'Customers', 'Sales', 'Purchase', 
+      'Inventory', 'Human Resources', 'Production', 'Dispatch & Logistics', 
+      'Quality Management', 'Financial', 'Security & Monitoring', 
+      'Operations & Monitoring', 'Analytics & Reports'
+    ]
     if (basicModules.includes(item.name)) return true
 
     // Filter by roles if specified

@@ -23,6 +23,7 @@ const CompanyFormModal: React.FC<CompanyModalProps> = ({
     companyCode: '',
     companyName: '',
     legalName: '',
+    status: 'active' as 'active' | 'inactive' | 'suspended' | 'pending_approval' | 'under_review',
     registrationDetails: {
       gstin: '',
       pan: '',
@@ -47,12 +48,16 @@ const CompanyFormModal: React.FC<CompanyModalProps> = ({
         state: '',
         pincode: '',
         country: 'India'
-      }
+      },
+      warehouseAddresses: []
     },
     contactInfo: {
-      phones: [{ number: '', type: 'primary', label: 'Primary', isPrimary: true }],
-      emails: [{ email: '', type: 'primary', label: 'Primary', isPrimary: true }],
-      website: ''
+      phones: [{ type: '', label: 'Primary' }],
+      emails: [{ type: '', label: 'Primary' }],
+      website: '',
+      socialMedia: {
+        linkedin: ''
+      }
     },
     businessConfig: {
       currency: 'INR',
@@ -90,6 +95,7 @@ const CompanyFormModal: React.FC<CompanyModalProps> = ({
         companyCode: company.companyCode || '',
         companyName: company.companyName || '',
         legalName: company.legalName || '',
+        status: company.status || 'active',
         registrationDetails: {
           gstin: company.registrationDetails?.gstin || '',
           pan: company.registrationDetails?.pan || '',
@@ -114,12 +120,16 @@ const CompanyFormModal: React.FC<CompanyModalProps> = ({
             state: company.addresses?.factoryAddress?.state || '',
             pincode: company.addresses?.factoryAddress?.pincode || '',
             country: company.addresses?.factoryAddress?.country || 'India'
-          }
+          },
+          warehouseAddresses: company.addresses?.warehouseAddresses || []
         },
         contactInfo: {
-          phones: company.contactInfo?.phones || [{ number: '', type: 'primary', label: 'Primary', isPrimary: true }],
-          emails: company.contactInfo?.emails || [{ email: '', type: 'primary', label: 'Primary', isPrimary: true }],
-          website: company.contactInfo?.website || ''
+          phones: company.contactInfo?.phones?.length > 0 ? company.contactInfo.phones : [{ type: '', label: 'Primary' }],
+          emails: company.contactInfo?.emails?.length > 0 ? company.contactInfo.emails : [{ type: '', label: 'Primary' }],
+          website: company.contactInfo?.website || '',
+          socialMedia: {
+            linkedin: company.contactInfo?.socialMedia?.linkedin || ''
+          }
         },
         businessConfig: {
           currency: company.businessConfig?.currency || 'INR',
@@ -139,6 +149,66 @@ const CompanyFormModal: React.FC<CompanyModalProps> = ({
           }
         }
       })
+    } else {
+      // Reset form when creating new company
+      setFormData({
+        companyCode: '',
+        companyName: '',
+        legalName: '',
+        status: 'active',
+        registrationDetails: {
+          gstin: '',
+          pan: '',
+          cin: '',
+          udyogAadhar: '',
+          iecCode: '',
+          registrationDate: ''
+        },
+        addresses: {
+          registeredOffice: {
+            street: '',
+            area: '',
+            city: '',
+            state: '',
+            pincode: '',
+            country: 'India'
+          },
+          factoryAddress: {
+            street: '',
+            area: '',
+            city: '',
+            state: '',
+            pincode: '',
+            country: 'India'
+          },
+          warehouseAddresses: []
+        },
+        contactInfo: {
+          phones: [{ type: '', label: 'Primary' }],
+          emails: [{ type: '', label: 'Primary' }],
+          website: '',
+          socialMedia: {
+            linkedin: ''
+          }
+        },
+        businessConfig: {
+          currency: 'INR',
+          timezone: 'Asia/Kolkata',
+          fiscalYearStart: 'April',
+          workingDays: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
+          workingHours: {
+            start: '09:00',
+            end: '18:00',
+            breakStart: '13:00',
+            breakEnd: '14:00'
+          },
+          gstRates: {
+            defaultRate: 18,
+            rawMaterialRate: 12,
+            finishedGoodsRate: 18
+          }
+        }
+      })
     }
     setCurrentStep(0)
     setErrors({})
@@ -146,58 +216,63 @@ const CompanyFormModal: React.FC<CompanyModalProps> = ({
 
   const validateCurrentStep = (): boolean => {
     const newErrors: Record<string, string> = {}
+    
+    // Safety check - ensure formData is properly initialized
+    if (!formData) {
+      return false
+    }
 
     switch (currentStep) {
       case 0: // Basic Information
-        if (!formData.companyName.trim()) {
+        if (!formData.companyName?.trim()) {
           newErrors.companyName = 'Company name is required'
         }
-        if (!formData.legalName.trim()) {
+        if (!formData.legalName?.trim()) {
           newErrors.legalName = 'Legal name is required'
         }
-        if (!formData.companyCode.trim()) {
+        if (!formData.companyCode?.trim()) {
           newErrors.companyCode = 'Company code is required'
         }
         break
 
       case 1: // Registration Details
-        if (!formData.registrationDetails.gstin.trim()) {
+        if (!formData.registrationDetails?.gstin?.trim()) {
           newErrors.gstin = 'GSTIN is required'
         } else if (!validateGSTIN(formData.registrationDetails.gstin)) {
           newErrors.gstin = 'Invalid GSTIN format'
         }
-        if (!formData.registrationDetails.pan.trim()) {
+        if (!formData.registrationDetails?.pan?.trim()) {
           newErrors.pan = 'PAN is required'
         } else if (!validatePAN(formData.registrationDetails.pan)) {
           newErrors.pan = 'Invalid PAN format'
         }
-        if (formData.registrationDetails.cin && !validateCIN(formData.registrationDetails.cin)) {
+        if (formData.registrationDetails?.cin && !validateCIN(formData.registrationDetails.cin)) {
           newErrors.cin = 'Invalid CIN format'
         }
         break
 
       case 2: // Contact Information
-        if (!formData.contactInfo.emails[0]?.email.trim()) {
+        if (!formData.contactInfo.emails[0]?.type?.trim()) {
           newErrors.email = 'Primary email is required'
-        } else if (!validateEmail(formData.contactInfo.emails[0].email)) {
+        } else if (!validateEmail(formData.contactInfo.emails[0].type)) {
           newErrors.email = 'Invalid email format'
         }
-        if (!formData.contactInfo.phones[0]?.number.trim()) {
+        if (!formData.contactInfo.phones[0]?.type?.trim()) {
           newErrors.phone = 'Primary phone is required'
         }
         break
 
       case 3: // Address Information
-        if (!formData.addresses.registeredOffice.street.trim()) {
+        if (!formData.addresses?.registeredOffice?.street?.trim()) {
           newErrors.street = 'Street address is required'
         }
-        if (!formData.addresses.registeredOffice.city.trim()) {
+        if (!formData.addresses?.registeredOffice?.city?.trim()) {
           newErrors.city = 'City is required'
         }
-        if (!formData.addresses.registeredOffice.state.trim()) {
+        if (!formData.addresses?.registeredOffice?.state?.trim()) {
           newErrors.state = 'State is required'
         }
-        if (!formData.addresses.registeredOffice.pincode.trim()) {
+        if (!formData.addresses?.registeredOffice?.pincode?.trim()) {
           newErrors.pincode = 'Pincode is required'
         } else if (!validatePincode(formData.addresses.registeredOffice.pincode)) {
           newErrors.pincode = 'Invalid pincode format'
@@ -242,6 +317,11 @@ const CompanyFormModal: React.FC<CompanyModalProps> = ({
   }
 
   if (!isOpen) return null
+
+  // Safety check - ensure formData is properly initialized
+  if (!formData) {
+    return null
+  }
 
   const renderStepContent = () => {
     switch (currentStep) {
@@ -310,6 +390,23 @@ const CompanyFormModal: React.FC<CompanyModalProps> = ({
                   {errors.companyCode && (
                     <p className="mt-1 text-sm text-red-600">{errors.companyCode}</p>
                   )}
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Company Status *
+                  </label>
+                  <select
+                    value={formData.status}
+                    onChange={(e) => updateFormData({ status: e.target.value as any })}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                  >
+                    <option value="active">Active</option>
+                    <option value="inactive">Inactive</option>
+                    <option value="suspended">Suspended</option>
+                    <option value="pending_approval">Pending Approval</option>
+                    <option value="under_review">Under Review</option>
+                  </select>
                 </div>
 
                 <div>
@@ -458,11 +555,11 @@ const CompanyFormModal: React.FC<CompanyModalProps> = ({
                   <input
                     type="email"
                     required
-                    value={formData.contactInfo.emails[0]?.email || ''}
+                    value={formData.contactInfo.emails[0]?.type || ''}
                     onChange={(e) => updateFormData({
                       contactInfo: {
                         ...formData.contactInfo,
-                        emails: [{ email: e.target.value, type: 'primary', label: 'Primary', isPrimary: true }]
+                        emails: [{ type: e.target.value, label: 'Primary' }]
                       }
                     })}
                     className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors ${
@@ -482,11 +579,11 @@ const CompanyFormModal: React.FC<CompanyModalProps> = ({
                   <input
                     type="tel"
                     required
-                    value={formData.contactInfo.phones[0]?.number || ''}
+                    value={formData.contactInfo.phones[0]?.type || ''}
                     onChange={(e) => updateFormData({
                       contactInfo: {
                         ...formData.contactInfo,
-                        phones: [{ number: e.target.value, type: 'primary', label: 'Primary', isPrimary: true }]
+                        phones: [{ type: e.target.value, label: 'Primary' }]
                       }
                     })}
                     className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors ${
@@ -514,6 +611,27 @@ const CompanyFormModal: React.FC<CompanyModalProps> = ({
                     })}
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
                     placeholder="https://www.company.com"
+                  />
+                </div>
+
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    LinkedIn (Optional)
+                  </label>
+                  <input
+                    type="url"
+                    value={formData.contactInfo.socialMedia.linkedin}
+                    onChange={(e) => updateFormData({
+                      contactInfo: {
+                        ...formData.contactInfo,
+                        socialMedia: {
+                          ...formData.contactInfo.socialMedia,
+                          linkedin: e.target.value
+                        }
+                      }
+                    })}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                    placeholder="https://www.linkedin.com/company/company-name"
                   />
                 </div>
               </div>

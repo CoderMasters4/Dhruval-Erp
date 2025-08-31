@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { toast } from 'react-hot-toast'
+import { useSelector } from 'react-redux'
 import {
   User,
   Mail,
@@ -18,11 +19,12 @@ import {
   useUpdateUserMutation
 } from '@/lib/features/users/usersApi'
 import { useGetAllCompaniesQuery } from '@/lib/features/companies/companiesApi'
+import { selectCurrentUser } from '@/lib/features/auth/authSlice'
 
 interface UserFormModalProps {
   isOpen: boolean
   onClose: () => void
-  onSuccess: () => void
+  onSuccess: (operation: 'create' | 'update') => void
   user?: UserType
 }
 
@@ -66,23 +68,46 @@ const DEPARTMENTS = [
   { value: 'IT', label: 'Information Technology' }
 ]
 
-// Role options
+// Role options - must match server enum values
 const ROLES = [
-  { value: 'user', label: 'User', description: 'Basic user with limited access' },
-  { value: 'manager', label: 'Manager', description: 'Department manager with team access' },
-  { value: 'admin', label: 'Admin', description: 'System administrator with full access' },
+  { value: 'helper', label: 'Helper', description: 'Production helper with basic access' },
+  { value: 'operator', label: 'Operator', description: 'Machine operator with production access' },
+  { value: 'production_manager', label: 'Production Manager', description: 'Production department manager' },
+  { value: 'manager', label: 'Manager', description: 'General manager with team access' },
+  { value: 'accountant', label: 'Accountant', description: 'Financial and accounting access' },
+  { value: 'sales_executive', label: 'Sales Executive', description: 'Sales and customer access' },
+  { value: 'security_guard', label: 'Security Guard', description: 'Security and access control' },
+  { value: 'owner', label: 'Owner', description: 'Company owner with full access' },
   { value: 'super_admin', label: 'Super Admin', description: 'Full system access across all companies' }
 ]
 
 // Permission presets for different roles
 const PERMISSION_PRESETS: { [key: string]: { [module: string]: { [action: string]: boolean } } } = {
-  user: {
+  helper: {
     inventory: { view: true, create: false, edit: false, delete: false, approve: false, viewReports: false },
     production: { view: true, create: false, edit: false, delete: false, approve: false, viewReports: false, startProcess: false, qualityCheck: false },
     orders: { view: true, create: false, edit: false, delete: false, approve: false, viewReports: false, dispatch: false },
     financial: { view: false, create: false, edit: false, delete: false, approve: false, viewReports: false, bankTransactions: false },
     security: { gateManagement: false, visitorManagement: false, vehicleTracking: false, cctvAccess: false, emergencyResponse: false },
     hr: { viewEmployees: false, manageAttendance: false, manageSalary: false, viewReports: false },
+    admin: { userManagement: false, systemSettings: false, backupRestore: false, auditLogs: false }
+  },
+  operator: {
+    inventory: { view: true, create: false, edit: false, delete: false, approve: false, viewReports: false },
+    production: { view: true, create: true, edit: false, delete: false, approve: false, viewReports: false, startProcess: true, qualityCheck: false },
+    orders: { view: true, create: false, edit: false, delete: false, approve: false, viewReports: false, dispatch: false },
+    financial: { view: false, create: false, edit: false, delete: false, approve: false, viewReports: false, bankTransactions: false },
+    security: { gateManagement: false, visitorManagement: false, vehicleTracking: false, cctvAccess: false, emergencyResponse: false },
+    hr: { viewEmployees: false, manageAttendance: false, manageSalary: false, viewReports: false },
+    admin: { userManagement: false, systemSettings: false, backupRestore: false, auditLogs: false }
+  },
+  production_manager: {
+    inventory: { view: true, create: true, edit: true, delete: false, approve: false, viewReports: true },
+    production: { view: true, create: true, edit: true, delete: false, approve: false, viewReports: true, startProcess: true, qualityCheck: true },
+    orders: { view: true, create: true, edit: true, delete: false, approve: false, viewReports: true, dispatch: true },
+    financial: { view: true, create: false, edit: false, delete: false, approve: false, viewReports: true, bankTransactions: false },
+    security: { gateManagement: false, visitorManagement: false, vehicleTracking: false, cctvAccess: false, emergencyResponse: false },
+    hr: { viewEmployees: true, manageAttendance: true, manageSalary: false, viewReports: true },
     admin: { userManagement: false, systemSettings: false, backupRestore: false, auditLogs: false }
   },
   manager: {
@@ -94,7 +119,34 @@ const PERMISSION_PRESETS: { [key: string]: { [module: string]: { [action: string
     hr: { viewEmployees: true, manageAttendance: true, manageSalary: false, viewReports: true },
     admin: { userManagement: false, systemSettings: false, backupRestore: false, auditLogs: false }
   },
-  admin: {
+  accountant: {
+    inventory: { view: true, create: false, edit: false, delete: false, approve: false, viewReports: true },
+    production: { view: true, create: false, edit: false, delete: false, approve: false, viewReports: true, startProcess: false, qualityCheck: false },
+    orders: { view: true, create: false, edit: false, delete: false, approve: false, viewReports: true, dispatch: false },
+    financial: { view: true, create: true, edit: true, delete: false, approve: false, viewReports: true, bankTransactions: true },
+    security: { gateManagement: false, visitorManagement: false, vehicleTracking: false, cctvAccess: false, emergencyResponse: false },
+    hr: { viewEmployees: false, manageAttendance: false, manageSalary: true, viewReports: true },
+    admin: { userManagement: false, systemSettings: false, backupRestore: false, auditLogs: false }
+  },
+  sales_executive: {
+    inventory: { view: true, create: false, edit: false, delete: false, approve: false, viewReports: true },
+    production: { view: true, create: false, edit: false, delete: false, approve: false, viewReports: true, startProcess: false, qualityCheck: false },
+    orders: { view: true, create: true, edit: true, delete: false, approve: false, viewReports: true, dispatch: false },
+    financial: { view: true, create: false, edit: false, delete: false, approve: false, viewReports: true, bankTransactions: false },
+    security: { gateManagement: false, visitorManagement: false, vehicleTracking: false, cctvAccess: false, emergencyResponse: false },
+    hr: { viewEmployees: false, manageAttendance: false, manageSalary: false, viewReports: false },
+    admin: { userManagement: false, systemSettings: false, backupRestore: false, auditLogs: false }
+  },
+  security_guard: {
+    inventory: { view: false, create: false, edit: false, delete: false, approve: false, viewReports: false },
+    production: { view: false, create: false, edit: false, delete: false, approve: false, viewReports: false, startProcess: false, qualityCheck: false },
+    orders: { view: false, create: false, edit: false, delete: false, approve: false, viewReports: false, dispatch: false },
+    financial: { view: false, create: false, edit: false, delete: false, approve: false, viewReports: false, bankTransactions: false },
+    security: { gateManagement: true, visitorManagement: true, vehicleTracking: true, cctvAccess: true, emergencyResponse: true },
+    hr: { viewEmployees: false, manageAttendance: false, manageSalary: false, viewReports: false },
+    admin: { userManagement: false, systemSettings: false, backupRestore: false, auditLogs: false }
+  },
+  owner: {
     inventory: { view: true, create: true, edit: true, delete: true, approve: true, viewReports: true },
     production: { view: true, create: true, edit: true, delete: true, approve: true, viewReports: true, startProcess: true, qualityCheck: true },
     orders: { view: true, create: true, edit: true, delete: true, approve: true, viewReports: true, dispatch: true },
@@ -128,12 +180,12 @@ export default function UserFormModal({ isOpen, onClose, onSuccess, user }: User
     dateOfBirth: '',
     gender: '',
     primaryCompanyId: '',
-    role: 'user',
+    role: 'helper',
     department: '',
     designation: '',
     isActive: true,
     isSuperAdmin: false,
-    permissions: PERMISSION_PRESETS.user
+    permissions: PERMISSION_PRESETS.helper
   })
 
   const [showPassword, setShowPassword] = useState(false)
@@ -142,6 +194,9 @@ export default function UserFormModal({ isOpen, onClose, onSuccess, user }: User
 
   const [createUser, { isLoading: isCreating }] = useCreateUserMutation()
   const [updateUser, { isLoading: isUpdating }] = useUpdateUserMutation()
+
+  // Get current user for permissions
+  const currentUser = useSelector(selectCurrentUser)
 
   // Fetch companies for selection
   const { data: companiesResponse, isLoading: companiesLoading } = useGetAllCompaniesQuery()
@@ -152,6 +207,17 @@ export default function UserFormModal({ isOpen, onClose, onSuccess, user }: User
 
   // Helper function to get user ID
   const getUserId = (user: UserType) => user.id || user._id
+
+  // Function to update permissions when role changes
+  const updatePermissionsForRole = (role: string) => {
+    const rolePermissions = PERMISSION_PRESETS[role as keyof typeof PERMISSION_PRESETS]
+    if (rolePermissions) {
+      setFormData(prev => ({
+        ...prev,
+        permissions: rolePermissions
+      }))
+    }
+  }
 
   // Reset form when modal opens/closes or user changes
   useEffect(() => {
@@ -169,13 +235,17 @@ export default function UserFormModal({ isOpen, onClose, onSuccess, user }: User
           alternatePhone: user.personalInfo?.alternatePhone || '',
           dateOfBirth: user.personalInfo?.dateOfBirth || '',
           gender: user.personalInfo?.gender || '',
-          primaryCompanyId: user.primaryCompanyId || user.companyAccess?.[0]?.companyId || '',
-          role: user.companyAccess?.[0]?.role || user.role || 'user',
+          primaryCompanyId: typeof user.primaryCompanyId === 'string'
+            ? user.primaryCompanyId
+            : (typeof user.companyAccess?.[0]?.companyId === 'string'
+                ? user.companyAccess?.[0]?.companyId
+                : user.companyAccess?.[0]?.companyId?._id || ''),
+          role: user.companyAccess?.[0]?.role || user.role || 'helper',
           department: user.department || '',
           designation: user.designation || '',
           isActive: user.isActive ?? true,
           isSuperAdmin: user.isSuperAdmin || false,
-          permissions: user.companyAccess?.[0]?.permissions || PERMISSION_PRESETS.user
+          permissions: user.companyAccess?.[0]?.permissions || PERMISSION_PRESETS.helper
         })
       } else {
         setFormData({
@@ -191,12 +261,12 @@ export default function UserFormModal({ isOpen, onClose, onSuccess, user }: User
           dateOfBirth: '',
           gender: '',
           primaryCompanyId: '',
-          role: 'user',
+          role: 'helper',
           department: '',
           designation: '',
           isActive: true,
           isSuperAdmin: false,
-          permissions: PERMISSION_PRESETS.user
+          permissions: PERMISSION_PRESETS.helper
         })
       }
       setErrors({})
@@ -206,12 +276,25 @@ export default function UserFormModal({ isOpen, onClose, onSuccess, user }: User
   // Set default company when companies are loaded and no user is being edited
   useEffect(() => {
     if (!user && companies.length > 0 && !formData.primaryCompanyId) {
+      // For super admin, don't auto-select company
+      // For regular admin, select their company
+      const defaultCompany = currentUser?.isSuperAdmin ? '' : currentUser?.companyId || companies[0]?._id || ''
       setFormData(prev => ({
         ...prev,
-        primaryCompanyId: companies[0]?._id || ''
+        primaryCompanyId: defaultCompany
       }))
     }
-  }, [companies, user, formData.primaryCompanyId])
+  }, [companies, user, formData.primaryCompanyId, currentUser])
+
+  // Ensure permissions are always initialized
+  useEffect(() => {
+    if (!formData.permissions || Object.keys(formData.permissions).length === 0) {
+      setFormData(prev => ({
+        ...prev,
+        permissions: PERMISSION_PRESETS.helper
+      }))
+    }
+  }, [formData.permissions])
 
   const validateForm = (): boolean => {
     const newErrors: Partial<FormData> = {}
@@ -275,6 +358,8 @@ export default function UserFormModal({ isOpen, onClose, onSuccess, user }: User
 
     try {
       if (isEditing && user) {
+        // Note: Password is NOT included in update payload to prevent double hashing
+        // Password updates are handled separately through dedicated password change endpoints
         const updatePayload = {
           id: getUserId(user),
           user: {
@@ -306,7 +391,7 @@ export default function UserFormModal({ isOpen, onClose, onSuccess, user }: User
         }
         console.log('Update user payload:', updatePayload)
         await updateUser(updatePayload).unwrap()
-        toast.success('User updated successfully!')
+        // Success message is handled by parent component's onSuccess callback
       } else {
         const createPayload = {
           username: formData.username,
@@ -340,10 +425,10 @@ export default function UserFormModal({ isOpen, onClose, onSuccess, user }: User
         }
         console.log('Create user payload:', createPayload)
         await createUser(createPayload).unwrap()
-        toast.success('User created successfully!')
+        // Success message is handled by parent component's onSuccess callback
       }
 
-      onSuccess()
+      onSuccess(isEditing ? 'update' : 'create')
       onClose()
     } catch (error: any) {
       console.error(`${isEditing ? 'Update' : 'Create'} user error:`, error)
@@ -570,11 +655,14 @@ export default function UserFormModal({ isOpen, onClose, onSuccess, user }: User
                     disabled={companiesLoading}
                   >
                     <option value="">Select Company</option>
-                    {companies.map((company) => (
-                      <option key={company._id} value={company._id}>
-                        {company.companyName} ({company.companyCode})
-                      </option>
-                    ))}
+                    {companies
+                      .filter(company => company.isActive)
+                      .sort((a, b) => a.companyName.localeCompare(b.companyName))
+                      .map((company) => (
+                        <option key={company._id} value={company._id}>
+                          {company.companyName} ({company.companyCode})
+                        </option>
+                      ))}
                   </select>
                   {errors.primaryCompanyId && (
                     <p className="mt-1 text-sm text-red-600 font-medium">{errors.primaryCompanyId}</p>
@@ -617,7 +705,11 @@ export default function UserFormModal({ isOpen, onClose, onSuccess, user }: User
                   <select
                     required
                     value={formData.role}
-                    onChange={(e) => updateFormData({ role: e.target.value as UserType['role'] })}
+                    onChange={(e) => {
+                      const newRole = e.target.value
+                      updateFormData({ role: newRole as UserType['role'] })
+                      updatePermissionsForRole(newRole)
+                    }}
                     className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-all duration-200 bg-white text-gray-900 font-medium"
                   >
                     {ROLES.map((role) => (
@@ -702,7 +794,11 @@ export default function UserFormModal({ isOpen, onClose, onSuccess, user }: User
                   </p>
                   <select
                     value={formData.role}
-                    onChange={(e) => updateFormData({ role: e.target.value as UserType['role'] })}
+                    onChange={(e) => {
+                      const newRole = e.target.value
+                      updateFormData({ role: newRole as UserType['role'] })
+                      updatePermissionsForRole(newRole)
+                    }}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
                   >
                     {ROLES.map((role) => (
@@ -741,10 +837,10 @@ export default function UserFormModal({ isOpen, onClose, onSuccess, user }: User
                     <div className="flex flex-wrap gap-2">
                       <button
                         type="button"
-                        onClick={() => updateFormData({ permissions: PERMISSION_PRESETS.user })}
+                        onClick={() => updateFormData({ permissions: PERMISSION_PRESETS.helper })}
                         className="px-2 py-1 text-xs bg-blue-100 text-blue-700 rounded border border-blue-300 hover:bg-blue-200 transition-colors"
                       >
-                        Reset to User
+                        Reset to Helper
                       </button>
                       <button
                         type="button"
@@ -755,10 +851,10 @@ export default function UserFormModal({ isOpen, onClose, onSuccess, user }: User
                       </button>
                       <button
                         type="button"
-                        onClick={() => updateFormData({ permissions: PERMISSION_PRESETS.admin })}
+                        onClick={() => updateFormData({ permissions: PERMISSION_PRESETS.owner })}
                         className="px-2 py-1 text-xs bg-blue-100 text-blue-700 rounded border border-blue-300 hover:bg-blue-200 transition-colors"
                       >
-                        Set Admin
+                        Set Owner
                       </button>
                       <button
                         type="button"

@@ -14,6 +14,7 @@ import {
 import { Button } from '@/components/ui/Button'
 import { 
   Customer, 
+  CreateCustomerRequest,
   useCreateCustomerMutation, 
   useUpdateCustomerMutation 
 } from '@/lib/features/customers/customersApi'
@@ -185,17 +186,17 @@ export default function CustomerFormModal({ isOpen, onClose, onSuccess, customer
     }
 
     try {
-      const customerData = {
-        name: formData.name,
-        email: formData.email,
-        phone: formData.phone,
-        company: formData.company || undefined,
-        contactPerson: formData.contactPerson || undefined,
-        customerType: formData.customerType,
-        creditLimit: formData.creditLimit ? parseFloat(formData.creditLimit) : undefined,
-        paymentTerms: formData.paymentTerms || undefined,
-        taxId: formData.taxId || undefined,
-        website: formData.website || undefined,
+      const customerData: CreateCustomerRequest = {
+        customerName: formData.name,
+        companyId: formData.company || 'default-company',
+        businessInfo: {
+          businessType: formData.customerType === 'individual' ? 'individual' : 'private_limited',
+          industry: 'Manufacturing'
+        },
+        contactInfo: {
+          primaryPhone: formData.phone,
+          primaryEmail: formData.email
+        },
         address: {
           street: formData.address.street || undefined,
           city: formData.address.city || undefined,
@@ -203,15 +204,13 @@ export default function CustomerFormModal({ isOpen, onClose, onSuccess, customer
           country: formData.address.country || undefined,
           zipCode: formData.address.zipCode || undefined
         },
-        billingAddress: sameBillingAddress ? undefined : {
-          street: formData.billingAddress.street || undefined,
-          city: formData.billingAddress.city || undefined,
-          state: formData.billingAddress.state || undefined,
-          country: formData.billingAddress.country || undefined,
-          zipCode: formData.billingAddress.zipCode || undefined
-        },
-        notes: formData.notes || undefined,
-        tags: formData.tags ? formData.tags.split(',').map(tag => tag.trim()).filter(Boolean) : undefined
+        contactPerson: formData.contactPerson,
+        creditLimit: formData.creditLimit ? parseFloat(formData.creditLimit) : undefined,
+        paymentTerms: formData.paymentTerms,
+        taxId: formData.taxId,
+        website: formData.website,
+        notes: formData.notes,
+        tags: formData.tags ? formData.tags.split(',').map(tag => tag.trim()).filter(Boolean) : []
       }
 
       if (isEditing && customer) {

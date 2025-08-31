@@ -148,9 +148,9 @@ export class CronJobScheduler {
       for (const company of companies) {
         try {
           await this.processDailyReport(company._id.toString(), today);
-          console.log(`✅ Daily report generated for company: ${company.name}`);
+          console.log(`✅ Daily report generated for company: ${company.companyName}`);
         } catch (error) {
-          console.error(`❌ Error generating daily report for company ${company.name}:`, error);
+          console.error(`❌ Error generating daily report for company ${company.companyName}:`, error);
         }
       }
 
@@ -173,9 +173,9 @@ export class CronJobScheduler {
       for (const company of companies) {
         try {
           await this.processWeeklyReport(company._id.toString(), weekStart);
-          console.log(`✅ Weekly report generated for company: ${company.name}`);
+          console.log(`✅ Weekly report generated for company: ${company.companyName}`);
         } catch (error) {
-          console.error(`❌ Error generating weekly report for company ${company.name}:`, error);
+          console.error(`❌ Error generating weekly report for company ${company.companyName}:`, error);
         }
       }
 
@@ -200,9 +200,9 @@ export class CronJobScheduler {
       for (const company of companies) {
         try {
           await this.processMonthlyReport(company._id.toString(), month, year);
-          console.log(`✅ Monthly report generated for company: ${company.name}`);
+          console.log(`✅ Monthly report generated for company: ${company.companyName}`);
         } catch (error) {
-          console.error(`❌ Error generating monthly report for company ${company.name}:`, error);
+          console.error(`❌ Error generating monthly report for company ${company.companyName}:`, error);
         }
       }
 

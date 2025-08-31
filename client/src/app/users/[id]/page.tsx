@@ -33,7 +33,7 @@ export default function UserDetailsPage() {
   const params = useParams()
   const router = useRouter()
   const isSuperAdmin = useSelector(selectIsSuperAdmin)
-  const userId = params.id as string
+  const userId = params?.id as string
 
   const {
     data: user,
@@ -163,7 +163,7 @@ export default function UserDetailsPage() {
       user,
       onSuccess: () => {
         refetch()
-        toast.success(`2FA ${user.is2FAEnabled ? 'disabled' : 'enabled'} successfully!`)
+        toast.success(`2FA ${(user.is2FAEnabled || user.twoFactorEnabled) ? 'disabled' : 'enabled'} successfully!`)
       }
     })
   }
@@ -243,13 +243,13 @@ export default function UserDetailsPage() {
                   onClick={handleToggle2FA}
                   className={clsx(
                     'text-white',
-                    user.is2FAEnabled
+                    (user.is2FAEnabled || user.twoFactorEnabled)
                       ? 'bg-orange-500 hover:bg-orange-600'
                       : 'bg-purple-500 hover:bg-purple-600'
                   )}
                 >
                   <Shield className="w-4 h-4 mr-2" />
-                  {user.is2FAEnabled ? 'Disable 2FA' : 'Enable 2FA'}
+                  {(user.is2FAEnabled || user.twoFactorEnabled) ? 'Disable 2FA' : 'Enable 2FA'}
                 </Button>
                 <Button
                   onClick={handleDelete}
@@ -339,7 +339,7 @@ export default function UserDetailsPage() {
                             <div className="flex items-center gap-2">
                               <Building2 className="w-4 h-4 text-gray-600" />
                               <span className="font-medium text-gray-900">
-                                {access.companyName || `Company ${access.companyId}`}
+                                {access.companyId.companyName || `Company ${access.companyId._id}`}
                               </span>
                             </div>
                             <div className="flex items-center gap-2">
@@ -430,9 +430,9 @@ export default function UserDetailsPage() {
                     <p className="text-sm font-medium text-gray-600">Two-Factor Auth</p>
                     <p className={clsx(
                       'font-semibold',
-                      user.is2FAEnabled ? 'text-green-600' : 'text-gray-600'
+                      (user.is2FAEnabled || user.twoFactorEnabled) ? 'text-green-600' : 'text-gray-600'
                     )}>
-                      {user.is2FAEnabled ? 'Enabled' : 'Disabled'}
+                      {(user.is2FAEnabled || user.twoFactorEnabled) ? 'Enabled' : 'Disabled'}
                     </p>
                   </div>
                 </div>
@@ -454,7 +454,7 @@ export default function UserDetailsPage() {
           </div>
 
           {/* Security Alerts */}
-          {(!user.isEmailVerified || (user.loginAttempts && user.loginAttempts > 0)) && (
+          {(!user.isEmailVerified || (user.security?.failedLoginAttempts && user.security.failedLoginAttempts > 0)) && (
             <div className="mt-8 bg-yellow-50 rounded-2xl shadow-lg border border-yellow-200 p-6">
               <h3 className="text-lg font-semibold text-black mb-4 flex items-center">
                 <AlertTriangle className="w-5 h-5 mr-2 text-yellow-600" />
@@ -471,12 +471,12 @@ export default function UserDetailsPage() {
                   </div>
                 )}
                 
-                {user.loginAttempts && user.loginAttempts > 0 && (
+                {user.security?.failedLoginAttempts && user.security.failedLoginAttempts > 0 && (
                   <div className="flex items-center gap-3 p-3 bg-red-100 rounded-lg">
                     <AlertTriangle className="w-5 h-5 text-red-600" />
                     <div>
                       <p className="font-medium text-red-800">Failed Login Attempts</p>
-                      <p className="text-sm text-red-700">{user.loginAttempts} failed attempts detected</p>
+                      <p className="text-sm text-red-700">{user.security.failedLoginAttempts} failed attempts detected</p>
                     </div>
                   </div>
                 )}

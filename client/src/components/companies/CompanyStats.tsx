@@ -18,6 +18,9 @@ interface CompanyStatsProps {
     totalCompanies: number
     activeCompanies: number
     inactiveCompanies: number
+    suspendedCompanies: number
+    pendingApproval: number
+    underReview: number
     newThisMonth: number
     totalUsers?: number
     totalRevenue?: number
@@ -84,9 +87,9 @@ const CompanyStats: React.FC<CompanyStatsProps> = ({ stats, isLoading }) => {
       title: 'New This Month',
       value: stats.newThisMonth,
       icon: TrendingUp,
-      bgColor: 'bg-yellow-500',
-      iconBg: 'bg-yellow-400',
-      textColor: 'text-yellow-100',
+      bgColor: 'bg-blue-500',
+      iconBg: 'bg-blue-400',
+      textColor: 'text-blue-100',
       change: '+25%',
       changeType: 'positive' as const
     }
@@ -132,6 +135,8 @@ const CompanyStats: React.FC<CompanyStatsProps> = ({ stats, isLoading }) => {
           </div>
         ))}
       </div>
+
+
 
       {/* Additional Stats */}
       {(stats.totalUsers || stats.totalRevenue) && (

@@ -89,6 +89,9 @@ interface RoleBasedStatsProps {
     completedOrders?: number
     lowStockItems?: number
     activeProduction?: number
+    totalCompanies?: number
+    totalUsers?: number
+    systemHealth?: number
   }
   loading?: boolean
 }
@@ -104,37 +107,37 @@ export const RoleBasedStats: React.FC<RoleBasedStatsProps> = ({ stats, loading =
     // Super Admin - All stats
     if (isSuperAdmin) {
       roleStats.push(
-        { title: 'Total Companies', value: '12', change: '+2', changeType: 'increase' as const, icon: Building2, color: 'sky' as const },
-        { title: 'Total Users', value: stats?.totalEmployees || '0', change: '+5', changeType: 'increase' as const, icon: Users, color: 'black' as const },
-        { title: 'System Health', value: '98%', change: '+1%', changeType: 'increase' as const, icon: Settings, color: 'sky' as const },
-        { title: 'Total Revenue', value: `₹${(stats?.totalRevenue || 0).toLocaleString()}`, change: '+12%', changeType: 'increase' as const, icon: DollarSign, color: 'black' as const }
+        { title: 'Total Companies', value: stats?.totalCompanies || '0', change: undefined, changeType: undefined, icon: Building2, color: 'sky' as const },
+        { title: 'Total Users', value: stats?.totalUsers || '0', change: undefined, changeType: undefined, icon: Users, color: 'black' as const },
+        { title: 'System Health', value: `${stats?.systemHealth || 0}%`, change: undefined, changeType: undefined, icon: Settings, color: 'sky' as const },
+        { title: 'Total Revenue', value: `₹${(stats?.totalRevenue || 0).toLocaleString()}`, change: undefined, changeType: undefined, icon: DollarSign, color: 'black' as const }
       )
     }
     // Company Owner - Business overview
     else if (permissions.canViewFinancials && permissions.canViewOrders) {
       roleStats.push(
-        { title: 'Total Orders', value: stats?.totalOrders || '0', change: '+8%', changeType: 'increase' as const, icon: ShoppingCart, color: 'sky' as const },
-        { title: 'Revenue', value: `₹${(stats?.totalRevenue || 0).toLocaleString()}`, change: '+12%', changeType: 'increase' as const, icon: DollarSign, color: 'black' as const },
-        { title: 'Customers', value: stats?.totalCustomers || '0', change: '+15%', changeType: 'increase' as const, icon: Users, color: 'sky' as const },
-        { title: 'Products', value: stats?.totalProducts || '0', change: '+3%', changeType: 'increase' as const, icon: Package, color: 'black' as const }
+        { title: 'Total Orders', value: stats?.totalOrders || '0', change: undefined, changeType: undefined, icon: ShoppingCart, color: 'sky' as const },
+        { title: 'Revenue', value: `₹${(stats?.totalRevenue || 0).toLocaleString()}`, change: undefined, changeType: undefined, icon: DollarSign, color: 'black' as const },
+        { title: 'Customers', value: stats?.totalCustomers || '0', change: undefined, changeType: undefined, icon: Users, color: 'sky' as const },
+        { title: 'Products', value: stats?.totalProducts || '0', change: undefined, changeType: undefined, icon: Package, color: 'black' as const }
       )
     }
     // Production Manager - Production focused
     else if (permissions.canViewProduction) {
       roleStats.push(
-        { title: 'Active Production', value: stats?.activeProduction || '0', change: '+5%', changeType: 'increase' as const, icon: Factory, color: 'sky' as const },
-        { title: 'Completed Orders', value: stats?.completedOrders || '0', change: '+10%', changeType: 'increase' as const, icon: UserCheck, color: 'black' as const },
-        { title: 'Inventory Items', value: stats?.totalInventory || '0', change: '-2%', changeType: 'decrease' as const, icon: Package, color: 'sky' as const },
-        { title: 'Low Stock Alerts', value: stats?.lowStockItems || '0', change: '+1', changeType: 'increase' as const, icon: AlertTriangle, color: 'black' as const }
+        { title: 'Active Production', value: stats?.activeProduction || '0', change: undefined, changeType: undefined, icon: Factory, color: 'sky' as const },
+        { title: 'Completed Orders', value: stats?.completedOrders || '0', change: undefined, changeType: undefined, icon: UserCheck, color: 'black' as const },
+        { title: 'Inventory Items', value: stats?.totalInventory || '0', change: undefined, changeType: undefined, icon: Package, color: 'sky' as const },
+        { title: 'Low Stock Alerts', value: stats?.lowStockItems || '0', change: undefined, changeType: undefined, icon: AlertTriangle, color: 'black' as const }
       )
     }
     // Operator - Basic operational stats
     else {
       roleStats.push(
-        { title: 'My Tasks', value: '8', change: '+2', changeType: 'increase' as const, icon: UserCheck, color: 'sky' as const },
-        { title: 'Production Units', value: '156', change: '+12', changeType: 'increase' as const, icon: Factory, color: 'black' as const },
-        { title: 'Quality Checks', value: '24', change: '+3', changeType: 'increase' as const, icon: BarChart3, color: 'sky' as const },
-        { title: 'Pending Items', value: '5', change: '-1', changeType: 'decrease' as const, icon: AlertTriangle, color: 'black' as const }
+        { title: 'My Tasks', value: stats?.pendingOrders || '0', change: undefined, changeType: undefined, icon: UserCheck, color: 'sky' as const },
+        { title: 'Production Units', value: stats?.totalProduction || '0', change: undefined, changeType: undefined, icon: Factory, color: 'black' as const },
+        { title: 'Quality Checks', value: stats?.completedOrders || '0', change: undefined, changeType: undefined, icon: BarChart3, color: 'sky' as const },
+        { title: 'Pending Items', value: stats?.lowStockItems || '0', change: undefined, changeType: undefined, icon: AlertTriangle, color: 'black' as const }
       )
     }
 

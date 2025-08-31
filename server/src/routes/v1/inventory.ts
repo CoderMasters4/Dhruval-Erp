@@ -37,6 +37,13 @@ router.get('/search', inventoryController.searchItems.bind(inventoryController))
 router.get('/stats', inventoryController.getInventoryStats.bind(inventoryController));
 
 /**
+ * @route   GET /api/v2/inventory/alerts
+ * @desc    Get inventory alerts
+ * @access  Private
+ */
+router.get('/alerts', inventoryController.getInventoryAlerts.bind(inventoryController));
+
+/**
  * @route   GET /api/v2/inventory/low-stock
  * @desc    Get low stock items
  * @access  Private

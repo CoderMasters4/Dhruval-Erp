@@ -113,6 +113,14 @@ const authSlice = createSlice({
       }>
     ) => {
       const { user, token, refreshToken, companies, permissions } = action.payload
+      
+      console.log('AuthSlice: setCredentials called with:', { 
+        user: user._id, 
+        token: !!token, 
+        companies: companies?.length, 
+        permissions: Object.keys(permissions || {}) 
+      })
+      
       state.user = user
       state.token = token
       state.refreshToken = refreshToken || null
@@ -159,7 +167,22 @@ const authSlice = createSlice({
         if (refreshToken) localStorage.setItem('refreshToken', refreshToken)
         if (companies) localStorage.setItem('companies', JSON.stringify(companies))
         if (permissions) localStorage.setItem('permissions', JSON.stringify(permissions))
+        
+        // Verify token was stored correctly
+        const storedToken = localStorage.getItem('token')
+        if (storedToken !== token) {
+          console.error('AuthSlice: Token storage verification failed in setCredentials!')
+        } else {
+          console.log('AuthSlice: Token successfully stored in localStorage during setCredentials')
+        }
       }
+
+      console.log('AuthSlice: setCredentials completed, state updated:', {
+        isAuthenticated: state.isAuthenticated,
+        hasUser: !!state.user,
+        hasToken: !!state.token,
+        companiesCount: state.companies.length
+      })
     },
 
     switchCompany: (state, action: PayloadAction<Company>) => {
@@ -177,6 +200,8 @@ const authSlice = createSlice({
     },
 
     logout: (state) => {
+      console.log('AuthSlice: logout called, clearing authentication state');
+      
       state.user = null
       state.token = null
       state.refreshToken = null
@@ -195,7 +220,10 @@ const authSlice = createSlice({
         localStorage.removeItem('companies')
         localStorage.removeItem('permissions')
         localStorage.removeItem('currentCompany')
+        console.log('AuthSlice: localStorage cleared during logout')
       }
+
+      console.log('AuthSlice: logout completed, state cleared');
     },
     
     setLoading: (state, action: PayloadAction<boolean>) => {
@@ -238,6 +266,8 @@ const authSlice = createSlice({
     },
 
     initializeAuth: (state) => {
+      console.log('AuthSlice: initializeAuth called');
+      
       if (typeof window !== 'undefined') {
         const token = localStorage.getItem('token')
         const refreshToken = localStorage.getItem('refreshToken')
@@ -247,9 +277,18 @@ const authSlice = createSlice({
         const currentCompanyStr = localStorage.getItem('currentCompany')
         const currentCompanyId = localStorage.getItem('currentCompanyId')
 
+        console.log('AuthSlice: initializeAuth - localStorage data:', {
+          hasToken: !!token,
+          hasUser: !!userStr,
+          hasCompanies: !!companiesStr,
+          hasPermissions: !!permissionsStr,
+          tokenLength: token?.length || 0
+        })
+
         if (token && userStr) {
           try {
             const user = JSON.parse(userStr)
+            console.log('AuthSlice: initializeAuth - setting authenticated state for user:', user._id)
             state.user = user
             state.token = token
             state.refreshToken = refreshToken
@@ -270,7 +309,10 @@ const authSlice = createSlice({
             if (currentCompanyId) {
               state.currentCompanyId = currentCompanyId
             }
-          } catch {
+
+            console.log('AuthSlice: initializeAuth - authentication state restored successfully')
+          } catch (error) {
+            console.error('AuthSlice: initializeAuth - error parsing localStorage data:', error)
             // Clear invalid data
             localStorage.removeItem('token')
             localStorage.removeItem('refreshToken')
@@ -288,11 +330,14 @@ const authSlice = createSlice({
             state.currentCompany = null
             state.currentCompanyId = null
           }
+        } else {
+          console.log('AuthSlice: initializeAuth - no valid authentication data found in localStorage')
         }
       }
 
       state.isLoading = false
       state.isInitialized = true
+      console.log('AuthSlice: initializeAuth completed, isAuthenticated:', state.isAuthenticated)
     },
   },
 })

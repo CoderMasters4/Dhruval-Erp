@@ -180,6 +180,13 @@ const CompanySchema = new Schema<ICompany>({
   // Compliance & Licenses
   licenses: [LicenseSchema],
 
+  // Company Status
+  status: { 
+    type: String, 
+    enum: ['active', 'inactive', 'suspended', 'pending_approval', 'under_review'],
+    default: 'active'
+  },
+
   isActive: { type: Boolean, default: true },
   createdBy: { 
     type: Schema.Types.ObjectId, 

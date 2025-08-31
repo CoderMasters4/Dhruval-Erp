@@ -9,7 +9,7 @@ import {
 } from 'lucide-react'
 import { useSelector } from 'react-redux'
 import { selectIsSuperAdmin } from '@/lib/features/auth/authSlice'
-import { useGetAllUsersQuery } from '@/lib/features/users/usersApi'
+import { useGetAllUsersQuery, useGetCompaniesForFilteringQuery } from '@/lib/features/users/usersApi'
 import { AppLayout } from '@/components/layout/AppLayout'
 import { Button } from '@/components/ui/Button'
 import { Pagination } from '@/components/ui/Pagination'
@@ -26,6 +26,7 @@ interface UserFilters {
   search: string
   role: string
   status: string
+  companyId: string
   sortBy: string
   sortOrder: 'asc' | 'desc'
 }
@@ -50,6 +51,7 @@ export default function UsersPage() {
     search: '',
     role: 'all',
     status: 'all',
+    companyId: 'all',
     sortBy: 'name',
     sortOrder: 'asc'
   })
@@ -59,7 +61,7 @@ export default function UsersPage() {
     limit: 10
   })
 
-  // API query
+  // API queries
   const {
     data: usersResponse,
     isLoading,
@@ -71,10 +73,14 @@ export default function UsersPage() {
     search: filters.search || undefined,
     role: filters.role !== 'all' ? filters.role : undefined,
     status: filters.status !== 'all' ? filters.status : undefined,
+    companyId: filters.companyId !== 'all' ? filters.companyId : undefined,
   })
 
-  const users = usersResponse?.data || []
-  const paginationInfo = usersResponse?.pagination || { page: 1, limit: 10, total: 0, pages: 1 }
+  // Get companies for filtering (super admin only)
+  const { data: companiesResponse } = useGetCompaniesForFilteringQuery()
+
+  const users = usersResponse?.data?.users || []
+  const paginationInfo = usersResponse?.data?.pagination || { page: 1, limit: 10, total: 0, pages: 1 }
 
   // Event handlers
   const handleView = (user: any) => {
@@ -103,7 +109,7 @@ export default function UsersPage() {
           user,
           onSuccess: () => {
             refetch()
-            toast.success(`2FA ${user.is2FAEnabled ? 'disabled' : 'enabled'} successfully!`)
+            toast.success(`2FA ${(user.is2FAEnabled || user.twoFactorEnabled) ? 'disabled' : 'enabled'} successfully!`)
           }
         })
       }
@@ -145,7 +151,7 @@ export default function UsersPage() {
       user,
       onSuccess: () => {
         refetch()
-        toast.success(`2FA ${user.is2FAEnabled ? 'disabled' : 'enabled'} successfully!`)
+        toast.success(`2FA ${(user.is2FAEnabled || user.twoFactorEnabled) ? 'disabled' : 'enabled'} successfully!`)
       }
     })
   }
@@ -168,6 +174,7 @@ export default function UsersPage() {
       search: '',
       role: 'all',
       status: 'all',
+      companyId: 'all',
       sortBy: 'name',
       sortOrder: 'asc'
     })
@@ -260,7 +267,10 @@ export default function UsersPage() {
               ))}
             </div>
           }>
-            <UserStats users={users} isLoading={isLoading} />
+            <UserStats 
+              currentCompany={filters.companyId !== 'all' ? filters.companyId : undefined}
+              isSuperAdmin={isSuperAdmin}
+            />
           </Suspense>
 
           {/* Search and Filters */}
@@ -283,12 +293,18 @@ export default function UsersPage() {
               onFiltersChange={handleFilterChange}
               onReset={handleReset}
               onCreateNew={() => openUserForm({
-                onSuccess: () => {
+                onSuccess: (operation: 'create' | 'update') => {
                   refetch()
-                  toast.success('User created successfully!')
+                  if (operation === 'create') {
+                    toast.success('User created successfully!')
+                  } else {
+                    toast.success('User updated successfully!')
+                  }
                 }
               })}
               isLoading={isLoading}
+              companies={companiesResponse?.data || []}
+              isSuperAdmin={isSuperAdmin}
             />
           </Suspense>
 
@@ -338,13 +354,14 @@ export default function UsersPage() {
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 {(filters.search || filters.role !== 'all' || filters.status !== 'all') && (
                   <Button
-                    onClick={() => setFilters({
-                      search: '',
-                      role: 'all',
-                      status: 'all',
-                      sortBy: 'name',
-                      sortOrder: 'asc'
-                    })}
+                                      onClick={() => setFilters({
+                    search: '',
+                    role: 'all',
+                    status: 'all',
+                    companyId: 'all',
+                    sortBy: 'name',
+                    sortOrder: 'asc'
+                  })}
                     variant="outline"
                     className="border-blue-300 dark:border-blue-600 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all duration-200"
                   >
@@ -353,9 +370,13 @@ export default function UsersPage() {
                 )}
                 <Button
                   onClick={() => openUserForm({
-                    onSuccess: () => {
+                    onSuccess: (operation: 'create' | 'update') => {
                       refetch()
-                      toast.success('User created successfully!')
+                      if (operation === 'create') {
+                        toast.success('User created successfully!')
+                      } else {
+                        toast.success('User updated successfully!')
+                      }
                     }
                   })}
                   className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-lg hover:shadow-xl transition-all duration-200"

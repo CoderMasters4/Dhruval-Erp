@@ -36,7 +36,9 @@ import {
   Filter,
   Download,
   RefreshCw,
-  BarChart3
+  BarChart3,
+  Play,
+  Settings
 } from 'lucide-react'
 
 const COLORS = ['#0ea5e9', '#000000', '#87ceeb', '#0369a1', '#1e40af']

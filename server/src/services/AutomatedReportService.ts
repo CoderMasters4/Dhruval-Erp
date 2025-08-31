@@ -171,7 +171,7 @@ export class AutomatedReportService {
       stockMovements,
       lowStockItems: inventory.filter(item => item.stock.currentStock <= item.stock.reorderLevel),
       newItems: inventory.filter(item => 
-        item.lifecycle.createdAt >= startDate && item.lifecycle.createdAt <= endDate
+        item.createdAt >= startDate && item.createdAt <= endDate
       )
     };
   }
@@ -188,7 +188,7 @@ export class AutomatedReportService {
     return {
       totalOrders: productionOrders.length,
       completedOrders: productionOrders.filter(order => order.status === 'completed'),
-      pendingOrders: productionOrders.filter(order => order.status === 'pending'),
+      pendingOrders: productionOrders.filter(order => order.status === 'draft'),
       inProgressOrders: productionOrders.filter(order => order.status === 'in_progress'),
       totalProduction: productionOrders.reduce((sum, order) => sum + order.completedQuantity, 0),
       efficiency: this.calculateEfficiency(productionOrders)

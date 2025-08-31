@@ -52,7 +52,7 @@ import clsx from 'clsx'
 export default function SupplierDetailsPage() {
   const router = useRouter()
   const params = useParams()
-  const supplierId = params.id as string
+  const supplierId = params?.id as string
 
   // State management
   const [activeTab, setActiveTab] = useState('overview')

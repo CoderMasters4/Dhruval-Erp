@@ -5,6 +5,7 @@ export interface Company {
   companyCode: string
   companyName: string
   legalName?: string
+  status?: 'active' | 'inactive' | 'suspended' | 'pending_approval' | 'under_review'
   contactInfo: {
     phones: Array<{
       type: string

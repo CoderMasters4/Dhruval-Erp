@@ -3,23 +3,21 @@ import AuthController from '@/controllers/AuthController';
 
 const router = Router();
 
-// =============================================
-// AUTH ROUTES (No Authentication Required)
-// =============================================
+// Add debugging middleware for auth routes
+router.use((req, res, next) => {
+  console.log('Auth routes: Request received:', {
+    method: req.method,
+    path: req.path,
+    originalUrl: req.originalUrl,
+    body: req.body ? Object.keys(req.body) : 'no body'
+  });
+  next();
+});
 
-// User registration
+// Auth routes
 router.post('/register', AuthController.register);
-
-// User login
 router.post('/login', AuthController.login);
-
-// Refresh token
-router.post('/refresh-token', AuthController.refreshToken);
-
-// Logout (requires authentication)
 router.post('/logout', AuthController.logout);
-
-// Health check
-router.get('/health', AuthController.health);
+router.post('/refresh-token', AuthController.refreshToken);
 
 export default router;

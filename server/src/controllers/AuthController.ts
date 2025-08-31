@@ -8,6 +8,12 @@ class AuthController {
    */
   async login(req: Request, res: Response): Promise<void> {
     try {
+      console.log('AuthController: Login request received:', {
+        username: req.body.username,
+        hasPassword: !!req.body.password,
+        companyCode: req.body.companyCode
+      });
+
       const { username, password, companyCode } = req.body;
 
       // Basic validation
@@ -20,7 +26,14 @@ class AuthController {
         return;
       }
 
+      console.log('AuthController: Calling AuthService.login...');
       const result = await AuthService.login({ username, password, companyCode }, req, res);
+      
+      console.log('AuthController: AuthService.login result:', {
+        success: result.success,
+        hasData: !!result.data,
+        message: result.message
+      });
       
       if (result.success) {
         res.status(200).json(result);
@@ -29,7 +42,7 @@ class AuthController {
       }
 
     } catch (error) {
-      logger.error('Error in login controller:', error);
+      console.error('AuthController: Error in login controller:', error);
       res.status(500).json({
         success: false,
         error: 'Internal Server Error',
@@ -116,13 +129,21 @@ class AuthController {
    */
   async refreshToken(req: Request, res: Response): Promise<void> {
     try {
-      const { refreshToken } = req.body;
+      console.log('Refresh token request received:', {
+        cookies: req.cookies,
+        hasRefreshToken: !!req.cookies?.refreshToken,
+        refreshTokenLength: req.cookies?.refreshToken?.length || 0
+      });
+
+      // Read refresh token from HTTP-only cookie
+      const refreshToken = req.cookies?.refreshToken;
 
       if (!refreshToken) {
-        res.status(400).json({
+        console.log('No refresh token found in cookies');
+        res.status(401).json({
           success: false,
           error: 'Missing refresh token',
-          message: 'Refresh token is required'
+          message: 'Refresh token not found in cookies'
         });
         return;
       }
@@ -130,13 +151,15 @@ class AuthController {
       const result = await AuthService.refreshToken(refreshToken);
       
       if (result.success) {
+        console.log('Token refresh successful for user:', result.data?.userId);
         res.status(200).json(result);
       } else {
+        console.log('Token refresh failed:', result.error);
         res.status(401).json(result);
       }
 
     } catch (error) {
-      logger.error('Error in refresh token controller:', error);
+      console.error('Error in refresh token controller:', error);
       res.status(500).json({
         success: false,
         error: 'Internal Server Error',

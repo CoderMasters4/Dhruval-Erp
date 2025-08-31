@@ -67,7 +67,19 @@ export class CustomerController extends BaseController<ICustomer> {
   async getCustomersByCompany(req: Request, res: Response): Promise<void> {
     try {
       const companyId = req.user?.companyId;
-      const { page = 1, limit = 10, search, status } = req.query;
+      const { page = 1, limit = 10, search, status, companyId: filterCompanyId } = req.query;
+
+      // If super admin is filtering by specific company, use that company ID
+      if (filterCompanyId && req.user?.isSuperAdmin) {
+        const customers = await this.customerService.getCustomersByCompany(filterCompanyId.toString(), {
+          page: parseInt(page as string),
+          limit: parseInt(limit as string),
+          search: search as string,
+          status: status as string
+        });
+        this.sendSuccess(res, customers, 'Customers retrieved successfully');
+        return;
+      }
 
       if (!companyId) {
         this.sendError(res, new Error('Company ID is required'), 'Company ID is required', 400);
@@ -92,6 +104,48 @@ export class CustomerController extends BaseController<ICustomer> {
       this.sendSuccess(res, customers, 'Customers retrieved successfully');
     } catch (error) {
       this.sendError(res, error, 'Failed to get customers');
+    }
+  }
+
+  /**
+   * Get all customers across companies (Super Admin only)
+   */
+  async getAllCustomers(req: Request, res: Response): Promise<void> {
+    try {
+      // Check if user is super admin
+      if (!req.user?.isSuperAdmin) {
+        this.sendError(res, new Error('Access denied'), 'Super Admin privileges required', 403);
+        return;
+      }
+
+      const { page = 1, limit = 10, search, status, customerType, companyId } = req.query;
+
+      const options: any = {
+        page: parseInt(page as string),
+        limit: parseInt(limit as string)
+      };
+
+      if (search) {
+        options.search = search;
+      }
+
+      if (status) {
+        options.status = status;
+      }
+
+      if (customerType) {
+        options.customerType = customerType;
+      }
+
+      if (companyId) {
+        options.companyId = companyId;
+      }
+
+      const customers = await this.customerService.getAllCustomers(options);
+
+      this.sendSuccess(res, customers, 'All customers retrieved successfully');
+    } catch (error) {
+      this.sendError(res, error, 'Failed to get all customers');
     }
   }
 

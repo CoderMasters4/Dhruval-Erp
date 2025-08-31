@@ -26,6 +26,7 @@ interface CustomerFilters {
   search: string
   customerType: string
   status: string
+  companyId: string
   sortBy: string
   sortOrder: 'asc' | 'desc'
 }
@@ -39,6 +40,7 @@ export default function CustomersPage() {
     search: '',
     customerType: 'all',
     status: 'all',
+    companyId: 'all',
     sortBy: 'name',
     sortOrder: 'asc'
   })
@@ -54,6 +56,7 @@ export default function CustomersPage() {
     search: filters.search || undefined,
     customerType: filters.customerType !== 'all' ? filters.customerType : undefined,
     status: filters.status !== 'all' ? filters.status : undefined,
+    companyId: filters.companyId !== 'all' ? filters.companyId : undefined,
     sortBy: filters.sortBy,
     sortOrder: filters.sortOrder,
     page: 1,
@@ -106,6 +109,7 @@ export default function CustomersPage() {
       search: '',
       customerType: 'all',
       status: 'all',
+      companyId: 'all',
       sortBy: 'name',
       sortOrder: 'asc'
     })
@@ -196,7 +200,12 @@ export default function CustomersPage() {
           </div>
 
           {/* Stats Cards */}
-          <CustomerStats customers={customers} isLoading={isLoading} />
+          <CustomerStats 
+            customers={customers} 
+            isLoading={isLoading} 
+            currentCompany={filters.companyId !== 'all' ? filters.companyId : undefined}
+            isSuperAdmin={isSuperAdmin}
+          />
 
           {/* Search and Filters */}
           <CustomerFilters
@@ -251,7 +260,7 @@ export default function CustomersPage() {
                 }
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                {(filters.search || filters.customerType !== 'all' || filters.status !== 'all') && (
+                {(filters.search || filters.customerType !== 'all' || filters.status !== 'all' || filters.companyId !== 'all') && (
                   <Button
                     onClick={handleReset}
                     variant="outline"

@@ -99,8 +99,9 @@ export function UserTwoFactorManagement({
   }
 
   const getTwoFactorStats = () => {
-    const total = users.length
-    const enabled = users.filter(user => user.twoFactorEnabled).length
+    const usersArray = Array.isArray(users) ? users : []
+    const total = usersArray.length
+    const enabled = usersArray.filter(user => user.twoFactorEnabled).length
     const disabled = total - enabled
     const percentage = total > 0 ? Math.round((enabled / total) * 100) : 0
 

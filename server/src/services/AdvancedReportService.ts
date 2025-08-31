@@ -214,35 +214,292 @@ export class AdvancedReportService extends BaseService<IReport> {
    */
   async getReportStatistics(companyId: string): Promise<any> {
     try {
-      const filter = { companyId: new Types.ObjectId(companyId) };
+      const reports = await this.getReportsByCompany(companyId);
       
-      const [
-        totalReports,
-        activeReports,
-        draftReports,
-        categoryStats
-      ] = await Promise.all([
-        this.model.countDocuments(filter),
-        this.model.countDocuments({ ...filter, status: 'active' }),
-        this.model.countDocuments({ ...filter, status: 'draft' }),
-        this.model.aggregate([
-          { $match: filter },
-          { $group: { _id: '$reportCategory', count: { $sum: 1 } } }
-        ])
-      ]);
-
       return {
-        totalReports,
-        activeReports,
-        draftReports,
-        categoryStats: categoryStats.reduce((acc: any, item: any) => {
-          acc[item._id] = item.count;
-          return acc;
-        }, {})
+        totalReports: reports.length,
+        activeReports: reports.filter(r => r.isActive === true).length,
+        draftReports: reports.filter(r => r.status === 'draft').length,
+        scheduledReports: reports.filter(r => r.schedules && r.schedules.some(s => s.isActive)).length,
+        categories: this.groupByCategory(reports, 'reportCategory')
       };
     } catch (error) {
       logger.error('Error getting report statistics:', error);
       throw error;
     }
+  }
+
+  // Add missing methods that are called by the controller
+  async getScheduledReports(companyId: string): Promise<any[]> {
+    try {
+      const reports = await this.getReportsByCompany(companyId);
+      return reports.filter(r => r.schedules && r.schedules.some(s => s.isActive));
+    } catch (error) {
+      logger.error('Error getting scheduled reports:', error);
+      throw error;
+    }
+  }
+
+  async getReportTemplates(companyId: string): Promise<any[]> {
+    try {
+      const reports = await this.getReportsByCompany(companyId);
+      return reports.filter(r => r.isTemplate === true);
+    } catch (error) {
+      logger.error('Error getting report templates:', error);
+      throw error;
+    }
+  }
+
+  async getPublicReports(companyId: string): Promise<any[]> {
+    try {
+      const reports = await this.getReportsByCompany(companyId);
+      return reports.filter(r => r.accessControl?.isPublic === true);
+    } catch (error) {
+      logger.error('Error getting public reports:', error);
+      throw error;
+    }
+  }
+
+  async cloneReport(reportId: string, userId: string): Promise<any> {
+    try {
+      const originalReport = await this.findById(reportId);
+      if (!originalReport) {
+        throw new AppError('Report not found', 404);
+      }
+
+      const clonedData = {
+        ...originalReport.toObject(),
+        _id: undefined,
+        reportId: await this.generateReportId(originalReport.companyId),
+        reportName: `${originalReport.reportName} (Copy)`,
+        isTemplate: false,
+        createdBy: new Types.ObjectId(userId),
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
+
+      const clonedReport = await this.create(clonedData);
+      logger.info('Report cloned successfully', { originalId: reportId, newId: clonedReport._id });
+      
+      return clonedReport;
+    } catch (error) {
+      logger.error('Error cloning report:', error);
+      throw error;
+    }
+  }
+
+  async getReportStatus(reportId: string): Promise<any> {
+    try {
+      const report = await this.findById(reportId);
+      if (!report) {
+        throw new AppError('Report not found', 404);
+      }
+
+      return {
+        reportId,
+        status: report.status,
+        lastExecuted: report.lastExecuted,
+        nextScheduledRun: report.schedules?.find(s => s.isActive)?.nextExecution,
+        isActive: report.schedules?.some(s => s.isActive) || false
+      };
+    } catch (error) {
+      logger.error('Error getting report status:', error);
+      throw error;
+    }
+  }
+
+  async updateSchedule(reportId: string, schedule: any, userId: string): Promise<any> {
+    try {
+      const report = await this.findById(reportId);
+      if (!report) {
+        throw new AppError('Report not found', 404);
+      }
+
+      const updatedReport = await this.update(reportId, {
+        schedules: [
+          ...(report.schedules || []),
+          {
+            ...schedule,
+            updatedBy: new Types.ObjectId(userId),
+            updatedAt: new Date()
+          }
+        ]
+      });
+
+      logger.info('Report schedule updated successfully', { reportId });
+      return updatedReport;
+    } catch (error) {
+      logger.error('Error updating report schedule:', error);
+      throw error;
+    }
+  }
+
+  async updateDistribution(reportId: string, distribution: any, userId: string): Promise<any> {
+    try {
+      const report = await this.findById(reportId);
+      if (!report) {
+        throw new AppError('Report not found', 404);
+      }
+
+      const updatedReport = await this.update(reportId, {
+        customFields: {
+          ...report.customFields,
+          distribution: {
+            ...distribution,
+            updatedBy: new Types.ObjectId(userId),
+            updatedAt: new Date()
+          }
+        }
+      });
+
+      logger.info('Report distribution updated successfully', { reportId });
+      return updatedReport;
+    } catch (error) {
+      logger.error('Error updating report distribution:', error);
+      throw error;
+    }
+  }
+
+  async updateAccessControl(reportId: string, accessControl: any, userId: string): Promise<any> {
+    try {
+      const report = await this.findById(reportId);
+      if (!report) {
+        throw new AppError('Report not found', 404);
+      }
+
+      const updatedReport = await this.update(reportId, {
+        accessControl: {
+          ...report.accessControl,
+          ...accessControl,
+          updatedBy: new Types.ObjectId(userId),
+          updatedAt: new Date()
+        }
+      });
+
+      logger.info('Report access control updated successfully', { reportId });
+      return updatedReport;
+    } catch (error) {
+      logger.error('Error updating report access control:', error);
+      throw error;
+    }
+  }
+
+  async getReportAnalytics(reportId: string): Promise<any> {
+    try {
+      const report = await this.findById(reportId);
+      if (!report) {
+        throw new AppError('Report not found', 404);
+      }
+
+      return {
+        reportId,
+        totalExecutions: report.totalExecutions || 0,
+        lastExecuted: report.lastExecuted,
+        performance: report.performance || {},
+        executions: report.executions || []
+      };
+    } catch (error) {
+      logger.error('Error getting report analytics:', error);
+      throw error;
+    }
+  }
+
+  async grantAccess(reportId: string, targetUserId: string, permissions: string[], grantedBy: string): Promise<any> {
+    try {
+      const report = await this.findById(reportId);
+      if (!report) {
+        throw new AppError('Report not found', 404);
+      }
+
+      const accessControl = report.accessControl || {};
+      const allowedUsers = (accessControl as any).allowedUsers || [];
+      
+      // Remove existing access for this user
+      const filteredUsers = allowedUsers.filter(
+        (userId: Types.ObjectId) => userId.toString() !== targetUserId
+      );
+
+      // Add new access
+      filteredUsers.push(new Types.ObjectId(targetUserId));
+
+      const updatedReport = await this.update(reportId, { 
+        accessControl: {
+          ...accessControl,
+          allowedUsers: filteredUsers
+        }
+      });
+      
+      logger.info('Access granted successfully', { reportId, targetUserId, permissions });
+      
+      return updatedReport;
+    } catch (error) {
+      logger.error('Error granting access:', error);
+      throw error;
+    }
+  }
+
+  async revokeAccess(reportId: string, targetUserId: string, revokedBy: string): Promise<void> {
+    try {
+      const report = await this.findById(reportId);
+      if (!report) {
+        throw new AppError('Report not found', 404);
+      }
+
+      const accessControl = report.accessControl || {};
+      if ((accessControl as any).allowedUsers) {
+        (accessControl as any).allowedUsers = (accessControl as any).allowedUsers.filter(
+          (userId: Types.ObjectId) => userId.toString() !== targetUserId
+        );
+      }
+
+      await this.update(reportId, { accessControl });
+      logger.info('Access revoked successfully', { reportId, targetUserId });
+    } catch (error) {
+      logger.error('Error revoking access:', error);
+      throw error;
+    }
+  }
+
+  async searchReports(companyId: string, query: string, filters: any = {}): Promise<any[]> {
+    try {
+      const searchFilter: any = { companyId: new Types.ObjectId(companyId) };
+      
+      if (query) {
+        searchFilter.$or = [
+          { reportName: { $regex: query, $options: 'i' } },
+          { description: { $regex: query, $options: 'i' } },
+          { reportCategory: { $regex: query, $options: 'i' } }
+        ];
+      }
+
+      // Apply additional filters
+      if (filters.status) searchFilter.status = filters.status;
+      if (filters.category) searchFilter.reportCategory = filters.category;
+      if (filters.dateFrom || filters.dateTo) {
+        searchFilter.createdAt = {};
+        if (filters.dateFrom) searchFilter.createdAt.$gte = new Date(filters.dateFrom);
+        if (filters.dateTo) searchFilter.createdAt.$lte = new Date(filters.dateTo);
+      }
+
+      const reports = await this.findMany(searchFilter, {
+        sort: { createdAt: -1 }
+      });
+
+      return reports;
+    } catch (error) {
+      logger.error('Error searching reports:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Group items by a specific field
+   */
+  private groupByCategory(items: any[], field: string): any {
+    return items.reduce((acc: any, item: any) => {
+      const category = item[field] || 'Unknown';
+      acc[category] = (acc[category] || 0) + 1;
+      return acc;
+    }, {});
   }
 }

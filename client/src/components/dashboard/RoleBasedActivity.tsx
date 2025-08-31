@@ -16,6 +16,7 @@ import {
 import { useDashboardPermissions } from '@/lib/hooks/useDashboardPermissions'
 import { useSelector } from 'react-redux'
 import { selectIsSuperAdmin } from '@/lib/features/auth/authSlice'
+import { useGetRecentActivitiesQuery } from '@/lib/api/dashboardApi'
 
 interface Activity {
   id: string
@@ -74,181 +75,15 @@ export const RoleBasedActivity: React.FC<RoleBasedActivityProps> = ({ activities
   // Use provided permissions or fallback to hook
   const actualPermissions = permissions || dashboardPermissions
 
-  const getActivitiesForRole = (): Activity[] => {
-    // If activities are provided as props, use them
-    if (propActivities && propActivities.length > 0) {
-      return propActivities
-    }
-    // Super Admin - System-wide activities
-    if (isSuperAdmin) {
-      return [
-        {
-          id: '1',
-          type: 'system',
-          title: 'System Backup Completed',
-          description: 'Daily backup completed successfully for all companies',
-          timestamp: '2 minutes ago',
-          user: 'System',
-          status: 'success'
-        },
-        {
-          id: '2',
-          type: 'user',
-          title: 'New Company Registered',
-          description: 'ABC Manufacturing Ltd. registered with 15 users',
-          timestamp: '15 minutes ago',
-          user: 'Admin',
-          status: 'info'
-        },
-        {
-          id: '3',
-          type: 'system',
-          title: 'Security Alert',
-          description: 'Multiple failed login attempts detected',
-          timestamp: '1 hour ago',
-          user: 'Security System',
-          status: 'warning'
-        },
-        {
-          id: '4',
-          type: 'finance',
-          title: 'Monthly Revenue Report',
-          description: 'Generated revenue report for all companies',
-          timestamp: '2 hours ago',
-          user: 'System',
-          status: 'success'
-        }
-      ]
-    }
-    
-    // Company Owner - Business activities
-    if (actualPermissions.canViewFinancials && actualPermissions.canViewOrders) {
-      return [
-        {
-          id: '1',
-          type: 'order',
-          title: 'New Order Received',
-          description: 'Order #ORD-2024-001 from Reliance Industries - ₹2,50,000',
-          timestamp: '5 minutes ago',
-          user: 'Sales Team',
-          status: 'success'
-        },
-        {
-          id: '2',
-          type: 'finance',
-          title: 'Payment Received',
-          description: 'Payment of ₹1,80,000 received from Tata Motors',
-          timestamp: '30 minutes ago',
-          user: 'Accounts',
-          status: 'success'
-        },
-        {
-          id: '3',
-          type: 'production',
-          title: 'Production Target Achieved',
-          description: 'Monthly production target of 500 units completed',
-          timestamp: '1 hour ago',
-          user: 'Production Manager',
-          status: 'success'
-        },
-        {
-          id: '4',
-          type: 'inventory',
-          title: 'Low Stock Alert',
-          description: 'Steel sheets inventory below minimum threshold',
-          timestamp: '2 hours ago',
-          user: 'Inventory System',
-          status: 'warning'
-        }
-      ]
-    }
-    
-    // Production Manager - Production focused
-    if (actualPermissions.canViewProduction) {
-      return [
-        {
-          id: '1',
-          type: 'production',
-          title: 'Production Line Started',
-          description: 'Line A started production of automotive parts',
-          timestamp: '10 minutes ago',
-          user: 'Operator 1',
-          status: 'info'
-        },
-        {
-          id: '2',
-          type: 'quality',
-          title: 'Quality Check Passed',
-          description: 'Batch QC-2024-045 passed all quality parameters',
-          timestamp: '25 minutes ago',
-          user: 'Quality Inspector',
-          status: 'success'
-        },
-        {
-          id: '3',
-          type: 'inventory',
-          title: 'Raw Material Received',
-          description: 'Steel sheets - 500 kg received from supplier',
-          timestamp: '45 minutes ago',
-          user: 'Store Keeper',
-          status: 'success'
-        },
-        {
-          id: '4',
-          type: 'production',
-          title: 'Machine Maintenance',
-          description: 'CNC Machine 3 scheduled for maintenance',
-          timestamp: '1 hour ago',
-          user: 'Maintenance Team',
-          status: 'warning'
-        }
-      ]
-    }
-    
-    // Operator - Task focused
-    return [
-      {
-        id: '1',
-        type: 'production',
-        title: 'Task Completed',
-        description: 'Completed machining of 25 automotive parts',
-        timestamp: '15 minutes ago',
-        user: 'You',
-        status: 'success'
-      },
-      {
-        id: '2',
-        type: 'quality',
-        title: 'Quality Check Required',
-        description: 'Batch ready for quality inspection',
-        timestamp: '30 minutes ago',
-        user: 'Production System',
-        status: 'info'
-      },
-      {
-        id: '3',
-        type: 'production',
-        title: 'New Task Assigned',
-        description: 'Assembly of electronic components - 50 units',
-        timestamp: '1 hour ago',
-        user: 'Supervisor',
-        status: 'info'
-      },
-      {
-        id: '4',
-        type: 'inventory',
-        title: 'Material Request',
-        description: 'Requested additional screws for assembly',
-        timestamp: '2 hours ago',
-        user: 'You',
-        status: 'info'
-      }
-    ]
-  }
+  // Fetch real activities from API if not provided
+  const { data: apiActivities, isLoading: apiLoading } = useGetRecentActivitiesQuery({ limit: 10 })
 
-  const activities = getActivitiesForRole()
+  // Use provided activities, then API activities, then empty array
+  const activities = propActivities || apiActivities || []
 
-  if (loading) {
+  const isLoading = loading || apiLoading
+
+  if (isLoading) {
     return (
       <div className="bg-white rounded-xl border-2 border-sky-500 p-6">
         <div className="flex items-center justify-between mb-6">
@@ -270,6 +105,27 @@ export const RoleBasedActivity: React.FC<RoleBasedActivityProps> = ({ activities
     )
   }
 
+  // Show empty state when no activities
+  if (!activities || activities.length === 0) {
+    return (
+      <div className="bg-white rounded-xl border-2 border-sky-500 p-6">
+        <div className="flex items-center justify-between mb-6">
+          <h3 className="text-lg font-semibold text-black">Recent Activity</h3>
+        </div>
+        <div className="text-center py-8">
+          <Clock className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+          <h3 className="text-lg font-medium text-gray-900 mb-2">No Recent Activity</h3>
+          <p className="text-gray-500">
+            {isSuperAdmin 
+              ? 'No system activities to display at the moment.'
+              : 'No company activities to display at the moment.'
+            }
+          </p>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="bg-white rounded-xl border-2 border-sky-500 p-4 sm:p-6">
       <div className="flex items-center justify-between mb-4 sm:mb-6">
@@ -280,7 +136,7 @@ export const RoleBasedActivity: React.FC<RoleBasedActivityProps> = ({ activities
       </div>
 
       <div className="space-y-3 sm:space-y-4">
-        {activities.map((activity) => (
+        {activities.map((activity: Activity) => (
           <div key={activity.id} className="flex items-start space-x-3 p-2 sm:p-3 rounded-lg hover:bg-sky-50 transition-colors">
             <div className="flex-shrink-0 w-8 h-8 sm:w-10 sm:h-10 bg-white border-2 border-sky-500 rounded-full flex items-center justify-center">
               {getActivityIcon(activity.type, activity.status)}

@@ -16,14 +16,19 @@ import logger from '@/utils/logger';
 export const corsOptions = {
   origin: function (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) {
     // Allow requests with no origin (mobile apps, Postman, etc.)
-    if (!origin) return callback(null, true);
+    if (!origin) {
+      console.log('CORS: Allowing request with no origin');
+      return callback(null, true);
+    }
 
     // In development, be more permissive
     if (config.NODE_ENV === 'development') {
+      console.log('CORS: Allowing request from origin:', origin);
       return callback(null, true);
     }
 
     if (config.CORS_ORIGIN.includes(origin)) {
+      console.log('CORS: Allowing request from allowed origin:', origin);
       callback(null, true);
     } else {
       logger.warn('CORS blocked request', {
@@ -34,7 +39,7 @@ export const corsOptions = {
       callback(new Error('Not allowed by CORS'), false);
     }
   },
-  credentials: config.CORS_CREDENTIALS,
+  credentials: true, // Always allow credentials for authentication
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: [
     'Origin',
@@ -59,7 +64,8 @@ export const corsOptions = {
     'X-Rate-Limit-Reset'
   ],
   maxAge: 86400, // 24 hours
-  optionsSuccessStatus: 200 // Some legacy browsers (IE11, various SmartTVs) choke on 204
+  optionsSuccessStatus: 200, // Some legacy browsers (IE11, various SmartTVs) choke on 204
+  preflightContinue: false
 };
 
 // =============================================

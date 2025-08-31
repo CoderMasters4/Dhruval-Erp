@@ -176,7 +176,7 @@ const ShiftPage = () => {
               <div className="ml-3">
                 <p className="text-sm text-gray-600">Active Shifts</p>
                 <p className="text-2xl font-bold">
-                  {shifts.filter(shift => shift.isActive !== false).length}
+                  {shifts.filter(shift => shift.isDefault !== false).length}
                 </p>
               </div>
             </div>

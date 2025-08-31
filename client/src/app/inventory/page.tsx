@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useSelector } from 'react-redux'
 import {
   Package,
@@ -41,6 +41,14 @@ export default function InventoryPage() {
   const [statusFilter, setStatusFilter] = useState('all')
   const [page, setPage] = useState(1)
   const [viewMode, setViewMode] = useState<ViewMode>('list')
+  
+  // Add client-side state to prevent hydration mismatch
+  const [isClient, setIsClient] = useState(false)
+
+  // Set client-side state after hydration
+  useEffect(() => {
+    setIsClient(true)
+  }, [])
 
   // Fetch inventory data
   const { data: inventoryData, isLoading, error } = useGetInventoryItemsQuery({
@@ -57,11 +65,12 @@ export default function InventoryPage() {
   // Fetch inventory alerts
   const { data: inventoryAlerts } = useGetInventoryAlertsQuery({})
 
-  const items = inventoryData?.data || []
-  const pagination = inventoryData?.pagination
+  const items = inventoryData?.data?.data || []
+  const pagination = inventoryData?.data?.pagination
   const alerts = inventoryAlerts?.data || []
 
   const formatCurrency = (amount: number) => {
+    if (!isClient) return '₹0' // Return default value on server
     return new Intl.NumberFormat('en-IN', {
       style: 'currency',
       currency: 'INR',
@@ -94,6 +103,25 @@ export default function InventoryPage() {
       default:
         return null
     }
+  }
+
+  // Don't render until client-side hydration is complete
+  if (!isClient) {
+    return (
+      <AppLayout>
+        <div className="space-y-6">
+          <div className="animate-pulse">
+            <div className="h-16 bg-gray-200 rounded-lg mb-6"></div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+              {[1, 2, 3, 4].map((i) => (
+                <div key={i} className="h-24 bg-gray-200 rounded-lg"></div>
+              ))}
+            </div>
+            <div className="h-96 bg-gray-200 rounded-lg"></div>
+          </div>
+        </div>
+      </AppLayout>
+    )
   }
 
   return (
@@ -227,11 +255,11 @@ export default function InventoryPage() {
                   className="w-full px-3 py-2 border-2 border-sky-200 rounded-lg focus:outline-none focus:border-sky-500 bg-white text-black"
                 >
                   <option value="all">All Categories</option>
-                  <option value="Raw Materials">Raw Materials</option>
-                  <option value="Finished Goods">Finished Goods</option>
-                  <option value="Work in Progress">Work in Progress</option>
-                  <option value="Packaging">Packaging</option>
-                  <option value="Tools & Equipment">Tools & Equipment</option>
+                  <option value="raw_material">Raw Materials</option>
+                  <option value="finished_goods">Finished Goods</option>
+                  <option value="semi_finished">Work in Progress</option>
+                  <option value="consumables">Consumables</option>
+                  <option value="spare_parts">Tools & Equipment</option>
                 </select>
               </div>
 
@@ -295,67 +323,43 @@ export default function InventoryPage() {
                 render: (category) => (
                   <div className="flex items-center">
                     <Tag className="w-4 h-4 text-sky-500 mr-2" />
-                    <span className="text-sm text-black">{category}</span>
+                    <span className="text-sm text-black">{category?.primary || 'N/A'}</span>
                   </div>
                 )
               },
               {
-                key: 'currentStock',
+                key: 'stock',
                 label: 'Stock',
-                render: (currentStock, item) => (
-                  <div>
-                    <div className="text-sm font-medium text-black">
-                      {currentStock} {item.unit}
-                    </div>
-                    <div className="text-sm text-black opacity-60">
-                      Min: {item.minStock} | Max: {item.maxStock}
-                    </div>
+                render: (stock) => (
+                  <div className="text-sm text-black">
+                    <div className="font-medium">{stock.currentStock} {stock.unit}</div>
+                    <div className="text-xs opacity-60">Available: {stock.availableStock}</div>
                   </div>
                 )
               },
               {
-                key: 'status',
-                label: 'Status',
-                render: (status) => (
-                  <span className={getStatusBadge(status)}>
-                    {getStockIcon(status)}
-                    {status.replace('_', ' ')}
-                  </span>
-                )
-              },
-              {
-                key: 'totalValue',
+                key: 'pricing',
                 label: 'Value',
-                render: (totalValue, item) => (
-                  <div>
-                    <div className="text-sm font-medium text-black">
-                      {formatCurrency(totalValue)}
-                    </div>
-                    <div className="text-sm text-black opacity-60">
-                      @ {formatCurrency(item.unitPrice)}/{item.unit}
-                    </div>
+                render: (pricing) => (
+                  <div className="text-sm text-black">
+                    <div className="font-medium">{formatCurrency(pricing.costPrice || 0)}</div>
+                    <div className="text-xs opacity-60">MRP: {formatCurrency(pricing.mrp || 0)}</div>
                   </div>
                 )
               },
               {
-                key: 'location',
-                label: 'Location',
-                render: (location) => (
+                key: 'quality',
+                label: 'Quality',
+                render: (quality) => (
                   <div className="flex items-center">
-                    <Warehouse className="w-4 h-4 text-sky-500 mr-2" />
-                    <span className="text-sm text-black">{location}</span>
-                  </div>
-                )
-              },
-              {
-                key: 'lastUpdated',
-                label: 'Last Updated',
-                render: (lastUpdated) => (
-                  <div className="flex items-center">
-                    <Calendar className="w-4 h-4 text-sky-500 mr-2" />
-                    <span className="text-sm text-black">
-                      {lastUpdated ? new Date(lastUpdated).toLocaleDateString() : 'N/A'}
-                    </span>
+                    <Badge 
+                      variant={quality.qualityGrade === 'A' ? 'default' : 'secondary'}
+                      className={clsx(
+                        quality.qualityGrade === 'A' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+                      )}
+                    >
+                      {quality.qualityGrade}
+                    </Badge>
                   </div>
                 )
               },
@@ -364,75 +368,62 @@ export default function InventoryPage() {
                 label: 'Actions',
                 render: (_, item) => (
                   <div className="flex items-center space-x-2">
-                    <button className="text-sky-500 hover:text-black p-1 rounded hover:bg-sky-50">
+                    <Button variant="outline" size="sm">
                       <Eye className="h-4 w-4" />
-                    </button>
-                    <button className="text-sky-500 hover:text-black p-1 rounded hover:bg-sky-50">
+                    </Button>
+                    <Button variant="outline" size="sm">
                       <Edit className="h-4 w-4" />
-                    </button>
+                    </Button>
                   </div>
                 )
               }
             ]}
             renderGridCard={(item) => (
-              <div className="p-6">
-                <div className="flex items-center mb-4">
-                  <div className="flex-shrink-0 h-12 w-12">
-                    <div className="h-12 w-12 rounded-lg bg-sky-500 flex items-center justify-center">
-                      <Package className="w-6 h-6 text-white" />
-                    </div>
+              <div className="bg-white rounded-lg border border-sky-200 p-4 hover:shadow-md transition-shadow">
+                <div className="flex items-center mb-3">
+                  <div className="h-12 w-12 rounded-lg bg-sky-500 flex items-center justify-center mr-3">
+                    <Package className="w-6 h-6 text-white" />
                   </div>
-                  <div className="ml-4 flex-1">
-                    <h3 className="text-lg font-medium text-black">
-                      {item.itemName}
-                    </h3>
-                    <p className="text-sm text-black opacity-60">{item.itemCode}</p>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <button className="text-sky-500 hover:text-black p-1 rounded hover:bg-sky-50">
-                      <Eye className="h-4 w-4" />
-                    </button>
-                    <button className="text-sky-500 hover:text-black p-1 rounded hover:bg-sky-50">
-                      <Edit className="h-4 w-4" />
-                    </button>
+                  <div className="flex-1">
+                    <h3 className="font-medium text-black text-sm">{item.itemName}</h3>
+                    <p className="text-xs text-black opacity-60">{item.itemCode}</p>
                   </div>
                 </div>
 
-                <div className="space-y-3">
+                <div className="space-y-2 mb-3">
                   <div className="flex items-center">
-                    <Tag className="w-4 h-4 text-sky-500 mr-3" />
-                    <span className="text-sm text-black">{item.category}</span>
+                    <Tag className="w-4 h-4 text-sky-500 mr-2" />
+                    <span className="text-sm text-black">{item.category?.primary || 'N/A'}</span>
                   </div>
-
                   <div className="flex items-center">
                     <Warehouse className="w-4 h-4 text-sky-500 mr-3" />
-                    <span className="text-sm text-black">{item.location}</span>
+                    <span className="text-sm text-black">{item.locations?.length > 0 ? item.locations[0] : 'No Location'}</span>
                   </div>
+                </div>
 
-                  <div className="grid grid-cols-2 gap-4 pt-3 border-t border-sky-200">
-                    <div>
-                      <div className="text-xs text-black opacity-60 uppercase tracking-wider">Stock</div>
-                      <div className="text-sm font-medium text-black">
-                        {item.currentStock} {item.unit}
-                      </div>
-                    </div>
-                    <div>
-                      <div className="text-xs text-black opacity-60 uppercase tracking-wider">Value</div>
-                      <div className="text-sm font-medium text-black">
-                        {formatCurrency(item.totalValue)}
-                      </div>
+                <div className="grid grid-cols-2 gap-4 pt-3 border-t border-sky-200">
+                  <div>
+                    <div className="text-xs text-black opacity-60 uppercase tracking-wider">Stock</div>
+                    <div className="text-sm font-medium text-black">
+                      {item.stock?.currentStock || 0} {item.stock?.unit || 'units'}
                     </div>
                   </div>
-
-                  <div className="flex items-center justify-between pt-3 border-t border-sky-200">
-                    <span className={getStatusBadge(item.status)}>
-                      {getStockIcon(item.status)}
-                      {item.status.replace('_', ' ')}
-                    </span>
-                    <span className="text-xs text-black opacity-60">
-                      @ {formatCurrency(item.unitPrice)}/{item.unit}
-                    </span>
+                  <div>
+                    <div className="text-xs text-black opacity-60 uppercase tracking-wider">Value</div>
+                    <div className="text-sm font-medium text-black">
+                      {formatCurrency(item.pricing?.costPrice || 0)}
+                    </div>
                   </div>
+                </div>
+
+                <div className="flex items-center justify-between pt-3 border-t border-sky-200">
+                  <span className={getStatusBadge(item.stock?.currentStock <= (item.stock?.reorderLevel || 0) ? 'low_stock' : 'normal')}>
+                    {getStockIcon(item.stock?.currentStock <= (item.stock?.reorderLevel || 0) ? 'low_stock' : 'normal')}
+                    {item.stock?.currentStock <= (item.stock?.reorderLevel || 0) ? 'Low Stock' : 'Normal'}
+                  </span>
+                  <span className="text-xs text-black opacity-60">
+                    @ {formatCurrency(item.pricing?.costPrice || 0)}/{item.stock?.unit || 'unit'}
+                  </span>
                 </div>
               </div>
             )}
@@ -441,7 +432,7 @@ export default function InventoryPage() {
           />
 
           {/* Pagination */}
-          {pagination && pagination.pages > 1 && (
+          {pagination && pagination.totalPages > 1 && (
             <div className="bg-indigo-50 px-6 py-4 flex items-center justify-between border-t border-indigo-200 rounded-b-xl">
               <div className="text-sm text-gray-700">
                 Showing {((pagination.page - 1) * pagination.limit) + 1} to {Math.min(pagination.page * pagination.limit, pagination.total)} of {pagination.total} items
@@ -458,7 +449,7 @@ export default function InventoryPage() {
 
                 <div className="flex items-center space-x-1">
                   {/* Page numbers */}
-                  {Array.from({ length: Math.min(5, pagination.pages) }, (_, i) => {
+                  {Array.from({ length: Math.min(5, pagination.totalPages) }, (_, i) => {
                     const pageNum = i + 1
                     return (
                       <Button
@@ -472,16 +463,16 @@ export default function InventoryPage() {
                       </Button>
                     )
                   })}
-                  {pagination.pages > 5 && (
+                  {pagination.totalPages > 5 && (
                     <>
                       <span className="text-gray-500">...</span>
                       <Button
-                        onClick={() => setPage(pagination.pages)}
-                        variant={page === pagination.pages ? "default" : "outline"}
+                        onClick={() => setPage(pagination.totalPages)}
+                        variant={page === pagination.totalPages ? "default" : "outline"}
                         size="sm"
                         className="w-8 h-8 p-0"
                       >
-                        {pagination.pages}
+                        {pagination.totalPages}
                       </Button>
                     </>
                   )}
@@ -489,7 +480,7 @@ export default function InventoryPage() {
 
                 <Button
                   onClick={() => setPage(page + 1)}
-                  disabled={page >= pagination.pages}
+                  disabled={page >= pagination.totalPages}
                   variant="outline"
                   size="sm"
                 >

@@ -213,7 +213,7 @@ export const automatedReportsApi = baseApi.injectEndpoints({
         url: `/api/v1/advanced-reports/${reportId}/export`,
         method: 'POST',
         body: { format, filters },
-        responseHandler: (response) => response.blob(),
+        responseHandler: (response: Response) => response.blob(),
       }),
     }),
 
@@ -254,6 +254,16 @@ export const automatedReportsApi = baseApi.injectEndpoints({
       }),
       providesTags: ['AdvancedReport'],
     }),
+
+    // Update schedule
+    updateSchedule: builder.mutation<{ success: boolean; data: AdvancedReportConfig }, { reportId: string; schedule: Partial<AdvancedReportConfig['schedule']> }>({
+      query: ({ reportId, schedule }) => ({
+        url: `/api/v1/advanced-reports/${reportId}/schedule`,
+        method: 'PUT',
+        body: { schedule },
+      }),
+      invalidatesTags: ['AdvancedReport'],
+    }),
   }),
 })
 
@@ -272,4 +282,5 @@ export const {
   useUploadDocumentMutation,
   useGetReportHistoryQuery,
   useGetReportAnalyticsQuery,
+  useUpdateScheduleMutation,
 } = automatedReportsApi

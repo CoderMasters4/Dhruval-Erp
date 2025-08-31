@@ -16,12 +16,25 @@ import {
   User,
   MapPin,
   TrendingUp,
-  TrendingDown
+  TrendingDown,
+  Edit,
+  Trash2,
+  Loader2
 } from 'lucide-react'
 import { AppLayout } from '@/components/layout/AppLayout'
+import { Button } from '@/components/ui/Button'
 import { selectCurrentUser, selectIsSuperAdmin } from '@/lib/features/auth/authSlice'
-import { useGetInventoryMovementsQuery, useGetInventoryStatsQuery } from '@/lib/api/inventoryApi'
+import { 
+  useGetInventoryMovementsQuery, 
+  useGetInventoryStatsQuery,
+  useCreateStockMovementMutation,
+  useUpdateStockMovementMutation,
+  useDeleteStockMovementMutation
+} from '@/lib/api/inventoryApi'
 import clsx from 'clsx'
+import { toast } from 'sonner'
+import { StockMovementForm } from '@/components/inventory/StockMovementForm'
+import { StockMovementDetails } from '@/components/inventory/StockMovementDetails'
 
 export default function InventoryMovementsPage() {
   const user = useSelector(selectCurrentUser)
@@ -31,6 +44,10 @@ export default function InventoryMovementsPage() {
   const [statusFilter, setStatusFilter] = useState('all')
   const [page, setPage] = useState(1)
   const [showCreateModal, setShowCreateModal] = useState(false)
+  const [showEditModal, setShowEditModal] = useState(false)
+  const [showDetailsModal, setShowDetailsModal] = useState(false)
+  const [selectedMovement, setSelectedMovement] = useState<any>(null)
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
 
   // Fetch inventory movements data from API
   const { data: movementsData, isLoading, error } = useGetInventoryMovementsQuery({
@@ -44,8 +61,21 @@ export default function InventoryMovementsPage() {
   // Fetch inventory statistics
   const { data: inventoryStats } = useGetInventoryStatsQuery({})
 
-  const movements = movementsData?.data || []
-  const pagination = movementsData?.pagination
+  // Stock Movement CRUD mutations
+  const [createStockMovement, { isLoading: createLoading }] = useCreateStockMovementMutation()
+  const [updateStockMovement, { isLoading: updateLoading }] = useUpdateStockMovementMutation()
+  const [deleteStockMovement, { isLoading: deleteLoading }] = useDeleteStockMovementMutation()
+
+  const movements = movementsData?.data?.data || []
+  const rawPagination = movementsData?.data?.pagination
+  
+  // Convert pagination structure to match expected format
+  const pagination = rawPagination ? {
+    page: rawPagination.page,
+    limit: rawPagination.limit,
+    total: rawPagination.total,
+    pages: rawPagination.totalPages
+  } : undefined
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-IN', {
@@ -59,9 +89,9 @@ export default function InventoryMovementsPage() {
 
   const getMovementIcon = (type: string) => {
     switch (type) {
-      case 'inbound':
+      case 'inward':
         return <ArrowDown className="h-4 w-4 text-green-500" />
-      case 'outbound':
+      case 'outward':
         return <ArrowUp className="h-4 w-4 text-red-500" />
       case 'transfer':
         return <RefreshCw className="h-4 w-4 text-blue-500" />
@@ -107,15 +137,86 @@ export default function InventoryMovementsPage() {
       return quantity > 0 ? 'text-green-600' : 'text-red-600'
     }
     switch (type) {
-      case 'inbound':
+      case 'inward':
         return 'text-green-600'
-      case 'outbound':
+      case 'outward':
         return 'text-red-600'
       case 'transfer':
         return 'text-blue-600'
       default:
         return 'text-gray-600'
     }
+  }
+
+  // CRUD Handlers
+  const handleCreateMovement = async (formData: any) => {
+    try {
+      await createStockMovement(formData).unwrap()
+      toast.success('Stock movement created successfully!')
+      setShowCreateModal(false)
+      // Refresh the data
+      window.location.reload()
+    } catch (error: any) {
+      toast.error(error?.data?.message || 'Failed to create stock movement')
+      console.error('Create movement error:', error)
+    }
+  }
+
+  const handleEditMovement = async (formData: any) => {
+    try {
+      await updateStockMovement({ id: selectedMovement._id, data: formData }).unwrap()
+      toast.success('Stock movement updated successfully!')
+      setShowEditModal(false)
+      setSelectedMovement(null)
+      // Refresh the data
+      window.location.reload()
+    } catch (error: any) {
+      toast.error(error?.data?.message || 'Failed to update stock movement')
+      console.error('Update movement error:', error)
+    }
+  }
+
+  const handleDeleteMovement = async () => {
+    if (!selectedMovement) return
+    
+    try {
+      await deleteStockMovement(selectedMovement._id).unwrap()
+      toast.success('Stock movement deleted successfully!')
+      setShowDeleteConfirm(false)
+      setSelectedMovement(null)
+      // Refresh the data
+      window.location.reload()
+    } catch (error: any) {
+      toast.error(error?.data?.message || 'Failed to delete stock movement')
+      console.error('Delete movement error:', error)
+    }
+  }
+
+  const openCreateModal = () => {
+    setShowCreateModal(true)
+  }
+
+  const openEditModal = (movement: any) => {
+    setSelectedMovement(movement)
+    setShowEditModal(true)
+  }
+
+  const openDetailsModal = (movement: any) => {
+    setSelectedMovement(movement)
+    setShowDetailsModal(true)
+  }
+
+  const openDeleteConfirm = (movement: any) => {
+    setSelectedMovement(movement)
+    setShowDeleteConfirm(true)
+  }
+
+  const closeModals = () => {
+    setShowCreateModal(false)
+    setShowEditModal(false)
+    setShowDetailsModal(false)
+    setShowDeleteConfirm(false)
+    setSelectedMovement(null)
   }
 
   return (
@@ -330,12 +431,12 @@ export default function InventoryMovementsPage() {
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div>
                         <div className="text-sm font-medium text-gray-900">{movement.itemName}</div>
-                        <div className="text-sm text-gray-500">{movement.itemCode}</div>
+                        <div className="text-sm text-gray-500">{movement.companyItemCode || movement.itemCode}</div>
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className={clsx("text-sm font-bold", getQuantityColor(movement.movementType, movement.quantity))}>
-                        {movement.movementType === 'outbound' ? '-' : movement.quantity > 0 ? '+' : ''}{Math.abs(movement.quantity)} {movement.unit}
+                        {movement.movementType === 'outward' ? '-' : movement.quantity > 0 ? '+' : ''}{Math.abs(movement.quantity)} {movement.stock?.unit || movement.unit || 'PCS'}
                       </div>
                     </td>
                     <td className="px-6 py-4">
@@ -369,9 +470,29 @@ export default function InventoryMovementsPage() {
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                      <button className="text-sky-600 hover:text-sky-900 p-1 rounded hover:bg-sky-50">
-                        <Eye className="h-4 w-4" />
-                      </button>
+                      <div className="flex items-center space-x-2">
+                        <button 
+                          onClick={() => openDetailsModal(movement)}
+                          className="text-sky-600 hover:text-sky-900 p-1 rounded hover:bg-sky-50 transition-colors"
+                          title="View Details"
+                        >
+                          <Eye className="h-4 w-4" />
+                        </button>
+                        <button 
+                          onClick={() => openEditModal(movement)}
+                          className="text-blue-600 hover:text-blue-900 p-1 rounded hover:bg-blue-50 transition-colors"
+                          title="Edit Movement"
+                        >
+                          <Edit className="h-4 w-4" />
+                        </button>
+                        <button 
+                          onClick={() => openDeleteConfirm(movement)}
+                          className="text-red-600 hover:text-red-900 p-1 rounded hover:bg-red-50 transition-colors"
+                          title="Delete Movement"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -406,6 +527,88 @@ export default function InventoryMovementsPage() {
                 >
                   Next
                 </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Modals */}
+        {/* Create Movement Modal */}
+        {showCreateModal && (
+          <StockMovementForm
+            onClose={closeModals}
+            onSubmit={handleCreateMovement}
+            isLoading={createLoading}
+          />
+        )}
+
+        {/* Edit Movement Modal */}
+        {showEditModal && selectedMovement && (
+          <StockMovementForm
+            movement={selectedMovement}
+            onClose={closeModals}
+            onSubmit={handleEditMovement}
+            isLoading={updateLoading}
+          />
+        )}
+
+        {/* Movement Details Modal */}
+        {showDetailsModal && selectedMovement && (
+          <StockMovementDetails
+            movement={selectedMovement}
+            onClose={closeModals}
+            onEdit={() => {
+              setShowDetailsModal(false)
+              setShowEditModal(true)
+            }}
+            onDelete={() => {
+              setShowDetailsModal(false)
+              openDeleteConfirm(selectedMovement)
+            }}
+            canEdit={true}
+            canDelete={true}
+          />
+        )}
+
+        {/* Delete Confirmation Modal */}
+        {showDeleteConfirm && selectedMovement && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-xl shadow-2xl max-w-md w-full p-6">
+              <div className="text-center">
+                <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Trash2 className="w-8 h-8 text-red-600" />
+                </div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">Delete Stock Movement</h3>
+                <p className="text-gray-600 mb-6">
+                  Are you sure you want to delete movement #{selectedMovement.movementNumber}? 
+                  This action cannot be undone.
+                </p>
+                <div className="flex items-center justify-center space-x-3">
+                  <Button
+                    onClick={closeModals}
+                    variant="outline"
+                    disabled={deleteLoading}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    onClick={handleDeleteMovement}
+                    disabled={deleteLoading}
+                    className="bg-red-600 hover:bg-red-700 text-white"
+                  >
+                    {deleteLoading ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Deleting...
+                      </>
+                    ) : (
+                      <>
+                        <Trash2 className="w-4 h-4 mr-2" />
+                        Delete Movement
+                      </>
+                      )}
+                  </Button>
+                </div>
               </div>
             </div>
           </div>

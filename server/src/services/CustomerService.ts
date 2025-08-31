@@ -118,6 +118,60 @@ export class CustomerService extends BaseService<ICustomer> {
   }
 
   /**
+   * Get all customers across companies (Super Admin only)
+   */
+  async getAllCustomers(options: any = {}): Promise<ICustomer[]> {
+    try {
+      const startTime = Date.now();
+
+      // Build filter for all customers
+      let filter: any = { isActive: true };
+
+      // Add search filter if provided
+      if (options.search) {
+        filter.$or = [
+          { customerName: { $regex: options.search, $options: 'i' } },
+          { 'contactInfo.primaryEmail': { $regex: options.search, $options: 'i' } },
+          { 'contactInfo.primaryPhone': { $regex: options.search, $options: 'i' } },
+          { customerCode: { $regex: options.search, $options: 'i' } }
+        ];
+      }
+
+      // Add status filter if provided
+      if (options.status) {
+        filter.isActive = options.status === 'active';
+      }
+
+      // Add customer type filter if provided
+      if (options.customerType) {
+        filter['businessInfo.businessType'] = options.customerType;
+      }
+
+      // Add company filter if provided
+      if (options.companyId) {
+        filter.companyId = options.companyId;
+      }
+
+      // Optimize query options
+      const queryOptions = QueryOptimizer.optimizeFindOptions({
+        ...options,
+        lean: true,
+        sort: options.sort || { customerName: 1 }
+      });
+
+      // Use lean query for better performance
+      const customers = await this.findManyLean(filter, queryOptions);
+
+      QueryOptimizer.logQueryPerformance('getAllCustomers', startTime, customers.length, { options });
+
+      return customers;
+    } catch (error) {
+      logger.error('Error getting all customers', { error, options });
+      throw error;
+    }
+  }
+
+  /**
    * Update customer credit limit
    */
   async updateCreditLimit(customerId: string, creditLimit: number, updatedBy?: string): Promise<ICustomer | null> {

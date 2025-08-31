@@ -14,7 +14,9 @@ import {
   Clock,
   CheckCircle,
   XCircle,
-  Building2
+  Building2,
+  Calculator,
+  TrendingUp
 } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { User } from '@/lib/features/users/usersApi'
@@ -60,7 +62,6 @@ export default function UserList({
     switch (role) {
       case 'super_admin':
         return 'bg-red-100 text-red-800 border-red-200'
-      case 'admin':
       case 'owner':
         return 'bg-purple-100 text-purple-800 border-purple-200'
       case 'manager':
@@ -68,10 +69,14 @@ export default function UserList({
         return 'bg-blue-100 text-blue-800 border-blue-200'
       case 'operator':
         return 'bg-green-100 text-green-800 border-green-200'
+      case 'helper':
+        return 'bg-emerald-100 text-emerald-800 border-emerald-200'
       case 'accountant':
         return 'bg-yellow-100 text-yellow-800 border-yellow-200'
       case 'sales_executive':
         return 'bg-indigo-100 text-indigo-800 border-indigo-200'
+      case 'security_guard':
+        return 'bg-orange-100 text-orange-800 border-orange-200'
       default:
         return 'bg-gray-100 text-gray-800 border-gray-200'
     }
@@ -80,8 +85,19 @@ export default function UserList({
   const getRoleIcon = (role?: string) => {
     switch (role) {
       case 'super_admin':
-      case 'admin':
       case 'owner':
+        return Shield
+      case 'manager':
+      case 'production_manager':
+        return Users
+      case 'operator':
+      case 'helper':
+        return UserCheck
+      case 'accountant':
+        return Calculator
+      case 'sales_executive':
+        return TrendingUp
+      case 'security_guard':
         return Shield
       default:
         return UserCheck
@@ -93,7 +109,7 @@ export default function UserList({
     if (user.companyAccess && user.companyAccess.length > 0) {
       return user.companyAccess[0].role
     }
-    return user.role || 'user'
+    return user.role || 'helper'
   }
 
   const getUserName = (user: User) => {
@@ -216,7 +232,7 @@ export default function UserList({
                       </div>
 
                       {/* 2FA Badge */}
-                      {user.is2FAEnabled && (
+                      {(user.is2FAEnabled || user.twoFactorEnabled) && (
                         <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold bg-yellow-100 text-yellow-800 border border-yellow-200">
                           <Shield className="w-3 h-3 mr-1" />
                           2FA
@@ -237,18 +253,34 @@ export default function UserList({
                         </div>
                       )}
 
+                      {/* Company Information */}
                       {user.primaryCompany && (
                         <div className="flex items-center gap-1">
                           <Building2 className="w-4 h-4" />
-                          <span className="truncate max-w-xs">
+                          <span className="truncate max-w-xs font-medium text-gray-800">
                             {user.primaryCompany.companyName} ({user.primaryCompany.companyCode})
                           </span>
+                        </div>
+                      )}
+                      
+                      {/* Company Access Tags */}
+                      {user.companyAccess && user.companyAccess.length > 0 && (
+                        <div className="flex flex-wrap items-center gap-2">
+                          <Users className="w-4 h-4" />
+                          {user.companyAccess.map((access, index) => (
+                            <span
+                              key={access._id || index}
+                              className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 border border-blue-200"
+                            >
+                              {access.companyId.companyName} ({access.role})
+                            </span>
+                          ))}
                         </div>
                       )}
 
                       <div className="flex items-center gap-1">
                         <Clock className="w-4 h-4" />
-                        <span>Last login: {formatLastLogin(user.lastLogin)}</span>
+                        <span>Last login: {formatLastLogin(user.security?.lastLogin)}</span>
                       </div>
 
                       <div className="flex items-center gap-1">
@@ -289,11 +321,11 @@ export default function UserList({
                     onClick={() => onToggle2FA && onToggle2FA(user)}
                     className={clsx(
                       'p-2 rounded-lg transition-colors',
-                      user.is2FAEnabled
+                      (user.is2FAEnabled || user.twoFactorEnabled)
                         ? 'bg-orange-500 hover:bg-orange-600 text-white'
                         : 'bg-purple-500 hover:bg-purple-600 text-white'
                     )}
-                    title={user.is2FAEnabled ? 'Disable 2FA' : 'Enable 2FA'}
+                    title={(user.is2FAEnabled || user.twoFactorEnabled) ? 'Disable 2FA' : 'Enable 2FA'}
                   >
                     <Shield className="h-4 w-4" />
                   </Button>

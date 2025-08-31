@@ -23,16 +23,21 @@ import { errorHandler, notFoundHandler } from '@/middleware/errorHandler';
 // Import consolidated routes
 import apiRoutes from './routes';
 
+console.log('Server: Importing API routes...');
+
 // Automated reports will be integrated later
 
 // Initialize Express app
 const app = express();
+
+console.log('Server: Express app initialized');
 
 // =============================================
 // TRUST PROXY CONFIGURATION
 // =============================================
 if (config.TRUST_PROXY) {
   app.set('trust proxy', 1);
+  console.log('Server: Trust proxy enabled');
 }
 
 // =============================================
@@ -53,8 +58,56 @@ app.use(express.urlencoded({
   limit: '10mb' 
 }));
 
+console.log('Server: Body parsing middleware configured');
+
 // Cookie parsing
 app.use(cookieParser(config.COOKIE_SECRET));
+console.log('Server: Cookie parser configured with secret:', !!config.COOKIE_SECRET);
+console.log('Server: Cookie secret length:', config.COOKIE_SECRET?.length || 0);
+
+// Add debugging for cookie parsing
+app.use((req, res, next) => {
+  console.log('Request received:', {
+    method: req.method,
+    path: req.path,
+    cookies: req.cookies,
+    hasCookies: !!req.cookies,
+    cookieCount: req.cookies ? Object.keys(req.cookies).length : 0,
+    headers: {
+      'user-agent': req.get('User-Agent'),
+      'origin': req.get('Origin'),
+      'referer': req.get('Referer'),
+      'content-type': req.get('Content-Type'),
+      'authorization': req.get('Authorization') ? 'present' : 'missing'
+    },
+    body: req.body ? Object.keys(req.body) : 'no body'
+  });
+  next();
+});
+
+// Add a simple test endpoint for cookies
+app.get('/test-cookies', (req, res) => {
+  console.log('Test cookies endpoint called');
+  console.log('Request cookies:', req.cookies);
+  
+  // Set a test cookie
+  res.cookie('test_cookie', 'test_value', {
+    httpOnly: false,
+    secure: false,
+    sameSite: 'lax',
+    path: '/'
+  });
+  
+  res.json({
+    message: 'Test cookies endpoint',
+    cookies: req.cookies,
+    headers: {
+      'user-agent': req.get('User-Agent'),
+      'origin': req.get('Origin'),
+      'referer': req.get('Referer')
+    }
+  });
+});
 
 // Session configuration
 app.use(session({
@@ -242,8 +295,17 @@ app.options('*', (req: Request, res: Response) => {
 // API ROUTES
 // =============================================
 
-// Mount consolidated API routes
+// Mount API routes
 app.use(config.API_PREFIX, apiRoutes);
+console.log('Server: API routes mounted at:', config.API_PREFIX);
+console.log('Server: Available routes:', [
+  'POST /api/v1/auth/login',
+  'POST /api/v1/auth/register',
+  'POST /api/v1/auth/logout',
+  'POST /api/v1/auth/refresh-token',
+  'GET /api/v1/health',
+  'GET /api/v1/debug/cookies'
+]);
 
 // Root API info endpoint
 app.get('/api', (req, res) => {
@@ -437,16 +499,26 @@ process.on('unhandledRejection', (reason: any, promise: Promise<any>) => {
 // =============================================
 const startServer = async () => {
   try {
-    logger.info('🚀 Starting Factory ERP Server...');
+    console.log('🚀 Starting Factory ERP Server...');
+    console.log('Server: Environment:', config.NODE_ENV);
+    console.log('Server: Port:', config.PORT);
+    console.log('Server: API Prefix:', config.API_PREFIX);
+    console.log('Server: CORS Origin:', config.CORS_ORIGIN);
+    console.log('Server: Cookie SameSite:', config.COOKIE_SAME_SITE);
+    console.log('Server: JWT Secret configured:', !!config.JWT_SECRET);
+    console.log('Server: JWT Refresh Secret configured:', !!config.JWT_REFRESH_SECRET);
+    console.log('Server: JWT Issuer:', config.JWT_ISSUER);
+    console.log('Server: JWT Audience:', config.JWT_AUDIENCE);
+    console.log('Server: Cookie Secret configured:', !!config.COOKIE_SECRET);
 
     // Connect to database
-    logger.info('📊 Attempting database connection...');
+    console.log('📊 Attempting database connection...');
     await database.connect();
-    logger.info('✅ Database connected successfully!');
+    console.log('✅ Database connected successfully!');
     
     // Start HTTP server
     httpServer.listen(config.PORT, () => {
-      logger.info(`🚀 Factory ERP Server started successfully`, {
+      console.log(`🚀 Factory ERP Server started successfully`, {
         port: config.PORT,
         environment: config.NODE_ENV,
         version: config.APP_VERSION,
@@ -456,15 +528,17 @@ const startServer = async () => {
         apiPrefix: config.API_PREFIX
       });
       
-      // Log automated reports endpoints
-      logger.info('📊 Automated Reports endpoints available:', {
-        health: '/health/automated-reports',
-        trigger: '/api/trigger-report'
-      });
+      console.log('📊 Available endpoints:');
+      console.log('  - POST /api/v1/auth/login');
+      console.log('  - POST /api/v1/auth/register');
+      console.log('  - POST /api/v1/auth/logout');
+      console.log('  - POST /api/v1/auth/refresh-token');
+      console.log('  - GET /api/v1/health');
+      console.log('  - GET /api/v1/debug/cookies');
     });
 
   } catch (error) {
-    logger.error('Failed to start server', { 
+    console.error('Failed to start server', { 
       error: error instanceof Error ? error.message : 'Unknown error' 
     });
     process.exit(1);

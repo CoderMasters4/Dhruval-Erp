@@ -12,6 +12,13 @@ export interface JWTPayload {
   role?: string;
 }
 
+export interface RefreshTokenPayload {
+  userId: string;
+  tokenVersion: number;
+  iat: number;
+  exp: number;
+}
+
 export interface TokenPair {
   accessToken: string;
   refreshToken: string;
@@ -21,30 +28,55 @@ export interface TokenPair {
  * Generate JWT access token
  */
 export const generateAccessToken = (payload: JWTPayload): string => {
-  return jwt.sign(payload, config.JWT_SECRET, {
-    expiresIn: '15m', // 15 minutes
+  console.log('JWT: Generating access token for user:', payload.userId);
+  
+  const accessPayload = {
+    ...payload,
+    iat: Math.floor(Date.now() / 1000),
+          exp: Math.floor(Date.now() / 1000) + (15 * 24 * 60 * 60) // 15 days
+  };
+  
+  const token = jwt.sign(accessPayload, config.JWT_SECRET, {
     issuer: 'dhruval-erp',
     audience: 'dhruval-erp-users'
   });
+  
+  console.log('JWT: Access token generated successfully, length:', token.length);
+  return token;
 };
 
 /**
  * Generate JWT refresh token
  */
 export const generateRefreshToken = (payload: JWTPayload): string => {
-  return jwt.sign(payload, config.JWT_REFRESH_SECRET, {
-    expiresIn: '7d', // 7 days
+  const refreshPayload = {
+    userId: payload.userId,
+    tokenVersion: 1,
+    iat: Math.floor(Date.now() / 1000),
+    exp: Math.floor(Date.now() / 1000) + (30 * 24 * 60 * 60) // 30 days
+  };
+  
+  console.log('JWT: Generating refresh token for user:', payload.userId);
+  
+  const token = jwt.sign(refreshPayload, config.JWT_REFRESH_SECRET, {
     issuer: 'dhruval-erp',
     audience: 'dhruval-erp-users'
   });
+  
+  console.log('JWT: Refresh token generated successfully, length:', token.length);
+  return token;
 };
 
 /**
  * Generate both access and refresh tokens
  */
 export const generateTokenPair = (payload: JWTPayload): TokenPair => {
+  console.log('JWT: Generating token pair for user:', payload.userId);
+  
   const accessToken = generateAccessToken(payload);
   const refreshToken = generateRefreshToken(payload);
+  
+  console.log('JWT: Token pair generated successfully');
   
   return {
     accessToken,
@@ -65,58 +97,122 @@ export const verifyToken = (token: string, secret: string): JWTPayload | null =>
 };
 
 /**
- * Verify access token
+ * Verify JWT access token
  */
-export const verifyAccessToken = (token: string): JWTPayload | null => {
-  return verifyToken(token, config.JWT_SECRET);
+export const verifyAccessToken = (token: string): JWTPayload => {
+  try {
+    console.log('JWT: Verifying access token, length:', token.length);
+    
+    const decoded = jwt.verify(token, config.JWT_SECRET, {
+      issuer: 'dhruval-erp',
+      audience: 'dhruval-erp-users'
+    }) as JWTPayload;
+    
+    console.log('JWT: Access token verified successfully for user:', decoded.userId);
+    return decoded;
+  } catch (error) {
+    console.error('JWT: Access token verification failed:', error);
+    throw error;
+  }
 };
 
 /**
- * Verify refresh token
+ * Verify JWT refresh token
  */
-export const verifyRefreshToken = (token: string): JWTPayload | null => {
-  return verifyToken(token, config.JWT_REFRESH_SECRET);
+export const verifyRefreshToken = async (token: string): Promise<RefreshTokenPayload | null> => {
+  try {
+    console.log('JWT: Verifying refresh token, length:', token.length);
+    
+    const decoded = jwt.verify(token, config.JWT_REFRESH_SECRET, {
+      issuer: 'dhruval-erp',
+      audience: 'dhruval-erp-users'
+    }) as RefreshTokenPayload;
+    
+    console.log('JWT: Refresh token verified successfully for user:', decoded.userId);
+    return decoded;
+  } catch (error) {
+    console.error('JWT: Refresh token verification failed:', error);
+    return null;
+  }
 };
 
 /**
  * Set JWT tokens as HTTP-only cookies
  */
 export const setTokenCookies = (res: Response, tokens: TokenPair): void => {
-  // Set access token cookie (15 minutes)
-  res.cookie('accessToken', tokens.accessToken, {
+  const isProduction = process.env.NODE_ENV === 'production';
+  const isLocalhost = process.env.NODE_ENV === 'development';
+  
+  console.log('Setting JWT cookies:', {
+    isProduction,
+    isLocalhost,
+    accessTokenLength: tokens.accessToken.length,
+    refreshTokenLength: tokens.refreshToken.length,
+    cookieOptions: {
+      httpOnly: true,
+      secure: isProduction,
+      sameSite: isLocalhost ? 'lax' : 'strict',
+      path: '/'
+    }
+  });
+  
+  // For localhost development, we need to be more permissive with cookies
+  const cookieOptions = {
     httpOnly: true,
-    secure: config.NODE_ENV === 'production',
-    sameSite: 'strict',
-    maxAge: 15 * 60 * 1000, // 15 minutes in milliseconds
-    path: '/'
+    secure: isProduction, // Only use secure in production (HTTPS)
+    sameSite: (isLocalhost ? 'lax' : 'strict') as 'lax' | 'strict', // Use 'lax' for localhost development
+    path: '/',
+    domain: undefined, // Let browser set domain automatically
+    maxAge: undefined // Let browser handle expiration
+  };
+  
+  // Set access token cookie (15 days)
+  res.cookie('accessToken', tokens.accessToken, {
+    ...cookieOptions,
+    maxAge: 15 * 24 * 60 * 60 * 1000 // 15 days in milliseconds
   });
 
-  // Set refresh token cookie (7 days)
+  // Set refresh token cookie (30 days)
   res.cookie('refreshToken', tokens.refreshToken, {
-    httpOnly: true,
-    secure: config.NODE_ENV === 'production',
-    sameSite: 'strict',
-    maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days in milliseconds
-    path: '/'
+    ...cookieOptions,
+    maxAge: 30 * 24 * 60 * 60 * 1000 // 30 days in milliseconds
   });
+  
+  // Also set a non-HTTP-only cookie for debugging (remove in production)
+  if (isLocalhost) {
+    res.cookie('debug_token', 'cookie_set', {
+      httpOnly: false,
+      secure: false,
+      sameSite: 'lax',
+      path: '/',
+      maxAge: 60 * 1000 // 1 minute for debugging
+    });
+  }
+  
+  console.log('JWT cookies set successfully with options:', cookieOptions);
 };
 
 /**
  * Clear JWT cookies
  */
 export const clearTokenCookies = (res: Response): void => {
+  const isProduction = process.env.NODE_ENV === 'production';
+  const isLocalhost = process.env.NODE_ENV === 'development';
+  
   res.clearCookie('accessToken', {
     httpOnly: true,
-    secure: config.NODE_ENV === 'production',
-    sameSite: 'strict',
-    path: '/'
+    secure: isProduction,
+    sameSite: isLocalhost ? 'lax' : 'strict',
+    path: '/',
+    domain: isLocalhost ? undefined : undefined
   });
 
   res.clearCookie('refreshToken', {
     httpOnly: true,
-    secure: config.NODE_ENV === 'production',
-    sameSite: 'strict',
-    path: '/'
+    secure: isProduction,
+    sameSite: isLocalhost ? 'lax' : 'strict',
+    path: '/',
+    domain: isLocalhost ? undefined : undefined
   });
 };
 
