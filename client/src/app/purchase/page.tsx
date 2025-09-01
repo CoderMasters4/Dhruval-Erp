@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { AppLayout } from '@/components/layout/AppLayout'
 import { DashboardHeader } from '@/components/ui/DashboardHeader'
@@ -53,7 +53,8 @@ import {
 import toast from 'react-hot-toast'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer as RechartsContainer, BarChart, Bar, PieChart, Pie, Cell } from 'recharts'
 
-export default function PurchasePage() {
+// Component that uses useSearchParams
+function PurchasePageContent() {
   const searchParams = useSearchParams()
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedCategory, setSelectedCategory] = useState('all')
@@ -708,5 +709,27 @@ export default function PurchasePage() {
         </Tabs>
       </ResponsiveContainer>
     </AppLayout>
+  )
+}
+
+// Loading fallback component
+function PurchasePageLoading() {
+  return (
+    <AppLayout>
+      <ResponsiveContainer className="space-y-6">
+        <div className="flex items-center justify-center py-12">
+          <LoadingSpinner />
+        </div>
+      </ResponsiveContainer>
+    </AppLayout>
+  )
+}
+
+// Main component with Suspense boundary
+export default function PurchasePage() {
+  return (
+    <Suspense fallback={<PurchasePageLoading />}>
+      <PurchasePageContent />
+    </Suspense>
   )
 }
