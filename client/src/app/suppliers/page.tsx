@@ -36,6 +36,7 @@ import { AppLayout } from '@/components/layout/AppLayout'
 import { Button } from '@/components/ui/Button'
 import { Pagination } from '@/components/ui/Pagination'
 import { useGetSuppliersQuery } from '@/lib/api/suppliersApi'
+import { SupplierFormModal } from '@/components/suppliers/modals/SupplierFormModal'
 import clsx from 'clsx'
 
 interface SupplierFilters {
@@ -56,6 +57,8 @@ export default function SuppliersPage() {
   const [showFilters, setShowFilters] = useState(false)
   const [selectedSupplier, setSelectedSupplier] = useState<any>(null)
   const [showSupplierDetails, setShowSupplierDetails] = useState(false)
+  const [showSupplierForm, setShowSupplierForm] = useState(false)
+  const [editingSupplier, setEditingSupplier] = useState<any>(null)
 
   const [filters, setFilters] = useState<SupplierFilters>({
     search: '',
@@ -191,7 +194,8 @@ export default function SuppliersPage() {
   }
 
   const handleEditSupplier = (supplier: any) => {
-    router.push(`/suppliers/${supplier._id}/edit`)
+    setEditingSupplier(supplier)
+    setShowSupplierForm(true)
   }
 
   const handleSupplierDetails = (supplier: any) => {
@@ -268,7 +272,10 @@ export default function SuppliersPage() {
                 </Button>
 
                 <Button
-                  onClick={() => router.push('/suppliers/create')}
+                  onClick={() => {
+                    setEditingSupplier(null)
+                    setShowSupplierForm(true)
+                  }}
                   className="bg-sky-500 hover:bg-sky-600 text-white px-6 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-200"
                 >
                   <Plus className="h-5 w-5 mr-2" />
@@ -983,6 +990,21 @@ export default function SuppliersPage() {
             </div>
           </div>
           )}
+
+          {/* Supplier Form Modal */}
+          <SupplierFormModal
+            isOpen={showSupplierForm}
+            onClose={() => {
+              setShowSupplierForm(false)
+              setEditingSupplier(null)
+            }}
+            onSuccess={() => {
+              refetch()
+              setShowSupplierForm(false)
+              setEditingSupplier(null)
+            }}
+            supplier={editingSupplier}
+          />
         </div>
       </div>
     </AppLayout>

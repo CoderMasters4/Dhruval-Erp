@@ -6,7 +6,7 @@ import { logger } from '@/utils/logger';
 import { AppError } from '@/utils/errors';
 
 export interface SpareFilters {
-  companyId?: string;
+  companyId?: string; // Optional for superadmin access to all companies
   category?: string;
   manufacturer?: string;
   isActive?: boolean;
@@ -53,6 +53,9 @@ export class SpareService extends BaseService<ISpare> {
     totalPages: number;
   }> {
     try {
+      // Debug logging
+      console.log('SpareService.getSparesByCompany called with filters:', filters);
+      
       const {
         companyId,
         category,
@@ -72,22 +75,29 @@ export class SpareService extends BaseService<ISpare> {
       
       if (companyId) {
         query.companyId = new Types.ObjectId(companyId);
+        console.log('Added companyId filter:', companyId);
+      } else {
+        console.log('No companyId filter - superadmin access to all companies');
       }
       
       if (category) {
         query.category = category;
+        console.log('Added category filter:', category);
       }
       
       if (manufacturer) {
         query.manufacturer = new RegExp(manufacturer, 'i');
+        console.log('Added manufacturer filter:', manufacturer);
       }
       
       if (isActive !== undefined) {
         query['status.isActive'] = isActive;
+        console.log('Added isActive filter:', isActive);
       }
       
       if (isCritical !== undefined) {
         query['status.isCritical'] = isCritical;
+        console.log('Added isCritical filter:', isCritical);
       }
       
       if (search) {
@@ -98,6 +108,7 @@ export class SpareService extends BaseService<ISpare> {
           { manufacturer: new RegExp(search, 'i') },
           { brand: new RegExp(search, 'i') }
         ];
+        console.log('Added search filter:', search);
       }
 
       // Handle low stock filter
@@ -105,7 +116,10 @@ export class SpareService extends BaseService<ISpare> {
         query.$expr = {
           $lte: ['$stock.currentStock', '$stock.reorderLevel']
         };
+        console.log('Added low stock filter');
       }
+
+      console.log('Final query:', JSON.stringify(query, null, 2));
 
       // Calculate pagination
       const skip = (page - 1) * limit;
@@ -113,19 +127,35 @@ export class SpareService extends BaseService<ISpare> {
       // Build sort object
       const sort: any = {};
       sort[sortBy] = sortOrder === 'asc' ? 1 : -1;
+      console.log('Sort object:', sort);
 
       // Execute queries
-      const [spares, total] = await Promise.all([
-        this.model
+      console.log('Executing database queries...');
+      
+      // First try without populate to see if that's the issue
+      let spares;
+      try {
+        spares = await this.model
           .find(query)
           .sort(sort)
           .skip(skip)
           .limit(limit)
-          .populate('suppliers.supplierId', 'supplierName supplierCode')
-          .populate('locations.warehouseId', 'warehouseName')
-          .lean(),
-        this.model.countDocuments(query)
-      ]);
+          .lean();
+        console.log('Query executed successfully without populate');
+      } catch (populateError) {
+        console.log('Populate error, trying without populate:', populateError.message);
+        // If populate fails, try without it
+        spares = await this.model
+          .find(query)
+          .sort(sort)
+          .skip(skip)
+          .limit(limit)
+          .lean();
+      }
+      
+      const total = await this.model.countDocuments(query);
+
+      console.log('Database query results:', { sparesCount: spares.length, total });
 
       const totalPages = Math.ceil(total / limit);
 
@@ -144,6 +174,7 @@ export class SpareService extends BaseService<ISpare> {
         totalPages
       };
     } catch (error) {
+      console.log('Error in SpareService.getSparesByCompany:', error);
       logger.error('Error getting spares by company', { error, filters });
       throw new AppError('Failed to retrieve spares', 500, error);
     }

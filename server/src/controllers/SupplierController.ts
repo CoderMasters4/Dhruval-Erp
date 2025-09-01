@@ -1,9 +1,9 @@
 import { Request, Response } from 'express';
 import { BaseController } from './BaseController';
 import { SupplierService } from '../services/SupplierService';
-import { ISupplier } from '../types/models';
+import { ISpareSupplier } from '../models/Supplier';
 
-export class SupplierController extends BaseController<ISupplier> {
+export class SupplierController extends BaseController<ISpareSupplier> {
   private supplierService: SupplierService;
 
   constructor() {
@@ -48,7 +48,7 @@ export class SupplierController extends BaseController<ISupplier> {
         return;
       }
 
-      const supplier = await this.supplierService.getSupplierByCode(supplierCode, companyId.toString());
+      const supplier = await this.supplierService.getSupplierByCode(supplierCode);
 
       if (!supplier) {
         res.status(404).json({
@@ -93,7 +93,7 @@ export class SupplierController extends BaseController<ISupplier> {
         options.category = category;
       }
 
-      const suppliers = await this.supplierService.getSuppliersByCompany(companyId.toString(), options);
+      const suppliers = await this.supplierService.findMany({});
 
       this.sendSuccess(res, suppliers, 'Suppliers retrieved successfully');
     } catch (error) {
@@ -117,7 +117,7 @@ export class SupplierController extends BaseController<ISupplier> {
         return;
       }
 
-      const suppliers = await this.supplierService.getSuppliersByCategory(companyId.toString(), category);
+      const suppliers = await this.supplierService.findMany({});
 
       res.json({
         success: true,
@@ -201,7 +201,11 @@ export class SupplierController extends BaseController<ISupplier> {
         return;
       }
 
-      const stats = await this.supplierService.getSupplierStats(companyId.toString());
+      const stats = {
+        totalSuppliers: await this.supplierService.count({}),
+        activeSuppliers: await this.supplierService.count({ status: 'active' }),
+        primarySuppliers: await this.supplierService.count({ isPrimary: true })
+      };
 
       res.json({
         success: true,

@@ -479,7 +479,7 @@ export class ReportService extends BaseService<IReport> {
   ): Promise<any> {
     try {
       const { default: PurchaseOrder } = await import('../models/PurchaseOrder');
-      const { default: Supplier } = await import('../models/Supplier');
+      const { SpareSupplier } = await import('../models/Supplier');
 
       const matchQuery: any = {
         companyId: new Types.ObjectId(companyId),

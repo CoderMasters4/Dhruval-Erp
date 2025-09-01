@@ -169,3 +169,4 @@ export function InventoryGrid({ items, onViewDetails, onEditItem, onDeleteItem }
     </div>
   );
 }
+

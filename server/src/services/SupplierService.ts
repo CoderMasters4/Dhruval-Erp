@@ -1,65 +1,54 @@
 import { Types } from 'mongoose';
 import { BaseService } from './BaseService';
-import { Supplier } from '../models';
-import { ISupplier } from '../types/models';
+import { SpareSupplier } from '../models/Supplier';
+import { ISpareSupplier } from '../models/Supplier';
 import { AppError } from '../utils/errors';
 import { logger } from '../utils/logger';
 
-export class SupplierService extends BaseService<ISupplier> {
+export class SupplierService extends BaseService<ISpareSupplier> {
   constructor() {
-    super(Supplier);
+    super(SpareSupplier as any);
   }
 
   /**
    * Create a new supplier
    */
-  async createSupplier(supplierData: Partial<ISupplier>, createdBy?: string): Promise<ISupplier> {
+  async createSupplier(supplierData: Partial<ISpareSupplier>, createdBy?: string): Promise<ISpareSupplier> {
     try {
       // Validate supplier data
       this.validateSupplierData(supplierData);
 
-      // Check if supplier code already exists
+      // Check for duplicate supplier code
       if (supplierData.supplierCode) {
         const existingSupplier = await this.findOne({ 
-          supplierCode: supplierData.supplierCode.toUpperCase(),
-          companyId: supplierData.companyId 
+          supplierCode: supplierData.supplierCode
         });
 
         if (existingSupplier) {
-          throw new AppError('Supplier code already exists', 400);
+          throw new AppError('Supplier with this code already exists', 400);
         }
       }
 
-      // Check if primary email already exists
-      if (supplierData.contactInfo?.primaryEmail) {
-        const existingEmail = await this.findOne({
-          'contactInfo.primaryEmail': supplierData.contactInfo.primaryEmail,
-          companyId: supplierData.companyId
-        });
-
-        if (existingEmail) {
-          throw new AppError('Supplier with this email already exists', 400);
-        }
-      }
-
-      // Generate supplier code if not provided
-      if (!supplierData.supplierCode) {
-        supplierData.supplierCode = await this.generateSupplierCode(supplierData.companyId!.toString());
-      }
-
+      // Create supplier
       const supplier = await this.create({
         ...supplierData,
-        supplierCode: supplierData.supplierCode.toUpperCase(),
-        isActive: true,
-        createdAt: new Date(),
-        updatedAt: new Date()
+        status: supplierData.status || 'active',
+        performanceMetrics: {
+          onTimeDeliveryRate: 0,
+          qualityRejectionRate: 0,
+          averageLeadTime: 0,
+          totalOrders: 0,
+          totalOrderValue: 0,
+          averageOrderValue: 0
+        },
+        pricingHistory: [],
+        performanceScore: 0
       }, createdBy);
 
-      logger.info('Supplier created successfully', { 
-        supplierId: supplier._id, 
+      logger.info('Supplier created successfully', {
+        supplierId: supplier._id,
         supplierCode: supplier.supplierCode,
-        companyId: supplierData.companyId,
-        createdBy 
+        createdBy
       });
 
       return supplier;
@@ -72,47 +61,47 @@ export class SupplierService extends BaseService<ISupplier> {
   /**
    * Get supplier by code
    */
-  async getSupplierByCode(supplierCode: string, companyId: string): Promise<ISupplier | null> {
+  async getSupplierByCode(supplierCode: string): Promise<ISpareSupplier | null> {
     try {
-      return await this.findOne({ 
-        supplierCode: supplierCode.toUpperCase(),
-        companyId: new Types.ObjectId(companyId)
-      });
+      return await this.findOne({ supplierCode });
     } catch (error) {
-      logger.error('Error getting supplier by code', { error, supplierCode, companyId });
+      logger.error('Error getting supplier by code', { error, supplierCode });
       throw error;
     }
   }
 
   /**
-   * Get suppliers by company
+   * Get suppliers by status
    */
-  async getSuppliersByCompany(companyId: string, options: any = {}): Promise<ISupplier[]> {
+  async getSuppliersByStatus(status: string): Promise<ISpareSupplier[]> {
     try {
-      const query = { 
-        companyId: new Types.ObjectId(companyId),
-        isActive: true
-      };
-
-      return await this.findMany(query, options);
+      return await this.findMany({ status });
     } catch (error) {
-      logger.error('Error getting suppliers by company', { error, companyId });
+      logger.error('Error getting suppliers by status', { error, status });
       throw error;
     }
   }
 
   /**
-   * Get suppliers by category
+   * Get primary suppliers
    */
-  async getSuppliersByCategory(companyId: string, category: string): Promise<ISupplier[]> {
+  async getPrimarySuppliers(): Promise<ISpareSupplier[]> {
     try {
-      return await this.findMany({ 
-        companyId: new Types.ObjectId(companyId),
-        'businessInfo.supplierCategory': category,
-        isActive: true
-      });
+      return await this.findMany({ isPrimary: true });
     } catch (error) {
-      logger.error('Error getting suppliers by category', { error, companyId, category });
+      logger.error('Error getting primary suppliers', { error });
+      throw error;
+    }
+  }
+
+  /**
+   * Get suppliers by quality rating
+   */
+  async getSuppliersByQualityRating(minRating: number): Promise<ISpareSupplier[]> {
+    try {
+      return await this.findMany({ qualityRating: { $gte: minRating } });
+    } catch (error) {
+      logger.error('Error getting suppliers by quality rating', { error, minRating });
       throw error;
     }
   }
@@ -120,26 +109,22 @@ export class SupplierService extends BaseService<ISupplier> {
   /**
    * Update supplier rating
    */
-  async updateSupplierRating(supplierId: string, rating: number, ratedBy?: string): Promise<ISupplier | null> {
+  async updateSupplierRating(supplierId: string, rating: number, ratedBy?: string): Promise<ISpareSupplier | null> {
     try {
       const supplier = await this.findById(supplierId);
       if (!supplier) {
         throw new AppError('Supplier not found', 404);
       }
 
-      if (rating < 1 || rating > 5) {
-        throw new AppError('Rating must be between 1 and 5', 400);
-      }
-
       const updatedSupplier = await this.update(supplierId, {
-        'performanceMetrics.overallRating': rating,
-        'performanceMetrics.lastRatingUpdate': new Date()
+        qualityRating: rating
       }, ratedBy);
 
-      logger.info('Supplier rating updated', { 
-        supplierId, 
-        rating,
-        ratedBy 
+      logger.info('Supplier rating updated', {
+        supplierId,
+        oldRating: supplier.qualityRating,
+        newRating: rating,
+        ratedBy
       });
 
       return updatedSupplier;
@@ -150,75 +135,32 @@ export class SupplierService extends BaseService<ISupplier> {
   }
 
   /**
-   * Get supplier statistics
-   */
-  async getSupplierStats(companyId: string): Promise<any> {
-    try {
-      const [
-        totalSuppliers,
-        activeSuppliers,
-        inactiveSuppliers,
-        suppliersByCategory,
-        averageRating
-      ] = await Promise.all([
-        this.count({ companyId: new Types.ObjectId(companyId) }),
-        this.count({ companyId: new Types.ObjectId(companyId), isActive: true }),
-        this.count({ companyId: new Types.ObjectId(companyId), isActive: false }),
-        this.model.aggregate([
-          { $match: { companyId: new Types.ObjectId(companyId), isActive: true } },
-          { $group: { _id: '$businessInfo.supplierCategory', count: { $sum: 1 } } }
-        ]),
-        this.model.aggregate([
-          { $match: { companyId: new Types.ObjectId(companyId), isActive: true } },
-          { $group: { _id: null, avgRating: { $avg: '$performanceMetrics.overallRating' } } }
-        ])
-      ]);
-
-      return {
-        totalSuppliers,
-        activeSuppliers,
-        inactiveSuppliers,
-        suppliersByCategory,
-        averageRating: averageRating[0]?.avgRating || 0
-      };
-    } catch (error) {
-      logger.error('Error getting supplier statistics', { error, companyId });
-      throw error;
-    }
-  }
-
-  /**
-   * Generate supplier code
-   */
-  private async generateSupplierCode(companyId: string): Promise<string> {
-    const count = await this.count({ companyId: new Types.ObjectId(companyId) });
-    return `SUPP${(count + 1).toString().padStart(6, '0')}`;
-  }
-
-  /**
    * Validate supplier data
    */
-  private validateSupplierData(supplierData: Partial<ISupplier>): void {
-    if (!supplierData.companyId) {
-      throw new AppError('Company ID is required', 400);
-    }
-
+  private validateSupplierData(supplierData: Partial<ISpareSupplier>): void {
     if (!supplierData.supplierName) {
       throw new AppError('Supplier name is required', 400);
     }
 
-    if (!supplierData.contactInfo?.primaryEmail) {
-      throw new AppError('Primary email is required', 400);
+    if (!supplierData.supplierCode) {
+      throw new AppError('Supplier code is required', 400);
     }
 
-    if (!supplierData.contactInfo?.primaryPhone) {
-      throw new AppError('Primary phone number is required', 400);
+    if (!supplierData.partNumber) {
+      throw new AppError('Part number is required', 400);
     }
 
-    // Validate email format
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(supplierData.contactInfo.primaryEmail)) {
-      throw new AppError('Invalid email format', 400);
+    if (supplierData.leadTime !== undefined && supplierData.leadTime < 0) {
+      throw new AppError('Lead time must be non-negative', 400);
+    }
+
+    if (supplierData.minOrderQuantity !== undefined && supplierData.minOrderQuantity < 0) {
+      throw new AppError('Minimum order quantity must be non-negative', 400);
+    }
+
+    if (supplierData.qualityRating !== undefined && (supplierData.qualityRating < 1 || supplierData.qualityRating > 5)) {
+      throw new AppError('Quality rating must be between 1 and 5', 400);
     }
   }
 }
+

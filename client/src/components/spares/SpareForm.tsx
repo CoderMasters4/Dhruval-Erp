@@ -3,6 +3,10 @@ import { X, Plus, Trash2, Upload } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Spare } from '@/lib/api/sparesApi';
+import { FormMaintenanceManagement } from './FormMaintenanceManagement';
+import { FormQualityManagement } from './FormQualityManagement';
+import { FormCompatibilityManagement } from './FormCompatibilityManagement';
+import { FormSuppliersManagement } from './FormSuppliersManagement';
 
 interface SpareFormProps {
   isOpen: boolean;
@@ -490,7 +494,57 @@ export const SpareForm: React.FC<SpareFormProps> = ({
               </div>
             )}
 
-            {/* Add other tabs content here... */}
+            {/* Maintenance Tab */}
+            {activeTab === 'maintenance' && (
+              <div className="space-y-6">
+                <FormMaintenanceManagement
+                  spare={formData}
+                  onUpdate={(updates) => {
+                    setFormData(prev => ({ ...prev, ...updates }));
+                  }}
+                  isEditable={true}
+                />
+              </div>
+            )}
+
+            {/* Quality Tab */}
+            {activeTab === 'quality' && (
+              <div className="space-y-6">
+                <FormQualityManagement
+                  spare={formData}
+                  onUpdate={(updates) => {
+                    setFormData(prev => ({ ...prev, ...updates }));
+                  }}
+                  isEditable={true}
+                />
+              </div>
+            )}
+
+            {/* Compatibility Tab */}
+            {activeTab === 'compatibility' && (
+              <div className="space-y-6">
+                <FormCompatibilityManagement
+                  spare={formData}
+                  onUpdate={(updates) => {
+                    setFormData(prev => ({ ...prev, ...updates }));
+                  }}
+                  isEditable={true}
+                />
+              </div>
+            )}
+
+            {/* Suppliers Tab */}
+            {activeTab === 'suppliers' && (
+              <div className="space-y-6">
+                <FormSuppliersManagement
+                  spare={formData}
+                  onUpdate={(updates) => {
+                    setFormData(prev => ({ ...prev, ...updates }));
+                  }}
+                  isEditable={true}
+                />
+              </div>
+            )}
           </div>
 
           {/* Footer */}

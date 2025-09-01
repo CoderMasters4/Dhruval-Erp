@@ -1,6 +1,12 @@
 import { Schema, model } from 'mongoose';
 import { ISpare, ISpareCompatibility, ISpareSupplier, ISpareLocation, IMaintenanceSchedule, ISpareUsageHistory } from '@/types/models';
 
+// Import the comprehensive schemas we created
+import { MaintenanceSchedule, MaintenanceRecord } from './Maintenance';
+import { QualityCheck, Certification, ComplianceStandard } from './Quality';
+import { CompatibilityRecord } from './Compatibility';
+import { SpareSupplier } from './Supplier';
+
 const SpareCompatibilitySchema = new Schema<ISpareCompatibility>({
   equipmentType: { type: String, required: true, trim: true },
   equipmentModel: { type: String, required: true, trim: true },
@@ -152,6 +158,9 @@ const SpareSchema = new Schema<ISpare>({
   // Compatibility
   compatibility: [SpareCompatibilitySchema],
   
+  // Equipment (for compatibility management)
+  // equipment: [{ type: Schema.Types.ObjectId, ref: 'Equipment' }], // Removed - not in interface
+  
   // Stock Management
   stock: {
     currentStock: { type: Number, required: true, min: 0, default: 0 },
@@ -190,6 +199,7 @@ const SpareSchema = new Schema<ISpare>({
     isConsumable: { type: Boolean, required: true, default: false },
     expectedLifespan: { type: Number, min: 0 },
     maintenanceSchedule: MaintenanceScheduleSchema,
+    maintenanceRecords: [{ type: Schema.Types.ObjectId, ref: 'MaintenanceRecord' }],
     criticality: { 
       type: String, 
       required: true, 
@@ -221,7 +231,10 @@ const SpareSchema = new Schema<ISpare>({
     lastQualityCheck: { type: Date },
     qualityNotes: { type: String, trim: true },
     certifications: [{ type: String, trim: true }],
-    complianceStandards: [{ type: String, trim: true }]
+    complianceStandards: [{ type: String, trim: true }],
+    qualityChecks: [{ type: Schema.Types.ObjectId, ref: 'QualityCheck' }],
+    qualityCertifications: [{ type: Schema.Types.ObjectId, ref: 'Certification' }],
+    complianceStandardsList: [{ type: Schema.Types.ObjectId, ref: 'ComplianceStandard' }]
   },
   
   // Storage & Handling
@@ -287,25 +300,25 @@ SpareSchema.index({ companyId: 1, 'stock.currentStock': 1 });
 // Pre-save middleware to calculate available stock
 SpareSchema.pre('save', function(next) {
   if (this.isModified('stock')) {
-    this.stock.availableStock = this.stock.currentStock - this.stock.reservedStock;
-    this.stock.totalValue = this.stock.currentStock * this.stock.averageCost;
+    (this as any).stock.availableStock = (this as any).stock.currentStock - (this as any).stock.reservedStock;
+    (this as any).stock.totalValue = (this as any).stock.currentStock * (this as any).stock.averageCost;
   }
   next();
 });
 
 // Virtual for low stock alert
 SpareSchema.virtual('isLowStock').get(function() {
-  return this.stock.currentStock <= this.stock.reorderLevel;
+  return (this as any).stock.currentStock <= (this as any).stock.reorderLevel;
 });
 
 // Virtual for out of stock
 SpareSchema.virtual('isOutOfStock').get(function() {
-  return this.stock.currentStock === 0;
+  return (this as any).stock.currentStock === 0;
 });
 
 // Virtual for critical low stock
 SpareSchema.virtual('isCriticalLowStock').get(function() {
-  return this.stock.currentStock <= this.stock.minStockLevel;
+  return (this as any).stock.currentStock <= (this as any).stock.minStockLevel;
 });
 
 // Ensure virtuals are included in JSON output

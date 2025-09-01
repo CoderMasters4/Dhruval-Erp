@@ -1,6 +1,7 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { AppLayout } from '@/components/layout/AppLayout'
 import { DashboardHeader } from '@/components/ui/DashboardHeader'
 import { ResponsiveContainer } from '@/components/ui/ResponsiveContainer'
@@ -10,20 +11,26 @@ import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { Badge } from '@/components/ui/badge'
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner'
+import { CreatePurchaseOrderModal } from '@/components/purchase/CreatePurchaseOrderModal'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
   useGetPurchaseStatsQuery,
   useGetPurchaseOrdersQuery,
   useGetSupplierPurchaseReportQuery,
   useGetCategoryWiseSpendQuery,
+  useGetPurchaseAnalyticsQuery,
   useUpdatePurchasePaymentStatusMutation,
-  useExportPurchaseDataMutation
+  useExportPurchaseDataMutation,
+  useCreatePurchaseOrderMutation
 } from '@/lib/api/purchaseApi'
+import { useSelector } from 'react-redux'
+import { selectCurrentUser, selectIsSuperAdmin } from '@/lib/features/auth/authSlice'
 import {
   ShoppingCart,
   TrendingDown,
   Package,
   Truck,
-
   Search,
   Filter,
   Download,
@@ -35,14 +42,35 @@ import {
   CreditCard,
   Droplets,
   Palette,
-  Box
+  Box,
+  BarChart3,
+  TrendingUp,
+  Calendar,
+  DollarSign,
+  Users,
+  FileText
 } from 'lucide-react'
 import toast from 'react-hot-toast'
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer as RechartsContainer, BarChart, Bar, PieChart, Pie, Cell } from 'recharts'
 
 export default function PurchasePage() {
+  const searchParams = useSearchParams()
   const [searchTerm, setSearchTerm] = useState('')
-  const [selectedCategory] = useState('all')
-  const [currentPage] = useState(1)
+  const [selectedCategory, setSelectedCategory] = useState('all')
+  const [currentPage, setCurrentPage] = useState(1)
+  const [selectedPeriod, setSelectedPeriod] = useState<'week' | 'month' | 'quarter' | 'year'>('month')
+  const [selectedCompanyId, setSelectedCompanyId] = useState<string>('')
+  const [activeTab, setActiveTab] = useState('overview')
+  const [showCreateModal, setShowCreateModal] = useState(false)
+
+  const user = useSelector(selectCurrentUser)
+  const isSuperAdmin = useSelector(selectIsSuperAdmin)
+
+  // Get user's company ID
+  const userCompanyId = user?.companyAccess?.[0]?.companyId
+
+  // Determine which company ID to use
+  const targetCompanyId = isSuperAdmin && selectedCompanyId ? selectedCompanyId : userCompanyId
 
   // RTK Query hooks
   const {
@@ -50,7 +78,7 @@ export default function PurchasePage() {
     isLoading: statsLoading,
     error: statsError,
     refetch: refetchStats
-  } = useGetPurchaseStatsQuery()
+  } = useGetPurchaseStatsQuery({ companyId: targetCompanyId })
 
   const {
     data: ordersData,
@@ -61,27 +89,52 @@ export default function PurchasePage() {
     search: searchTerm,
     category: selectedCategory === 'all' ? undefined : selectedCategory,
     page: currentPage,
-    limit: 10
+    limit: 10,
+    companyId: targetCompanyId
   })
 
   const {
     data: supplierReportData,
     isLoading: supplierReportLoading
-  } = useGetSupplierPurchaseReportQuery({})
+  } = useGetSupplierPurchaseReportQuery({ companyId: targetCompanyId })
 
   const {
     data: categorySpendData,
     isLoading: categorySpendLoading
-  } = useGetCategoryWiseSpendQuery({})
+  } = useGetCategoryWiseSpendQuery({ companyId: targetCompanyId })
+
+  const {
+    data: analyticsData,
+    isLoading: analyticsLoading
+  } = useGetPurchaseAnalyticsQuery({ 
+    period: selectedPeriod, 
+    companyId: targetCompanyId 
+  })
 
   const [updatePaymentStatus] = useUpdatePurchasePaymentStatusMutation()
   const [exportPurchaseData] = useExportPurchaseDataMutation()
+  const [createPurchaseOrder] = useCreatePurchaseOrderMutation()
+
+  // Handle URL parameters
+  useEffect(() => {
+    const action = searchParams.get('action')
+    const tab = searchParams.get('tab')
+    
+    if (action === 'create') {
+      setShowCreateModal(true)
+    }
+    
+    if (tab) {
+      setActiveTab(tab)
+    }
+  }, [searchParams])
 
   // Handler functions
   const handlePaymentStatusUpdate = async (orderId: string, paymentStatus: 'pending' | 'paid' | 'overdue' | 'partial') => {
     try {
       await updatePaymentStatus({ id: orderId, paymentStatus }).unwrap()
       toast.success('Payment status updated successfully')
+      refetchOrders()
     } catch (error: any) {
       toast.error(error?.data?.message || 'Failed to update payment status')
     }
@@ -92,39 +145,14 @@ export default function PurchasePage() {
       const result = await exportPurchaseData({
         format,
         filters: {
+          companyId: targetCompanyId,
           search: searchTerm,
           category: selectedCategory === 'all' ? undefined : selectedCategory
         }
       }).unwrap()
-
-      toast.success('Export started. Download will begin shortly.')
-
-      if (result.data.downloadUrl) {
-        try {
-          // Import download utility dynamically
-          const { downloadWithFallback } = await import('@/utils/downloadUtils')
-
-          const downloadResult = await downloadWithFallback(
-            result.data.downloadUrl,
-            `purchase-export-${new Date().toISOString().split('T')[0]}.${format}`
-          )
-
-          if (downloadResult.success) {
-            if (downloadResult.method === 'clipboard') {
-              toast('Download URL copied to clipboard. Paste in new tab to download.', {
-                icon: 'ℹ️',
-                duration: 5000
-              })
-            }
-          } else {
-            // Final fallback
-            window.open(result.data.downloadUrl, '_blank')
-          }
-        } catch (importError) {
-          // Fallback to original method
-          window.open(result.data.downloadUrl, '_blank')
-        }
-      }
+      toast.success('Data exported successfully')
+      // Handle download
+      window.open(result.data.downloadUrl, '_blank')
     } catch (error: any) {
       toast.error(error?.data?.message || 'Failed to export data')
     }
@@ -133,84 +161,74 @@ export default function PurchasePage() {
   const handleRefresh = () => {
     refetchStats()
     refetchOrders()
-    toast.success('Data refreshed')
   }
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'delivered': return 'bg-green-100 text-green-800'
-      case 'pending': return 'bg-yellow-100 text-yellow-800'
-      case 'in_transit': return 'bg-blue-100 text-blue-800'
-      case 'shipped': return 'bg-cyan-100 text-cyan-800'
-      case 'cancelled': return 'bg-red-100 text-red-800'
-      default: return 'bg-gray-100 text-gray-800'
-    }
-  }
-
-  const getPaymentStatusColor = (status: string) => {
-    switch (status) {
-      case 'paid': return 'bg-green-100 text-green-800'
-      case 'pending': return 'bg-yellow-100 text-yellow-800'
-      case 'overdue': return 'bg-red-100 text-red-800'
-      case 'partial': return 'bg-blue-100 text-blue-800'
-      default: return 'bg-gray-100 text-gray-800'
-    }
-  }
-
-  const getCategoryColor = (category: string) => {
-    switch (category) {
-      case 'chemicals': return 'bg-purple-100 text-purple-800'
-      case 'grey_fabric': return 'bg-blue-100 text-blue-800'
-      case 'colors': return 'bg-green-100 text-green-800'
-      case 'packing_material': return 'bg-orange-100 text-orange-800'
-      default: return 'bg-gray-100 text-gray-800'
-    }
-  }
-
-  const getCategoryIcon = (category: string) => {
-    switch (category) {
-      case 'chemicals': return <Droplets className="h-4 w-4" />
-      case 'grey_fabric': return <Package className="h-4 w-4" />
-      case 'colors': return <Palette className="h-4 w-4" />
-      case 'packing_material': return <Box className="h-4 w-4" />
-      default: return <Package className="h-4 w-4" />
-    }
-  }
-
-  // Loading states
-  if (statsLoading || ordersLoading) {
-    return (
-      <AppLayout>
-        <ResponsiveContainer className="flex items-center justify-center min-h-[400px]">
-          <LoadingSpinner size="lg" />
-        </ResponsiveContainer>
-      </AppLayout>
-    )
-  }
-
-  // Error states
-  if (statsError || ordersError) {
-    return (
-      <AppLayout>
-        <ResponsiveContainer className="flex items-center justify-center min-h-[400px]">
-          <div className="text-center">
-            <AlertTriangle className="h-12 w-12 text-red-500 mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">Error Loading Data</h3>
-            <p className="text-gray-600 mb-4">Failed to load purchase data. Please try again.</p>
-            <Button onClick={handleRefresh}>
-              <RefreshCw className="h-4 w-4 mr-2" />
-              Retry
-            </Button>
-          </div>
-        </ResponsiveContainer>
-      </AppLayout>
-    )
-  }
-
+  // Data extraction
   const stats = statsData?.data
   const orders = ordersData?.data || []
   const supplierReport = supplierReportData?.data || []
   const categorySpend = categorySpendData?.data || []
+  const analytics = analyticsData?.data
+
+  // Category icon mapping
+  const getCategoryIcon = (category: string) => {
+    switch (category) {
+      case 'chemicals':
+        return <Droplets className="h-4 w-4 text-blue-600" />
+      case 'grey_fabric':
+        return <Package className="h-4 w-4 text-gray-600" />
+      case 'colors':
+        return <Palette className="h-4 w-4 text-purple-600" />
+      case 'packing_material':
+        return <Box className="h-4 w-4 text-orange-600" />
+      default:
+        return <Package className="h-4 w-4 text-gray-600" />
+    }
+  }
+
+  // Status badge mapping
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case 'pending':
+        return <Badge variant="secondary">Pending</Badge>
+      case 'confirmed':
+        return <Badge variant="default">Confirmed</Badge>
+      case 'shipped':
+        return <Badge variant="outline">Shipped</Badge>
+      case 'delivered':
+        return <Badge variant="success">Delivered</Badge>
+      case 'cancelled':
+        return <Badge variant="destructive">Cancelled</Badge>
+      default:
+        return <Badge variant="secondary">{status}</Badge>
+    }
+  }
+
+  const getPaymentStatusBadge = (status: string) => {
+    switch (status) {
+      case 'pending':
+        return <Badge variant="warning">Pending</Badge>
+      case 'paid':
+        return <Badge variant="success">Paid</Badge>
+      case 'overdue':
+        return <Badge variant="destructive">Overdue</Badge>
+      case 'partial':
+        return <Badge variant="outline">Partial</Badge>
+      default:
+        return <Badge variant="secondary">{status}</Badge>
+    }
+  }
+
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('en-IN', {
+      style: 'currency',
+      currency: 'INR',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
+    }).format(amount)
+  }
+
+  const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8']
 
   return (
     <AppLayout>
@@ -218,255 +236,476 @@ export default function PurchasePage() {
         {/* Header */}
         <DashboardHeader
           title="Purchase Management"
-          description="Track purchases, supplier payments, and material procurement"
+          description="Track purchases, supplier payments, and material procurement with analytics"
           icon={<ShoppingCart className="h-6 w-6 text-white" />}
           actions={
-            <Button onClick={handleRefresh} variant="outline" size="sm">
-              <RefreshCw className="h-4 w-4 mr-2" />
-              Refresh
-            </Button>
+            <div className="flex gap-2">
+              {isSuperAdmin && (
+                <Select value={selectedCompanyId} onValueChange={setSelectedCompanyId}>
+                  <SelectTrigger className="w-48">
+                    <SelectValue placeholder="Select Company" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">All Companies</SelectItem>
+                    {/* Add company options here */}
+                  </SelectContent>
+                </Select>
+              )}
+              <CreatePurchaseOrderModal 
+                onSuccess={handleRefresh} 
+                open={showCreateModal}
+                onOpenChange={setShowCreateModal}
+              />
+              <Button onClick={handleRefresh} variant="outline" size="sm">
+                <RefreshCw className="h-4 w-4 mr-2" />
+                Refresh
+              </Button>
+            </div>
           }
         />
 
-        {/* Stats Cards */}
-        <ResponsiveGrid cols={{ default: 1, sm: 2, lg: 4 }} gap="md">
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">Total Purchases</p>
-                  <p className="text-2xl font-bold text-gray-900">
-                    ₹{stats ? (stats.totalPurchases / 100000).toFixed(1) : '0'}L
-                  </p>
-                </div>
-                <Package className="h-8 w-8 text-blue-600" />
-              </div>
-            </CardContent>
-          </Card>
+        {/* Tabs */}
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="overview">Overview</TabsTrigger>
+            <TabsTrigger value="analytics">Analytics</TabsTrigger>
+            <TabsTrigger value="orders">Orders</TabsTrigger>
+          </TabsList>
 
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">Monthly Spend</p>
-                  <p className="text-2xl font-bold text-orange-600">
-                    ₹{stats ? (stats.monthlySpend / 100000).toFixed(1) : '0'}L
-                  </p>
-                </div>
-                <TrendingDown className="h-8 w-8 text-orange-600" />
-              </div>
-            </CardContent>
-          </Card>
+          {/* Overview Tab */}
+          <TabsContent value="overview" className="space-y-6">
+            {/* Stats Cards */}
+            <ResponsiveGrid cols={{ default: 1, sm: 2, lg: 4 }} gap="md">
+              <Card>
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-gray-600">Total Purchases</p>
+                      <p className="text-2xl font-bold text-gray-900">
+                        {stats ? formatCurrency(stats.totalPurchases) : '₹0'}
+                      </p>
+                    </div>
+                    <Package className="h-8 w-8 text-blue-600" />
+                  </div>
+                </CardContent>
+              </Card>
 
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">Total Suppliers</p>
-                  <p className="text-2xl font-bold text-gray-900">
-                    {stats?.totalSuppliers || 0}
-                  </p>
-                </div>
-                <Truck className="h-8 w-8 text-green-600" />
-              </div>
-            </CardContent>
-          </Card>
+              <Card>
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-gray-600">Monthly Spend</p>
+                      <p className="text-2xl font-bold text-orange-600">
+                        {stats ? formatCurrency(stats.monthlySpend) : '₹0'}
+                      </p>
+                    </div>
+                    <TrendingDown className="h-8 w-8 text-orange-600" />
+                  </div>
+                </CardContent>
+              </Card>
 
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">Pending Orders</p>
-                  <p className="text-2xl font-bold text-red-600">
-                    {stats?.pendingOrders || 0}
-                  </p>
-                </div>
-                <AlertTriangle className="h-8 w-8 text-red-600" />
-              </div>
-            </CardContent>
-          </Card>
-        </ResponsiveGrid>
+              <Card>
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-gray-600">Total Suppliers</p>
+                      <p className="text-2xl font-bold text-green-600">
+                        {stats ? stats.totalSuppliers : 0}
+                      </p>
+                    </div>
+                    <Users className="h-8 w-8 text-green-600" />
+                  </div>
+                </CardContent>
+              </Card>
 
-        {/* Main Content */}
-        <ResponsiveGrid cols={{ default: 1, lg: 3 }} gap="lg">
-          {/* Recent Purchases */}
-          <div className="lg:col-span-2">
+              <Card>
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-gray-600">Pending Orders</p>
+                      <p className="text-2xl font-bold text-red-600">
+                        {stats ? stats.pendingOrders : 0}
+                      </p>
+                    </div>
+                    <AlertTriangle className="h-8 w-8 text-red-600" />
+                  </div>
+                </CardContent>
+              </Card>
+            </ResponsiveGrid>
+
+            {/* Charts Grid */}
+            <ResponsiveGrid cols={{ default: 1, lg: 2 }} gap="lg">
+              {/* Category-wise Spend */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Category-wise Spend</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    {categorySpendLoading ? (
+                      <div className="flex items-center justify-center py-8">
+                        <LoadingSpinner />
+                      </div>
+                    ) : categorySpend.length === 0 ? (
+                      <div className="text-center py-8">
+                        <Package className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                        <p className="text-gray-500">No category data found</p>
+                      </div>
+                    ) : (
+                      <>
+                        <div className="space-y-2">
+                          {categorySpend.map((category) => (
+                            <div key={category.category} className="space-y-2">
+                              <div className="flex justify-between items-center">
+                                <div className="flex items-center space-x-2">
+                                  {getCategoryIcon(category.category)}
+                                  <span className="text-sm font-medium">{category.category.replace('_', ' ')}</span>
+                                </div>
+                                <span className="text-sm text-gray-600">
+                                  {formatCurrency(category.amount)} ({category.percentage.toFixed(1)}%)
+                                </span>
+                              </div>
+                              <div className="w-full bg-gray-200 rounded-full h-2">
+                                <div
+                                  className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                                  style={{ width: `${category.percentage}%` }}
+                                ></div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                        <div className="mt-6">
+                          <RechartsContainer width="100%" height={200}>
+                            <PieChart>
+                              <Pie
+                                data={categorySpend}
+                                cx="50%"
+                                cy="50%"
+                                labelLine={false}
+                                label={({ category, percentage }) => `${category.replace('_', ' ')} ${percentage.toFixed(1)}%`}
+                                outerRadius={80}
+                                fill="#8884d8"
+                                dataKey="amount"
+                              >
+                                {categorySpend.map((entry, index) => (
+                                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                                ))}
+                              </Pie>
+                              <Tooltip formatter={(value) => formatCurrency(Number(value))} />
+                            </PieChart>
+                          </RechartsContainer>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Top Suppliers */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Top Suppliers</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    {supplierReportLoading ? (
+                      <div className="flex items-center justify-center py-8">
+                        <LoadingSpinner />
+                      </div>
+                    ) : supplierReport.length === 0 ? (
+                      <div className="text-center py-8">
+                        <Truck className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                        <p className="text-gray-500">No supplier data found</p>
+                      </div>
+                    ) : (
+                      <>
+                        <div className="space-y-3">
+                          {supplierReport.slice(0, 5).map((supplier) => (
+                            <div key={supplier.supplierId} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                              <div className="flex items-center space-x-3">
+                                <div className="p-2 bg-blue-100 rounded-full">
+                                  <Truck className="h-4 w-4 text-blue-600" />
+                                </div>
+                                <div>
+                                  <p className="font-medium text-sm">{supplier.supplierName}</p>
+                                  <p className="text-xs text-gray-500">{supplier.category}</p>
+                                </div>
+                              </div>
+                              <div className="text-right">
+                                <p className="font-medium text-sm">{formatCurrency(supplier.totalPurchases)}</p>
+                                <p className="text-xs text-gray-500">{supplier.totalOrders} orders</p>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                        <div className="mt-6">
+                          <RechartsContainer width="100%" height={200}>
+                            <BarChart data={supplierReport.slice(0, 5)}>
+                              <CartesianGrid strokeDasharray="3 3" />
+                              <XAxis dataKey="supplierName" />
+                              <YAxis />
+                              <Tooltip formatter={(value) => formatCurrency(Number(value))} />
+                              <Bar dataKey="totalPurchases" fill="#0ea5e9" />
+                            </BarChart>
+                          </RechartsContainer>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            </ResponsiveGrid>
+          </TabsContent>
+
+          {/* Analytics Tab */}
+          <TabsContent value="analytics" className="space-y-6">
+            {/* Analytics Controls */}
+            <div className="flex gap-4 items-center">
+              <Select value={selectedPeriod} onValueChange={(value: any) => setSelectedPeriod(value)}>
+                <SelectTrigger className="w-32">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="week">Week</SelectItem>
+                  <SelectItem value="month">Month</SelectItem>
+                  <SelectItem value="quarter">Quarter</SelectItem>
+                  <SelectItem value="year">Year</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Analytics Charts */}
+            <ResponsiveGrid cols={{ default: 1, lg: 2 }} gap="lg">
+              {/* Purchase Trends */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Purchase Trends</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {analyticsLoading ? (
+                    <div className="flex items-center justify-center py-8">
+                      <LoadingSpinner />
+                    </div>
+                  ) : analytics?.dailyPurchases?.length === 0 ? (
+                    <div className="text-center py-8">
+                      <TrendingUp className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                      <p className="text-gray-500">No trend data available</p>
+                    </div>
+                  ) : (
+                    <RechartsContainer width="100%" height={300}>
+                      <LineChart data={analytics?.dailyPurchases || []}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="date" />
+                        <YAxis />
+                        <Tooltip formatter={(value) => formatCurrency(Number(value))} />
+                        <Line type="monotone" dataKey="amount" stroke="#0ea5e9" strokeWidth={2} />
+                      </LineChart>
+                    </RechartsContainer>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Monthly Comparison */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Monthly Comparison</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {analyticsLoading ? (
+                    <div className="flex items-center justify-center py-8">
+                      <LoadingSpinner />
+                    </div>
+                  ) : analytics?.monthlyPurchases?.length === 0 ? (
+                    <div className="text-center py-8">
+                      <Calendar className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                      <p className="text-gray-500">No monthly data available</p>
+                    </div>
+                  ) : (
+                    <RechartsContainer width="100%" height={300}>
+                      <BarChart data={analytics?.monthlyPurchases || []}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="month" />
+                        <YAxis />
+                        <Tooltip formatter={(value) => formatCurrency(Number(value))} />
+                        <Bar dataKey="amount" fill="#10b981" />
+                      </BarChart>
+                    </RechartsContainer>
+                  )}
+                </CardContent>
+              </Card>
+            </ResponsiveGrid>
+
+            {/* Purchase Trends Table */}
             <Card>
               <CardHeader>
-                <div className="flex items-center justify-between">
-                  <CardTitle>Recent Purchases</CardTitle>
-                  <div className="flex space-x-2">
-                    <Button variant="outline" size="sm">
-                      <Download className="h-4 w-4 mr-2" />
-                      Export
-                    </Button>
-                    <Button size="sm">
-                      <Plus className="h-4 w-4 mr-2" />
-                      New Purchase
-                    </Button>
+                <CardTitle>Purchase Growth Trends</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {analyticsLoading ? (
+                  <div className="flex items-center justify-center py-8">
+                    <LoadingSpinner />
                   </div>
-                </div>
-                
-                {/* Search and Filter */}
-                <div className="flex space-x-2 mt-4">
-                  <div className="relative flex-1">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                    <Input
-                      placeholder="Search purchases..."
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      className="pl-10"
-                    />
+                ) : analytics?.purchaseTrends?.length === 0 ? (
+                  <div className="text-center py-8">
+                    <TrendingUp className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                    <p className="text-gray-500">No trend data available</p>
                   </div>
-                  <Button variant="outline" size="sm">
-                    <Filter className="h-4 w-4 mr-2" />
-                    Filter
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="w-full">
+                      <thead>
+                        <tr className="border-b">
+                          <th className="text-left p-2">Period</th>
+                          <th className="text-left p-2">Amount</th>
+                          <th className="text-left p-2">Growth</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {analytics?.purchaseTrends?.map((trend, index) => (
+                          <tr key={index} className="border-b">
+                            <td className="p-2">{trend.period}</td>
+                            <td className="p-2">{formatCurrency(trend.amount)}</td>
+                            <td className="p-2">
+                              <span className={`font-medium ${trend.growth >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                                {trend.growth >= 0 ? '+' : ''}{trend.growth.toFixed(1)}%
+                              </span>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Orders Tab */}
+          <TabsContent value="orders" className="space-y-6">
+            {/* Search and Filters */}
+            <div className="flex gap-4 items-center">
+              <div className="flex-1">
+                <Input
+                  placeholder="Search orders..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="max-w-sm"
+                />
+              </div>
+              <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                <SelectTrigger className="w-40">
+                  <SelectValue placeholder="Category" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Categories</SelectItem>
+                  <SelectItem value="chemicals">Chemicals</SelectItem>
+                  <SelectItem value="grey_fabric">Grey Fabric</SelectItem>
+                  <SelectItem value="colors">Colors</SelectItem>
+                  <SelectItem value="packing_material">Packing Material</SelectItem>
+                  <SelectItem value="other">Other</SelectItem>
+                </SelectContent>
+              </Select>
+              <Button onClick={() => handleExport('csv')} variant="outline" size="sm">
+                <Download className="h-4 w-4 mr-2" />
+                Export CSV
+              </Button>
+              <Button onClick={() => handleExport('excel')} variant="outline" size="sm">
+                <Download className="h-4 w-4 mr-2" />
+                Export Excel
+              </Button>
+            </div>
+
+            {/* Orders Table */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Purchase Orders</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {ordersLoading ? (
+                  <div className="flex items-center justify-center py-8">
+                    <LoadingSpinner />
+                  </div>
+                ) : orders.length === 0 ? (
+                  <div className="text-center py-8">
+                    <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                    <p className="text-gray-500">No purchase orders found</p>
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="w-full">
+                      <thead>
+                        <tr className="border-b">
+                          <th className="text-left p-2">Order ID</th>
+                          <th className="text-left p-2">Supplier</th>
+                          <th className="text-left p-2">Amount</th>
+                          <th className="text-left p-2">Status</th>
+                          <th className="text-left p-2">Payment</th>
+                          <th className="text-left p-2">Date</th>
+                          <th className="text-left p-2">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {orders.map((order) => (
+                          <tr key={order._id} className="border-b hover:bg-gray-50">
+                            <td className="p-2 font-medium">{order.purchaseOrderId}</td>
+                            <td className="p-2">{order.supplier?.name || 'N/A'}</td>
+                            <td className="p-2">{formatCurrency(order.totalAmount)}</td>
+                            <td className="p-2">{getStatusBadge(order.status)}</td>
+                            <td className="p-2">{getPaymentStatusBadge(order.paymentStatus)}</td>
+                            <td className="p-2">{new Date(order.orderDate).toLocaleDateString()}</td>
+                            <td className="p-2">
+                              <div className="flex gap-2">
+                                <Button
+                                  onClick={() => handlePaymentStatusUpdate(order._id, 'paid')}
+                                  variant="outline"
+                                  size="sm"
+                                >
+                                  <CreditCard className="h-3 w-3 mr-1" />
+                                  Mark Paid
+                                </Button>
+                                <Button variant="outline" size="sm">
+                                  <Eye className="h-3 w-3 mr-1" />
+                                  View
+                                </Button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Pagination */}
+            {ordersData?.pagination && (
+              <div className="flex justify-between items-center">
+                <p className="text-sm text-gray-600">
+                  Showing {((currentPage - 1) * 10) + 1} to {Math.min(currentPage * 10, ordersData.pagination.total)} of {ordersData.pagination.total} results
+                </p>
+                <div className="flex gap-2">
+                  <Button
+                    onClick={() => setCurrentPage(currentPage - 1)}
+                    disabled={currentPage === 1}
+                    variant="outline"
+                    size="sm"
+                  >
+                    Previous
+                  </Button>
+                  <Button
+                    onClick={() => setCurrentPage(currentPage + 1)}
+                    disabled={currentPage >= ordersData.pagination.pages}
+                    variant="outline"
+                    size="sm"
+                  >
+                    Next
                   </Button>
                 </div>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {orders.length === 0 ? (
-                    <div className="text-center py-8">
-                      <ShoppingCart className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                      <p className="text-gray-500">No purchase orders found</p>
-                    </div>
-                  ) : (
-                    orders.map((order) => (
-                      <div key={order._id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 transition-colors">
-                        <div className="flex-1">
-                          <div className="flex items-center space-x-3">
-                            <div>
-                              <p className="font-medium text-gray-900">{order.purchaseOrderId}</p>
-                              <p className="text-sm text-gray-600">{order.supplier?.name || 'Unknown Supplier'}</p>
-                              <p className="text-xs text-gray-500">
-                                {order.items.length} item(s) • {new Date(order.orderDate).toLocaleDateString()}
-                              </p>
-                            </div>
-                          </div>
-                        </div>
-                        <div className="text-right">
-                          <p className="font-bold text-gray-900">₹{order.totalAmount.toLocaleString()}</p>
-                          <div className="flex space-x-1 mt-1">
-                            <Badge className={getStatusColor(order.status)}>
-                              {order.status}
-                            </Badge>
-                            <Badge className={getPaymentStatusColor(order.paymentStatus)}>
-                              {order.paymentStatus}
-                            </Badge>
-                          </div>
-                          <p className="text-xs text-gray-500 mt-1">
-                            {order.expectedDelivery ? `ETA: ${new Date(order.expectedDelivery).toLocaleDateString()}` : 'No ETA'}
-                          </p>
-                        </div>
-                        <div className="ml-4 flex space-x-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handlePaymentStatusUpdate(order._id, order.paymentStatus === 'paid' ? 'pending' : 'paid')}
-                          >
-                            <CreditCard className="h-4 w-4" />
-                          </Button>
-                          <Button variant="outline" size="sm">
-                            <Eye className="h-4 w-4" />
-                          </Button>
-                          <Button variant="outline" size="sm">
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </div>
-                    ))
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Supplier-wise Purchases & Category Spend */}
-          <div className="space-y-6">
-            {/* Top Suppliers */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Top Suppliers</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {supplierReportLoading ? (
-                    <div className="flex items-center justify-center py-8">
-                      <LoadingSpinner />
-                    </div>
-                  ) : supplierReport.length === 0 ? (
-                    <div className="text-center py-8">
-                      <Truck className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                      <p className="text-gray-500">No supplier data found</p>
-                    </div>
-                  ) : (
-                    supplierReport.slice(0, 5).map((supplier) => (
-                      <div key={supplier.supplierId} className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50 transition-colors">
-                        <div>
-                          <p className="font-medium text-gray-900">{supplier.supplierName}</p>
-                          <p className="text-sm text-gray-600">{supplier.totalOrders} orders</p>
-                          <p className="text-xs text-gray-500">
-                            Last: {new Date(supplier.lastOrderDate).toLocaleDateString()}
-                          </p>
-                        </div>
-                        <div className="text-right">
-                          <p className="font-bold text-gray-900">
-                            ₹{(supplier.totalPurchases / 100000).toFixed(1)}L
-                          </p>
-                          <p className="text-xs text-gray-500">
-                            Avg: ₹{(supplier.averageOrderValue / 1000).toFixed(0)}K
-                          </p>
-                        </div>
-                      </div>
-                    ))
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Category-wise Spend */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Category-wise Spend</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  {categorySpendLoading ? (
-                    <div className="flex items-center justify-center py-8">
-                      <LoadingSpinner />
-                    </div>
-                  ) : categorySpend.length === 0 ? (
-                    <div className="text-center py-8">
-                      <Package className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                      <p className="text-gray-500">No category data found</p>
-                    </div>
-                  ) : (
-                    categorySpend.map((category) => (
-                      <div key={category.category} className="space-y-2">
-                        <div className="flex justify-between items-center">
-                          <div className="flex items-center space-x-2">
-                            {getCategoryIcon(category.category)}
-                            <span className="text-sm font-medium">{category.category.replace('_', ' ')}</span>
-                          </div>
-                          <span className="text-sm text-gray-600">
-                            ₹{(category.amount / 100000).toFixed(1)}L ({category.percentage}%)
-                          </span>
-                        </div>
-                        <div className="w-full bg-gray-200 rounded-full h-2">
-                          <div
-                            className="bg-blue-600 h-2 rounded-full transition-all duration-300"
-                            style={{ width: `${category.percentage}%` }}
-                          ></div>
-                        </div>
-                      </div>
-                    ))
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </ResponsiveGrid>
+              </div>
+            )}
+          </TabsContent>
+        </Tabs>
       </ResponsiveContainer>
     </AppLayout>
   )

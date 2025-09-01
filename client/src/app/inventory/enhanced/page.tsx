@@ -14,11 +14,12 @@ import { Activity } from 'lucide-react';
 import { 
   InventoryHeader,
   InventoryFilters,
-  InventoryItemForm,
   InventoryAnalytics,
   InventoryGrid,
   InventoryList,
-  InventoryDetailsModal
+  CreateInventoryItemModal,
+  InventoryDetailsModal,
+  InventoryItemForm
 } from '@/components/inventory';
 
 const EnhancedInventoryPage = () => {
@@ -30,6 +31,10 @@ const EnhancedInventoryPage = () => {
   const [viewMode, setViewMode] = useState<'list' | 'grid' | 'analytics'>('list');
   const [isClient, setIsClient] = useState(false);
   const [viewDetails, setViewDetails] = useState<any>(null);
+  
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
 
   useEffect(() => {
     setIsClient(true);
@@ -44,7 +49,9 @@ const EnhancedInventoryPage = () => {
   const { data: inventoryData, isLoading, error, refetch } = useGetInventoryItemsQuery({
     search: searchTerm || undefined,
     category: categoryFilter || undefined,
-    status: statusFilter || undefined
+    status: statusFilter || undefined,
+    page: currentPage,
+    limit: pageSize
   });
 
   const { data: inventoryStats } = useGetInventoryStatsQuery({});
@@ -57,6 +64,28 @@ const EnhancedInventoryPage = () => {
   const items = inventoryData?.data?.data || [];
   const stats = inventoryStats?.data;
   const alerts = inventoryAlerts?.data || [];
+  
+  // Pagination data
+  const pagination = inventoryData?.data?.pagination;
+  const totalItems = pagination?.total || 0;
+  const totalPages = pagination?.totalPages || 1;
+  const hasNextPage = pagination?.hasNext || false;
+  const hasPrevPage = pagination?.hasPrev || false;
+
+  // Pagination handlers
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
+
+  const handlePageSizeChange = (size: number) => {
+    setPageSize(size);
+    setCurrentPage(1); // Reset to first page when changing page size
+  };
+
+  // Reset pagination when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, categoryFilter, statusFilter]);
 
   // Debug: Log the alerts data
   console.log('Inventory Alerts Data:', inventoryAlerts);
@@ -87,10 +116,17 @@ const EnhancedInventoryPage = () => {
   };
 
   const handleUpdateItem = async (formData: any) => {
-    if (!selectedItem) return;
+    if (!selectedItem) {
+      console.error('No selected item for update');
+      return;
+    }
+    
+    console.log('Updating item:', selectedItem._id);
+    console.log('Update data:', formData);
     
     try {
-      await updateInventoryItem({ itemId: selectedItem._id, itemData: formData }).unwrap();
+      const result = await updateInventoryItem({ itemId: selectedItem._id, itemData: formData }).unwrap();
+      console.log('Item updated successfully:', result);
       setSelectedItem(null);
       setShowCreateModal(false);
       refetch();
@@ -100,9 +136,12 @@ const EnhancedInventoryPage = () => {
   };
 
   const handleDeleteItem = async (id: string) => {
+    console.log('Delete item clicked for ID:', id);
     if (window.confirm('Are you sure you want to delete this inventory item?')) {
       try {
+        console.log('Attempting to delete item with ID:', id);
         await deleteInventoryItem(id).unwrap();
+        console.log('Item deleted successfully');
         refetch();
       } catch (error) {
         console.error('Failed to delete inventory item:', error);
@@ -115,6 +154,7 @@ const EnhancedInventoryPage = () => {
   };
 
   const handleEditItem = (item: any) => {
+    console.log('Edit item clicked:', item);
     setSelectedItem(item);
     setShowCreateModal(true);
   };
@@ -125,10 +165,57 @@ const EnhancedInventoryPage = () => {
   };
 
   const handleFormSubmit = (formData: any) => {
+    // Transform flat form data to nested structure that API expects
+    // Only include fields that the working API format accepts
+    const transformedData = {
+      itemName: formData.itemName,
+      category: {
+        primary: formData.category || 'raw_material',
+        secondary: '',
+        tertiary: ''
+      },
+      warehouseId: formData.warehouseId,
+      reorderPoint: Number(formData.reorderPoint) || 0,
+      reorderQuantity: Number(formData.reorderQuantity) || 0,
+      stockingMethod: formData.stockingMethod || 'fifo',
+      currentStock: Number(formData.currentStock) || 0,
+      costPrice: Number(formData.costPrice) || 0,
+      sellingPrice: Number(formData.sellingPrice) || 0,
+      stock: {
+        unit: formData.unit, // This is the key field that was missing
+        currentStock: Number(formData.currentStock) || 0,
+        availableStock: Number(formData.currentStock) || 0,
+        reorderLevel: Number(formData.reorderLevel) || 0,
+        minStockLevel: Number(formData.minStockLevel) || 0,
+        maxStockLevel: Number(formData.maxStockLevel) || 0,
+        economicOrderQuantity: Number(formData.reorderQuantity) || 0,
+        valuationMethod: formData.valuationMethod || 'FIFO',
+        averageCost: Number(formData.costPrice) || 0,
+        totalValue: (Number(formData.currentStock) || 0) * (Number(formData.costPrice) || 0)
+      },
+      pricing: {
+        costPrice: Number(formData.costPrice) || 0,
+        sellingPrice: Number(formData.sellingPrice) || 0,
+        currency: 'INR'
+      },
+      locations: [
+        {
+          warehouseId: formData.warehouseId,
+          warehouseName: "Main Warehouse",
+          quantity: Number(formData.currentStock) || 0,
+          lastUpdated: new Date().toISOString(),
+          isActive: true
+        }
+      ]
+    };
+
+    console.log('Original form data:', formData);
+    console.log('Transformed data:', transformedData);
+
     if (selectedItem) {
-      handleUpdateItem(formData);
+      handleUpdateItem(transformedData);
     } else {
-      handleCreateItem(formData);
+      handleCreateItem(transformedData);
     }
   };
 
@@ -154,16 +241,16 @@ const EnhancedInventoryPage = () => {
     <AppLayout>
       <div className="space-y-6">
         {/* Header */}
-      <InventoryHeader
-        totalItems={safeItems.length}
+        <InventoryHeader
+          totalItems={totalItems}
           lowStockCount={lowStockCount}
-        onAddItem={() => setShowCreateModal(true)}
-        onRefresh={() => refetch()}
-        onExport={() => console.log('Export clicked')}
-        onImport={() => console.log('Import clicked')}
-        searchTerm={searchTerm}
-        onSearchChange={setSearchTerm}
-      />
+          onAddItem={() => setShowCreateModal(true)}
+          onRefresh={() => refetch()}
+          onExport={() => console.log('Export clicked')}
+          onImport={() => console.log('Import clicked')}
+          searchTerm={searchTerm}
+          onSearchChange={setSearchTerm}
+        />
 
         {/* Filters */}
           <InventoryFilters
@@ -269,7 +356,77 @@ const EnhancedInventoryPage = () => {
           />
         )}
 
-              {/* Create/Edit Modal */}
+        {/* Pagination Controls */}
+        {totalItems > 0 && (
+          <div className="bg-white rounded-lg border border-gray-200 p-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-4">
+                <span className="text-sm text-gray-700">
+                  Showing {((currentPage - 1) * pageSize) + 1} to {Math.min(currentPage * pageSize, totalItems)} of {totalItems} items
+                </span>
+                <select
+                  value={pageSize}
+                  onChange={(e) => handlePageSizeChange(Number(e.target.value))}
+                  className="px-3 py-1 border border-gray-300 rounded-md text-sm"
+                >
+                  <option value={10}>10 per page</option>
+                  <option value={25}>25 per page</option>
+                  <option value={50}>50 per page</option>
+                  <option value={100}>100 per page</option>
+                </select>
+              </div>
+              
+              <div className="flex items-center space-x-2">
+                <button
+                  onClick={() => handlePageChange(currentPage - 1)}
+                  disabled={!hasPrevPage}
+                  className="px-3 py-1 text-sm border border-gray-300 rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+                >
+                  Previous
+                </button>
+                
+                <div className="flex items-center space-x-1">
+                  {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                    let pageNum;
+                    if (totalPages <= 5) {
+                      pageNum = i + 1;
+                    } else if (currentPage <= 3) {
+                      pageNum = i + 1;
+                    } else if (currentPage >= totalPages - 2) {
+                      pageNum = totalPages - 4 + i;
+                    } else {
+                      pageNum = currentPage - 2 + i;
+                    }
+                    
+                    return (
+                      <button
+                        key={pageNum}
+                        onClick={() => handlePageChange(pageNum)}
+                        className={`px-3 py-1 text-sm border rounded-md ${
+                          currentPage === pageNum
+                            ? 'bg-blue-500 text-white border-blue-500'
+                            : 'border-gray-300 hover:bg-gray-50'
+                        }`}
+                      >
+                        {pageNum}
+                      </button>
+                    );
+                  })}
+                </div>
+                
+                <button
+                  onClick={() => handlePageChange(currentPage + 1)}
+                  disabled={!hasNextPage}
+                  className="px-3 py-1 text-sm border border-gray-300 rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+                >
+                  Next
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Create/Edit Modal */}
         {showCreateModal && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999]">
             <div className="bg-white rounded-lg p-6 max-w-4xl mx-4 max-h-[90vh] overflow-y-auto border-4 border-red-500">
@@ -288,6 +445,7 @@ const EnhancedInventoryPage = () => {
                 <p className="text-yellow-800">Modal is open! showCreateModal: {showCreateModal.toString()}</p>
               </div>
               <InventoryItemForm
+                key={selectedItem?._id || 'new'}
                 item={selectedItem}
                 onSubmit={handleFormSubmit}
                 onCancel={handleFormClose}

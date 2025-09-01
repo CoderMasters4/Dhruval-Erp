@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { WarehouseSelector } from './WarehouseSelector';
@@ -30,6 +30,17 @@ export const InventoryItemForm: React.FC<InventoryItemFormProps> = ({
   });
 
   const warehouse = warehouseData?.data;
+
+  // Handle item changes (for editing)
+  useEffect(() => {
+    if (item) {
+      console.log('Form initialized with item:', item);
+      setSelectedWarehouse(item.warehouseId || '');
+      setReorderPoint(item.reorderPoint || 0);
+      setReorderQuantity(item.reorderQuantity || 0);
+      setStockingMethod(item.stockingMethod || 'fifo');
+    }
+  }, [item]);
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -263,6 +274,12 @@ export const InventoryItemForm: React.FC<InventoryItemFormProps> = ({
           </ul>
         </div>
       </div>
+
+      {/* Specifications */}
+      <div className="bg-white rounded-lg border border-gray-200 p-6">
+        <h3 className="text-lg font-semibold text-gray-800 mb-4 border-b pb-2">
+          Specifications
+        </h3>
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>

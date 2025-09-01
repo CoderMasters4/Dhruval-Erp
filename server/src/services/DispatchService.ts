@@ -1,7 +1,7 @@
 import { Types } from 'mongoose';
 import { BaseService } from './BaseService';
-import Dispatch from '../models/Dispatch';
-import { IDispatch } from '../types/models';
+import { Dispatch } from '../models/Dispatch';
+import { IDispatch } from '../models/Dispatch';
 import { AppError } from '../utils/errors';
 import { logger } from '../utils/logger';
 
@@ -19,21 +19,12 @@ export class DispatchService extends BaseService<IDispatch> {
 
       const dispatch = await this.create({
         ...dispatchData,
-        dispatchNumber: await this.generateDispatchNumber(dispatchData.companyId!.toString()),
-        dispatchDate: dispatchData.dispatchDate || new Date(),
-        totalItems: 0,
-        totalQuantity: 0,
-        totalWeight: 0,
-        totalVolume: 0,
-        totalValue: 0,
-        items: [],
         createdBy: createdBy ? new Types.ObjectId(createdBy) : undefined
       }, createdBy);
 
       logger.info('Dispatch entry created successfully', {
-        dispatchNumber: dispatch.dispatchNumber,
-        dispatchType: dispatch.dispatchType,
-        totalQuantity: dispatch.totalQuantity,
+        dispatchId: dispatch._id,
+        title: dispatch.title,
         createdBy
       });
 
@@ -202,8 +193,8 @@ export class DispatchService extends BaseService<IDispatch> {
       throw new AppError('Company ID is required', 400);
     }
 
-    if (!dispatchData.dispatchType) {
-      throw new AppError('Dispatch type is required', 400);
+    if (!dispatchData.title) {
+              throw new AppError('Dispatch title is required', 400);
     }
 
     if (!dispatchData.priority) {

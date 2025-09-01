@@ -124,63 +124,63 @@ const categoryValidation = [
 ];
 
 /**
- * @route   POST /api/v2/spares
+ * @route   POST /api/v1/spares
  * @desc    Create a new spare
  * @access  Private
  */
 router.post('/', createSpareValidation, spareController.createSpare.bind(spareController));
 
 /**
- * @route   GET /api/v2/spares
+ * @route   GET /api/v1/spares
  * @desc    Get spares by company with filtering and pagination
  * @access  Private
  */
 router.get('/', spareController.getSparesByCompany.bind(spareController));
 
 /**
- * @route   GET /api/v2/spares/stats
+ * @route   GET /api/v1/spares/stats
  * @desc    Get spare statistics
  * @access  Private
  */
 router.get('/stats', spareController.getSpareStats.bind(spareController));
 
 /**
- * @route   GET /api/v2/spares/low-stock
+ * @route   GET /api/v1/spares/low-stock
  * @desc    Get low stock spares
  * @access  Private
  */
 router.get('/low-stock', spareController.getLowStockSpares.bind(spareController));
 
 /**
- * @route   GET /api/v2/spares/category/:category
+ * @route   GET /api/v1/spares/category/:category
  * @desc    Get spares by category
  * @access  Private
  */
 router.get('/category/:category', categoryValidation, spareController.getSparesByCategory.bind(spareController));
 
 /**
- * @route   GET /api/v2/spares/check-code/:spareCode
+ * @route   GET /api/v1/spares/check-code/:spareCode
  * @desc    Check spare code uniqueness
  * @access  Private
  */
 router.get('/check-code/:spareCode', spareCodeValidation, spareController.checkSpareCodeUnique.bind(spareController));
 
 /**
- * @route   GET /api/v2/spares/:id
+ * @route   GET /api/v1/spares/:id
  * @desc    Get spare by ID
  * @access  Private
  */
 router.get('/:id', idValidation, spareController.getSpareById.bind(spareController));
 
 /**
- * @route   PUT /api/v2/spares/:id
+ * @route   PUT /api/v1/spares/:id
  * @desc    Update spare
  * @access  Private
  */
 router.put('/:id', [...idValidation, ...updateSpareValidation], spareController.updateSpare.bind(spareController));
 
 /**
- * @route   POST /api/v2/spares/:spareId/stock
+ * @route   POST /api/v1/spares/:spareId/stock
  * @desc    Update spare stock
  * @access  Private
  */
@@ -190,7 +190,7 @@ router.post('/:spareId/stock', [
 ], spareController.updateStock.bind(spareController));
 
 /**
- * @route   DELETE /api/v2/spares/:id
+ * @route   DELETE /api/v1/spares/:id
  * @desc    Delete spare
  * @access  Private
  */

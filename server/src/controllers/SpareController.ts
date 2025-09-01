@@ -58,39 +58,90 @@ export class SpareController extends BaseController<ISpare> {
 
   /**
    * Get spares by company with filtering and pagination
+   * Superadmin can access all spares, regular users only their company spares
    */
   async getSparesByCompany(req: Request, res: Response): Promise<void> {
     try {
-      const { companyId } = this.getUserInfo(req);
+      // Debug logging
+      console.log('SpareController.getSparesByCompany called');
+      console.log('Request user:', (req as any).user);
+      console.log('Request headers:', req.headers);
+      console.log('Request query:', req.query);
+      
+      const user = (req as any).user;
+      const isSuperAdmin = user?.isSuperAdmin === true;
+      console.log('Is superadmin:', isSuperAdmin);
+      
+      let filters: SpareFilters;
+      
+      if (isSuperAdmin) {
+        // Superadmin can access all spares from all companies
+        console.log('Superadmin access - getting all spares');
+        filters = {
+          // No companyId filter for superadmin
+          category: req.query.category as string,
+          manufacturer: req.query.manufacturer as string,
+          isActive: req.query.isActive === 'true' ? true : req.query.isActive === 'false' ? false : undefined,
+          isLowStock: req.query.isLowStock === 'true' ? true : req.query.isLowStock === 'false' ? false : undefined,
+          isCritical: req.query.isCritical === 'true' ? true : req.query.isCritical === 'false' ? false : undefined,
+          search: req.query.search as string,
+          page: parseInt(req.query.page as string) || 1,
+          limit: parseInt(req.query.limit as string) || 20,
+          sortBy: req.query.sortBy as string || 'createdAt',
+          sortOrder: (req.query.sortOrder as 'asc' | 'desc') || 'desc'
+        };
+      } else {
+        // Regular users can only access spares from their company
+        const { companyId } = this.getUserInfo(req);
+        console.log('Regular user - extracted companyId:', companyId);
 
-      if (!companyId) {
-        throw new AppError('Company ID is required', 400);
+        if (!companyId) {
+          console.log('Company ID is missing for regular user');
+          throw new AppError('Company ID is required for regular users', 400);
+        }
+
+        filters = {
+          companyId,
+          category: req.query.category as string,
+          manufacturer: req.query.manufacturer as string,
+          isActive: req.query.isActive === 'true' ? true : req.query.isActive === 'false' ? false : undefined,
+          isLowStock: req.query.isLowStock === 'true' ? true : req.query.isLowStock === 'false' ? false : undefined,
+          isCritical: req.query.isCritical === 'true' ? true : req.query.isCritical === 'false' ? false : undefined,
+          search: req.query.search as string,
+          page: parseInt(req.query.page as string) || 1,
+          limit: parseInt(req.query.limit as string) || 20,
+          sortBy: req.query.sortBy as string || 'createdAt',
+          sortOrder: (req.query.sortOrder as 'asc' | 'desc') || 'desc'
+        };
       }
 
-      const filters: SpareFilters = {
-        companyId,
-        category: req.query.category as string,
-        manufacturer: req.query.manufacturer as string,
-        isActive: req.query.isActive === 'true',
-        isLowStock: req.query.isLowStock === 'true',
-        isCritical: req.query.isCritical === 'true',
-        search: req.query.search as string,
-        page: parseInt(req.query.page as string) || 1,
-        limit: parseInt(req.query.limit as string) || 20,
-        sortBy: req.query.sortBy as string || 'createdAt',
-        sortOrder: (req.query.sortOrder as 'asc' | 'desc') || 'desc'
-      };
+      console.log('Filters applied:', filters);
 
       const result = await this.spareService.getSparesByCompany(filters);
+      console.log('Service result:', result);
 
-      logger.info(`Retrieved spares for company ${companyId}`, {
+      const accessType = isSuperAdmin ? 'all companies' : 'user company';
+      logger.info(`Retrieved spares for ${accessType}`, {
         total: result.total,
         page: result.page,
-        limit: result.limit
+        limit: result.limit,
+        isSuperAdmin,
+        companyId: isSuperAdmin ? 'ALL' : filters.companyId
       });
+      
+      // Add response metadata to show access level
+      const responseData = {
+        ...result,
+        accessInfo: {
+          isSuperAdmin,
+          accessType,
+          companyId: isSuperAdmin ? 'ALL' : filters.companyId
+        }
+      };
 
-      this.sendSuccess(res, result, 'Spares retrieved successfully');
+      this.sendSuccess(res, responseData, 'Spares retrieved successfully');
     } catch (error) {
+      console.log('Error in getSparesByCompany:', error);
       this.sendError(res, error);
     }
   }

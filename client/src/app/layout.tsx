@@ -173,7 +173,7 @@ export default function RootLayout({
         <meta property="og:url" content="https://yourapp.com" />
         <meta property="og:image" content="https://yourapp.com/icons/icon-192x192.png" />
       </head>
-      <body className={`${inter.className} antialiased transition-colors duration-300`}>
+      <body className={`${inter.className} antialiased transition-colors duration-300`} suppressHydrationWarning>
         <Providers>
           {children}
           <PWAManager />

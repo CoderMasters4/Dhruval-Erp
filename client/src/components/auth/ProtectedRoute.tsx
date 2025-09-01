@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useSelector } from 'react-redux'
 import { selectIsAuthenticated, selectCurrentUser, selectAuthInitialized, selectAuthLoading } from '@/lib/features/auth/authSlice'
@@ -36,6 +36,12 @@ export function ProtectedRoute({
   const isAuthInitialized = useSelector(selectAuthInitialized)
   const isAuthLoading = useSelector(selectAuthLoading)
   const permissions = usePermissions()
+  const [isClient, setIsClient] = useState(false)
+
+  // Prevent hydration mismatch by only rendering on client
+  useEffect(() => {
+    setIsClient(true)
+  }, [])
 
   useEffect(() => {
     // Don't redirect until auth is initialized
@@ -76,6 +82,15 @@ export function ProtectedRoute({
     permissions,
     isAuthInitialized
   ])
+
+  // Prevent hydration mismatch by not rendering until client-side
+  if (!isClient) {
+    return fallback || (
+      <div className="min-h-screen flex items-center justify-center">
+        <CompactLoader message="Loading..." size="lg" />
+      </div>
+    )
+  }
 
   // Show loading while checking authentication
   if (!isAuthInitialized || isAuthLoading || (requireAuth && !isAuthenticated && isAuthInitialized)) {

@@ -3,18 +3,25 @@
 import { useState } from 'react'
 import { AppLayout } from '@/components/layout/AppLayout'
 import { DashboardHeader } from '@/components/ui/DashboardHeader'
-import { ResponsiveContainer, ResponsiveGrid } from '@/components/ui/ResponsiveLayout'
+import { ResponsiveGrid } from '@/components/ui/ResponsiveLayout'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { Badge } from '@/components/ui/badge'
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
-  useGetSalesStatsQuery,
+  useGetSalesDashboardQuery,
   useGetSalesOrdersQuery,
   useGetCustomerSalesReportQuery,
+  useGetProductSalesPerformanceQuery,
+  useGetSalesTrendsQuery,
+  useGetSalesTeamPerformanceQuery,
   useUpdatePaymentStatusMutation,
-  useExportSalesDataMutation
+  useExportSalesDataMutation,
+  useCreateSalesOrderMutation,
+  useUpdateSalesOrderMutation,
+  useDeleteSalesOrderMutation
 } from '@/lib/api/salesApi'
 import {
   ShoppingBag,
@@ -31,22 +38,57 @@ import {
   AlertCircle,
   RefreshCw,
   Edit,
-  Trash2
+  Trash2,
+  BarChart3,
+  PieChart,
+  LineChart,
+  Activity,
+  Target,
+  Award,
+  Clock,
+  Package,
+  UserCheck,
+  FileText
 } from 'lucide-react'
+import {
+  LineChart as RechartsLineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  BarChart,
+  Bar,
+  PieChart as RechartsPieChart,
+  Pie,
+  Cell,
+  AreaChart,
+  Area
+} from 'recharts'
 import toast from 'react-hot-toast'
+import clsx from 'clsx'
+import { SalesOrderModal } from '@/components/modals/SalesOrderModal'
+
+const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4']
 
 export default function SalesPage() {
+  const [activeTab, setActiveTab] = useState('dashboard')
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedFilter, setSelectedFilter] = useState('all')
   const [currentPage, setCurrentPage] = useState(1)
+  const [timeRange, setTimeRange] = useState('month')
+  const [showCreateModal, setShowCreateModal] = useState(false)
+  const [showEditModal, setShowEditModal] = useState(false)
+  const [selectedOrder, setSelectedOrder] = useState<any>(null)
 
   // RTK Query hooks
   const {
-    data: statsData,
-    isLoading: statsLoading,
-    error: statsError,
-    refetch: refetchStats
-  } = useGetSalesStatsQuery()
+    data: dashboardData,
+    isLoading: dashboardLoading,
+    error: dashboardError,
+    refetch: refetchDashboard
+  } = useGetSalesDashboardQuery({ period: timeRange })
 
   const {
     data: ordersData,
@@ -65,56 +107,47 @@ export default function SalesPage() {
     isLoading: customerReportLoading
   } = useGetCustomerSalesReportQuery({})
 
+  const {
+    data: productPerformanceData,
+    isLoading: productPerformanceLoading
+  } = useGetProductSalesPerformanceQuery({})
+
+  const {
+    data: salesTrendsData,
+    isLoading: salesTrendsLoading
+  } = useGetSalesTrendsQuery({ period: timeRange })
+
+  const {
+    data: teamPerformanceData,
+    isLoading: teamPerformanceLoading
+  } = useGetSalesTeamPerformanceQuery({})
+
+  // Mutations
   const [updatePaymentStatus] = useUpdatePaymentStatusMutation()
   const [exportSalesData] = useExportSalesDataMutation()
+  const [createSalesOrder] = useCreateSalesOrderMutation()
+  const [updateSalesOrder] = useUpdateSalesOrderMutation()
+  const [deleteSalesOrder] = useDeleteSalesOrderMutation()
 
   // Handler functions
   const handlePaymentStatusUpdate = async (orderId: string, paymentStatus: 'pending' | 'paid' | 'overdue' | 'partial') => {
     try {
       await updatePaymentStatus({ id: orderId, paymentStatus }).unwrap()
       toast.success('Payment status updated successfully')
+      refetchOrders()
     } catch (error: any) {
       toast.error(error?.data?.message || 'Failed to update payment status')
     }
   }
 
-  const handleExport = async (format: 'csv' | 'excel') => {
+  const handleExport = async () => {
+    const format = 'csv' as 'csv' | 'excel' | 'pdf'
     try {
-      const result = await exportSalesData({
-        format,
-        filters: {
-          search: searchTerm,
-          status: selectedFilter === 'all' ? undefined : selectedFilter
-        }
-      }).unwrap()
-
-      toast.success('Export started. Download will begin shortly.')
-
-      if (result.data.downloadUrl) {
-        try {
-          // Import download utility dynamically
-          const { downloadWithFallback } = await import('@/utils/downloadUtils')
-
-          const downloadResult = await downloadWithFallback(
-            result.data.downloadUrl,
-            `sales-export-${new Date().toISOString().split('T')[0]}.${format}`
-          )
-
-          if (downloadResult.success) {
-            if (downloadResult.method === 'clipboard') {
-              toast('Download URL copied to clipboard. Paste in new tab to download.', {
-                icon: 'ℹ️',
-                duration: 5000
-              })
-            }
-          } else {
-            // Final fallback
-            window.open(result.data.downloadUrl, '_blank')
-          }
-        } catch (importError) {
-          // Fallback to original method
-          window.open(result.data.downloadUrl, '_blank')
-        }
+      const result = await exportSalesData({ format, filters: {} }).unwrap()
+      toast.success('Data exported successfully')
+      // Handle download
+      if (result.data?.downloadUrl) {
+        window.open(result.data.downloadUrl, '_blank')
       }
     } catch (error: any) {
       toast.error(error?.data?.message || 'Failed to export data')
@@ -122,17 +155,55 @@ export default function SalesPage() {
   }
 
   const handleRefresh = () => {
-    refetchStats()
+    refetchDashboard()
     refetchOrders()
-    toast.success('Data refreshed')
+  }
+
+  const handleCreateOrder = () => {
+    setShowCreateModal(true)
+  }
+
+  const handleEditOrder = (order: any) => {
+    setSelectedOrder(order)
+    setShowEditModal(true)
+  }
+
+  const handleDeleteOrder = async (orderId: string) => {
+    if (confirm('Are you sure you want to delete this order?')) {
+      try {
+        await deleteSalesOrder(orderId).unwrap()
+        toast.success('Order deleted successfully')
+        refetchOrders()
+      } catch (error: any) {
+        toast.error(error?.data?.message || 'Failed to delete order')
+      }
+    }
+  }
+
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('en-IN', {
+      style: 'currency',
+      currency: 'INR',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(amount)
+  }
+
+  const formatNumber = (num: number) => {
+    return new Intl.NumberFormat('en-IN').format(num)
+  }
+
+  const getGrowthColor = (growth: number) => {
+    return growth >= 0 ? 'text-green-600' : 'text-red-600'
   }
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'paid': return 'bg-green-100 text-green-800'
-      case 'pending': return 'bg-yellow-100 text-yellow-800'
-      case 'overdue': return 'bg-red-100 text-red-800'
-      case 'partial': return 'bg-blue-100 text-blue-800'
+      case 'completed': return 'bg-green-100 text-green-800'
+      case 'confirmed': return 'bg-blue-100 text-blue-800'
+      case 'in_production': return 'bg-yellow-100 text-yellow-800'
+      case 'pending': return 'bg-gray-100 text-gray-800'
+      case 'cancelled': return 'bg-red-100 text-red-800'
       default: return 'bg-gray-100 text-gray-800'
     }
   }
@@ -140,288 +211,492 @@ export default function SalesPage() {
   const getPaymentStatusColor = (status: string) => {
     switch (status) {
       case 'paid': return 'bg-green-100 text-green-800'
-      case 'pending': return 'bg-yellow-100 text-yellow-800'
+      case 'partial': return 'bg-yellow-100 text-yellow-800'
+      case 'pending': return 'bg-blue-100 text-blue-800'
       case 'overdue': return 'bg-red-100 text-red-800'
-      case 'partial': return 'bg-blue-100 text-blue-800'
       default: return 'bg-gray-100 text-gray-800'
     }
   }
 
-  // Loading states
-  if (statsLoading || ordersLoading) {
-    return (
-      <AppLayout>
-        <ResponsiveContainer className="flex items-center justify-center min-h-[400px]">
-          <LoadingSpinner size="lg" />
-        </ResponsiveContainer>
-      </AppLayout>
-    )
-  }
-
-  // Error states
-  if (statsError || ordersError) {
-    return (
-      <AppLayout>
-        <ResponsiveContainer className="flex items-center justify-center min-h-[400px]">
-          <div className="text-center">
-            <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">Error Loading Data</h3>
-            <p className="text-gray-600 mb-4">Failed to load sales data. Please try again.</p>
-            <Button onClick={handleRefresh}>
-              <RefreshCw className="h-4 w-4 mr-2" />
-              Retry
-            </Button>
-          </div>
-        </ResponsiveContainer>
-      </AppLayout>
-    )
-  }
-
-  const stats = statsData?.data
+  const dashboard = dashboardData?.data
+  const stats = dashboard?.stats
+  const analytics = dashboard?.analytics
   const orders = ordersData?.data || []
+  const pagination = ordersData?.pagination
   const customerReport = customerReportData?.data || []
+  const productPerformance = productPerformanceData?.data || []
+  const salesTrends = salesTrendsData?.data || []
+  const teamPerformance = teamPerformanceData?.data || []
+
+  if (dashboardLoading) {
+    return (
+      <AppLayout>
+        <LoadingSpinner />
+      </AppLayout>
+    )
+  }
 
   return (
     <AppLayout>
-      <ResponsiveContainer className="space-y-6">
-        {/* Header */}
-        <DashboardHeader
+      <ResponsiveContainer>
+        <div className="space-y-6">
+          {/* Header */}
+          <DashboardHeader
           title="Sales Management"
-          description="Track sales, customer payments, and revenue analytics"
+          description="Comprehensive sales overview, analytics, and order management"
           icon={<ShoppingBag className="h-6 w-6 text-white" />}
           actions={
-            <Button onClick={handleRefresh} variant="outline" size="sm">
-              <RefreshCw className="h-4 w-4 mr-2" />
-              Refresh
-            </Button>
+            <div className="flex gap-2">
+              <Button onClick={handleExport} variant="outline" size="sm">
+                <Download className="h-4 w-4 mr-2" />
+                Export
+              </Button>
+              <Button onClick={handleRefresh} variant="outline" size="sm">
+                <RefreshCw className="h-4 w-4 mr-2" />
+                Refresh
+              </Button>
+            </div>
           }
         />
 
-        {/* Stats Cards */}
-        <ResponsiveGrid cols={{ default: 1, sm: 2, lg: 4 }} gap="md">
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">Total Sales</p>
-                  <p className="text-2xl font-bold text-gray-900">
-                    ₹{stats ? (stats.totalSales / 100000).toFixed(1) : '0'}L
-                  </p>
-                </div>
-                <DollarSign className="h-8 w-8 text-green-600" />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">Monthly Growth</p>
-                  <p className="text-2xl font-bold text-green-600">
-                    +{stats?.monthlyGrowth || 0}%
-                  </p>
-                </div>
-                <TrendingUp className="h-8 w-8 text-green-600" />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">Total Customers</p>
-                  <p className="text-2xl font-bold text-gray-900">
-                    {stats?.totalCustomers || 0}
-                  </p>
-                </div>
-                <Users className="h-8 w-8 text-blue-600" />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">Pending Payments</p>
-                  <p className="text-2xl font-bold text-red-600">
-                    ₹{stats ? (stats.pendingPayments / 100000).toFixed(1) : '0'}L
-                  </p>
-                </div>
-                <AlertCircle className="h-8 w-8 text-red-600" />
-              </div>
-            </CardContent>
-          </Card>
-        </ResponsiveGrid>
-
         {/* Main Content */}
-        <ResponsiveGrid cols={{ default: 1, lg: 3 }} gap="lg">
-          {/* Recent Sales */}
-          <div className="lg:col-span-2">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+          <TabsList className="grid w-full grid-cols-4">
+            <TabsTrigger value="dashboard" className="flex items-center gap-2">
+              <BarChart3 className="h-4 w-4" />
+              Dashboard
+            </TabsTrigger>
+            <TabsTrigger value="orders" className="flex items-center gap-2">
+              <FileText className="h-4 w-4" />
+              Orders
+            </TabsTrigger>
+            <TabsTrigger value="analytics" className="flex items-center gap-2">
+              <LineChart className="h-4 w-4" />
+              Analytics
+            </TabsTrigger>
+            <TabsTrigger value="reports" className="flex items-center gap-2">
+              <PieChart className="h-4 w-4" />
+              Reports
+            </TabsTrigger>
+          </TabsList>
+
+          {/* Dashboard Tab */}
+          <TabsContent value="dashboard" className="space-y-6">
+            {/* Stats Cards */}
+            <ResponsiveGrid cols={{ default: 1, sm: 2, lg: 4 }} gap="md">
+              <Card>
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-gray-600">Total Sales</p>
+                      <p className="text-2xl font-bold text-gray-900">
+                        {stats ? formatCurrency(stats.totalSales) : '₹0'}
+                      </p>
+                                             <p className={clsx("text-sm", getGrowthColor(stats?.monthlyGrowth ?? 0))}>
+                         {stats?.monthlyGrowth && stats.monthlyGrowth >= 0 ? '+' : ''}{stats?.monthlyGrowth ?? 0}% from last month
+                       </p>
+                    </div>
+                    <DollarSign className="h-8 w-8 text-green-600" />
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-gray-600">Total Orders</p>
+                      <p className="text-2xl font-bold text-gray-900">
+                        {formatNumber(stats?.totalOrders || 0)}
+                      </p>
+                      <p className="text-sm text-gray-500">
+                        Avg: {stats ? formatCurrency(stats.averageOrderValue) : '₹0'}
+                      </p>
+                    </div>
+                    <Package className="h-8 w-8 text-blue-600" />
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-gray-600">Pending Payments</p>
+                      <p className="text-2xl font-bold text-yellow-600">
+                        {stats ? formatCurrency(stats.pendingPayments) : '₹0'}
+                      </p>
+                      <p className="text-sm text-gray-500">
+                        {stats?.overduePayments ? `${formatCurrency(stats.overduePayments)} overdue` : 'All on time'}
+                      </p>
+                    </div>
+                    <Clock className="h-8 w-8 text-yellow-600" />
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-gray-600">Active Customers</p>
+                      <p className="text-2xl font-bold text-gray-900">
+                        {customerReport.length}
+                      </p>
+                      <p className="text-sm text-gray-500">
+                        Top customers this month
+                      </p>
+                    </div>
+                    <Users className="h-8 w-8 text-purple-600" />
+                  </div>
+                </CardContent>
+              </Card>
+            </ResponsiveGrid>
+
+            {/* Charts Section */}
+            <ResponsiveGrid cols={{ default: 1, lg: 2 }} gap="lg">
+              {/* Sales Trends Chart */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <TrendingUp className="h-5 w-5" />
+                    Sales Trends
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <ResponsiveContainer width="100%" height={300}>
+                                         <RechartsLineChart data={salesTrends}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="_id" />
+                      <YAxis />
+                      <Tooltip formatter={(value) => formatCurrency(Number(value))} />
+                      <Line type="monotone" dataKey="amount" stroke="#3b82f6" strokeWidth={2} />
+                                         </RechartsLineChart>
+                  </ResponsiveContainer>
+                </CardContent>
+              </Card>
+
+              {/* Top Products Chart */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Package className="h-5 w-5" />
+                    Top Products
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <ResponsiveContainer width="100%" height={300}>
+                    <BarChart data={productPerformance.slice(0, 5)}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="_id" />
+                      <YAxis />
+                      <Tooltip formatter={(value) => formatCurrency(Number(value))} />
+                      <Bar dataKey="totalRevenue" fill="#10b981" />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </CardContent>
+              </Card>
+            </ResponsiveGrid>
+
+            {/* Recent Orders */}
             <Card>
               <CardHeader>
-                <div className="flex items-center justify-between">
-                  <CardTitle>Recent Sales</CardTitle>
-                  <div className="flex space-x-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleExport('excel')}
-                    >
-                      <Download className="h-4 w-4 mr-2" />
-                      Export Excel
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleExport('csv')}
-                    >
-                      <Download className="h-4 w-4 mr-2" />
-                      Export CSV
-                    </Button>
-                    <Button size="sm">
-                      <Plus className="h-4 w-4 mr-2" />
-                      New Sale
-                    </Button>
-                  </div>
-                </div>
-                
-                {/* Search and Filter */}
-                <div className="flex space-x-2 mt-4">
-                  <div className="relative flex-1">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                    <Input
-                      placeholder="Search sales..."
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      className="pl-10"
-                    />
-                  </div>
-                  <Button variant="outline" size="sm">
-                    <Filter className="h-4 w-4 mr-2" />
-                    Filter
-                  </Button>
-                </div>
+                <CardTitle className="flex items-center gap-2">
+                  <FileText className="h-5 w-5" />
+                  Recent Orders
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {orders.length === 0 ? (
-                    <div className="text-center py-8">
-                      <ShoppingBag className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                      <p className="text-gray-500">No sales orders found</p>
-                    </div>
-                  ) : (
-                    orders.map((order) => (
-                      <div key={order._id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 transition-colors">
-                        <div className="flex-1">
-                          <div className="flex items-center space-x-3">
-                            <div>
-                              <p className="font-medium text-gray-900">{order.orderId}</p>
-                              <p className="text-sm text-gray-600">{order.customer.name}</p>
-                              <p className="text-xs text-gray-500">
-                                {order.items.length} item(s) • {new Date(order.orderDate).toLocaleDateString()}
-                              </p>
-                            </div>
-                          </div>
+                  {dashboard?.recentOrders?.slice(0, 5).map((order: any) => (
+                    <div key={order._id} className="flex items-center justify-between p-4 border rounded-lg">
+                      <div className="flex items-center gap-4">
+                        <div>
+                          <p className="font-medium">{order.orderNumber}</p>
+                          <p className="text-sm text-gray-500">{order.customerName}</p>
                         </div>
-                        <div className="text-right">
-                          <p className="font-bold text-gray-900">₹{order.totalAmount.toLocaleString()}</p>
-                          <div className="flex space-x-1 mt-1">
+                      </div>
+                      <div className="flex items-center gap-4">
+                        <Badge className={getStatusColor(order.status)}>
+                          {order.status}
+                        </Badge>
+                        <Badge className={getPaymentStatusColor(order.payment.paymentStatus)}>
+                          {order.payment.paymentStatus}
+                        </Badge>
+                        <p className="font-medium">{formatCurrency(order.orderSummary.finalAmount)}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Orders Tab */}
+          <TabsContent value="orders" className="space-y-6">
+            {/* Orders Header */}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <Input
+                  placeholder="Search orders..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-64"
+                />
+                <select
+                  value={selectedFilter}
+                  onChange={(e) => setSelectedFilter(e.target.value)}
+                  className="border rounded-md px-3 py-2"
+                >
+                  <option value="all">All Status</option>
+                  <option value="pending">Pending</option>
+                  <option value="confirmed">Confirmed</option>
+                  <option value="in_production">In Production</option>
+                  <option value="completed">Completed</option>
+                  <option value="cancelled">Cancelled</option>
+                </select>
+              </div>
+              <Button onClick={handleCreateOrder}>
+                <Plus className="h-4 w-4 mr-2" />
+                New Order
+              </Button>
+            </div>
+
+            {/* Orders Table */}
+            <Card>
+              <CardContent className="p-0">
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Order
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Customer
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Status
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Payment
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Amount
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Date
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Actions
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {orders.map((order: any) => (
+                        <tr key={order._id}>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="text-sm font-medium text-gray-900">{order.orderNumber}</div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="text-sm text-gray-900">{order.customerName}</div>
+                            <div className="text-sm text-gray-500">{order.customerCode}</div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
                             <Badge className={getStatusColor(order.status)}>
                               {order.status}
                             </Badge>
-                            <Badge className={getPaymentStatusColor(order.paymentStatus)}>
-                              {order.paymentStatus}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <Badge className={getPaymentStatusColor(order.payment.paymentStatus)}>
+                              {order.payment.paymentStatus}
                             </Badge>
-                          </div>
-                          <p className="text-xs text-gray-500 mt-1">
-                            {order.expectedDelivery ? `ETA: ${new Date(order.expectedDelivery).toLocaleDateString()}` : 'No ETA'}
-                          </p>
-                        </div>
-                        <div className="ml-4 flex space-x-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handlePaymentStatusUpdate(order._id, order.paymentStatus === 'paid' ? 'pending' : 'paid')}
-                          >
-                            <CreditCard className="h-4 w-4" />
-                          </Button>
-                          <Button variant="outline" size="sm">
-                            <Eye className="h-4 w-4" />
-                          </Button>
-                          <Button variant="outline" size="sm">
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </div>
-                    ))
-                  )}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {formatCurrency(order.orderSummary.finalAmount)}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {new Date(order.createdAt).toLocaleDateString()}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                                         <div className="flex items-center gap-2">
+                               <Button variant="ghost" size="sm">
+                                 <Eye className="h-4 w-4" />
+                               </Button>
+                               <Button variant="ghost" size="sm" onClick={() => handleEditOrder(order)}>
+                                 <Edit className="h-4 w-4" />
+                               </Button>
+                               <Button variant="ghost" size="sm" onClick={() => handleDeleteOrder(order._id)}>
+                                 <Trash2 className="h-4 w-4" />
+                               </Button>
+                             </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
               </CardContent>
             </Card>
-          </div>
 
-          {/* Customer-wise Sales */}
-          <div>
+            {/* Pagination */}
+            {pagination && (
+              <div className="flex items-center justify-between">
+                <div className="text-sm text-gray-700">
+                  Showing {((pagination.page - 1) * pagination.limit) + 1} to {Math.min(pagination.page * pagination.limit, pagination.total)} of {pagination.total} results
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={pagination.page === 1}
+                    onClick={() => setCurrentPage(pagination.page - 1)}
+                  >
+                    Previous
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={pagination.page >= pagination.pages}
+                    onClick={() => setCurrentPage(pagination.page + 1)}
+                  >
+                    Next
+                  </Button>
+                </div>
+              </div>
+            )}
+          </TabsContent>
+
+          {/* Analytics Tab */}
+          <TabsContent value="analytics" className="space-y-6">
+            <ResponsiveGrid cols={{ default: 1, lg: 2 }} gap="lg">
+              {/* Customer Segmentation */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Users className="h-5 w-5" />
+                    Customer Segmentation
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <ResponsiveContainer width="100%" height={300}>
+                    <RechartsPieChart>
+                      <Pie
+                        data={analytics?.customerSegmentation || []}
+                        cx="50%"
+                        cy="50%"
+                        labelLine={false}
+                                                 label={({ name, percent }) => `${name} ${((percent ?? 0) * 100).toFixed(0)}%`}
+                        outerRadius={80}
+                        fill="#8884d8"
+                        dataKey="count"
+                      >
+                        {analytics?.customerSegmentation?.map((entry: any, index: number) => (
+                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                        ))}
+                      </Pie>
+                      <Tooltip />
+                    </RechartsPieChart>
+                  </ResponsiveContainer>
+                </CardContent>
+              </Card>
+
+              {/* Sales by Status */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Activity className="h-5 w-5" />
+                    Sales by Status
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <ResponsiveContainer width="100%" height={300}>
+                    <BarChart data={analytics?.salesByStatus || []}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="_id" />
+                      <YAxis />
+                      <Tooltip formatter={(value) => formatCurrency(Number(value))} />
+                      <Bar dataKey="amount" fill="#8b5cf6" />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </CardContent>
+              </Card>
+            </ResponsiveGrid>
+          </TabsContent>
+
+          {/* Reports Tab */}
+          <TabsContent value="reports" className="space-y-6">
+            {/* Team Performance */}
             <Card>
               <CardHeader>
-                <CardTitle>Top Customers</CardTitle>
+                <CardTitle className="flex items-center gap-2">
+                  <UserCheck className="h-5 w-5" />
+                  Sales Team Performance
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {customerReportLoading ? (
-                    <div className="flex items-center justify-center py-8">
-                      <LoadingSpinner />
-                    </div>
-                  ) : customerReport.length === 0 ? (
-                    <div className="text-center py-8">
-                      <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                      <p className="text-gray-500">No customer data found</p>
-                    </div>
-                  ) : (
-                    customerReport.slice(0, 5).map((customer, index) => (
-                      <div key={customer.customerId} className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50 transition-colors">
-                        <div>
-                          <p className="font-medium text-gray-900">{customer.customerName}</p>
-                          <p className="text-sm text-gray-600">{customer.totalOrders} orders</p>
-                          <p className="text-xs text-gray-500">
-                            Last: {new Date(customer.lastOrderDate).toLocaleDateString()}
-                          </p>
-                          <Badge
-                            className={
-                              customer.paymentStatus === 'good'
-                                ? 'bg-green-100 text-green-800'
-                                : customer.paymentStatus === 'delayed'
-                                ? 'bg-yellow-100 text-yellow-800'
-                                : 'bg-red-100 text-red-800'
-                            }
-                          >
-                            {customer.paymentStatus}
-                          </Badge>
-                        </div>
-                        <div className="text-right">
-                          <p className="font-bold text-gray-900">
-                            ₹{(customer.totalSales / 100000).toFixed(1)}L
-                          </p>
-                          <p className="text-xs text-gray-500">
-                            Avg: ₹{(customer.averageOrderValue / 1000).toFixed(0)}K
-                          </p>
-                          {customer.outstandingAmount > 0 && (
-                            <p className="text-xs text-red-600">
-                              Outstanding: ₹{(customer.outstandingAmount / 1000).toFixed(0)}K
-                            </p>
-                          )}
-                        </div>
+                  {teamPerformance.map((member: any) => (
+                    <div key={member._id} className="flex items-center justify-between p-4 border rounded-lg">
+                      <div>
+                        <p className="font-medium">{member.salesPersonName}</p>
+                        <p className="text-sm text-gray-500">{member.totalOrders} orders</p>
                       </div>
-                    ))
-                  )}
+                      <div className="text-right">
+                        <p className="font-medium">{formatCurrency(member.totalAmount)}</p>
+                        <p className="text-sm text-gray-500">Avg: {formatCurrency(member.averageOrderValue)}</p>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </CardContent>
             </Card>
-          </div>
-        </ResponsiveGrid>
+
+            {/* Customer Report */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Target className="h-5 w-5" />
+                  Top Customers
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {customerReport.slice(0, 10).map((customer: any) => (
+                    <div key={customer._id} className="flex items-center justify-between p-4 border rounded-lg">
+                      <div>
+                        <p className="font-medium">{customer.customerName}</p>
+                        <p className="text-sm text-gray-500">{customer.customerCode}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-medium">{formatCurrency(customer.totalAmount)}</p>
+                        <p className="text-sm text-gray-500">{customer.totalOrders} orders</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
+
+        {/* Modals */}
+        <SalesOrderModal
+          isOpen={showCreateModal}
+          onClose={() => setShowCreateModal(false)}
+          mode="create"
+        />
+        
+        <SalesOrderModal
+          isOpen={showEditModal}
+          onClose={() => {
+            setShowEditModal(false)
+            setSelectedOrder(null)
+          }}
+          order={selectedOrder}
+          mode="edit"
+        />
+        </div>
       </ResponsiveContainer>
     </AppLayout>
   )

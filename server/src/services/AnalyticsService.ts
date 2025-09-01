@@ -4,7 +4,7 @@ import ProductionOrder from '../models/ProductionOrder';
 import FinancialTransaction from '../models/FinancialTransaction';
 import Employee from '../models/Employee';
 import Customer from '../models/Customer';
-import Supplier from '../models/Supplier';
+import { SpareSupplier } from '../models/Supplier';
 import Visitor from '../models/Visitor';
 import Company from '../models/Company';
 
@@ -432,7 +432,7 @@ export class AnalyticsService {
   }
 
   private async getSupplierData(companyId: string) {
-    return await Supplier.find({ companyId }).lean();
+    return await SpareSupplier.find({ companyId }).lean();
   }
 
   private async getVisitorData(companyId: string, startDate: Date, endDate: Date) {

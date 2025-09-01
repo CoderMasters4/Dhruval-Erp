@@ -7,7 +7,7 @@ import CustomerOrder from '../../models/CustomerOrder'
 import ProductionOrder from '../../models/ProductionOrder'
 import InventoryItem from '../../models/InventoryItem'
 import Customer from '../../models/Customer'
-import Supplier from '../../models/Supplier'
+import { SpareSupplier } from '../../models/Supplier'
 import Invoice from '../../models/Invoice'
 import Quotation from '../../models/Quotation'
 import Attendance from '../../models/Attendance'
@@ -260,7 +260,7 @@ router.get('/', async (req: AuthenticatedRequest, res: Response) => {
         ProductionOrder.countDocuments({ companyId, status: 'in_production' }),
         Quotation.countDocuments({ companyId }),
         Invoice.countDocuments({ companyId }),
-        Supplier.countDocuments({ companyId }),
+        SpareSupplier.countDocuments({ companyId }),
         Attendance.countDocuments({
           companyId,
           date: { $gte: startOfToday() }
@@ -565,6 +565,142 @@ router.get('/realtime', async (req: AuthenticatedRequest, res: Response) => {
     res.status(500).json({
       success: false,
       error: 'Failed to fetch real-time data'
+    })
+  }
+})
+
+/**
+ * Get recent activities
+ */
+router.get('/activities', async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const { companyId, isSuperAdmin } = req.user
+    const limit = parseInt(req.query.limit as string) || 10
+
+    let activities: any[] = []
+
+    if (isSuperAdmin) {
+      // Super Admin - System-wide activities
+      const [recentUsers, recentCompanies] = await Promise.all([
+        User.find({ isActive: true })
+          .sort({ createdAt: -1 })
+          .limit(5)
+          .select('username createdAt'),
+        Company.find({ isActive: true })
+          .sort({ createdAt: -1 })
+          .limit(5)
+          .select('companyName createdAt')
+      ])
+
+      // Convert to activity format
+      recentUsers.forEach((newUser) => {
+        activities.push({
+          id: `user-${newUser._id}`,
+          type: 'user',
+          title: 'New User Registered',
+          description: `User ${newUser.username} joined the system`,
+          timestamp: newUser.createdAt.toISOString(),
+          user: 'System',
+          status: 'success'
+        })
+      })
+
+      recentCompanies.forEach((company) => {
+        activities.push({
+          id: `company-${company._id}`,
+          type: 'system',
+          title: 'New Company Registered',
+          description: `${company.companyName} registered in the system`,
+          timestamp: company.createdAt.toISOString(),
+          user: 'System Admin',
+          status: 'info'
+        })
+      })
+    } else {
+      // Company-specific activities
+      const recentCompanyUsers = await User.find({
+        'companyAccess.companyId': companyId,
+        'companyAccess.isActive': true,
+        isActive: true
+      })
+        .sort({ 'companyAccess.joinedAt': -1 })
+        .limit(5)
+        .select('username companyAccess')
+
+      // Convert to activity format
+      recentCompanyUsers.forEach((newUser) => {
+        const companyAccess = newUser.companyAccess?.find((access: any) =>
+          access.companyId.toString() === companyId
+        )
+
+        if (companyAccess) {
+          activities.push({
+            id: `company-user-${newUser._id}`,
+            type: 'user',
+            title: 'New Team Member',
+            description: `${newUser.username} joined as ${companyAccess.role}`,
+            timestamp: companyAccess.joinedAt?.toISOString() || new Date().toISOString(),
+            user: 'HR Team',
+            status: 'success'
+          })
+        }
+      })
+
+      // Add recent orders if available
+      const recentOrders = await CustomerOrder.find({
+        companyId: new Types.ObjectId(companyId)
+      })
+        .sort({ createdAt: -1 })
+        .limit(3)
+        .select('orderNumber totalAmount status createdAt')
+
+      recentOrders.forEach((order) => {
+        activities.push({
+          id: `order-${order._id}`,
+          type: 'order',
+          title: 'New Order',
+          description: `Order ${order.orderNumber || order._id} created - ${order.status}`,
+          timestamp: order.createdAt.toISOString(),
+          user: 'Sales Team',
+          status: order.status === 'confirmed' ? 'warning' : 'success'
+        })
+      })
+
+      // Add recent production activities if available
+      const recentProduction = await ProductionOrder.find({
+        companyId: new Types.ObjectId(companyId)
+      })
+        .sort({ createdAt: -1 })
+        .limit(3)
+        .select('productionOrderNumber status createdAt')
+
+      recentProduction.forEach((production) => {
+        activities.push({
+          id: `production-${production._id}`,
+          type: 'production',
+          title: 'Production Update',
+          description: `Production order ${production.productionOrderNumber} - ${production.status}`,
+          timestamp: production.createdAt.toISOString(),
+          user: 'Production Team',
+          status: production.status === 'completed' ? 'success' : 'info'
+        })
+      })
+    }
+
+    // Sort activities by timestamp (newest first) and limit
+    activities.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
+
+    res.json({
+      success: true,
+      data: activities.slice(0, limit)
+    })
+
+  } catch (error: any) {
+    console.error('Dashboard activities error:', error)
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch activities',
+      message: 'An error occurred while fetching recent activities'
     })
   }
 })

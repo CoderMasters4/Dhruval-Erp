@@ -39,10 +39,16 @@ export abstract class BaseController<T extends Document> implements IBaseControl
    */
   protected getUserInfo(req: Request): { userId?: string; companyId?: string } {
     const user = (req as any).user;
-    return {
+    console.log('BaseController.getUserInfo - Request user object:', user);
+    console.log('BaseController.getUserInfo - User keys:', user ? Object.keys(user) : 'No user object');
+    
+    const result = {
       userId: user?.userId?.toString() || user?._id?.toString(),
       companyId: user?.companyId?.toString()
     };
+    
+    console.log('BaseController.getUserInfo - Extracted info:', result);
+    return result;
   }
 
   /**

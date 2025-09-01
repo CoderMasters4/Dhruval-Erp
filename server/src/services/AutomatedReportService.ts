@@ -3,9 +3,9 @@ import InventoryItem from '../models/InventoryItem';
 import ProductionOrder from '../models/ProductionOrder';
 import CustomerOrder from '../models/CustomerOrder';
 import FinancialTransaction from '../models/FinancialTransaction';
-import Dispatch from '../models/Dispatch';
+import { Dispatch } from '../models/Dispatch';
 import Customer from '../models/Customer';
-import Supplier from '../models/Supplier';
+import { SpareSupplier } from '../models/Supplier';
 import StockMovement from '../models/StockMovement';
 import * as ExcelJS from 'exceljs';
 import * as fs from 'fs';
@@ -250,9 +250,9 @@ export class AutomatedReportService {
 
     return {
       totalDispatch: dispatches.length,
-      totalDeliveries: dispatches.filter(d => d.status === 'delivered').length,
-      pendingDeliveries: dispatches.filter(d => d.status === 'in_transit').length,
-      rtoCount: dispatches.filter(d => d.rtoDetails.isRTO).length,
+      totalDeliveries: dispatches.filter(d => d.status === 'completed').length,
+      pendingDeliveries: dispatches.filter(d => d.status === 'in-progress').length,
+      rtoCount: 0, // Not available in simple dispatch model
       dispatchStatuses: this.groupByStatus(dispatches, 'status')
     };
   }

@@ -18,7 +18,7 @@ import {
   User,
   Role,
   Customer,
-  Supplier,
+  SpareSupplier,
   InventoryItem,
   Warehouse,
   ProductionOrder,
@@ -171,7 +171,7 @@ class SimpleSeed {
       await User.deleteMany({});
       await Role.deleteMany({});
       await Customer.deleteMany({});
-      await Supplier.deleteMany({});
+      await SpareSupplier.deleteMany({});
       await InventoryItem.deleteMany({});
       await Warehouse.deleteMany({});
       await ProductionOrder.deleteMany({});
@@ -593,7 +593,7 @@ class SimpleSeed {
         const location = getRandomElement(INDIAN_LOCATIONS);
         const createdBy = getRandomElement(companyUsers);
 
-        const supplier = await Supplier.create({
+        const supplier = await SpareSupplier.create({
           companyId: company._id,
           supplierCode: `SUPP${company._id.toString().slice(-4)}${i.toString().padStart(3, '0')}`,
           supplierName: faker.company.name() + ' Suppliers',

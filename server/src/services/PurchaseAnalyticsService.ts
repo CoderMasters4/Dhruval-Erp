@@ -1,5 +1,5 @@
 import PurchaseOrder from '../models/PurchaseOrder';
-import Supplier from '../models/Supplier';
+import { SpareSupplier } from '../models/Supplier';
 import Company from '../models/Company';
 
 export interface PurchaseAnalyticsParams {

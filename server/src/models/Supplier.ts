@@ -1,393 +1,342 @@
-import { Schema, model } from 'mongoose';
-import { ISupplier } from '@/types/models';
+import mongoose from 'mongoose';
 
-const SupplierAddressSchema = new Schema({
-  type: { type: String, enum: ['office', 'factory', 'warehouse', 'billing'], required: true },
-  isPrimary: { type: Boolean, default: false },
-  contactPerson: { type: String },
-  phone: { type: String },
-  email: { type: String },
-  addressLine1: { type: String, required: true },
-  addressLine2: { type: String },
-  city: { type: String, required: true },
-  state: { type: String, required: true },
-  pincode: { type: String, required: true },
-  country: { type: String, default: 'India' },
-  landmark: { type: String },
-  gpsCoordinates: {
-    latitude: { type: Number },
-    longitude: { type: Number }
+// Performance Metrics Schema
+const PerformanceMetricsSchema = new mongoose.Schema({
+  onTimeDeliveryRate: {
+    type: Number,
+    default: 0,
+    min: 0,
+    max: 100
   },
-  isActive: { type: Boolean, default: true }
-}, { _id: false });
-
-const SupplierContactSchema = new Schema({
-  name: { type: String, required: true },
-  designation: { type: String },
-  department: { type: String },
-  phone: { type: String, required: true },
-  alternatePhone: { type: String },
-  email: { type: String },
-  whatsapp: { type: String },
-  isPrimary: { type: Boolean, default: false },
-  canReceiveOrders: { type: Boolean, default: false },
-  canQuoteRates: { type: Boolean, default: false },
-  notes: { type: String },
-  isActive: { type: Boolean, default: true }
-}, { _id: false });
-
-const ProductCategorySchema = new Schema({
-  category: { type: String, required: true },
-  subCategory: { type: String },
-  products: [String],
-  minimumOrderQuantity: { type: Number, min: 0 },
-  leadTime: { type: Number, min: 0 }, // in days
-  qualityGrade: { type: String, enum: ['A+', 'A', 'B+', 'B', 'C'] },
-  certifications: [String],
-  isActive: { type: Boolean, default: true }
-}, { _id: false });
-
-const PerformanceMetricSchema = new Schema({
-  metric: { type: String, required: true },
-  value: { type: Number, required: true },
-  unit: { type: String },
-  period: { type: String, enum: ['monthly', 'quarterly', 'yearly'] },
-  lastUpdated: { type: Date, default: Date.now }
-}, { _id: false });
-
-const SupplierSchema = new Schema<ISupplier>({
-  companyId: { 
-    type: Schema.Types.ObjectId, 
-    ref: 'Company', 
-    required: true, 
-    index: true 
+  qualityRejectionRate: {
+    type: Number,
+    default: 0,
+    min: 0,
+    max: 100
   },
+  averageLeadTime: {
+    type: Number,
+    default: 0,
+    min: 0
+  },
+  totalOrders: {
+    type: Number,
+    default: 0,
+    min: 0
+  },
+  totalOrderValue: {
+    type: Number,
+    default: 0,
+    min: 0
+  },
+  averageOrderValue: {
+    type: Number,
+    default: 0,
+    min: 0
+  }
+}, { _id: false });
 
-  // Supplier Identification
-  supplierCode: { 
-    type: String, 
+// Pricing History Schema
+const PricingHistorySchema = new mongoose.Schema({
+  date: {
+    type: Date,
     required: true,
-    uppercase: true,
+    default: Date.now
+  },
+  price: {
+    type: Number,
+    required: true,
+    min: 0
+  },
+  currency: {
+    type: String,
+    default: 'USD',
+    enum: ['USD', 'EUR', 'GBP', 'INR', 'CAD', 'AUD']
+  },
+  quantity: {
+    type: Number,
+    required: true,
+    min: 1
+  },
+  orderNumber: {
+    type: String,
+    trim: true
+  }
+}, { _id: false });
+
+// Supplier Schema (embedded in Spare)
+export const SpareSupplierSchema = new mongoose.Schema({
+  supplierId: {
+    type: String,
+    required: true,
     trim: true
   },
-  supplierName: { 
-    type: String, 
+  supplierName: {
+    type: String,
     required: true,
-    trim: true,
-    maxlength: 255
+    trim: true
   },
-  legalName: { 
+  supplierCode: {
+    type: String,
+    required: true,
+    trim: true
+  },
+  partNumber: {
+    type: String,
+    required: true,
+    trim: true
+  },
+  isPrimary: {
+    type: Boolean,
+    default: false
+  },
+  leadTime: {
+    type: Number,
+    required: true,
+    min: 0,
+    default: 0
+  },
+  minOrderQuantity: {
+    type: Number,
+    required: true,
+    min: 1,
+    default: 1
+  },
+  lastSupplyDate: {
+    type: Date
+  },
+  lastSupplyRate: {
+    type: Number,
+    min: 0
+  },
+  qualityRating: {
+    type: Number,
+    required: true,
+    min: 1,
+    max: 5,
+    default: 3
+  },
+  warrantyPeriod: {
+    type: Number,
+    min: 0,
+    default: 0
+  },
+  contactPerson: {
+    type: String,
+    trim: true
+  },
+  email: {
     type: String,
     trim: true,
-    maxlength: 255
+    lowercase: true,
+    match: [/^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/, 'Please enter a valid email']
   },
-  displayName: { 
+  phone: {
     type: String,
-    trim: true,
-    maxlength: 255
+    trim: true
   },
-
-  // Business Information
-  businessInfo: {
-    businessType: { 
-      type: String, 
-      enum: ['individual', 'proprietorship', 'partnership', 'private_limited', 'public_limited', 'llp', 'trust', 'society', 'government'], 
-      required: true 
-    },
-    industry: { type: String },
-    subIndustry: { type: String },
-    businessDescription: { type: String },
-    website: { type: String },
-    socialMedia: {
-      facebook: { type: String },
-      instagram: { type: String },
-      linkedin: { type: String },
-      twitter: { type: String }
-    },
-    establishedYear: { type: Number },
-    employeeCount: { type: String, enum: ['1-10', '11-50', '51-200', '201-500', '500+'] },
-    annualTurnover: { type: String, enum: ['<1L', '1L-10L', '10L-1Cr', '1Cr-10Cr', '10Cr+'] },
-    manufacturingCapacity: { type: String }
+  website: {
+    type: String,
+    trim: true
   },
-
-  // Registration Details
-  registrationDetails: {
-    gstin: { 
-      type: String,
-      uppercase: true,
-      match: /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/,
-      sparse: true
-    },
-    pan: { 
-      type: String,
-      uppercase: true,
-      match: /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/
-    },
-    cin: { type: String },
-    udyogAadhar: { type: String },
-    iecCode: { type: String },
-    registrationNumber: { type: String },
-    vatNumber: { type: String },
-    cstNumber: { type: String },
-    msmeNumber: { type: String },
-    factoryLicense: { type: String }
+  address: {
+    type: String,
+    trim: true
   },
-
-  // Contact Information
-  contactInfo: {
-    primaryPhone: { type: String, required: true },
-    alternatePhone: { type: String },
-    primaryEmail: { type: String, required: true },
-    alternateEmail: { type: String },
-    whatsapp: { type: String },
-    fax: { type: String },
-    tollFree: { type: String }
+  status: {
+    type: String,
+    enum: ['active', 'inactive', 'blacklisted', 'pending'],
+    default: 'active'
   },
-
-  // Addresses
-  addresses: [SupplierAddressSchema],
-
-  // Contact Persons
-  contactPersons: [SupplierContactSchema],
-
-  // Product Categories & Capabilities
-  productCategories: [ProductCategorySchema],
-
-  // Financial Information
-  financialInfo: {
-    paymentTerms: { type: String },
-    creditDays: { type: Number, default: 0, min: 0 },
-    securityDeposit: { type: Number, default: 0, min: 0 },
-    advancePaid: { type: Number, default: 0, min: 0 },
-    outstandingPayable: { type: Number, default: 0 },
-    totalPurchases: { type: Number, default: 0, min: 0 },
-    lastPaymentDate: { type: Date },
-    lastPaymentAmount: { type: Number, min: 0 },
-    preferredPaymentMethod: { 
-      type: String, 
-      enum: ['cash', 'cheque', 'bank_transfer', 'upi', 'card'] 
-    },
-    currency: { type: String, default: 'INR' },
-    taxDeductionRate: { type: Number, default: 0, min: 0, max: 100 }
+  performanceMetrics: {
+    type: PerformanceMetricsSchema,
+    default: () => ({})
   },
-
-  // Banking Details
-  bankingDetails: {
-    bankName: { type: String },
-    branchName: { type: String },
-    accountNumber: { type: String },
-    ifscCode: { type: String },
-    accountHolderName: { type: String },
-    accountType: { type: String, enum: ['savings', 'current', 'cc', 'od'] },
-    upiId: { type: String },
-    isVerified: { type: Boolean, default: false }
+  pricingHistory: {
+    type: [PricingHistorySchema],
+    default: []
   },
-
-  // Supply History & Performance
-  supplyHistory: {
-    firstOrderDate: { type: Date },
-    lastOrderDate: { type: Date },
-    totalOrders: { type: Number, default: 0, min: 0 },
-    totalOrderValue: { type: Number, default: 0, min: 0 },
-    averageOrderValue: { type: Number, default: 0, min: 0 },
-    onTimeDeliveryRate: { type: Number, default: 0, min: 0, max: 100 },
-    qualityRejectionRate: { type: Number, default: 0, min: 0, max: 100 },
-    averageLeadTime: { type: Number, default: 0, min: 0 }, // in days
-    suppliedProducts: [String]
-  },
-
-  // Performance Metrics
-  performanceMetrics: [PerformanceMetricSchema],
-
-  // Quality & Certifications
-  quality: {
-    qualityRating: { type: Number, min: 1, max: 5 },
-    qualityGrade: { type: String, enum: ['A+', 'A', 'B+', 'B', 'C'] },
-    certifications: [String],
-    qualityAgreements: [String],
-    lastQualityAudit: { type: Date },
-    nextQualityAudit: { type: Date },
-    qualityNotes: { type: String },
-    defectRate: { type: Number, default: 0, min: 0, max: 100 },
-    returnRate: { type: Number, default: 0, min: 0, max: 100 }
-  },
-
-  // Relationship Management
-  relationship: {
-    supplierType: { 
-      type: String, 
-      enum: ['manufacturer', 'trader', 'distributor', 'agent', 'service_provider'], 
-      required: true 
-    },
-    supplierCategory: { 
-      type: String, 
-      enum: ['strategic', 'preferred', 'approved', 'conditional', 'blacklisted'], 
-      default: 'approved' 
-    },
-    relationshipManager: { type: Schema.Types.ObjectId, ref: 'User' },
-    assignedBuyer: { type: Schema.Types.ObjectId, ref: 'User' },
-    supplierSince: { type: Date },
-    lastInteraction: { type: Date },
-    nextReview: { type: Date },
-    priority: { type: String, enum: ['low', 'medium', 'high', 'critical'], default: 'medium' },
-    exclusiveSupplier: { type: Boolean, default: false },
-    strategicPartner: { type: Boolean, default: false }
-  },
-
-  // Compliance & Risk
-  compliance: {
-    vendorApprovalStatus: { type: String, enum: ['pending', 'approved', 'rejected', 'suspended'], default: 'pending' },
-    approvalDate: { type: Date },
-    approvedBy: { type: Schema.Types.ObjectId, ref: 'User' },
-    complianceDocuments: [String], // URLs to uploaded documents
-    riskCategory: { type: String, enum: ['low', 'medium', 'high'], default: 'low' },
-    blacklisted: { type: Boolean, default: false },
-    blacklistReason: { type: String },
-    complianceNotes: { type: String },
-    lastComplianceCheck: { type: Date },
-    nextComplianceCheck: { type: Date },
-    environmentalCompliance: { type: Boolean, default: false },
-    laborCompliance: { type: Boolean, default: false },
-    safetyCompliance: { type: Boolean, default: false }
-  },
-
-  // Additional Information
-  notes: { type: String },
-  tags: [String],
-  customFields: { type: Schema.Types.Mixed },
-  attachments: [String], // URLs to documents, images, etc.
-
-  // Status & Tracking
-  isActive: { type: Boolean, default: true },
-  createdBy: { type: Schema.Types.ObjectId, ref: 'User', required: true },
-  lastModifiedBy: { type: Schema.Types.ObjectId, ref: 'User' }
-}, {
+  notes: {
+    type: String,
+    trim: true
+  }
+}, { 
   timestamps: true,
-  collection: 'suppliers'
+  _id: false 
 });
 
-// Compound Indexes
-SupplierSchema.index({ companyId: 1, supplierCode: 1 }, { unique: true });
-SupplierSchema.index({ companyId: 1, 'contactInfo.primaryEmail': 1 });
-SupplierSchema.index({ companyId: 1, 'contactInfo.primaryPhone': 1 });
-SupplierSchema.index({ companyId: 1, 'registrationDetails.gstin': 1 });
-SupplierSchema.index({ companyId: 1, 'relationship.supplierType': 1 });
-SupplierSchema.index({ companyId: 1, 'relationship.supplierCategory': 1 });
-SupplierSchema.index({ companyId: 1, 'compliance.vendorApprovalStatus': 1 });
-SupplierSchema.index({ companyId: 1, isActive: 1 });
+// Indexes for better query performance
+SpareSupplierSchema.index({ supplierId: 1 });
+SpareSupplierSchema.index({ supplierName: 1 });
+SpareSupplierSchema.index({ supplierCode: 1 });
+SpareSupplierSchema.index({ partNumber: 1 });
+SpareSupplierSchema.index({ status: 1 });
+SpareSupplierSchema.index({ isPrimary: 1 });
 
-// Text search index
-SupplierSchema.index({ 
-  supplierName: 'text', 
-  supplierCode: 'text',
-  legalName: 'text',
-  'contactInfo.primaryEmail': 'text',
-  'contactInfo.primaryPhone': 'text'
+// Virtual for supplier performance score
+SpareSupplierSchema.virtual('performanceScore').get(function() {
+  const metrics = this.performanceMetrics;
+  if (!metrics) return 0;
+  
+  const onTimeScore = metrics.onTimeDeliveryRate || 0;
+  const qualityScore = (100 - (metrics.qualityRejectionRate || 0));
+  const leadTimeScore = Math.max(0, 100 - (metrics.averageLeadTime || 0));
+  
+  return Math.round((onTimeScore + qualityScore + leadTimeScore) / 3);
 });
 
-// Pre-save middleware
-SupplierSchema.pre('save', function(next) {
-  // Set display name if not provided
-  if (!this.displayName) {
-    this.displayName = this.supplierName;
+// Method to update performance metrics
+SpareSupplierSchema.methods.updatePerformanceMetrics = function(newOrder) {
+  const metrics = this.performanceMetrics;
+  
+  // Update total orders and value
+  metrics.totalOrders = (metrics.totalOrders || 0) + 1;
+  metrics.totalOrderValue = (metrics.totalOrderValue || 0) + (newOrder.value || 0);
+  metrics.averageOrderValue = metrics.totalOrderValue / metrics.totalOrders;
+  
+  // Update lead time if provided
+  if (newOrder.leadTime !== undefined) {
+    const currentAvg = metrics.averageLeadTime || 0;
+    const currentCount = metrics.totalOrders - 1;
+    metrics.averageLeadTime = ((currentAvg * currentCount) + newOrder.leadTime) / metrics.totalOrders;
   }
   
-  // Ensure at least one address is primary
-  if (this.addresses && this.addresses.length > 0) {
-    const primaryAddresses = this.addresses.filter(addr => addr.isPrimary);
-    if (primaryAddresses.length === 0) {
-      this.addresses[0].isPrimary = true;
-    } else if (primaryAddresses.length > 1) {
-      this.addresses.forEach((addr, index) => {
-        addr.isPrimary = index === 0;
-      });
-    }
+  // Update delivery rate if provided
+  if (newOrder.onTime !== undefined) {
+    const currentRate = metrics.onTimeDeliveryRate || 0;
+    const currentCount = metrics.totalOrders - 1;
+    const newRate = newOrder.onTime ? 100 : 0;
+    metrics.onTimeDeliveryRate = ((currentRate * currentCount) + newRate) / metrics.totalOrders;
   }
   
-  // Ensure at least one contact person is primary
-  if (this.contactPersons && this.contactPersons.length > 0) {
-    const primaryContacts = this.contactPersons.filter(contact => contact.isPrimary);
-    if (primaryContacts.length === 0) {
-      this.contactPersons[0].isPrimary = true;
-    } else if (primaryContacts.length > 1) {
-      this.contactPersons.forEach((contact, index) => {
-        contact.isPrimary = index === 0;
-      });
-    }
+  // Update quality rejection rate if provided
+  if (newOrder.rejected !== undefined) {
+    const currentRate = metrics.qualityRejectionRate || 0;
+    const currentCount = metrics.totalOrders - 1;
+    const newRate = newOrder.rejected ? 100 : 0;
+    metrics.qualityRejectionRate = ((currentRate * currentCount) + newRate) / metrics.totalOrders;
   }
   
-  // Calculate average order value
-  if (this.supplyHistory.totalOrders > 0) {
-    this.supplyHistory.averageOrderValue = 
-      this.supplyHistory.totalOrderValue / this.supplyHistory.totalOrders;
+  return this;
+};
+
+// Method to add pricing history
+SpareSupplierSchema.methods.addPricingHistory = function(pricingData) {
+  const newPricing = {
+    date: pricingData.date || new Date(),
+    price: pricingData.price,
+    currency: pricingData.currency || 'USD',
+    quantity: pricingData.quantity,
+    orderNumber: pricingData.orderNumber
+  };
+  
+  this.pricingHistory.push(newPricing);
+  
+  // Keep only last 50 pricing records
+  if (this.pricingHistory.length > 50) {
+    this.pricingHistory = this.pricingHistory.slice(-50);
   }
   
+  return this;
+};
+
+// Method to get current price
+SpareSupplierSchema.methods.getCurrentPrice = function() {
+  if (this.pricingHistory.length === 0) {
+    return null;
+  }
+  
+  // Sort by date and get the most recent
+  const sortedHistory = [...this.pricingHistory].sort((a, b) => 
+    new Date(b.date).getTime() - new Date(a.date).getTime()
+  );
+  
+  return sortedHistory[0];
+};
+
+// Method to get price trend
+SpareSupplierSchema.methods.getPriceTrend = function() {
+  if (this.pricingHistory.length < 2) {
+    return 'stable';
+  }
+  
+  const sortedHistory = [...this.pricingHistory].sort((a, b) => 
+    new Date(b.date).getTime() - new Date(a.date).getTime()
+  );
+  
+  const recent = sortedHistory[0].price;
+  const previous = sortedHistory[1].price;
+  
+  if (recent > previous) return 'increasing';
+  if (recent < previous) return 'decreasing';
+  return 'stable';
+};
+
+// Static method to find suppliers by status
+SpareSupplierSchema.statics.findByStatus = function(status) {
+  return this.find({ status });
+};
+
+// Static method to find primary suppliers
+SpareSupplierSchema.statics.findPrimarySuppliers = function() {
+  return this.find({ isPrimary: true });
+};
+
+// Static method to find suppliers by quality rating
+SpareSupplierSchema.statics.findByQualityRating = function(minRating) {
+  return this.find({ qualityRating: { $gte: minRating } });
+};
+
+// Pre-save middleware to ensure only one primary supplier per spare
+SpareSupplierSchema.pre('save', function(next) {
+  if (this.isPrimary && this.isModified('isPrimary')) {
+    // This will be handled at the Spare level
+    // where we ensure only one supplier is primary
+  }
   next();
 });
 
-// Instance methods
-SupplierSchema.methods.getPrimaryAddress = function(type?: string) {
-  if (type) {
-    return this.addresses.find(addr => addr.type === type && addr.isPrimary && addr.isActive);
-  }
-  return this.addresses.find(addr => addr.isPrimary && addr.isActive);
-};
+// Export the schema
+export const SpareSupplier = mongoose.model('SpareSupplier', SpareSupplierSchema);
 
-SupplierSchema.methods.getPrimaryContact = function() {
-  return this.contactPersons.find(contact => contact.isPrimary && contact.isActive);
-};
-
-SupplierSchema.methods.getQualityScore = function() {
-  const onTimeScore = this.supplyHistory.onTimeDeliveryRate || 0;
-  const qualityScore = 100 - (this.supplyHistory.qualityRejectionRate || 0);
-  const overallRating = (this.quality.qualityRating || 3) * 20; // Convert 1-5 to 0-100
-  
-  return (onTimeScore + qualityScore + overallRating) / 3;
-};
-
-SupplierSchema.methods.isApproved = function() {
-  return this.compliance.vendorApprovalStatus === 'approved' && 
-         !this.compliance.blacklisted && 
-         this.isActive;
-};
-
-SupplierSchema.methods.canSupply = function(productCategory: string) {
-  return this.productCategories.some(cat => 
-    cat.category === productCategory && cat.isActive
-  );
-};
-
-// Static methods
-SupplierSchema.statics.findByCompany = function(companyId: string) {
-  return this.find({ companyId, isActive: true });
-};
-
-SupplierSchema.statics.findApproved = function(companyId: string) {
-  return this.find({ 
-    companyId, 
-    'compliance.vendorApprovalStatus': 'approved',
-    'compliance.blacklisted': false,
-    isActive: true 
-  });
-};
-
-SupplierSchema.statics.findByCategory = function(companyId: string, category: string) {
-  return this.find({
-    companyId,
-    'productCategories.category': category,
-    'productCategories.isActive': true,
-    isActive: true
-  });
-};
-
-SupplierSchema.statics.findTopPerformers = function(companyId: string, limit: number = 10) {
-  return this.find({ companyId, isActive: true })
-    .sort({ 
-      'supplyHistory.onTimeDeliveryRate': -1,
-      'quality.qualityRating': -1,
-      'supplyHistory.totalOrderValue': -1
-    })
-    .limit(limit);
-};
-
-export default model<ISupplier>('Supplier', SupplierSchema);
+// Export types for TypeScript
+export interface ISpareSupplier extends mongoose.Document {
+  supplierId: string;
+  supplierName: string;
+  supplierCode: string;
+  partNumber: string;
+  isPrimary: boolean;
+  leadTime: number;
+  minOrderQuantity: number;
+  lastSupplyDate?: Date;
+  lastSupplyRate?: number;
+  qualityRating: number;
+  warrantyPeriod?: number;
+  contactPerson?: string;
+  email?: string;
+  phone?: string;
+  website?: string;
+  address?: string;
+  status: 'active' | 'inactive' | 'blacklisted' | 'pending';
+  performanceMetrics: {
+    onTimeDeliveryRate: number;
+    qualityRejectionRate: number;
+    averageLeadTime: number;
+    totalOrders: number;
+    totalOrderValue: number;
+    averageOrderValue: number;
+  };
+  pricingHistory: Array<{
+    date: Date;
+    price: number;
+    currency: string;
+    quantity: number;
+    orderNumber?: string;
+  }>;
+  notes?: string;
+  performanceScore: number;
+  updatePerformanceMetrics: (newOrder: any) => ISpareSupplier;
+  addPricingHistory: (pricingData: any) => ISpareSupplier;
+  getCurrentPrice: () => any;
+  getPriceTrend: () => string;
+}

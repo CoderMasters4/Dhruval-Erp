@@ -17,6 +17,7 @@ export interface PurchaseStats {
 export interface PurchaseOrder {
   _id: string
   purchaseOrderId: string
+  companyId: string
   supplierId: string
   supplier: {
     _id: string
@@ -41,6 +42,8 @@ export interface PurchaseOrder {
   expectedDelivery?: string
   actualDelivery?: string
   notes?: string
+  createdBy: string
+  updatedBy: string
   createdAt: string
   updatedAt: string
 }
@@ -70,17 +73,105 @@ export interface CategoryWiseSpend {
 }
 
 export interface CreatePurchaseOrderRequest {
-  supplierId: string
+  companyId?: string // Optional for super admin, required for regular users
+  poNumber: string
+  poDate: string
+  expectedDeliveryDate: string
+  financialYear: string
+  poType: 'standard' | 'blanket' | 'contract' | 'planned' | 'emergency' | 'service' | 'capital'
+  priority: 'low' | 'medium' | 'high' | 'urgent'
+  category: 'raw_material' | 'finished_goods' | 'consumables' | 'services' | 'capital_goods' | 'maintenance'
+  supplier: {
+    supplierId: string
+    supplierCode: string
+    supplierName: string
+    gstin: string
+    pan: string
+    contactPerson: string
+    phone: string
+    email: string
+    address: {
+      addressLine1: string
+      addressLine2: string
+      city: string
+      state: string
+      pincode: string
+      country: string
+    }
+  }
+  deliveryInfo: {
+    deliveryAddress: {
+      addressLine1: string
+      addressLine2: string
+      city: string
+      state: string
+      pincode: string
+      country: string
+    }
+    warehouseId: string
+    warehouseName: string
+    contactPerson: string
+    contactPhone: string
+    deliveryInstructions: string
+    workingHours: string
+    deliveryType: 'standard' | 'express' | 'scheduled'
+  }
   items: Array<{
     itemId: string
+    itemCode: string
     itemName: string
-    category: 'chemicals' | 'grey_fabric' | 'colors' | 'packing_material' | 'other'
+    description: string
+    specifications: string
+    hsnCode: string
     quantity: number
     unit: string
-    price: number
+    rate: number
+    discount: {
+      type: 'percentage' | 'amount'
+      value: number
+    }
+    discountAmount: number
+    taxableAmount: number
+    taxBreakup: Array<{
+      taxType: 'CGST' | 'SGST' | 'IGST' | 'CESS'
+      rate: number
+      amount: number
+    }>
+    totalTaxAmount: number
+    lineTotal: number
+    deliveryDate: string
+    notes: string
   }>
-  notes?: string
-  expectedDelivery?: string
+  amounts: {
+    subtotal: number
+    totalDiscount: number
+    taxableAmount: number
+    totalTaxAmount: number
+    freightCharges: number
+    packingCharges: number
+    otherCharges: number
+    roundingAdjustment: number
+    grandTotal: number
+  }
+  taxDetails: {
+    placeOfSupply: string
+    isReverseCharge: boolean
+    taxBreakup: Array<{
+      taxType: 'CGST' | 'SGST' | 'IGST' | 'CESS'
+      rate: number
+      taxableAmount: number
+      taxAmount: number
+    }>
+    totalTaxAmount: number
+  }
+  paymentTerms: {
+    termType: 'advance' | 'net' | 'cod' | 'credit' | 'milestone'
+    days: number
+    advancePercentage: number
+  }
+  terms: string
+  notes: string
+  specialInstructions: string
 }
 
 export interface UpdatePurchaseOrderRequest {
@@ -92,6 +183,7 @@ export interface UpdatePurchaseOrderRequest {
 }
 
 export interface PurchaseFilters {
+  companyId?: string // For super admin to filter by company
   status?: string
   paymentStatus?: string
   supplierId?: string
@@ -103,16 +195,30 @@ export interface PurchaseFilters {
   limit?: number
 }
 
+export interface PurchaseAnalytics {
+  dailyPurchases: Array<{ date: string; amount: number; orders: number }>
+  monthlyPurchases: Array<{ month: string; amount: number; orders: number }>
+  topSuppliers: Array<{ supplier: string; amount: number; orders: number }>
+  purchasesByCategory: Array<{ category: string; amount: number; percentage: number }>
+  purchaseTrends: Array<{ period: string; amount: number; growth: number }>
+}
+
 // API Endpoints
 export const purchaseApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     // Get Purchase Statistics
-    getPurchaseStats: builder.query<{ success: boolean; data: PurchaseStats }, void>({
-      query: () => '/purchase/stats',
+    getPurchaseStats: builder.query<
+      { success: boolean; data: PurchaseStats }, 
+      { companyId?: string }
+    >({
+      query: (params) => ({
+        url: '/purchase/stats',
+        params,
+      }),
       providesTags: ['PurchaseStats'],
     }),
 
-    // Get All Purchase Orders
+    // Get All Purchase Orders with Company ID support
     getPurchaseOrders: builder.query<
       { success: boolean; data: PurchaseOrder[]; pagination: any },
       PurchaseFilters
@@ -130,7 +236,7 @@ export const purchaseApi = baseApi.injectEndpoints({
       providesTags: (result, error, id) => [{ type: 'Purchase', id }],
     }),
 
-    // Create Purchase Order
+    // Create Purchase Order with Company ID handling
     createPurchaseOrder: builder.mutation<
       { success: boolean; data: PurchaseOrder },
       CreatePurchaseOrderRequest
@@ -172,7 +278,7 @@ export const purchaseApi = baseApi.injectEndpoints({
     // Get Supplier Purchase Report
     getSupplierPurchaseReport: builder.query<
       { success: boolean; data: SupplierPurchaseReport[] },
-      { dateFrom?: string; dateTo?: string }
+      { dateFrom?: string; dateTo?: string; companyId?: string }
     >({
       query: (params) => ({
         url: '/purchase/supplier-report',
@@ -184,7 +290,7 @@ export const purchaseApi = baseApi.injectEndpoints({
     // Get Category-wise Spend
     getCategoryWiseSpend: builder.query<
       { success: boolean; data: CategoryWiseSpend[] },
-      { dateFrom?: string; dateTo?: string }
+      { dateFrom?: string; dateTo?: string; companyId?: string }
     >({
       query: (params) => ({
         url: '/purchase/category-spend',
@@ -193,18 +299,13 @@ export const purchaseApi = baseApi.injectEndpoints({
       providesTags: ['PurchaseStats'],
     }),
 
-    // Get Purchase Analytics
+    // Get Purchase Analytics (Combined Overview + Analytics)
     getPurchaseAnalytics: builder.query<
       {
         success: boolean
-        data: {
-          dailyPurchases: Array<{ date: string; amount: number; orders: number }>
-          monthlyPurchases: Array<{ month: string; amount: number; orders: number }>
-          topSuppliers: Array<{ supplier: string; amount: number; orders: number }>
-          purchasesByCategory: Array<{ category: string; amount: number; percentage: number }>
-        }
+        data: PurchaseAnalytics
       },
-      { period?: 'week' | 'month' | 'quarter' | 'year' }
+      { period?: 'week' | 'month' | 'quarter' | 'year'; companyId?: string }
     >({
       query: (params) => ({
         url: '/purchase/analytics',
@@ -232,13 +333,13 @@ export const purchaseApi = baseApi.injectEndpoints({
 
     // Bulk Update Orders
     bulkUpdatePurchaseOrders: builder.mutation<
-      { success: boolean; data: { updated: number } },
-      { ids: string[]; updates: Partial<UpdatePurchaseOrderRequest> }
+      { success: boolean; data: PurchaseOrder[] },
+      { orderIds: string[]; updates: Partial<UpdatePurchaseOrderRequest> }
     >({
-      query: ({ ids, updates }) => ({
+      query: ({ orderIds, updates }) => ({
         url: '/purchase/orders/bulk-update',
         method: 'PUT',
-        body: { ids, updates },
+        body: { orderIds, updates },
       }),
       invalidatesTags: ['Purchase', 'PurchaseStats'],
     }),
@@ -246,13 +347,37 @@ export const purchaseApi = baseApi.injectEndpoints({
     // Export Purchase Data
     exportPurchaseData: builder.mutation<
       { success: boolean; data: { downloadUrl: string } },
-      { format: 'csv' | 'excel'; filters?: PurchaseFilters }
+      { format: 'csv' | 'excel'; filters: PurchaseFilters }
     >({
       query: ({ format, filters }) => ({
-        url: '/purchase/export',
+        url: `/purchase/export/${format}`,
         method: 'POST',
-        body: { format, filters },
+        body: filters,
       }),
+    }),
+
+    // Get Purchase Order by Status
+    getPurchaseOrdersByStatus: builder.query<
+      { success: boolean; data: PurchaseOrder[]; pagination: any },
+      { status: string; companyId?: string; page?: number; limit?: number }
+    >({
+      query: (params) => ({
+        url: `/purchase/orders/status/${params.status}`,
+        params: { companyId: params.companyId, page: params.page, limit: params.limit },
+      }),
+      providesTags: ['Purchase'],
+    }),
+
+    // Get Purchase Orders by Supplier
+    getPurchaseOrdersBySupplier: builder.query<
+      { success: boolean; data: PurchaseOrder[]; pagination: any },
+      { supplierId: string; companyId?: string; page?: number; limit?: number }
+    >({
+      query: (params) => ({
+        url: `/purchase/orders/supplier/${params.supplierId}`,
+        params: { companyId: params.companyId, page: params.page, limit: params.limit },
+      }),
+      providesTags: ['Purchase'],
     }),
   }),
 })
@@ -270,4 +395,6 @@ export const {
   useUpdatePurchasePaymentStatusMutation,
   useBulkUpdatePurchaseOrdersMutation,
   useExportPurchaseDataMutation,
+  useGetPurchaseOrdersByStatusQuery,
+  useGetPurchaseOrdersBySupplierQuery,
 } = purchaseApi

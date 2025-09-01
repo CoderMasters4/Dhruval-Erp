@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { BaseController } from './BaseController';
 import { DispatchService } from '../services/DispatchService';
-import { IDispatch } from '../types/models';
+import { IDispatch } from '../models/Dispatch';
 
 export class DispatchController extends BaseController<IDispatch> {
   private dispatchService: DispatchService;

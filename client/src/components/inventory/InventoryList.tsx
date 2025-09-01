@@ -196,3 +196,4 @@ export function InventoryList({ items, onViewDetails, onEditItem, onDeleteItem }
     </div>
   );
 }
+

@@ -258,7 +258,8 @@ export const baseApi = createApi({
     'AdvancedReport',
     'Document',
     'EnhancedOrder',
-    'EnhancedOrderStats'
+    'EnhancedOrderStats',
+    'SalesDashboard'
 
   ],
   endpoints: () => ({}),

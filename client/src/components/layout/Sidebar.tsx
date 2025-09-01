@@ -58,7 +58,9 @@ import {
   Clock,
   Calendar,
   Activity,
-  RotateCcw
+  RotateCcw,
+  PieChart,
+  Plus
 } from 'lucide-react'
 import { selectSidebarCollapsed, selectSidebarOpen, toggleSidebar, setSidebarCollapsed } from '@/lib/features/ui/uiSlice'
 import { selectCurrentUser, selectIsSuperAdmin } from '@/lib/features/auth/authSlice'
@@ -128,23 +130,29 @@ const navigationItems: NavigationItem[] = [
     permission: 'view:Sale',
     children: [
       {
-        name: 'Sales Overview',
+        name: 'Sales Dashboard',
         href: '/sales',
         icon: ShoppingBag,
         permission: 'view:Sale'
       },
       {
+        name: 'Orders Management',
+        href: '/sales?tab=orders',
+        icon: FileText,
+        permission: 'view:Order'
+      },
+      {
         name: 'Sales Analytics',
-        href: '/sales/analytics',
+        href: '/sales?tab=analytics',
         icon: BarChart3,
         permission: 'view:Sale',
         roles: ['admin', 'manager', 'sales']
       },
       {
-        name: 'Enhanced Orders',
-        href: '/orders/enhanced',
-        icon: FileText,
-        permission: 'view:Order'
+        name: 'Sales Reports',
+        href: '/sales?tab=reports',
+        icon: PieChart,
+        permission: 'view:Sale'
       },
       {
         name: 'Quotations',
@@ -162,21 +170,20 @@ const navigationItems: NavigationItem[] = [
     permission: 'view:Purchase',
     children: [
       {
-        name: 'Purchase Overview',
+        name: 'Purchase Dashboard',
         href: '/purchase',
         icon: ShoppingCart,
         permission: 'view:Purchase'
       },
       {
-        name: 'Purchase Analytics',
-        href: '/purchase/analytics',
-        icon: BarChart3,
-        permission: 'view:Purchase',
-        roles: ['admin', 'manager', 'purchase']
+        name: 'Create Purchase Order',
+        href: '/purchase?action=create',
+        icon: Plus,
+        permission: 'view:Purchase'
       },
       {
         name: 'Purchase Orders',
-        href: '/purchase/orders',
+        href: '/purchase-orders',
         icon: FileText,
         permission: 'view:PurchaseOrder'
       },
@@ -185,6 +192,12 @@ const navigationItems: NavigationItem[] = [
         href: '/suppliers',
         icon: Truck,
         permission: 'view:Supplier'
+      },
+      {
+        name: 'Purchase Quotations',
+        href: '/purchase/quotations',
+        icon: Quote,
+        permission: 'view:Quotation'
       }
     ]
   },
@@ -209,13 +222,13 @@ const navigationItems: NavigationItem[] = [
       //   permission: 'view:InventoryItem'
       // }
       
-      {
-        name: 'Process-wise Stock',
-        href: '/process-wise-stock',
-        icon: Package,
-        permission: 'view:InventoryItem',
-        roles: ['admin', 'manager', 'production']
-      },
+      // {
+      //   name: 'Process-wise Stock',
+      //   href: '/process-wise-stock',
+      //   icon: Package,
+      //   permission: 'view:InventoryItem',
+      //   roles: ['admin', 'manager', 'production']
+      // },
       {
         name: 'Stock Movements',
         href: '/inventory/movements',
@@ -503,14 +516,14 @@ const navigationItems: NavigationItem[] = [
       },
       {
         name: 'Sales Analytics',
-        href: '/sales/analytics',
+        href: '/sales?tab=analytics',
         icon: BarChart3,
         permission: 'view:Sale',
         roles: ['admin', 'manager', 'sales']
       },
       {
         name: 'Purchase Analytics',
-        href: '/purchase/analytics',
+        href: '/purchase?tab=analytics',
         icon: BarChart3,
         permission: 'view:Purchase',
         roles: ['admin', 'manager', 'purchase']

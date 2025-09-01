@@ -1,26 +1,37 @@
 import { baseApi } from './baseApi'
 
+// Types
 export interface Supplier {
-  _id: string
-  supplierCode: string
-  supplierName?: string
-  companyName: string
+  _id?: string
+  supplierId: string
+  supplierName: string
   displayName?: string
-  category: 'raw_materials' | 'packaging' | 'machinery' | 'services' | 'utilities'
-  status: 'active' | 'inactive' | 'pending' | 'blacklisted'
-  isActive?: boolean
+  supplierCode: string
+  partNumber: string
+  isPrimary: boolean
+  leadTime: number
+  minOrderQuantity: number
+  lastSupplyDate?: string
+  lastSupplyRate?: number
+  qualityRating: number
+  warrantyPeriod?: number
+  contactPerson?: string
   email?: string
   phone?: string
   website?: string
-  address?: {
-    street?: string
-    city?: string
-    state?: string
-    pincode?: string
-    country?: string
-    addressLine1?: string
-    addressLine2?: string
+  address?: string
+  isActive?: boolean
+  status: 'active' | 'inactive' | 'blacklisted' | 'pending'
+  
+  // Contact Information
+  contactInfo?: {
+    primaryEmail?: string
+    alternateEmail?: string
+    primaryPhone?: string
+    alternatePhone?: string
   }
+  
+  // Address Information
   addresses?: Array<{
     addressLine1: string
     addressLine2?: string
@@ -29,48 +40,26 @@ export interface Supplier {
     pincode: string
     country: string
   }>
-  contactPerson?: {
-    name: string
-    designation?: string
-    email?: string
-    phone?: string
-  }
-  contactInfo?: {
-    primaryEmail?: string
-    alternateEmail?: string
-    primaryPhone?: string
-    alternatePhone?: string
-  }
-  businessDetails?: {
-    gstin?: string
-    pan?: string
-    registrationNumber?: string
-    taxId?: string
-  }
+  
+  // Business Information
   businessInfo?: {
-    businessType?: string
     industry?: string
-    subIndustry?: string
-    businessDescription?: string
-    website?: string
+    businessType?: string
   }
+  
+  // Registration Details
   registrationDetails?: {
     pan?: string
     gstin?: string
-    registrationNumber?: string
   }
-  bankDetails?: {
-    accountName?: string
-    accountNumber?: string
-    bankName?: string
-    ifscCode?: string
-    swiftCode?: string
-  }
+  
+  // Financial Information
   financialInfo?: {
     paymentTerms?: string
     creditDays?: number
-    creditLimit?: number
   }
+  
+  // Relationship Information
   relationship?: {
     supplierCategory?: string
     supplierType?: string
@@ -78,6 +67,8 @@ export interface Supplier {
     priority?: 'low' | 'medium' | 'high'
     strategicPartner?: boolean
   }
+  
+  // Supply History
   supplyHistory?: {
     totalOrders?: number
     totalOrderValue?: number
@@ -86,132 +77,281 @@ export interface Supplier {
     averageLeadTime?: number
     qualityRejectionRate?: number
   }
+  
+  // Quality Information
   quality?: {
     defectRate?: number
     returnRate?: number
-    qualityScore?: number
   }
+  
+  // Compliance Information
   compliance?: {
     vendorApprovalStatus?: 'approved' | 'pending' | 'rejected'
-    certifications?: string[]
   }
-  rating?: number
+  
+  // Performance Metrics (legacy)
+  performanceMetrics: {
+    onTimeDeliveryRate: number
+    qualityRejectionRate: number
+    averageLeadTime: number
+    totalOrders: number
+    totalOrderValue: number
+    averageOrderValue: number
+  }
+  
+  // Legacy fields for backward compatibility
   totalOrders?: number
   totalSpend?: number
-  lastOrderDate?: string
-  onTimeDelivery?: number
-  qualityScore?: number
-  leadTime?: number
-  paymentTerms?: string
-  creditLimit?: number
-  companyId: string
-  createdAt: string
-  updatedAt: string
+  
+  pricingHistory: Array<{
+    date: string
+    price: number
+    currency: string
+    quantity: number
+    orderNumber?: string
+  }>
+  notes?: string
+  createdAt?: string
+  updatedAt?: string
 }
 
-export interface SupplierStats {
+export interface SupplierAnalytics {
   totalSuppliers: number
   activeSuppliers: number
-  inactiveSuppliers: number
-  pendingSuppliers: number
-  blacklistedSuppliers: number
-  totalPurchaseOrders: number
-  totalSpend: number
-  averageOrderValue: number
-  averageRating: number
-  onTimeDeliveryRate: number
-  newSuppliersThisMonth: number
-  topSuppliers: Array<{
-    _id: string
-    companyName: string
-    totalSpend: number
-    totalOrders: number
-    rating: number
+  primarySupplier?: string
+  averageLeadTime: number
+  averageQualityRating: number
+  totalOrderValue: number
+  performanceComparison: Array<{
+    name: string
+    onTimeDelivery: number
+    qualityRating: number
+    averageLeadTime: number
   }>
-  categoryDistribution: {
-    [key: string]: number
-  }
+  priceTrends: Array<{
+    name: string
+    trend: 'increasing' | 'decreasing' | 'stable'
+    currentPrice: number
+    priceChange?: number
+  }>
 }
 
-export interface CreateSupplierRequest {
-  companyName: string
-  category: 'raw_materials' | 'packaging' | 'machinery' | 'services' | 'utilities'
-  email?: string
-  phone?: string
-  website?: string
-  address?: {
-    street?: string
-    city?: string
-    state?: string
-    pincode?: string
-    country?: string
-  }
-  contactPerson?: {
-    name: string
-    designation?: string
-    email?: string
-    phone?: string
-  }
-  businessDetails?: {
-    gstin?: string
-    pan?: string
-    registrationNumber?: string
-    taxId?: string
-  }
-  bankDetails?: {
-    accountName?: string
-    accountNumber?: string
-    bankName?: string
-    ifscCode?: string
-    swiftCode?: string
-  }
-  paymentTerms?: string
-  creditLimit?: number
+export interface SupplierFilters {
+  spareId?: string
+  status?: string
+  isPrimary?: boolean
+  qualityRating?: number
+  leadTime?: number
+  page?: number
+  limit?: number
 }
 
 export const suppliersApi = baseApi.injectEndpoints({
-    overrideExisting: true,
   endpoints: (builder) => ({
-    // Get all suppliers with filtering and pagination
+    // Get suppliers for a spare
+    getSuppliersForSpare: builder.query<
+      { success: boolean; data: Supplier[] },
+      string
+    >({
+      query: (spareId) => ({
+        url: `/suppliers-management/${spareId}`,
+        method: 'GET',
+      }),
+      providesTags: (result, error, spareId) => [
+        { type: 'Supplier', id: `SPARE_${spareId}` },
+      ],
+    }),
+
+    // Get all suppliers with filters
     getSuppliers: builder.query<
+      { success: boolean; data: Supplier[]; pagination?: any },
       {
-        success: boolean
-        data: Supplier[]
-        pagination: {
-          page: number
-          limit: number
-          total: number
-          pages: number
-        }
-      },
-      {
-        page?: number
-        limit?: number
-        search?: string
-        status?: string
-        category?: string
-        companyId?: string
+        page?: number;
+        limit?: number;
+        search?: string;
+        status?: string;
+        category?: string;
       }
     >({
-      query: (params = {}) => ({
+      query: (params) => ({
         url: '/suppliers',
         method: 'GET',
         params,
       }),
-      providesTags: ['Supplier'],
+      providesTags: [{ type: 'Supplier', id: 'LIST' }],
     }),
 
-    // Get supplier statistics
-    getSupplierStats: builder.query<
-      { success: boolean; data: SupplierStats },
-      { companyId?: string }
+    // Add supplier to a spare
+    addSupplier: builder.mutation<
+      { success: boolean; data: Supplier; message: string },
+      { spareId: string; supplierData: Supplier }
     >({
-      query: (params = {}) => ({
-        url: '/suppliers/stats',
-        method: 'GET',
-        params,
+      query: ({ spareId, supplierData }) => ({
+        url: `/suppliers-management/${spareId}`,
+        method: 'POST',
+        body: supplierData,
       }),
-      providesTags: ['Supplier'],
+      invalidatesTags: (result, error, { spareId }) => [
+        { type: 'Supplier', id: `SPARE_${spareId}` },
+        { type: 'Supplier', id: 'LIST' },
+      ],
+    }),
+
+    // Create general supplier (not tied to a specific spare)
+    createSupplier: builder.mutation<
+      { success: boolean; data: Supplier; message: string },
+      Supplier
+    >({
+      query: (supplierData) => ({
+        url: '/suppliers',
+        method: 'POST',
+        body: supplierData,
+      }),
+      invalidatesTags: [{ type: 'Supplier', id: 'LIST' }],
+    }),
+
+    // Update general supplier
+    updateGeneralSupplier: builder.mutation<
+      { success: boolean; data: Supplier; message: string },
+      { id: string; data: Partial<Supplier> }
+    >({
+      query: ({ id, data }) => ({
+        url: `/suppliers/${id}`,
+        method: 'PUT',
+        body: data,
+      }),
+      invalidatesTags: (result, error, { id }) => [
+        { type: 'Supplier', id },
+        { type: 'Supplier', id: 'LIST' },
+      ],
+    }),
+
+    // Update supplier
+    updateSupplier: builder.mutation<
+      { success: boolean; data: Supplier; message: string },
+      { spareId: string; supplierIndex: number; data: Partial<Supplier> }
+    >({
+      query: ({ spareId, supplierIndex, data }) => ({
+        url: `/suppliers-management/${spareId}/${supplierIndex}`,
+        method: 'PUT',
+        body: data,
+      }),
+      invalidatesTags: (result, error, { spareId }) => [
+        { type: 'Supplier', id: `SPARE_${spareId}` },
+        { type: 'Supplier', id: 'LIST' },
+      ],
+    }),
+
+    // Delete supplier
+    deleteSupplier: builder.mutation<
+      { success: boolean; message: string },
+      { spareId: string; supplierIndex: number }
+    >({
+      query: ({ spareId, supplierIndex }) => ({
+        url: `/suppliers-management/${spareId}/${supplierIndex}`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: (result, error, { spareId }) => [
+        { type: 'Supplier', id: `SPARE_${spareId}` },
+        { type: 'Supplier', id: 'LIST' },
+      ],
+    }),
+
+    // Add pricing history to supplier
+    addPricingHistory: builder.mutation<
+      { success: boolean; data: any; message: string },
+      { spareId: string; supplierIndex: number; pricingData: any }
+    >({
+      query: ({ spareId, supplierIndex, pricingData }) => ({
+        url: `/suppliers-management/${spareId}/${supplierIndex}/pricing`,
+        method: 'POST',
+        body: pricingData,
+      }),
+      invalidatesTags: (result, error, { spareId }) => [
+        { type: 'Supplier', id: `SPARE_${spareId}` },
+      ],
+    }),
+
+    // Get supplier analytics for a spare
+    getSupplierAnalytics: builder.query<
+      { success: boolean; data: SupplierAnalytics },
+      string
+    >({
+      query: (spareId) => ({
+        url: `/suppliers-management/${spareId}/analytics`,
+        method: 'GET',
+      }),
+      providesTags: (result, error, spareId) => [
+        { type: 'Supplier', id: `ANALYTICS_${spareId}` },
+      ],
+    }),
+
+    // Get suppliers by status
+    getSuppliersByStatus: builder.query<
+      { success: boolean; data: Supplier[] },
+      string
+    >({
+      query: (status) => ({
+        url: `/suppliers-management/status/${status}`,
+        method: 'GET',
+      }),
+      providesTags: (result, error, status) => [
+        { type: 'Supplier', id: `STATUS_${status}` },
+      ],
+    }),
+
+    // Get primary suppliers
+    getPrimarySuppliers: builder.query<
+      { success: boolean; data: Supplier[] },
+      void
+    >({
+      query: () => ({
+        url: '/suppliers-management/primary/all',
+        method: 'GET',
+      }),
+      providesTags: [{ type: 'Supplier', id: 'PRIMARY' }],
+    }),
+
+    // Search suppliers
+    searchSuppliers: builder.query<
+      { success: boolean; data: Supplier[] },
+      string
+    >({
+      query: (query) => ({
+        url: `/suppliers-management/search/${query}`,
+        method: 'GET',
+      }),
+      providesTags: (result, error, query) => [
+        { type: 'Supplier', id: `SEARCH_${query}` },
+      ],
+    }),
+
+    // Get supplier statistics overview
+    getSupplierStats: builder.query<
+      { success: boolean; data: SupplierAnalytics },
+      void
+    >({
+      query: () => ({
+        url: '/suppliers-management/stats/overview',
+        method: 'GET',
+      }),
+      providesTags: [{ type: 'Supplier', id: 'OVERALL_ANALYTICS' }],
+    }),
+
+    // Bulk supplier operations
+    bulkSupplierOperations: builder.mutation<
+      { success: boolean; data: Supplier[]; message: string },
+      { spareId: string; suppliers: Supplier[] }
+    >({
+      query: ({ spareId, suppliers }) => ({
+        url: `/suppliers-management/bulk/${spareId}`,
+        method: 'POST',
+        body: { suppliers },
+      }),
+      invalidatesTags: (result, error, { spareId }) => [
+        { type: 'Supplier', id: `SPARE_${spareId}` },
+        { type: 'Supplier', id: 'LIST' },
+      ],
     }),
 
     // Get supplier by ID
@@ -220,112 +360,45 @@ export const suppliersApi = baseApi.injectEndpoints({
       string
     >({
       query: (supplierId) => ({
-        url: `/suppliers/${supplierId}`,
+        url: `/suppliers-management/supplier/${supplierId}`,
         method: 'GET',
       }),
-      providesTags: ['Supplier'],
+      providesTags: (result, error, supplierId) => [
+        { type: 'Supplier', id: supplierId },
+      ],
     }),
 
-    // Create new supplier
-    createSupplier: builder.mutation<
-      { success: boolean; data: Supplier; message: string },
-      CreateSupplierRequest
-    >({
-      query: (supplierData) => ({
-        url: '/suppliers',
-        method: 'POST',
-        body: supplierData,
-      }),
-      invalidatesTags: ['Supplier'],
-    }),
-
-    // Update supplier
-    updateSupplier: builder.mutation<
-      { success: boolean; data: Supplier; message: string },
-      { supplierId: string; supplierData: Partial<CreateSupplierRequest> }
-    >({
-      query: ({ supplierId, supplierData }) => ({
-        url: `/suppliers/${supplierId}`,
-        method: 'PUT',
-        body: supplierData,
-      }),
-      invalidatesTags: ['Supplier'],
-    }),
-
-    // Delete supplier
-    deleteSupplier: builder.mutation<
-      { success: boolean; message: string },
+    // Get supplier orders
+    getSupplierOrders: builder.query<
+      { success: boolean; data: any[] },
       string
     >({
       query: (supplierId) => ({
-        url: `/suppliers/${supplierId}`,
-        method: 'DELETE',
-      }),
-      invalidatesTags: ['Supplier'],
-    }),
-
-    // Get supplier purchase orders
-    getSupplierOrders: builder.query<
-      {
-        success: boolean
-        data: any[]
-        pagination: {
-          page: number
-          limit: number
-          total: number
-          pages: number
-        }
-      },
-      {
-        supplierId: string
-        page?: number
-        limit?: number
-      }
-    >({
-      query: ({ supplierId, ...params }) => ({
-        url: `/suppliers/${supplierId}/orders`,
+        url: `/suppliers-management/supplier/${supplierId}/orders`,
         method: 'GET',
-        params,
       }),
-      providesTags: ['Supplier', 'Order'],
-    }),
-
-    // Update supplier status
-    updateSupplierStatus: builder.mutation<
-      { success: boolean; data: Supplier; message: string },
-      { supplierId: string; status: 'active' | 'inactive' | 'pending' | 'blacklisted' }
-    >({
-      query: ({ supplierId, status }) => ({
-        url: `/suppliers/${supplierId}/status`,
-        method: 'PATCH',
-        body: { status },
-      }),
-      invalidatesTags: ['Supplier'],
-    }),
-
-    // Update supplier rating
-    updateSupplierRating: builder.mutation<
-      { success: boolean; data: Supplier; message: string },
-      { supplierId: string; rating: number; review?: string }
-    >({
-      query: ({ supplierId, rating, review }) => ({
-        url: `/suppliers/${supplierId}/rating`,
-        method: 'PATCH',
-        body: { rating, review },
-      }),
-      invalidatesTags: ['Supplier'],
+      providesTags: (result, error, supplierId) => [
+        { type: 'Supplier', id: `ORDERS_${supplierId}` },
+      ],
     }),
   }),
 })
 
 export const {
   useGetSuppliersQuery,
-  useGetSupplierStatsQuery,
-  useGetSupplierByIdQuery,
+  useGetSuppliersForSpareQuery,
+  useAddSupplierMutation,
   useCreateSupplierMutation,
   useUpdateSupplierMutation,
+  useUpdateGeneralSupplierMutation,
   useDeleteSupplierMutation,
+  useAddPricingHistoryMutation,
+  useGetSupplierAnalyticsQuery,
+  useGetSuppliersByStatusQuery,
+  useGetPrimarySuppliersQuery,
+  useSearchSuppliersQuery,
+  useGetSupplierStatsQuery,
+  useBulkSupplierOperationsMutation,
+  useGetSupplierByIdQuery,
   useGetSupplierOrdersQuery,
-  useUpdateSupplierStatusMutation,
-  useUpdateSupplierRatingMutation,
 } = suppliersApi

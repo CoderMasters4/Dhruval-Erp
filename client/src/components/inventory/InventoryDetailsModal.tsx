@@ -162,3 +162,4 @@ export function InventoryDetailsModal({ item, onClose, onEdit, onDelete }: Inven
     </div>
   );
 }
+

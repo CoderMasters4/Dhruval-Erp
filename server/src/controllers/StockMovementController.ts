@@ -18,31 +18,42 @@ export class StockMovementController extends BaseController<IStockMovement> {
   async createStockMovement(req: Request, res: Response): Promise<void> {
     try {
       const movementData = req.body;
-      const createdBy = req.user?.id;
+      const createdBy = req.user?._id; // Use _id instead of id
+      
+      if (!createdBy) {
+        this.sendError(res, new Error('User ID is required'), 'User ID is required', 400);
+        return;
+      }
       
       // Auto-detect company ID and unit from warehouse or item
-      let companyId = req.user?.companyId;
+      let companyId = movementData.companyId || req.company?._id || req.user?.primaryCompanyId;
       let unit = movementData.unit;
       
-      // If user doesn't have company ID (super admin), extract from warehouse or item
-      if (!companyId) {
-        if (movementData.warehouseId) {
-          // Get company ID from warehouse
-          const Warehouse = require('@/models/Warehouse').default;
-          const warehouse = await Warehouse.findById(movementData.warehouseId).select('companyId');
-          if (warehouse?.companyId) {
-            companyId = warehouse.companyId.toString();
-            console.log('StockMovementController: Company ID extracted from warehouse:', companyId);
+      // If companyId is already provided in the request, use it
+      if (movementData.companyId) {
+        companyId = movementData.companyId;
+        console.log('StockMovementController: Using companyId from request:', companyId);
+      } else {
+        // If user doesn't have company ID (super admin), extract from warehouse or item
+        if (!companyId) {
+          if (movementData.warehouseId) {
+            // Get company ID from warehouse
+            const Warehouse = require('@/models/Warehouse').default;
+            const warehouse = await Warehouse.findById(movementData.warehouseId).select('companyId');
+            if (warehouse?.companyId) {
+              companyId = warehouse.companyId.toString();
+              console.log('StockMovementController: Company ID extracted from warehouse:', companyId);
+            }
           }
-        }
-        
-        if (!companyId && movementData.itemId) {
-          // Get company ID from item
-          const InventoryItem = require('@/models/InventoryItem').default;
-          const item = await InventoryItem.findById(movementData.itemId).select('companyId');
-          if (item?.companyId) {
-            companyId = item.companyId.toString();
-            console.log('StockMovementController: Company ID extracted from item:', companyId);
+          
+          if (!companyId && movementData.itemId) {
+            // Get company ID from item
+            const InventoryItem = require('@/models/InventoryItem').default;
+            const item = await InventoryItem.findById(movementData.itemId).select('companyId');
+            if (item?.companyId) {
+              companyId = item.companyId.toString();
+              console.log('StockMovementController: Company ID extracted from item:', companyId);
+            }
           }
         }
       }
@@ -103,17 +114,32 @@ export class StockMovementController extends BaseController<IStockMovement> {
         unit: unit,
         fromLocation: fromLocation,
         toLocation: toLocation,
-        referenceDocument: referenceDocument
+        referenceDocument: referenceDocument,
+        // Ensure quantity is a number
+        quantity: Number(movementData.quantity) || 0,
+        // Ensure movementDate is a valid date
+        movementDate: movementData.movementDate ? new Date(movementData.movementDate) : new Date()
       };
 
       console.log('StockMovementController: Creating movement with company ID:', companyId);
       console.log('StockMovementController: Original movement data:', movementData);
       console.log('StockMovementController: Enriched movement data:', enrichedMovementData);
+      console.log('StockMovementController: CreatedBy:', createdBy);
+      console.log('StockMovementController: Unit:', unit);
+      console.log('StockMovementController: Quantity type:', typeof enrichedMovementData.quantity);
+      console.log('StockMovementController: MovementDate type:', typeof enrichedMovementData.movementDate);
 
-      const movement = await this.stockMovementService.createStockMovement(enrichedMovementData, createdBy);
+      const movement = await this.stockMovementService.createStockMovement(enrichedMovementData, createdBy.toString());
 
       this.sendSuccess(res, movement, 'Stock movement created successfully', 201);
     } catch (error) {
+      console.error('StockMovementController: Error creating stock movement:', error);
+      console.error('StockMovementController: Error details:', {
+        message: error.message,
+        stack: error.stack,
+        name: error.name,
+        code: error.code
+      });
       this.sendError(res, error, 'Failed to create stock movement');
     }
   }
@@ -187,7 +213,7 @@ export class StockMovementController extends BaseController<IStockMovement> {
    */
   async getMovementsByCompany(req: Request, res: Response): Promise<void> {
     try {
-      const companyId = req.user?.companyId;
+      const companyId = req.company?._id || req.user?.primaryCompanyId;
       const { page = 1, limit = 10, movementType, startDate, endDate, search } = req.query;
 
       if (!companyId) {
@@ -195,7 +221,7 @@ export class StockMovementController extends BaseController<IStockMovement> {
         return;
       }
 
-      let query: any = { companyId };
+      let query: any = { companyId: companyId.toString() };
 
       if (movementType) {
         query.movementType = movementType;
@@ -210,9 +236,8 @@ export class StockMovementController extends BaseController<IStockMovement> {
 
       if (search) {
         query.$or = [
-          { referenceNumber: { $regex: search, $options: 'i' } },
-          { 'item.itemName': { $regex: search, $options: 'i' } },
-          { 'item.itemCode': { $regex: search, $options: 'i' } }
+          { movementNumber: { $regex: search, $options: 'i' } },
+          { 'referenceDocument.documentNumber': { $regex: search, $options: 'i' } }
         ];
       }
 
@@ -222,9 +247,21 @@ export class StockMovementController extends BaseController<IStockMovement> {
         sort: { movementDate: -1 }
       };
 
-      const movements = await this.stockMovementService.findMany(query, options);
+      const result = await this.stockMovementService.findManyWithPagination(query, options);
 
-      this.sendSuccess(res, movements, 'Stock movements retrieved successfully');
+      // Return data in the expected format for the frontend
+      res.status(200).json({
+        success: true,
+        message: 'Stock movements retrieved successfully',
+        data: {
+          spares: result.documents,  // Use "spares" field to match frontend expectations
+          total: result.pagination.total,
+          page: result.pagination.page,
+          limit: result.pagination.limit,
+          totalPages: result.pagination.totalPages
+        },
+        timestamp: new Date().toISOString()
+      });
     } catch (error) {
       this.sendError(res, error, 'Failed to get stock movements');
     }

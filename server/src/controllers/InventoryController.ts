@@ -19,19 +19,26 @@ export class InventoryController extends BaseController<IInventoryItem> {
   async createInventoryItem(req: Request, res: Response): Promise<void> {
     try {
       const itemData = req.body;
-      const createdBy = req.user?.id;
-      const companyId = req.user?.companyId;
+      const createdBy = req.user?._id; // Use _id instead of id
+      const companyId = req.company?._id || req.user?.primaryCompanyId; // Get from company context or primary company
 
       if (!companyId) {
         this.sendError(res, new Error('Company ID is required'), 'Company ID is required', 400);
         return;
       }
 
+      if (!createdBy) {
+        this.sendError(res, new Error('User ID is required'), 'User ID is required', 400);
+        return;
+      }
+
       // Add company ID to item data
       itemData.companyId = companyId;
-
-      const item = await this.inventoryService.createInventoryItem(itemData, createdBy);
-
+      console.log('itemData', itemData);
+      console.log('createdBy', createdBy);
+      console.log('companyId', companyId);
+      const item = await this.inventoryService.createInventoryItem(itemData, createdBy.toString());
+    
       this.sendSuccess(res, item, 'Inventory item created successfully', 201);
     } catch (error) {
       this.sendError(res, error, 'Failed to create inventory item');
@@ -210,13 +217,10 @@ export class InventoryController extends BaseController<IInventoryItem> {
    */
   async getLowStockItems(req: Request, res: Response): Promise<void> {
     try {
-      const companyId = req.user?.companyId;
+      const companyId = req.company?._id || req.user?.primaryCompanyId;
 
       if (!companyId) {
-        res.status(400).json({
-          success: false,
-          message: 'Company ID is required'
-        });
+        this.sendError(res, new Error('Company ID is required'), 'Company ID is required', 400);
         return;
       }
 
@@ -233,7 +237,7 @@ export class InventoryController extends BaseController<IInventoryItem> {
    */
   async getInventoryStats(req: Request, res: Response): Promise<void> {
     try {
-      const companyId = req.user?.companyId;
+      const companyId = req.company?._id || req.user?.primaryCompanyId;
 
       if (!companyId) {
         this.sendError(res, new Error('Company ID is required'), 'Company ID is required', 400);
@@ -253,7 +257,7 @@ export class InventoryController extends BaseController<IInventoryItem> {
    */
   async getInventoryAlerts(req: Request, res: Response): Promise<void> {
     try {
-      const companyId = req.user?.companyId;
+      const companyId = req.company?._id || req.user?.primaryCompanyId;
 
       if (!companyId) {
         this.sendError(res, new Error('Company ID is required'), 'Company ID is required', 400);
@@ -299,7 +303,7 @@ export class InventoryController extends BaseController<IInventoryItem> {
     try {
       const { id } = req.params;
       const updateData = req.body;
-      const updatedBy = req.user?.id;
+      const updatedBy = req.user?._id?.toString();
 
       const item = await this.inventoryService.update(id, updateData, updatedBy);
 
@@ -327,7 +331,7 @@ export class InventoryController extends BaseController<IInventoryItem> {
   async deleteInventoryItem(req: Request, res: Response): Promise<void> {
     try {
       const { id } = req.params;
-      const deletedBy = req.user?.id;
+      const deletedBy = req.user?._id?.toString();
 
       const item = await this.inventoryService.update(id, {
         'status.isActive': false,
@@ -350,7 +354,7 @@ export class InventoryController extends BaseController<IInventoryItem> {
    */
   async searchItems(req: Request, res: Response): Promise<void> {
     try {
-      const companyId = req.user?.companyId;
+      const companyId = req.company?._id || req.user?.primaryCompanyId;
       const { q: searchTerm, limit = 10 } = req.query;
 
       if (!companyId) {

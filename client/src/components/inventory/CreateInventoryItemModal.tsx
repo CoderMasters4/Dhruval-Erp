@@ -37,32 +37,44 @@ export function CreateInventoryItemModal({ isOpen, onClose, onSubmit }: CreateIn
       unit: 'meters',
       reorderLevel: '',
       minStockLevel: '',
-      maxStockLevel: ''
+      maxStockLevel: '',
+      economicOrderQuantity: ''
     },
     pricing: {
       costPrice: '',
       sellingPrice: '',
       currency: 'INR'
-    }
+    },
+    warehouseId: ''
   })
 
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   const handleInputChange = (field: string, value: any) => {
+    console.log('handleInputChange called:', field, value)
+    
     if (field.includes('.')) {
       const [parent, child] = field.split('.')
-      setFormData(prev => ({
-        ...prev,
-        [parent]: {
-          ...(prev[parent as keyof typeof prev] as any),
-          [child]: value
+      setFormData(prev => {
+        const newData = {
+          ...prev,
+          [parent]: {
+            ...(prev[parent as keyof typeof prev] as any),
+            [child]: value
+          }
         }
-      }))
+        console.log('Updated formData:', newData)
+        return newData
+      })
     } else {
-      setFormData(prev => ({
-        ...prev,
-        [field]: value
-      }))
+      setFormData(prev => {
+        const newData = {
+          ...prev,
+          [field]: value
+        }
+        console.log('Updated formData:', newData)
+        return newData
+      })
     }
   }
 
@@ -71,7 +83,52 @@ export function CreateInventoryItemModal({ isOpen, onClose, onSubmit }: CreateIn
     setIsSubmitting(true)
     
     try {
-      await onSubmit(formData)
+      // Transform form data to match API structure exactly
+      const transformedData = {
+        itemName: formData.itemName,
+        category: formData.category,
+        warehouseId: formData.warehouseId,
+        reorderPoint: Number(formData.stock.reorderLevel) || 0,
+        reorderQuantity: Number(formData.stock.economicOrderQuantity) || 0,
+        stockingMethod: 'fifo',
+        currentStock: Number(formData.stock.currentStock) || 0,
+        costPrice: Number(formData.pricing.costPrice) || 0,
+        sellingPrice: Number(formData.pricing.sellingPrice) || 0,
+        stock: {
+          unit: formData.stock.unit,
+          currentStock: Number(formData.stock.currentStock) || 0,
+          availableStock: Number(formData.stock.currentStock) || 0,
+          reorderLevel: Number(formData.stock.reorderLevel) || 0,
+          minStockLevel: Number(formData.stock.minStockLevel) || 0,
+          maxStockLevel: Number(formData.stock.maxStockLevel) || 0,
+          economicOrderQuantity: Number(formData.stock.economicOrderQuantity) || 0,
+          valuationMethod: 'FIFO',
+          averageCost: Number(formData.pricing.costPrice) || 0,
+          totalValue: (Number(formData.stock.currentStock) || 0) * (Number(formData.pricing.costPrice) || 0)
+        },
+        pricing: {
+          costPrice: Number(formData.pricing.costPrice) || 0,
+          sellingPrice: Number(formData.pricing.sellingPrice) || 0,
+          currency: formData.pricing.currency
+        },
+        locations: [
+          {
+            warehouseId: formData.warehouseId,
+            warehouseName: "Main Warehouse",
+            quantity: Number(formData.stock.currentStock) || 0,
+            lastUpdated: new Date().toISOString(),
+            isActive: true
+          }
+        ]
+      }
+
+      // Debug logging
+      console.log('Form Data:', formData)
+      console.log('Transformed Data:', transformedData)
+      console.log('Stock Unit:', formData.stock.unit)
+      console.log('Stock Object:', transformedData.stock)
+
+      await onSubmit(transformedData)
       onClose()
       setFormData({
         itemCode: '',
@@ -96,13 +153,15 @@ export function CreateInventoryItemModal({ isOpen, onClose, onSubmit }: CreateIn
           unit: 'meters',
           reorderLevel: '',
           minStockLevel: '',
-          maxStockLevel: ''
+          maxStockLevel: '',
+          economicOrderQuantity: ''
         },
         pricing: {
           costPrice: '',
           sellingPrice: '',
           currency: 'INR'
-        }
+        },
+        warehouseId: ''
       })
     } catch (error) {
       console.error('Error creating inventory item:', error)
@@ -132,6 +191,15 @@ export function CreateInventoryItemModal({ isOpen, onClose, onSubmit }: CreateIn
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
+          {/* Debug Information */}
+          <div className="bg-gray-100 p-4 rounded-lg text-xs">
+            <h3 className="font-bold mb-2">Debug Info:</h3>
+            <div>Stock Unit: {formData.stock.unit}</div>
+            <div>Current Stock: {formData.stock.currentStock}</div>
+            <div>Warehouse ID: {formData.warehouseId}</div>
+            <div>Category: {formData.category.primary}</div>
+          </div>
+
           {/* Basic Information */}
           <Card>
             <CardHeader>
@@ -160,6 +228,23 @@ export function CreateInventoryItemModal({ isOpen, onClose, onSubmit }: CreateIn
                     placeholder="e.g., Silk Saree - Red"
                     required
                   />
+                </div>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Warehouse *
+                  </label>
+                  <select
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-sky-500"
+                    value={formData.warehouseId}
+                    onChange={(e) => handleInputChange('warehouseId', e.target.value)}
+                    required
+                  >
+                    <option value="">Select Warehouse</option>
+                    <option value="68aed32e8d1ce6852fdc5fd6">Main Warehouse</option>
+                    <option value="68aed32e8d1ce6852fdc5fd7">Secondary Warehouse</option>
+                  </select>
                 </div>
               </div>
               <div>
@@ -337,6 +422,7 @@ export function CreateInventoryItemModal({ isOpen, onClose, onSubmit }: CreateIn
                     <option value="kg">Kilograms</option>
                     <option value="liters">Liters</option>
                     <option value="yards">Yards</option>
+                    <option value="boxes">Boxes</option>
                   </select>
                 </div>
               </div>
@@ -372,6 +458,19 @@ export function CreateInventoryItemModal({ isOpen, onClose, onSubmit }: CreateIn
                     value={formData.stock.maxStockLevel}
                     onChange={(e) => handleInputChange('stock.maxStockLevel', e.target.value)}
                     placeholder="e.g., 500"
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Economic Order Quantity
+                  </label>
+                  <Input
+                    type="number"
+                    value={formData.stock.economicOrderQuantity}
+                    onChange={(e) => handleInputChange('stock.economicOrderQuantity', e.target.value)}
+                    placeholder="e.g., 50"
                   />
                 </div>
               </div>

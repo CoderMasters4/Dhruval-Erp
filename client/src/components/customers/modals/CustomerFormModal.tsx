@@ -18,6 +18,8 @@ import {
   useCreateCustomerMutation, 
   useUpdateCustomerMutation 
 } from '@/lib/features/customers/customersApi'
+import { useAuth } from '@/components/auth/AuthProvider'
+import { useGetAllCompaniesQuery } from '@/lib/features/companies/companiesApi'
 
 interface CustomerFormModalProps {
   isOpen: boolean
@@ -56,6 +58,9 @@ interface FormData {
 }
 
 export default function CustomerFormModal({ isOpen, onClose, onSuccess, customer }: CustomerFormModalProps) {
+  const { user } = useAuth()
+  const { data: companiesResponse, isLoading: isLoadingCompanies } = useGetAllCompaniesQuery()
+  
   const [formData, setFormData] = useState<FormData>({
     name: '',
     email: '',
@@ -93,6 +98,18 @@ export default function CustomerFormModal({ isOpen, onClose, onSuccess, customer
 
   const isEditing = !!customer
   const isLoading = isCreating || isUpdating
+  const isSuperAdmin = user?.isSuperAdmin
+  const companies = companiesResponse?.data || []
+
+  // Auto-set company for non-superadmin users
+  useEffect(() => {
+    if (!isSuperAdmin && user?.currentCompanyId && !isEditing) {
+      setFormData(prev => ({
+        ...prev,
+        company: user.currentCompanyId || ''
+      }))
+    }
+  }, [isSuperAdmin, user?.currentCompanyId, isEditing])
 
   useEffect(() => {
     if (customer) {
@@ -129,7 +146,7 @@ export default function CustomerFormModal({ isOpen, onClose, onSuccess, customer
         name: '',
         email: '',
         phone: '',
-        company: '',
+        company: isSuperAdmin ? '' : (user?.currentCompanyId || ''),
         contactPerson: '',
         customerType: 'individual',
         creditLimit: '',
@@ -155,7 +172,7 @@ export default function CustomerFormModal({ isOpen, onClose, onSuccess, customer
       })
     }
     setErrors({})
-  }, [customer, isOpen])
+  }, [customer, isOpen, isSuperAdmin, user?.currentCompanyId])
 
   const validateForm = (): boolean => {
     const newErrors: Partial<FormData> = {}
@@ -174,6 +191,12 @@ export default function CustomerFormModal({ isOpen, onClose, onSuccess, customer
       newErrors.phone = 'Phone is required'
     }
 
+    if (isSuperAdmin && !formData.company.trim()) {
+      newErrors.company = 'Company selection is required'
+    } else if (!isSuperAdmin && !user?.currentCompanyId) {
+      newErrors.company = 'No company assigned to your account'
+    }
+
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
   }
@@ -188,7 +211,7 @@ export default function CustomerFormModal({ isOpen, onClose, onSuccess, customer
     try {
       const customerData: CreateCustomerRequest = {
         customerName: formData.name,
-        companyId: formData.company || 'default-company',
+        companyId: isSuperAdmin ? formData.company : (user?.currentCompanyId || ''),
         businessInfo: {
           businessType: formData.customerType === 'individual' ? 'individual' : 'private_limited',
           industry: 'Manufacturing'
@@ -382,6 +405,47 @@ export default function CustomerFormModal({ isOpen, onClose, onSuccess, customer
                     <option value="business">Business</option>
                   </select>
                 </div>
+
+                {isSuperAdmin ? (
+                  <div>
+                    <label className="block text-sm font-semibold text-black mb-2">
+                      Company *
+                    </label>
+                    <select
+                      required
+                      disabled={isLoadingCompanies}
+                      value={formData.company}
+                      onChange={(e) => updateFormData({ company: e.target.value })}
+                      className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 ${
+                        errors.company ? 'border-red-300 bg-red-50' : 'border-gray-300 bg-white'
+                      } ${isLoadingCompanies ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    >
+                      <option value="">
+                        {isLoadingCompanies ? 'Loading companies...' : 'Select Company'}
+                      </option>
+                      {companies.map((company) => (
+                        <option key={company._id} value={company._id}>
+                          {company.companyName}
+                        </option>
+                      ))}
+                    </select>
+                    {errors.company && (
+                      <p className="mt-1 text-sm text-red-600 font-medium">{errors.company}</p>
+                    )}
+                  </div>
+                ) : (
+                  <div>
+                    <label className="block text-sm font-semibold text-black mb-2">
+                      Company
+                    </label>
+                    <div className="w-full px-4 py-3 border border-gray-300 rounded-xl bg-gray-50 text-gray-600">
+                      {companies.find(c => c._id === user?.currentCompanyId)?.companyName || 'Your Company'}
+                    </div>
+                    <p className="mt-1 text-sm text-gray-500">
+                      Customer will be created under your company
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -600,10 +664,10 @@ export default function CustomerFormModal({ isOpen, onClose, onSuccess, customer
             
             <Button
               type="submit"
-              disabled={isLoading}
+              disabled={isLoading || (isSuperAdmin && isLoadingCompanies)}
               className="bg-blue-500 hover:bg-blue-600 text-white px-8 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
             >
-              {isLoading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+              {(isLoading || (isSuperAdmin && isLoadingCompanies)) && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
               {isEditing ? 'Update Customer' : 'Create Customer'}
             </Button>
           </div>

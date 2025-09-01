@@ -1,0 +1,280 @@
+ | "User" | "Role" | "Customer" | "Supplier" | "InventoryItem" | "StockMovement" | "Warehouse" | "WarehouseStats" | "Batch" | "ProductionOrder" | "CustomerOrder" | ... 69 more ... | "EnhancedOrderStats">'.
+      Type '{ type: "MaintenanceSchedule"; id: string; }' is not assignable to type 'TagDescription<"Company" | "User" | "Role" | "Customer" | "Supplier" | "InventoryItem" | "StockMovement" | "Warehouse" | "WarehouseStats" | "Batch" | "ProductionOrder" | "CustomerOrder" | ... 69 more ... | "EnhancedOrderStats"> | null | undefined'.
+        Type '{ type: "MaintenanceSchedule"; id: string; }' is not assignable to type 'FullTagDescription<"Company" | "User" | "Role" | "Customer" | "Supplier" | "InventoryItem" | "StockMovement" | "Warehouse" | "WarehouseStats" | "Batch" | "ProductionOrder" | "CustomerOrder" | ... 69 more ... | "EnhancedOrderStats">'.
+          Types of property 'type' are incompatible.
+            Type '"MaintenanceSchedule"' is not assignable to type '"Company" | "User" | "Role" | "Customer" | "Supplier" | "InventoryItem" | "StockMovement" | "Warehouse" | "WarehouseStats" | "Batch" | "ProductionOrder" | "CustomerOrder" | ... 69 more ... | "EnhancedOrderStats"'.
+
+243       providesTags: (result, error, days) => [
+          ~~~~~~~~~~~~
+
+  node_modules/@reduxjs/toolkit/dist/query/index.d.mts:2021:5
+    2021     providesTags?: ResultDescription<TagTypes, ResultType, QueryArg, BaseQueryError<BaseQuery>, BaseQueryMeta<BaseQuery>>;
+             ~~~~~~~~~~~~
+    The expected type comes from property 'providesTags' which is declared here on type 'Omit<EndpointDefinitionWithQuery<number, (args: any, api: any, extraOptions: any) => Promise<QueryReturnValue<unknown, FetchBaseQueryError, FetchBaseQueryMeta>>, { ...; }, unknown> & CommonEndpointDefinition<...> & { ...; } & { ...; } & QueryExtraOptions<...>, "type"> | Omit<...>'
+
+src/lib/api/maintenanceApi.ts:257:24 - error TS2322: Type '"MaintenanceAnalytics"' is not assignable to type '"Company" | "User" | "Role" | "Customer" | "Supplier" | "InventoryItem" | "StockMovement" | "Warehouse" | "WarehouseStats" | "Batch" | "ProductionOrder" | "CustomerOrder" | ... 69 more ... | "EnhancedOrderStats"'.
+
+257       providesTags: [{ type: 'MaintenanceAnalytics', id: 'OVERALL' }],
+                           ~~~~
+
+src/lib/api/qualityApi.ts:114:7 - error TS2322: Type '(result: { success: boolean; data: QualityCheck[]; } | undefined, error: FetchBaseQueryError | undefined, spareId: string) => { type: "QualityCheck"; id: string; }[]' is not assignable to type 'ResultDescription<"Company" | "User" | "Role" | "Customer" | "Supplier" | "InventoryItem" | "StockMovement" | "Warehouse" | "WarehouseStats" | "Batch" | "ProductionOrder" | "CustomerOrder" | ... 69 more ... | "EnhancedOrderStats", { ...; }, string, FetchBaseQueryError, FetchBaseQueryMeta | undefined> | undefined'.
+  Type '(result: { success: boolean; data: QualityCheck[]; } | undefined, error: FetchBaseQueryError | undefined, spareId: string) => { type: "QualityCheck"; id: string; }[]' is not assignable to type 'GetResultDescriptionFn<"Company" | "User" | "Role" | "Customer" | "Supplier" | "InventoryItem" | "StockMovement" | "Warehouse" | "WarehouseStats" | "Batch" | "ProductionOrder" | "CustomerOrder" | ... 69 more ... | "EnhancedOrderStats", { ...; }, string, FetchBaseQueryError, FetchBaseQueryMeta | undefined>'.
+    Type '{ type: "QualityCheck"; id: string; }[]' is not assignable to type 'TagDescriptionArray<"Company" | "User" | "Role" | "Customer" | "Supplier" | "InventoryItem" | "StockMovement" | "Warehouse" | "WarehouseStats" | "Batch" | "ProductionOrder" | "CustomerOrder" | ... 69 more ... | "EnhancedOrderStats">'.
+      Type '{ type: "QualityCheck"; id: string; }' is not assignable to type 'TagDescription<"Company" | "User" | "Role" | "Customer" | "Supplier" | "InventoryItem" | "StockMovement" | "Warehouse" | "WarehouseStats" | "Batch" | "ProductionOrder" | "CustomerOrder" | ... 69 more ... | "EnhancedOrderStats"> | null | undefined'.
+        Type '{ type: "QualityCheck"; id: string; }' is not assignable to type 'FullTagDescription<"Company" | "User" | "Role" | "Customer" | "Supplier" | "InventoryItem" | "StockMovement" | "Warehouse" | "WarehouseStats" | "Batch" | "ProductionOrder" | "CustomerOrder" | ... 69 more ... | "EnhancedOrderStats">'.
+          Types of property 'type' are incompatible.
+            Type '"QualityCheck"' is not assignable to type '"Company" | "User" | "Role" | "Customer" | "Supplier" | "InventoryItem" | "StockMovement" | "Warehouse" | "WarehouseStats" | "Batch" | "ProductionOrder" | "CustomerOrder" | ... 69 more ... | "EnhancedOrderStats"'.
+
+114       providesTags: (result, error, spareId) => [
+          ~~~~~~~~~~~~
+
+  node_modules/@reduxjs/toolkit/dist/query/index.d.mts:2021:5
+    2021     providesTags?: ResultDescription<TagTypes, ResultType, QueryArg, BaseQueryError<BaseQuery>, BaseQueryMeta<BaseQuery>>;
+             ~~~~~~~~~~~~
+    The expected type comes from property 'providesTags' which is declared here on type 'Omit<EndpointDefinitionWithQuery<string, (args: any, api: any, extraOptions: any) => Promise<QueryReturnValue<unknown, FetchBaseQueryError, FetchBaseQueryMeta>>, { ...; }, unknown> & CommonEndpointDefinition<...> & { ...; } & { ...; } & QueryExtraOptions<...>, "type"> | Omit<...>'
+
+src/lib/api/qualityApi.ts:129:7 - error TS2322: Type '(result: { success: boolean; data: QualityCheck; message: string; } | undefined, error: FetchBaseQueryError | undefined, checkData: QualityCheck) => { ...; }[]' is not assignable to type 'ResultDescription<"Company" | "User" | "Role" | "Customer" | "Supplier" | "InventoryItem" | "StockMovement" | "Warehouse" | "WarehouseStats" | "Batch" | "ProductionOrder" | "CustomerOrder" | ... 69 more ... | "EnhancedOrderStats", { ...; }, QualityCheck, FetchBaseQueryError, FetchBaseQueryMeta | undefined> | undefined'.
+  Type '(result: { success: boolean; data: QualityCheck; message: string; } | undefined, error: FetchBaseQueryError | undefined, checkData: QualityCheck) => { ...; }[]' is not assignable to type 'GetResultDescriptionFn<"Company" | "User" | "Role" | "Customer" | "Supplier" | "InventoryItem" | "StockMovement" | "Warehouse" | "WarehouseStats" | "Batch" | "ProductionOrder" | "CustomerOrder" | ... 69 more ... | "EnhancedOrderStats", { ...; }, QualityCheck, FetchBaseQueryError, FetchBaseQueryMeta | undefined>'.
+    Type '{ type: "QualityCheck"; id: string; }[]' is not assignable to type 'TagDescriptionArray<"Company" | "User" | "Role" | "Customer" | "Supplier" | "InventoryItem" | "StockMovement" | "Warehouse" | "WarehouseStats" | "Batch" | "ProductionOrder" | "CustomerOrder" | ... 69 more ... | "EnhancedOrderStats">'.
+      Type '{ type: "QualityCheck"; id: string; }' is not assignable to type 'TagDescription<"Company" | "User" | "Role" | "Customer" | "Supplier" | "InventoryItem" | "StockMovement" | "Warehouse" | "WarehouseStats" | "Batch" | "ProductionOrder" | "CustomerOrder" | ... 69 more ... | "EnhancedOrderStats"> | null | undefined'.
+        Type '{ type: "QualityCheck"; id: string; }' is not assignable to type 'FullTagDescription<"Company" | "User" | "Role" | "Customer" | "Supplier" | "InventoryItem" | "StockMovement" | "Warehouse" | "WarehouseStats" | "Batch" | "ProductionOrder" | "CustomerOrder" | ... 69 more ... | "EnhancedOrderStats">'.
+          Types of property 'type' are incompatible.
+            Type '"QualityCheck"' is not assignable to type '"Company" | "User" | "Role" | "Customer" | "Supplier" | "InventoryItem" | "StockMovement" | "Warehouse" | "WarehouseStats" | "Batch" | "ProductionOrder" | "CustomerOrder" | ... 69 more ... | "EnhancedOrderStats"'.
+
+129       invalidatesTags: (result, error, checkData) => [
+          ~~~~~~~~~~~~~~~
+
+  node_modules/@reduxjs/toolkit/dist/query/index.d.mts:2385:5
+    2385     invalidatesTags?: ResultDescription<TagTypes, ResultType, QueryArg, BaseQueryError<BaseQuery>, BaseQueryMeta<BaseQuery>>;
+             ~~~~~~~~~~~~~~~
+    The expected type comes from property 'invalidatesTags' which is declared here on type 'Omit<EndpointDefinitionWithQuery<QualityCheck, (args: any, api: any, extraOptions: any) => Promise<QueryReturnValue<unknown, FetchBaseQueryError, FetchBaseQueryMeta>>, { ...; }, unknown> & CommonEndpointDefinition<...> & { ...; } & { ...; } & MutationExtraOptions<...>, "type"> | Omit<...>'
+
+src/lib/api/qualityApi.ts:145:7 - error TS2322: Type '(result: { success: boolean; data: QualityCheck; message: string; } | undefined, error: FetchBaseQueryError | undefined, { id, data }: { id: string; data: Partial<...>; }) => { ...; }[]' is not assignable to type 'ResultDescription<"Company" | "User" | "Role" | "Customer" | "Supplier" | "InventoryItem" | "StockMovement" | "Warehouse" | "WarehouseStats" | "Batch" | "ProductionOrder" | "CustomerOrder" | ... 69 more ... | "EnhancedOrderStats", { ...; }, { ...; }, FetchBaseQueryError, FetchBaseQueryMeta | undefined> | undefined'.
+  Type '(result: { success: boolean; data: QualityCheck; message: string; } | undefined, error: FetchBaseQueryError | undefined, { id, data }: { id: string; data: Partial<...>; }) => { ...; }[]' is not assignable to type 'GetResultDescriptionFn<"Company" | "User" | "Role" | "Customer" | "Supplier" | "InventoryItem" | "StockMovement" | "Warehouse" | "WarehouseStats" | "Batch" | "ProductionOrder" | "CustomerOrder" | ... 69 more ... | "EnhancedOrderStats", { ...; }, { ...; }, FetchBaseQueryError, FetchBaseQueryMeta | undefined>'.
+    Type '{ type: "QualityCheck"; id: string; }[]' is not assignable to type 'TagDescriptionArray<"Company" | "User" | "Role" | "Customer" | "Supplier" | "InventoryItem" | "StockMovement" | "Warehouse" | "WarehouseStats" | "Batch" | "ProductionOrder" | "CustomerOrder" | ... 69 more ... | "EnhancedOrderStats">'.
+      Type '{ type: "QualityCheck"; id: string; }' is not assignable to type 'TagDescription<"Company" | "User" | "Role" | "Customer" | "Supplier" | "InventoryItem" | "StockMovement" | "Warehouse" | "WarehouseStats" | "Batch" | "ProductionOrder" | "CustomerOrder" | ... 69 more ... | "EnhancedOrderStats"> | null | undefined'.
+        Type '{ type: "QualityCheck"; id: string; }' is not assignable to type 'FullTagDescription<"Company" | "User" | "Role" | "Customer" | "Supplier" | "InventoryItem" | "StockMovement" | "Warehouse" | "WarehouseStats" | "Batch" | "ProductionOrder" | "CustomerOrder" | ... 69 more ... | "EnhancedOrderStats">'.
+          Types of property 'type' are incompatible.
+            Type '"QualityCheck"' is not assignable to type '"Company" | "User" | "Role" | "Customer" | "Supplier" | "InventoryItem" | "StockMovement" | "Warehouse" | "WarehouseStats" | "Batch" | "ProductionOrder" | "CustomerOrder" | ... 69 more ... | "EnhancedOrderStats"'.
+
+145       invalidatesTags: (result, error, { id, data }) => [
+          ~~~~~~~~~~~~~~~
+
+  node_modules/@reduxjs/toolkit/dist/query/index.d.mts:2385:5
+    2385     invalidatesTags?: ResultDescription<TagTypes, ResultType, QueryArg, BaseQueryError<BaseQuery>, BaseQueryMeta<BaseQuery>>;
+             ~~~~~~~~~~~~~~~
+    The expected type comes from property 'invalidatesTags' which is declared here on type 'Omit<EndpointDefinitionWithQuery<{ id: string; data: Partial<QualityCheck>; }, (args: any, api: any, extraOptions: any) => Promise<QueryReturnValue<unknown, FetchBaseQueryError, FetchBaseQueryMeta>>, { ...; }, unknown> & CommonEndpointDefinition<...> & { ...; } & { ...; } & MutationExtraOptions<...>, "type"> | Omit<...'
+
+src/lib/api/qualityApi.ts:161:7 - error TS2322: Type '(result: { success: boolean; message: string; } | undefined, error: FetchBaseQueryError | undefined, id: string) => { type: "QualityCheck"; id: string; }[]' is not assignable to type 'ResultDescription<"Company" | "User" | "Role" | "Customer" | "Supplier" | "InventoryItem" | "StockMovement" | "Warehouse" | "WarehouseStats" | "Batch" | "ProductionOrder" | "CustomerOrder" | ... 69 more ... | "EnhancedOrderStats", { ...; }, string, FetchBaseQueryError, FetchBaseQueryMeta | undefined> | undefined'.
+  Type '(result: { success: boolean; message: string; } | undefined, error: FetchBaseQueryError | undefined, id: string) => { type: "QualityCheck"; id: string; }[]' is not assignable to type 'GetResultDescriptionFn<"Company" | "User" | "Role" | "Customer" | "Supplier" | "InventoryItem" | "StockMovement" | "Warehouse" | "WarehouseStats" | "Batch" | "ProductionOrder" | "CustomerOrder" | ... 69 more ... | "EnhancedOrderStats", { ...; }, string, FetchBaseQueryError, FetchBaseQueryMeta | undefined>'.
+    Type '{ type: "QualityCheck"; id: string; }[]' is not assignable to type 'TagDescriptionArray<"Company" | "User" | "Role" | "Customer" | "Supplier" | "InventoryItem" | "StockMovement" | "Warehouse" | "WarehouseStats" | "Batch" | "ProductionOrder" | "CustomerOrder" | ... 69 more ... | "EnhancedOrderStats">'.
+      Type '{ type: "QualityCheck"; id: string; }' is not assignable to type 'TagDescription<"Company" | "User" | "Role" | "Customer" | "Supplier" | "InventoryItem" | "StockMovement" | "Warehouse" | "WarehouseStats" | "Batch" | "ProductionOrder" | "CustomerOrder" | ... 69 more ... | "EnhancedOrderStats"> | null | undefined'.
+        Type '{ type: "QualityCheck"; id: string; }' is not assignable to type 'FullTagDescription<"Company" | "User" | "Role" | "Customer" | "Supplier" | "InventoryItem" | "StockMovement" | "Warehouse" | "WarehouseStats" | "Batch" | "ProductionOrder" | "CustomerOrder" | ... 69 more ... | "EnhancedOrderStats">'.
+          Types of property 'type' are incompatible.
+            Type '"QualityCheck"' is not assignable to type '"Company" | "User" | "Role" | "Customer" | "Supplier" | "InventoryItem" | "StockMovement" | "Warehouse" | "WarehouseStats" | "Batch" | "ProductionOrder" | "CustomerOrder" | ... 69 more ... | "EnhancedOrderStats"'.
+
+161       invalidatesTags: (result, error, id) => [
+          ~~~~~~~~~~~~~~~
+
+  node_modules/@reduxjs/toolkit/dist/query/index.d.mts:2385:5
+    2385     invalidatesTags?: ResultDescription<TagTypes, ResultType, QueryArg, BaseQueryError<BaseQuery>, BaseQueryMeta<BaseQuery>>;
+             ~~~~~~~~~~~~~~~
+    The expected type comes from property 'invalidatesTags' which is declared here on type 'Omit<EndpointDefinitionWithQuery<string, (args: any, api: any, extraOptions: any) => Promise<QueryReturnValue<unknown, FetchBaseQueryError, FetchBaseQueryMeta>>, { ...; }, unknown> & CommonEndpointDefinition<...> & { ...; } & { ...; } & MutationExtraOptions<...>, "type"> | Omit<...>'
+
+src/lib/api/qualityApi.ts:176:7 - error TS2322: Type '(result: { success: boolean; data: Certification[]; } | undefined, error: FetchBaseQueryError | undefined, spareId: string) => { type: "Certification"; id: string; }[]' is not assignable to type 'ResultDescription<"Company" | "User" | "Role" | "Customer" | "Supplier" | "InventoryItem" | "StockMovement" | "Warehouse" | "WarehouseStats" | "Batch" | "ProductionOrder" | "CustomerOrder" | ... 69 more ... | "EnhancedOrderStats", { ...; }, string, FetchBaseQueryError, FetchBaseQueryMeta | undefined> | undefined'.
+  Type '(result: { success: boolean; data: Certification[]; } | undefined, error: FetchBaseQueryError | undefined, spareId: string) => { type: "Certification"; id: string; }[]' is not assignable to type 'GetResultDescriptionFn<"Company" | "User" | "Role" | "Customer" | "Supplier" | "InventoryItem" | "StockMovement" | "Warehouse" | "WarehouseStats" | "Batch" | "ProductionOrder" | "CustomerOrder" | ... 69 more ... | "EnhancedOrderStats", { ...; }, string, FetchBaseQueryError, FetchBaseQueryMeta | undefined>'.
+    Type '{ type: "Certification"; id: string; }[]' is not assignable to type 'TagDescriptionArray<"Company" | "User" | "Role" | "Customer" | "Supplier" | "InventoryItem" | "StockMovement" | "Warehouse" | "WarehouseStats" | "Batch" | "ProductionOrder" | "CustomerOrder" | ... 69 more ... | "EnhancedOrderStats">'.
+      Type '{ type: "Certification"; id: string; }' is not assignable to type 'TagDescription<"Company" | "User" | "Role" | "Customer" | "Supplier" | "InventoryItem" | "StockMovement" | "Warehouse" | "WarehouseStats" | "Batch" | "ProductionOrder" | "CustomerOrder" | ... 69 more ... | "EnhancedOrderStats"> | null | undefined'.
+        Type '{ type: "Certification"; id: string; }' is not assignable to type 'FullTagDescription<"Company" | "User" | "Role" | "Customer" | "Supplier" | "InventoryItem" | "StockMovement" | "Warehouse" | "WarehouseStats" | "Batch" | "ProductionOrder" | "CustomerOrder" | ... 69 more ... | "EnhancedOrderStats">'.
+          Types of property 'type' are incompatible.
+            Type '"Certification"' is not assignable to type '"Company" | "User" | "Role" | "Customer" | "Supplier" | "InventoryItem" | "StockMovement" | "Warehouse" | "WarehouseStats" | "Batch" | "ProductionOrder" | "CustomerOrder" | ... 69 more ... | "EnhancedOrderStats"'.
+
+176       providesTags: (result, error, spareId) => [
+          ~~~~~~~~~~~~
+
+  node_modules/@reduxjs/toolkit/dist/query/index.d.mts:2021:5
+    2021     providesTags?: ResultDescription<TagTypes, ResultType, QueryArg, BaseQueryError<BaseQuery>, BaseQueryMeta<BaseQuery>>;
+             ~~~~~~~~~~~~
+    The expected type comes from property 'providesTags' which is declared here on type 'Omit<EndpointDefinitionWithQuery<string, (args: any, api: any, extraOptions: any) => Promise<QueryReturnValue<unknown, FetchBaseQueryError, FetchBaseQueryMeta>>, { ...; }, unknown> & CommonEndpointDefinition<...> & { ...; } & { ...; } & QueryExtraOptions<...>, "type"> | Omit<...>'
+
+src/lib/api/qualityApi.ts:191:7 - error TS2322: Type '(result: { success: boolean; data: Certification; message: string; } | undefined, error: FetchBaseQueryError | undefined, certData: Certification) => { ...; }[]' is not assignable to type 'ResultDescription<"Company" | "User" | "Role" | "Customer" | "Supplier" | "InventoryItem" | "StockMovement" | "Warehouse" | "WarehouseStats" | "Batch" | "ProductionOrder" | "CustomerOrder" | ... 69 more ... | "EnhancedOrderStats", { ...; }, Certification, FetchBaseQueryError, FetchBaseQueryMeta | undefined> | undefi...'.
+  Type '(result: { success: boolean; data: Certification; message: string; } | undefined, error: FetchBaseQueryError | undefined, certData: Certification) => { ...; }[]' is not assignable to type 'GetResultDescriptionFn<"Company" | "User" | "Role" | "Customer" | "Supplier" | "InventoryItem" | "StockMovement" | "Warehouse" | "WarehouseStats" | "Batch" | "ProductionOrder" | "CustomerOrder" | ... 69 more ... | "EnhancedOrderStats", { ...; }, Certification, FetchBaseQueryError, FetchBaseQueryMeta | undefined>'.
+    Type '{ type: "Certification"; id: string; }[]' is not assignable to type 'TagDescriptionArray<"Company" | "User" | "Role" | "Customer" | "Supplier" | "InventoryItem" | "StockMovement" | "Warehouse" | "WarehouseStats" | "Batch" | "ProductionOrder" | "CustomerOrder" | ... 69 more ... | "EnhancedOrderStats">'.
+      Type '{ type: "Certification"; id: string; }' is not assignable to type 'TagDescription<"Company" | "User" | "Role" | "Customer" | "Supplier" | "InventoryItem" | "StockMovement" | "Warehouse" | "WarehouseStats" | "Batch" | "ProductionOrder" | "CustomerOrder" | ... 69 more ... | "EnhancedOrderStats"> | null | undefined'.
+        Type '{ type: "Certification"; id: string; }' is not assignable to type 'FullTagDescription<"Company" | "User" | "Role" | "Customer" | "Supplier" | "InventoryItem" | "StockMovement" | "Warehouse" | "WarehouseStats" | "Batch" | "ProductionOrder" | "CustomerOrder" | ... 69 more ... | "EnhancedOrderStats">'.
+          Types of property 'type' are incompatible.
+            Type '"Certification"' is not assignable to type '"Company" | "User" | "Role" | "Customer" | "Supplier" | "InventoryItem" | "StockMovement" | "Warehouse" | "WarehouseStats" | "Batch" | "ProductionOrder" | "CustomerOrder" | ... 69 more ... | "EnhancedOrderStats"'.
+
+191       invalidatesTags: (result, error, certData) => [
+          ~~~~~~~~~~~~~~~
+
+  node_modules/@reduxjs/toolkit/dist/query/index.d.mts:2385:5
+    2385     invalidatesTags?: ResultDescription<TagTypes, ResultType, QueryArg, BaseQueryError<BaseQuery>, BaseQueryMeta<BaseQuery>>;
+             ~~~~~~~~~~~~~~~
+    The expected type comes from property 'invalidatesTags' which is declared here on type 'Omit<EndpointDefinitionWithQuery<Certification, (args: any, api: any, extraOptions: any) => Promise<QueryReturnValue<unknown, FetchBaseQueryError, FetchBaseQueryMeta>>, { ...; }, unknown> & CommonEndpointDefinition<...> & { ...; } & { ...; } & MutationExtraOptions<...>, "type"> | Omit<...>'
+
+src/lib/api/qualityApi.ts:207:7 - error TS2322: Type '(result: { success: boolean; data: Certification; message: string; } | undefined, error: FetchBaseQueryError | undefined, { id, data }: { id: string; data: Partial<...>; }) => { ...; }[]' is not assignable to type 'ResultDescription<"Company" | "User" | "Role" | "Customer" | "Supplier" | "InventoryItem" | "StockMovement" | "Warehouse" | "WarehouseStats" | "Batch" | "ProductionOrder" | "CustomerOrder" | ... 69 more ... | "EnhancedOrderStats", { ...; }, { ...; }, FetchBaseQueryError, FetchBaseQueryMeta | undefined> | undefined'.
+  Type '(result: { success: boolean; data: Certification; message: string; } | undefined, error: FetchBaseQueryError | undefined, { id, data }: { id: string; data: Partial<...>; }) => { ...; }[]' is not assignable to type 'GetResultDescriptionFn<"Company" | "User" | "Role" | "Customer" | "Supplier" | "InventoryItem" | "StockMovement" | "Warehouse" | "WarehouseStats" | "Batch" | "ProductionOrder" | "CustomerOrder" | ... 69 more ... | "EnhancedOrderStats", { ...; }, { ...; }, FetchBaseQueryError, FetchBaseQueryMeta | undefined>'.
+    Type '{ type: "Certification"; id: string; }[]' is not assignable to type 'TagDescriptionArray<"Company" | "User" | "Role" | "Customer" | "Supplier" | "InventoryItem" | "StockMovement" | "Warehouse" | "WarehouseStats" | "Batch" | "ProductionOrder" | "CustomerOrder" | ... 69 more ... | "EnhancedOrderStats">'.
+      Type '{ type: "Certification"; id: string; }' is not assignable to type 'TagDescription<"Company" | "User" | "Role" | "Customer" | "Supplier" | "InventoryItem" | "StockMovement" | "Warehouse" | "WarehouseStats" | "Batch" | "ProductionOrder" | "CustomerOrder" | ... 69 more ... | "EnhancedOrderStats"> | null | undefined'.
+        Type '{ type: "Certification"; id: string; }' is not assignable to type 'FullTagDescription<"Company" | "User" | "Role" | "Customer" | "Supplier" | "InventoryItem" | "StockMovement" | "Warehouse" | "WarehouseStats" | "Batch" | "ProductionOrder" | "CustomerOrder" | ... 69 more ... | "EnhancedOrderStats">'.
+          Types of property 'type' are incompatible.
+            Type '"Certification"' is not assignable to type '"Company" | "User" | "Role" | "Customer" | "Supplier" | "InventoryItem" | "StockMovement" | "Warehouse" | "WarehouseStats" | "Batch" | "ProductionOrder" | "CustomerOrder" | ... 69 more ... | "EnhancedOrderStats"'.
+
+207       invalidatesTags: (result, error, { id, data }) => [
+          ~~~~~~~~~~~~~~~
+
+  node_modules/@reduxjs/toolkit/dist/query/index.d.mts:2385:5
+    2385     invalidatesTags?: ResultDescription<TagTypes, ResultType, QueryArg, BaseQueryError<BaseQuery>, BaseQueryMeta<BaseQuery>>;
+             ~~~~~~~~~~~~~~~
+    The expected type comes from property 'invalidatesTags' which is declared here on type 'Omit<EndpointDefinitionWithQuery<{ id: string; data: Partial<Certification>; }, (args: any, api: any, extraOptions: any) => Promise<QueryReturnValue<unknown, FetchBaseQueryError, FetchBaseQueryMeta>>, { ...; }, unknown> & CommonEndpointDefinition<...> & { ...; } & { ...; } & MutationExtraOptions<...>, "type"> | Omit...'
+
+src/lib/api/qualityApi.ts:223:7 - error TS2322: Type '(result: { success: boolean; message: string; } | undefined, error: FetchBaseQueryError | undefined, id: string) => { type: "Certification"; id: string; }[]' is not assignable to type 'ResultDescription<"Company" | "User" | "Role" | "Customer" | "Supplier" | "InventoryItem" | "StockMovement" | "Warehouse" | "WarehouseStats" | "Batch" | "ProductionOrder" | "CustomerOrder" | ... 69 more ... | "EnhancedOrderStats", { ...; }, string, FetchBaseQueryError, FetchBaseQueryMeta | undefined> | undefined'.
+  Type '(result: { success: boolean; message: string; } | undefined, error: FetchBaseQueryError | undefined, id: string) => { type: "Certification"; id: string; }[]' is not assignable to type 'GetResultDescriptionFn<"Company" | "User" | "Role" | "Customer" | "Supplier" | "InventoryItem" | "StockMovement" | "Warehouse" | "WarehouseStats" | "Batch" | "ProductionOrder" | "CustomerOrder" | ... 69 more ... | "EnhancedOrderStats", { ...; }, string, FetchBaseQueryError, FetchBaseQueryMeta | undefined>'.
+    Type '{ type: "Certification"; id: string; }[]' is not assignable to type 'TagDescriptionArray<"Company" | "User" | "Role" | "Customer" | "Supplier" | "InventoryItem" | "StockMovement" | "Warehouse" | "WarehouseStats" | "Batch" | "ProductionOrder" | "CustomerOrder" | ... 69 more ... | "EnhancedOrderStats">'.
+      Type '{ type: "Certification"; id: string; }' is not assignable to type 'TagDescription<"Company" | "User" | "Role" | "Customer" | "Supplier" | "InventoryItem" | "StockMovement" | "Warehouse" | "WarehouseStats" | "Batch" | "ProductionOrder" | "CustomerOrder" | ... 69 more ... | "EnhancedOrderStats"> | null | undefined'.
+        Type '{ type: "Certification"; id: string; }' is not assignable to type 'FullTagDescription<"Company" | "User" | "Role" | "Customer" | "Supplier" | "InventoryItem" | "StockMovement" | "Warehouse" | "WarehouseStats" | "Batch" | "ProductionOrder" | "CustomerOrder" | ... 69 more ... | "EnhancedOrderStats">'.
+          Types of property 'type' are incompatible.
+            Type '"Certification"' is not assignable to type '"Company" | "User" | "Role" | "Customer" | "Supplier" | "InventoryItem" | "StockMovement" | "Warehouse" | "WarehouseStats" | "Batch" | "ProductionOrder" | "CustomerOrder" | ... 69 more ... | "EnhancedOrderStats"'.
+
+223       invalidatesTags: (result, error, id) => [
+          ~~~~~~~~~~~~~~~
+
+  node_modules/@reduxjs/toolkit/dist/query/index.d.mts:2385:5
+    2385     invalidatesTags?: ResultDescription<TagTypes, ResultType, QueryArg, BaseQueryError<BaseQuery>, BaseQueryMeta<BaseQuery>>;
+             ~~~~~~~~~~~~~~~
+    The expected type comes from property 'invalidatesTags' which is declared here on type 'Omit<EndpointDefinitionWithQuery<string, (args: any, api: any, extraOptions: any) => Promise<QueryReturnValue<unknown, FetchBaseQueryError, FetchBaseQueryMeta>>, { ...; }, unknown> & CommonEndpointDefinition<...> & { ...; } & { ...; } & MutationExtraOptions<...>, "type"> | Omit<...>'
+
+src/lib/api/qualityApi.ts:238:7 - error TS2322: Type '(result: { success: boolean; data: ComplianceStandard[]; } | undefined, error: FetchBaseQueryError | undefined, spareId: string) => { ...; }[]' is not assignable to type 'ResultDescription<"Company" | "User" | "Role" | "Customer" | "Supplier" | "InventoryItem" | "StockMovement" | "Warehouse" | "WarehouseStats" | "Batch" | "ProductionOrder" | "CustomerOrder" | ... 69 more ... | "EnhancedOrderStats", { ...; }, string, FetchBaseQueryError, FetchBaseQueryMeta | undefined> | undefined'.
+  Type '(result: { success: boolean; data: ComplianceStandard[]; } | undefined, error: FetchBaseQueryError | undefined, spareId: string) => { ...; }[]' is not assignable to type 'GetResultDescriptionFn<"Company" | "User" | "Role" | "Customer" | "Supplier" | "InventoryItem" | "StockMovement" | "Warehouse" | "WarehouseStats" | "Batch" | "ProductionOrder" | "CustomerOrder" | ... 69 more ... | "EnhancedOrderStats", { ...; }, string, FetchBaseQueryError, FetchBaseQueryMeta | undefined>'.
+    Type '{ type: "ComplianceStandard"; id: string; }[]' is not assignable to type 'TagDescriptionArray<"Company" | "User" | "Role" | "Customer" | "Supplier" | "InventoryItem" | "StockMovement" | "Warehouse" | "WarehouseStats" | "Batch" | "ProductionOrder" | "CustomerOrder" | ... 69 more ... | "EnhancedOrderStats">'.
+      Type '{ type: "ComplianceStandard"; id: string; }' is not assignable to type 'TagDescription<"Company" | "User" | "Role" | "Customer" | "Supplier" | "InventoryItem" | "StockMovement" | "Warehouse" | "WarehouseStats" | "Batch" | "ProductionOrder" | "CustomerOrder" | ... 69 more ... | "EnhancedOrderStats"> | null | undefined'.
+        Type '{ type: "ComplianceStandard"; id: string; }' is not assignable to type 'FullTagDescription<"Company" | "User" | "Role" | "Customer" | "Supplier" | "InventoryItem" | "StockMovement" | "Warehouse" | "WarehouseStats" | "Batch" | "ProductionOrder" | "CustomerOrder" | ... 69 more ... | "EnhancedOrderStats">'.
+          Types of property 'type' are incompatible.
+            Type '"ComplianceStandard"' is not assignable to type '"Company" | "User" | "Role" | "Customer" | "Supplier" | "InventoryItem" | "StockMovement" | "Warehouse" | "WarehouseStats" | "Batch" | "ProductionOrder" | "CustomerOrder" | ... 69 more ... | "EnhancedOrderStats"'.
+
+238       providesTags: (result, error, spareId) => [
+          ~~~~~~~~~~~~
+
+  node_modules/@reduxjs/toolkit/dist/query/index.d.mts:2021:5
+    2021     providesTags?: ResultDescription<TagTypes, ResultType, QueryArg, BaseQueryError<BaseQuery>, BaseQueryMeta<BaseQuery>>;
+             ~~~~~~~~~~~~
+    The expected type comes from property 'providesTags' which is declared here on type 'Omit<EndpointDefinitionWithQuery<string, (args: any, api: any, extraOptions: any) => Promise<QueryReturnValue<unknown, FetchBaseQueryError, FetchBaseQueryMeta>>, { ...; }, unknown> & CommonEndpointDefinition<...> & { ...; } & { ...; } & QueryExtraOptions<...>, "type"> | Omit<...>'
+
+src/lib/api/qualityApi.ts:253:7 - error TS2322: Type '(result: { success: boolean; data: ComplianceStandard; message: string; } | undefined, error: FetchBaseQueryError | undefined, complianceData: ComplianceStandard) => { ...; }[]' is not assignable to type 'ResultDescription<"Company" | "User" | "Role" | "Customer" | "Supplier" | "InventoryItem" | "StockMovement" | "Warehouse" | "WarehouseStats" | "Batch" | "ProductionOrder" | "CustomerOrder" | ... 69 more ... | "EnhancedOrderStats", { ...; }, ComplianceStandard, FetchBaseQueryError, FetchBaseQueryMeta | undefined> | u...'.
+  Type '(result: { success: boolean; data: ComplianceStandard; message: string; } | undefined, error: FetchBaseQueryError | undefined, complianceData: ComplianceStandard) => { ...; }[]' is not assignable to type 'GetResultDescriptionFn<"Company" | "User" | "Role" | "Customer" | "Supplier" | "InventoryItem" | "StockMovement" | "Warehouse" | "WarehouseStats" | "Batch" | "ProductionOrder" | "CustomerOrder" | ... 69 more ... | "EnhancedOrderStats", { ...; }, ComplianceStandard, FetchBaseQueryError, FetchBaseQueryMeta | undefined>'.
+    Type '{ type: "ComplianceStandard"; id: string; }[]' is not assignable to type 'TagDescriptionArray<"Company" | "User" | "Role" | "Customer" | "Supplier" | "InventoryItem" | "StockMovement" | "Warehouse" | "WarehouseStats" | "Batch" | "ProductionOrder" | "CustomerOrder" | ... 69 more ... | "EnhancedOrderStats">'.
+      Type '{ type: "ComplianceStandard"; id: string; }' is not assignable to type 'TagDescription<"Company" | "User" | "Role" | "Customer" | "Supplier" | "InventoryItem" | "StockMovement" | "Warehouse" | "WarehouseStats" | "Batch" | "ProductionOrder" | "CustomerOrder" | ... 69 more ... | "EnhancedOrderStats"> | null | undefined'.
+        Type '{ type: "ComplianceStandard"; id: string; }' is not assignable to type 'FullTagDescription<"Company" | "User" | "Role" | "Customer" | "Supplier" | "InventoryItem" | "StockMovement" | "Warehouse" | "WarehouseStats" | "Batch" | "ProductionOrder" | "CustomerOrder" | ... 69 more ... | "EnhancedOrderStats">'.
+          Types of property 'type' are incompatible.
+            Type '"ComplianceStandard"' is not assignable to type '"Company" | "User" | "Role" | "Customer" | "Supplier" | "InventoryItem" | "StockMovement" | "Warehouse" | "WarehouseStats" | "Batch" | "ProductionOrder" | "CustomerOrder" | ... 69 more ... | "EnhancedOrderStats"'.
+
+253       invalidatesTags: (result, error, complianceData) => [
+          ~~~~~~~~~~~~~~~
+
+  node_modules/@reduxjs/toolkit/dist/query/index.d.mts:2385:5
+    2385     invalidatesTags?: ResultDescription<TagTypes, ResultType, QueryArg, BaseQueryError<BaseQuery>, BaseQueryMeta<BaseQuery>>;
+             ~~~~~~~~~~~~~~~
+    The expected type comes from property 'invalidatesTags' which is declared here on type 'Omit<EndpointDefinitionWithQuery<ComplianceStandard, (args: any, api: any, extraOptions: any) => Promise<QueryReturnValue<unknown, FetchBaseQueryError, FetchBaseQueryMeta>>, { ...; }, unknown> & CommonEndpointDefinition<...> & { ...; } & { ...; } & MutationExtraOptions<...>, "type"> | Omit<...>'
+
+src/lib/api/qualityApi.ts:269:7 - error TS2322: Type '(result: { success: boolean; data: ComplianceStandard; message: string; } | undefined, error: FetchBaseQueryError | undefined, { id, data }: { id: string; data: Partial<...>; }) => { ...; }[]' is not assignable to type 'ResultDescription<"Company" | "User" | "Role" | "Customer" | "Supplier" | "InventoryItem" | "StockMovement" | "Warehouse" | "WarehouseStats" | "Batch" | "ProductionOrder" | "CustomerOrder" | ... 69 more ... | "EnhancedOrderStats", { ...; }, { ...; }, FetchBaseQueryError, FetchBaseQueryMeta | undefined> | undefined'.
+  Type '(result: { success: boolean; data: ComplianceStandard; message: string; } | undefined, error: FetchBaseQueryError | undefined, { id, data }: { id: string; data: Partial<...>; }) => { ...; }[]' is not assignable to type 'GetResultDescriptionFn<"Company" | "User" | "Role" | "Customer" | "Supplier" | "InventoryItem" | "StockMovement" | "Warehouse" | "WarehouseStats" | "Batch" | "ProductionOrder" | "CustomerOrder" | ... 69 more ... | "EnhancedOrderStats", { ...; }, { ...; }, FetchBaseQueryError, FetchBaseQueryMeta | undefined>'.
+    Type '{ type: "ComplianceStandard"; id: string; }[]' is not assignable to type 'TagDescriptionArray<"Company" | "User" | "Role" | "Customer" | "Supplier" | "InventoryItem" | "StockMovement" | "Warehouse" | "WarehouseStats" | "Batch" | "ProductionOrder" | "CustomerOrder" | ... 69 more ... | "EnhancedOrderStats">'.
+      Type '{ type: "ComplianceStandard"; id: string; }' is not assignable to type 'TagDescription<"Company" | "User" | "Role" | "Customer" | "Supplier" | "InventoryItem" | "StockMovement" | "Warehouse" | "WarehouseStats" | "Batch" | "ProductionOrder" | "CustomerOrder" | ... 69 more ... | "EnhancedOrderStats"> | null | undefined'.
+        Type '{ type: "ComplianceStandard"; id: string; }' is not assignable to type 'FullTagDescription<"Company" | "User" | "Role" | "Customer" | "Supplier" | "InventoryItem" | "StockMovement" | "Warehouse" | "WarehouseStats" | "Batch" | "ProductionOrder" | "CustomerOrder" | ... 69 more ... | "EnhancedOrderStats">'.
+          Types of property 'type' are incompatible.
+            Type '"ComplianceStandard"' is not assignable to type '"Company" | "User" | "Role" | "Customer" | "Supplier" | "InventoryItem" | "StockMovement" | "Warehouse" | "WarehouseStats" | "Batch" | "ProductionOrder" | "CustomerOrder" | ... 69 more ... | "EnhancedOrderStats"'.
+
+269       invalidatesTags: (result, error, { id, data }) => [
+          ~~~~~~~~~~~~~~~
+
+  node_modules/@reduxjs/toolkit/dist/query/index.d.mts:2385:5
+    2385     invalidatesTags?: ResultDescription<TagTypes, ResultType, QueryArg, BaseQueryError<BaseQuery>, BaseQueryMeta<BaseQuery>>;
+             ~~~~~~~~~~~~~~~
+    The expected type comes from property 'invalidatesTags' which is declared here on type 'Omit<EndpointDefinitionWithQuery<{ id: string; data: Partial<ComplianceStandard>; }, (args: any, api: any, extraOptions: any) => Promise<QueryReturnValue<unknown, FetchBaseQueryError, FetchBaseQueryMeta>>, { ...; }, unknown> & CommonEndpointDefinition<...> & { ...; } & { ...; } & MutationExtraOptions<...>, "type"> |...'
+
+src/lib/api/qualityApi.ts:285:7 - error TS2322: Type '(result: { success: boolean; message: string; } | undefined, error: FetchBaseQueryError | undefined, id: string) => { type: "ComplianceStandard"; id: string; }[]' is not assignable to type 'ResultDescription<"Company" | "User" | "Role" | "Customer" | "Supplier" | "InventoryItem" | "StockMovement" | "Warehouse" | "WarehouseStats" | "Batch" | "ProductionOrder" | "CustomerOrder" | ... 69 more ... | "EnhancedOrderStats", { ...; }, string, FetchBaseQueryError, FetchBaseQueryMeta | undefined> | undefined'.
+  Type '(result: { success: boolean; message: string; } | undefined, error: FetchBaseQueryError | undefined, id: string) => { type: "ComplianceStandard"; id: string; }[]' is not assignable to type 'GetResultDescriptionFn<"Company" | "User" | "Role" | "Customer" | "Supplier" | "InventoryItem" | "StockMovement" | "Warehouse" | "WarehouseStats" | "Batch" | "ProductionOrder" | "CustomerOrder" | ... 69 more ... | "EnhancedOrderStats", { ...; }, string, FetchBaseQueryError, FetchBaseQueryMeta | undefined>'.
+    Type '{ type: "ComplianceStandard"; id: string; }[]' is not assignable to type 'TagDescriptionArray<"Company" | "User" | "Role" | "Customer" | "Supplier" | "InventoryItem" | "StockMovement" | "Warehouse" | "WarehouseStats" | "Batch" | "ProductionOrder" | "CustomerOrder" | ... 69 more ... | "EnhancedOrderStats">'.
+      Type '{ type: "ComplianceStandard"; id: string; }' is not assignable to type 'TagDescription<"Company" | "User" | "Role" | "Customer" | "Supplier" | "InventoryItem" | "StockMovement" | "Warehouse" | "WarehouseStats" | "Batch" | "ProductionOrder" | "CustomerOrder" | ... 69 more ... | "EnhancedOrderStats"> | null | undefined'.
+        Type '{ type: "ComplianceStandard"; id: string; }' is not assignable to type 'FullTagDescription<"Company" | "User" | "Role" | "Customer" | "Supplier" | "InventoryItem" | "StockMovement" | "Warehouse" | "WarehouseStats" | "Batch" | "ProductionOrder" | "CustomerOrder" | ... 69 more ... | "EnhancedOrderStats">'.
+          Types of property 'type' are incompatible.
+            Type '"ComplianceStandard"' is not assignable to type '"Company" | "User" | "Role" | "Customer" | "Supplier" | "InventoryItem" | "StockMovement" | "Warehouse" | "WarehouseStats" | "Batch" | "ProductionOrder" | "CustomerOrder" | ... 69 more ... | "EnhancedOrderStats"'.
+
+285       invalidatesTags: (result, error, id) => [
+          ~~~~~~~~~~~~~~~
+
+  node_modules/@reduxjs/toolkit/dist/query/index.d.mts:2385:5
+    2385     invalidatesTags?: ResultDescription<TagTypes, ResultType, QueryArg, BaseQueryError<BaseQuery>, BaseQueryMeta<BaseQuery>>;
+             ~~~~~~~~~~~~~~~
+    The expected type comes from property 'invalidatesTags' which is declared here on type 'Omit<EndpointDefinitionWithQuery<string, (args: any, api: any, extraOptions: any) => Promise<QueryReturnValue<unknown, FetchBaseQueryError, FetchBaseQueryMeta>>, { ...; }, unknown> & CommonEndpointDefinition<...> & { ...; } & { ...; } & MutationExtraOptions<...>, "type"> | Omit<...>'
+
+src/lib/api/qualityApi.ts:300:7 - error TS2322: Type '(result: { success: boolean; data: QualityAnalytics; } | undefined, error: FetchBaseQueryError | undefined, spareId: string) => { type: "QualityAnalytics"; id: string; }[]' is not assignable to type 'ResultDescription<"Company" | "User" | "Role" | "Customer" | "Supplier" | "InventoryItem" | "StockMovement" | "Warehouse" | "WarehouseStats" | "Batch" | "ProductionOrder" | "CustomerOrder" | ... 69 more ... | "EnhancedOrderStats", { ...; }, string, FetchBaseQueryError, FetchBaseQueryMeta | undefined> | undefined'.
+  Type '(result: { success: boolean; data: QualityAnalytics; } | undefined, error: FetchBaseQueryError | undefined, spareId: string) => { type: "QualityAnalytics"; id: string; }[]' is not assignable to type 'GetResultDescriptionFn<"Company" | "User" | "Role" | "Customer" | "Supplier" | "InventoryItem" | "StockMovement" | "Warehouse" | "WarehouseStats" | "Batch" | "ProductionOrder" | "CustomerOrder" | ... 69 more ... | "EnhancedOrderStats", { ...; }, string, FetchBaseQueryError, FetchBaseQueryMeta | undefined>'.
+    Type '{ type: "QualityAnalytics"; id: string; }[]' is not assignable to type 'TagDescriptionArray<"Company" | "User" | "Role" | "Customer" | "Supplier" | "InventoryItem" | "StockMovement" | "Warehouse" | "WarehouseStats" | "Batch" | "ProductionOrder" | "CustomerOrder" | ... 69 more ... | "EnhancedOrderStats">'.
+      Type '{ type: "QualityAnalytics"; id: string; }' is not assignable to type 'TagDescription<"Company" | "User" | "Role" | "Customer" | "Supplier" | "InventoryItem" | "StockMovement" | "Warehouse" | "WarehouseStats" | "Batch" | "ProductionOrder" | "CustomerOrder" | ... 69 more ... | "EnhancedOrderStats"> | null | undefined'.
+        Type '{ type: "QualityAnalytics"; id: string; }' is not assignable to type 'FullTagDescription<"Company" | "User" | "Role" | "Customer" | "Supplier" | "InventoryItem" | "StockMovement" | "Warehouse" | "WarehouseStats" | "Batch" | "ProductionOrder" | "CustomerOrder" | ... 69 more ... | "EnhancedOrderStats">'.
+          Types of property 'type' are incompatible.
+            Type '"QualityAnalytics"' is not assignable to type '"Company" | "User" | "Role" | "Customer" | "Supplier" | "InventoryItem" | "StockMovement" | "Warehouse" | "WarehouseStats" | "Batch" | "ProductionOrder" | "CustomerOrder" | ... 69 more ... | "EnhancedOrderStats"'.
+
+300       providesTags: (result, error, spareId) => [
+          ~~~~~~~~~~~~
+
+  node_modules/@reduxjs/toolkit/dist/query/index.d.mts:2021:5
+    2021     providesTags?: ResultDescription<TagTypes, ResultType, QueryArg, BaseQueryError<BaseQuery>, BaseQueryMeta<BaseQuery>>;
+             ~~~~~~~~~~~~
+    The expected type comes from property 'providesTags' which is declared here on type 'Omit<EndpointDefinitionWithQuery<string, (args: any, api: any, extraOptions: any) => Promise<QueryReturnValue<unknown, FetchBaseQueryError, FetchBaseQueryMeta>>, { ...; }, unknown> & CommonEndpointDefinition<...> & { ...; } & { ...; } & QueryExtraOptions<...>, "type"> | Omit<...>'
+
+src/lib/api/qualityApi.ts:314:7 - error TS2322: Type '(result: { success: boolean; data: QualityCheck[]; } | undefined, error: FetchBaseQueryError | undefined, days: number) => { type: "QualityCheck"; id: string; }[]' is not assignable to type 'ResultDescription<"Company" | "User" | "Role" | "Customer" | "Supplier" | "InventoryItem" | "StockMovement" | "Warehouse" | "WarehouseStats" | "Batch" | "ProductionOrder" | "CustomerOrder" | ... 69 more ... | "EnhancedOrderStats", { ...; }, number, FetchBaseQueryError, FetchBaseQueryMeta | undefined> | undefined'.
+  Type '(result: { success: boolean; data: QualityCheck[]; } | undefined, error: FetchBaseQueryError | undefined, days: number) => { type: "QualityCheck"; id: string; }[]' is not assignable to type 'GetResultDescriptionFn<"Company" | "User" | "Role" | "Customer" | "Supplier" | "InventoryItem" | "StockMovement" | "Warehouse" | "WarehouseStats" | "Batch" | "ProductionOrder" | "CustomerOrder" | ... 69 more ... | "EnhancedOrderStats", { ...; }, number, FetchBaseQueryError, FetchBaseQueryMeta | undefined>'.
+    Type '{ type: "QualityCheck"; id: string; }[]' is not assignable to type 'TagDescriptionArray<"Company" | "User" | "Role" | "Customer" | "Supplier" | "InventoryItem" | "StockMovement" | "Warehouse" | "WarehouseStats" | "Batch" | "ProductionOrder" | "CustomerOrder" | ... 69 more ... | "EnhancedOrderStats">'.
+      Type '{ type: "QualityCheck"; id: string; }' is not assignable to type 'TagDescription<"Company" | "User" | "Role" | "Customer" | "Supplier" | "InventoryItem" | "StockMovement" | "Warehouse" | "WarehouseStats" | "Batch" | "ProductionOrder" | "CustomerOrder" | ... 69 more ... | "EnhancedOrderStats"> | null | undefined'.
+        Type '{ type: "QualityCheck"; id: string; }' is not assignable to type 'FullTagDescription<"Company" | "User" | "Role" | "Customer" | "Supplier" | "InventoryItem" | "StockMovement" | "Warehouse" | "WarehouseStats" | "Batch" | "ProductionOrder" | "CustomerOrder" | ... 69 more ... | "EnhancedOrderStats">'.
+          Types of property 'type' are incompatible.
+            Type '"QualityCheck"' is not assignable to type '"Company" | "User" | "Role" | "Customer" | "Supplier" | "InventoryItem" | "StockMovement" | "Warehouse" | "WarehouseStats" | "Batch" | "ProductionOrder" | "CustomerOrder" | ... 69 more ... | "EnhancedOrderStats"'.
+
+314       providesTags: (result, error, days) => [
+          ~~~~~~~~~~~~
+
+  node_modules/@reduxjs/toolkit/dist/query/index.d.mts:2021:5
+    2021     providesTags?: ResultDescription<TagTypes, ResultType, QueryArg, BaseQueryError<BaseQuery>, BaseQueryMeta<BaseQuery>>;
+             ~~~~~~~~~~~~
+    The expected type comes from property 'providesTags' which is declared here on type 'Omit<EndpointDefinitionWithQuery<number, (args: any, api: any, extraOptions: any) => Promise<QueryReturnValue<unknown, FetchBaseQueryError, FetchBaseQueryMeta>>, { ...; }, unknown> & CommonEndpointDefinition<...> & { ...; } & { ...; } & QueryExtraOptions<...>, "type"> | Omit<...>'
+
+src/lib/api/qualityApi.ts:328:24 - error TS2322: Type '"Certification"' is not assignable to type '"Company" | "User" | "Role" | "Customer" | "Supplier" | "InventoryItem" | "StockMovement" | "Warehouse" | "WarehouseStats" | "Batch" | "ProductionOrder" | "CustomerOrder" | ... 69 more ... | "EnhancedOrderStats"'.
+
+328       providesTags: [{ type: 'Certification', id: 'EXPIRED' }],
+                           ~~~~
+
+src/lib/api/qualityApi.ts:340:7 - error TS2322: Type '(result: { success: boolean; data: Certification[]; } | undefined, error: FetchBaseQueryError | undefined, days: number) => { type: "Certification"; id: string; }[]' is not assignable to type 'ResultDescription<"Company" | "User" | "Role" | "Customer" | "Supplier" | "InventoryItem" | "StockMovement" | "Warehouse" | "WarehouseStats" | "Batch" | "ProductionOrder" | "CustomerOrder" | ... 69 more ... | "EnhancedOrderStats", { ...; }, number, FetchBaseQueryError, FetchBaseQueryMeta | undefined> | undefined'.
+  Type '(result: { success: boolean; data: Certification[]; } | undefined, error: FetchBaseQueryError | undefined, days: number) => { type: "Certification"; id: string; }[]' is not assignable to type 'GetResultDescriptionFn<"Company" | "User" | "Role" | "Customer" | "Supplier" | "InventoryItem" | "StockMovement" | "Warehouse" | "WarehouseStats" | "Batch" | "ProductionOrder" | "CustomerOrder" | ... 69 more ... | "EnhancedOrderStats", { ...; }, number, FetchBaseQueryError, FetchBaseQueryMeta | undefined>'.
+    Type '{ type: "Certification"; id: string; }[]' is not assignable to type 'TagDescriptionArray<"Company" | "User" | "Role" | "Customer" | "Supplier" | "InventoryItem" | "StockMovement" | "Warehouse" | "WarehouseStats" | "Batch" | "ProductionOrder" | "CustomerOrder" | ... 69 more ... | "EnhancedOrderStats">'.
+      Type '{ type: "Certification"; id: string; }' is not assignable to type 'TagDescription<"Company" | "User" | "Role" | "Customer" | "Supplier" | "InventoryItem" | "StockMovement" | "Warehouse" | "WarehouseStats" | "Batch" | "ProductionOrder" | "CustomerOrder" | ... 69 more ... | "EnhancedOrderStats"> | null | undefined'.
+        Type '{ type: "Certification"; id: string; }' is not assignable to type 'FullTagDescription<"Company" | "User" | "Role" | "Customer" | "Supplier" | "InventoryItem" | "StockMovement" | "Warehouse" | "WarehouseStats" | "Batch" | "ProductionOrder" | "CustomerOrder" | ... 69 more ... | "EnhancedOrderStats">'.
+          Types of property 'type' are incompatible.
+            Type '"Certification"' is not assignable to type '"Company" | "User" | "Role" | "Customer" | "Supplier" | "InventoryItem" | "StockMovement" | "Warehouse" | "WarehouseStats" | "Batch" | "ProductionOrder" | "CustomerOrder" | ... 69 more ... | "EnhancedOrderStats"'.
+
+340       providesTags: (result, error, days) => [
+          ~~~~~~~~~~~~
+
+  node_modules/@reduxjs/toolkit/dist/query/index.d.mts:2021:5
+    2021     providesTags?: ResultDescription<TagTypes, ResultType, QueryArg, BaseQueryError<BaseQuery>, BaseQueryMeta<BaseQuery>>;
+             ~~~~~~~~~~~~
+    The expected type comes from property 'providesTags' which is declared here on type 'Omit<EndpointDefinitionWithQuery<number, (args: any, api: any, extraOptions: any) => Promise<QueryReturnValue<unknown, FetchBaseQueryError, FetchBaseQueryMeta>>, { ...; }, unknown> & CommonEndpointDefinition<...> & { ...; } & { ...; } & QueryExtraOptions<...>, "type"> | Omit<...>'
+
+src/lib/api/qualityApi.ts:354:24 - error TS2322: Type '"QualityAnalytics"' is not assignable to type '"Company" | "User" | "Role" | "Customer" | "Supplier" | "InventoryItem" | "StockMovement" | "Warehouse" | "WarehouseStats" | "Batch" | "ProductionOrder" | "CustomerOrder" | ... 69 more ... | "EnhancedOrderStats"'.
+
+354       providesTags: [{ type: 'QualityAnalytics', id: 'OVERALL' }],
+                           ~~~~
+
+
+Found 104 errors in 6 files.
+
+Errors  Files
+    51  src/app/suppliers/[id]/page.tsx:75
+     2  src/app/suppliers/page.tsx:321
+     7  src/components/spares/MaintenanceManagement.tsx:420
+    15  src/lib/api/compatibilityApi.ts:113
+    12  src/lib/api/maintenanceApi.ts:93
+    17  src/lib/api/qualityApi.ts:114
+rim@rims-MacBook-Pro client % 

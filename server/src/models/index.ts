@@ -12,7 +12,7 @@ import ProductionOrder from './ProductionOrder';
 import CustomerOrder from './CustomerOrder';
 import Customer from './Customer';
 import CustomerVisit from './CustomerVisit';
-import Supplier from './Supplier';
+import { SpareSupplier } from './Supplier';
 import FinancialTransaction from './FinancialTransaction';
 import AuditLog from './AuditLog';
 import Role from './Role';
@@ -27,7 +27,7 @@ import BusinessAnalytics from './BusinessAnalytics';
 import BoilerMonitoring from './BoilerMonitoring';
 import ElectricityMonitoring from './ElectricityMonitoring';
 import Hospitality from './Hospitality';
-import Dispatch from './Dispatch'; // ✅ FIXED: TypeScript errors resolved
+import { Dispatch } from './Dispatch'; // ✅ FIXED: TypeScript errors resolved
 import Report from './Report';
 import Spare from './Spare';
 import ProductionDashboard from './ProductionDashboard';
@@ -44,7 +44,7 @@ export {
   CustomerOrder,
   Customer,
   CustomerVisit,
-  Supplier,
+  SpareSupplier,
   FinancialTransaction,
   AuditLog,
   Role,
@@ -77,7 +77,7 @@ export default {
   CustomerOrder,
   Customer,
   CustomerVisit,
-  Supplier,
+  SpareSupplier,
   FinancialTransaction,
   AuditLog,
   Role,
@@ -116,7 +116,7 @@ export const registerModels = () => {
     'CustomerOrder',
     'Customer',
     'CustomerVisit',
-    'Supplier',
+    'SpareSupplier',
     'FinancialTransaction',
     'AuditLog',
     'Role',

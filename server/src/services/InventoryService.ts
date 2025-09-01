@@ -20,7 +20,12 @@ export class InventoryService extends BaseService<IInventoryItem> {
       // Validate item data
       this.validateInventoryItemData(itemData);
 
-      // Check if item code already exists in the company
+      // Generate item code if not provided
+      if (!itemData.itemCode) {
+        itemData.itemCode = await this.generateItemCode(itemData.companyId!.toString(), itemData.itemName!);
+      }
+
+      // Check if item code already exists in the company (only after generating itemCode)
       const existingItem = await this.findOne({ 
         itemCode: itemData.itemCode?.toUpperCase(),
         companyId: itemData.companyId
@@ -30,15 +35,22 @@ export class InventoryService extends BaseService<IInventoryItem> {
         throw new AppError('Item code already exists in this company', 400);
       }
 
-      // Generate item code if not provided
-      if (!itemData.itemCode) {
-        itemData.itemCode = await this.generateItemCode(itemData.companyId!.toString(), itemData.itemName!);
+      // Generate company item code if not provided
+      if (!itemData.companyItemCode) {
+        // Get company code from companyId
+        const Company = (await import('@/models')).Company;
+        const company = await Company.findById(itemData.companyId);
+        if (!company) {
+          throw new AppError('Company not found', 400);
+        }
+        itemData.companyItemCode = `${company.companyCode}-${itemData.itemCode}`;
       }
 
       // Set default values
       const itemToCreate = {
         ...itemData,
         itemCode: itemData.itemCode.toUpperCase(),
+        companyItemCode: itemData.companyItemCode.toUpperCase(),
         stock: {
           ...itemData.stock,
           currentStock: itemData.stock?.currentStock || 0,
@@ -59,6 +71,15 @@ export class InventoryService extends BaseService<IInventoryItem> {
           costPrice: itemData.pricing?.costPrice || 0,
           sellingPrice: itemData.pricing?.sellingPrice || 0,
           mrp: itemData.pricing?.mrp || 0
+        },
+        tracking: {
+          createdBy: createdBy ? new Types.ObjectId(createdBy) : undefined,
+          lastModifiedBy: createdBy ? new Types.ObjectId(createdBy) : undefined,
+          lastStockUpdate: new Date(),
+          lastMovementDate: new Date(),
+          totalInward: 0,
+          totalOutward: 0,
+          totalAdjustments: 0
         }
       };
 

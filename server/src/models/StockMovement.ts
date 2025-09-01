@@ -50,7 +50,7 @@ const StockMovementSchema = new Schema<IStockMovement>({
   referenceDocument: {
     documentType: { 
       type: String, 
-      enum: ['purchase_order', 'sales_order', 'production_order', 'transfer_note', 'adjustment_note', 'return_note'] 
+      enum: ['manual', 'purchase_order', 'sales_order', 'production_order', 'transfer_note', 'adjustment_note', 'return_note'] 
     },
     documentId: { type: Schema.Types.ObjectId },
     documentNumber: { type: String }

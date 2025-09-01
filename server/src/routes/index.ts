@@ -14,6 +14,7 @@ import v1InventoryRoutes from './v1/inventory';
 import v1ProductionRoutes from './v1/production';
 import v1CustomerOrdersRoutes from './v1/customer-orders';
 import v1PurchaseOrdersRoutes from './v1/purchase-orders';
+import v1PurchaseRoutes from './v1/purchase';
 import v1InvoicesRoutes from './v1/invoices';
 import v1WarehousesRoutes from './v1/warehouses';
 import v1StockMovementsRoutes from './v1/stock-movements';
@@ -25,12 +26,14 @@ import v1AuditLogsRoutes from './v1/audit-logs';
 import v1BusinessAnalyticsRoutes from './v1/business-analytics';
 import v1AnalyticsRoutes from './v1/analytics';
 import v1SalesAnalyticsRoutes from './v1/salesAnalytics';
+import v1SalesRoutes from './v1/sales';
 import v1PurchaseAnalyticsRoutes from './v1/purchaseAnalytics';
 import v1ProductionTrackingRoutes from './v1/productionTracking';
 import v1BoilerMonitoringRoutes from './v1/boiler-monitoring';
 import v1ElectricityMonitoringRoutes from './v1/electricity-monitoring';
 import v1HospitalityRoutes from './v1/hospitality';
-import v1DispatchRoutes from './v1/dispatch'; // Temporarily commented out due to Dispatch model TypeScript errors
+import v1DispatchRoutes from './v1/dispatch';
+import v1EnhancedDispatchRoutes from './v1/enhanced-dispatch';
 import v1ReportsRoutes from './v1/reports';
 import v1SparesRoutes from './v1/spares';
 import v1AttendanceRoutes from './v1/attendance';
@@ -42,6 +45,12 @@ import v1AdvancedReportsRoutes from './v1/advanced-reports';
 import v1DocumentManagementRoutes from './v1/document-management';
 import v1DashboardRoutes from './v1/dashboard';
 import v1OrdersRoutes from './v1/orders';
+
+// Import new feature routes
+import maintenanceRoutes from './maintenance';
+import qualityRoutes from './quality';
+import compatibilityRoutes from './compatibility';
+import suppliersRoutes from './suppliers';
 
 const router = Router();
 
@@ -103,6 +112,7 @@ router.get('/info', (req, res) => {
       'GET /api/v1/business-analytics - Business analytics (auth required)',
       'GET /api/v1/analytics - Comprehensive analytics & reports (auth required)',
       'GET /api/v1/sales-analytics - Customer-wise sales analytics (auth required)',
+      'GET /api/v1/sales - Comprehensive sales management (auth required)',
       'GET /api/v1/purchase-analytics - Supplier-wise purchase analytics (auth required)',
       'GET /api/v1/production-tracking - Real-time production tracking (auth required)',
       'GET /api/v1/boiler-monitoring - Boiler monitoring (auth required)',
@@ -155,11 +165,19 @@ router.use('/production', v1ProductionRoutes);
 router.use('/warehouses', v1WarehousesRoutes);
 router.use('/stock-movements', v1StockMovementsRoutes);
 router.use('/spares', v1SparesRoutes);
+
+// New feature routes
+router.use('/maintenance', maintenanceRoutes);
+router.use('/quality', qualityRoutes);
+router.use('/compatibility', compatibilityRoutes);
+router.use('/suppliers-management', suppliersRoutes);
+
 router.use('/batches', v1BatchesRoutes);
 
 // Orders and financial
 router.use('/customer-orders', v1CustomerOrdersRoutes);
 router.use('/purchase-orders', v1PurchaseOrdersRoutes);
+router.use('/purchase', v1PurchaseRoutes);
 router.use('/invoices', v1InvoicesRoutes);
 router.use('/quotations', v1QuotationsRoutes);
 router.use('/financial-transactions', v1FinancialTransactionsRoutes);
@@ -179,6 +197,7 @@ router.use('/electricity-monitoring', v1ElectricityMonitoringRoutes);
 router.use('/business-analytics', v1BusinessAnalyticsRoutes);
 router.use('/analytics', v1AnalyticsRoutes);
 router.use('/sales-analytics', v1SalesAnalyticsRoutes);
+router.use('/sales', v1SalesRoutes);
 router.use('/purchase-analytics', v1PurchaseAnalyticsRoutes);
 router.use('/production-tracking', v1ProductionTrackingRoutes);
 router.use('/security-logs', v1SecurityLogsRoutes);
@@ -186,7 +205,8 @@ router.use('/audit-logs', v1AuditLogsRoutes);
 
 // Specialized services
 router.use('/hospitality', v1HospitalityRoutes);
-router.use('/dispatch', v1DispatchRoutes); 
+router.use('/dispatch', v1DispatchRoutes);
+router.use('/enhanced-dispatch', v1EnhancedDispatchRoutes);
 router.use('/reports', v1ReportsRoutes);
 
 // Advanced features

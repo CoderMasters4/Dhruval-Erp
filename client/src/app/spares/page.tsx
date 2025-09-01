@@ -37,6 +37,7 @@ import {
   SpareDetails,
   StockUpdateModal
 } from '@/components/spares';
+import { ClientOnly } from '@/components/ui/ClientOnly';
 
 export default function SparesPage() {
   const user = useSelector(selectCurrentUser);
@@ -178,95 +179,99 @@ export default function SparesPage() {
     }
   ];
 
+
+
   return (
     <AppLayout>
-      <div className="space-y-6">
-        {/* Page Header */}
-        <PageHeader
-          title="Spares Management"
-          description="Manage your spare parts inventory and stock levels"
-        >
-          <Button onClick={() => openModal('createSpare')} className="flex items-center space-x-2">
-            <Plus className="w-4 h-4" />
-            <span>Add Spare</span>
-          </Button>
-        </PageHeader>
+      <ClientOnly>
+        <div className="space-y-6">
+          {/* Page Header */}
+          <PageHeader
+            title="Spares Management"
+            description="Manage your spare parts inventory and stock levels"
+          >
+            <Button onClick={() => openModal('createSpare')} className="flex items-center space-x-2">
+              <Plus className="w-4 h-4" />
+              <span>Add Spare</span>
+            </Button>
+          </PageHeader>
 
-        {/* Stats Cards */}
-        <StatsCards
-          cards={statsCards}
-        />
-
-        {/* Spares List */}
-        <SparesList
-          spares={sparesData?.data?.spares || []}
-          total={sparesData?.data?.total || 0}
-          page={sparesData?.data?.page || 1}
-          limit={sparesData?.data?.limit || 20}
-          totalPages={sparesData?.data?.totalPages || 1}
-          isLoading={sparesLoading}
-          filters={filters}
-          onFiltersChange={setFilters}
-          onCreateSpare={() => openModal('createSpare')}
-          onEditSpare={(spare) => openModal('editSpare', spare)}
-          onDeleteSpare={(spare) => openModal('deleteSpare', spare)}
-          onViewSpare={(spare) => openModal('viewSpare', spare)}
-          onUpdateStock={(spare) => openModal('updateStock', spare)}
-        />
-
-        {/* Modals */}
-        <SpareForm
-          isOpen={modals.createSpare}
-          onClose={() => closeModal('createSpare')}
-          onSubmit={handleCreateSpare}
-          isLoading={createLoading}
-          isEdit={false}
-        />
-
-        <SpareForm
-          isOpen={modals.editSpare}
-          onClose={() => closeModal('editSpare')}
-          onSubmit={handleUpdateSpare}
-          initialData={selectedSpare || undefined}
-          isLoading={updateLoading}
-          isEdit={true}
-        />
-
-        {selectedSpare && (
-          <SpareDetails
-            spare={selectedSpare}
-            isOpen={modals.viewSpare}
-            onClose={() => closeModal('viewSpare')}
-            onEdit={() => {
-              closeModal('viewSpare');
-              openModal('editSpare', selectedSpare);
-            }}
-            onUpdateStock={() => {
-              closeModal('viewSpare');
-              openModal('updateStock', selectedSpare);
-            }}
+          {/* Stats Cards */}
+          <StatsCards
+            cards={statsCards}
           />
-        )}
 
-        <StockUpdateModal
-          isOpen={modals.updateStock}
-          onClose={() => closeModal('updateStock')}
-          onSubmit={handleStockUpdate}
-          spare={selectedSpare}
-          isLoading={stockUpdateLoading}
-        />
+          {/* Spares List */}
+          <SparesList
+            spares={sparesData?.data?.spares || []}
+            total={sparesData?.data?.total || 0}
+            page={sparesData?.data?.page || 1}
+            limit={sparesData?.data?.limit || 20}
+            totalPages={sparesData?.data?.totalPages || 1}
+            isLoading={sparesLoading}
+            filters={filters}
+            onFiltersChange={setFilters}
+            onCreateSpare={() => openModal('createSpare')}
+            onEditSpare={(spare) => openModal('editSpare', spare)}
+            onDeleteSpare={(spare) => openModal('deleteSpare', spare)}
+            onViewSpare={(spare) => openModal('viewSpare', spare)}
+            onUpdateStock={(spare) => openModal('updateStock', spare)}
+          />
 
-        <ConfirmModal
-          isOpen={modals.deleteSpare}
-          onClose={() => closeModal('deleteSpare')}
-          onConfirm={handleDeleteSpare}
-          title="Delete Spare"
-          message={`Are you sure you want to delete "${selectedSpare?.spareName}"? This action cannot be undone.`}
-          confirmText="Delete"
-          isLoading={deleteLoading}
-          type="danger"
-        />
-      </div>
-    </AppLayout>
-  );
+                  {/* Modals */}
+          <SpareForm
+            isOpen={modals.createSpare}
+            onClose={() => closeModal('createSpare')}
+            onSubmit={handleCreateSpare}
+            isLoading={createLoading}
+            isEdit={false}
+          />
+
+          <SpareForm
+            isOpen={modals.editSpare}
+            onClose={() => closeModal('editSpare')}
+            onSubmit={handleUpdateSpare}
+            initialData={selectedSpare || undefined}
+            isLoading={updateLoading}
+            isEdit={true}
+          />
+
+          {selectedSpare && (
+            <SpareDetails
+              spare={selectedSpare}
+              isOpen={modals.viewSpare}
+              onClose={() => closeModal('viewSpare')}
+              onEdit={() => {
+                closeModal('viewSpare');
+                openModal('editSpare', selectedSpare);
+              }}
+              onUpdateStock={() => {
+                closeModal('viewSpare');
+                openModal('updateStock', selectedSpare);
+              }}
+            />
+          )}
+
+          <StockUpdateModal
+            isOpen={modals.updateStock}
+            onClose={() => closeModal('updateStock')}
+            onSubmit={handleStockUpdate}
+            spare={selectedSpare}
+            isLoading={stockUpdateLoading}
+          />
+
+          <ConfirmModal
+            isOpen={modals.deleteSpare}
+            onClose={() => closeModal('deleteSpare')}
+            onConfirm={handleDeleteSpare}
+            title="Delete Spare"
+            message={`Are you sure you want to delete "${selectedSpare?.spareName}"? This action cannot be undone.`}
+            confirmText="Delete"
+            isLoading={deleteLoading}
+            type="danger"
+          />
+        </div>
+        </ClientOnly>
+      </AppLayout>
+    );
 }

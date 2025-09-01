@@ -1,4 +1,4 @@
-import { Types } from 'mongoose';
+import { Types, FilterQuery } from 'mongoose';
 import { BaseService } from './BaseService';
 import { StockMovement } from '../models';
 import { IStockMovement } from '../types/models';
@@ -15,12 +15,18 @@ export class StockMovementService extends BaseService<IStockMovement> {
    */
   async createStockMovement(movementData: Partial<IStockMovement>, createdBy?: string): Promise<IStockMovement> {
     try {
+      console.log('StockMovementService: Starting to create stock movement');
+      console.log('StockMovementService: Input data:', movementData);
+      console.log('StockMovementService: CreatedBy:', createdBy);
+      
       // Validate movement data
       this.validateMovementData(movementData);
+      console.log('StockMovementService: Validation passed');
 
       // Generate movement number if not provided
       if (!movementData.movementNumber) {
         movementData.movementNumber = await this.generateMovementNumber(movementData.companyId!.toString());
+        console.log('StockMovementService: Generated movement number:', movementData.movementNumber);
       }
 
       const movement = await this.create({
@@ -30,6 +36,7 @@ export class StockMovementService extends BaseService<IStockMovement> {
         updatedAt: new Date()
       }, createdBy);
 
+      console.log('StockMovementService: Movement created successfully:', movement._id);
       logger.info('Stock movement created successfully', { 
         movementId: movement._id, 
         movementNumber: movement.movementNumber,
@@ -41,7 +48,64 @@ export class StockMovementService extends BaseService<IStockMovement> {
 
       return movement;
     } catch (error) {
+      console.error('StockMovementService: Error creating stock movement:', error);
+      console.error('StockMovementService: Error details:', {
+        message: error.message,
+        stack: error.stack,
+        name: error.name,
+        code: error.code
+      });
       logger.error('Error creating stock movement', { error, movementData, createdBy });
+      throw error;
+    }
+  }
+
+  /**
+   * Find many documents with pagination
+   */
+  async findManyWithPagination(
+    filter: FilterQuery<IStockMovement>, 
+    options: any = {}
+  ): Promise<{ documents: IStockMovement[]; pagination: any }> {
+    try {
+      const page = options.page || 1;
+      const limit = options.limit || 10;
+      const skip = (page - 1) * limit;
+      
+      // Get total count
+      const total = await this.count(filter);
+      
+      // Get documents with pagination
+      let query = this.model.find(filter)
+        .sort(options.sort || { movementDate: -1 })
+        .skip(skip)
+        .limit(limit);
+      
+      if (options.populate) {
+        options.populate.forEach((path: string) => {
+          query = query.populate(path);
+        });
+      }
+      
+      const documents = await query.exec();
+      
+      const totalPages = Math.ceil(total / limit);
+      const hasNext = page < totalPages;
+      const hasPrev = page > 1;
+      
+      return {
+        documents,
+        pagination: {
+          page,
+          limit,
+          total,
+          totalPages,
+          hasNext,
+          hasPrev
+        }
+      };
+    } catch (error) {
+      logger.error('Error finding stock movements with pagination', { error, filter, options });
       throw error;
     }
   }
@@ -263,16 +327,23 @@ export class StockMovementService extends BaseService<IStockMovement> {
     const today = new Date();
     const year = today.getFullYear();
     const month = (today.getMonth() + 1).toString().padStart(2, '0');
+    const day = today.getDate().toString().padStart(2, '0');
+    const hours = today.getHours().toString().padStart(2, '0');
+    const minutes = today.getMinutes().toString().padStart(2, '0');
+    const seconds = today.getSeconds().toString().padStart(2, '0');
+    const milliseconds = today.getMilliseconds().toString().padStart(3, '0');
     
+    // Get count for this specific day to avoid conflicts
     const count = await this.count({ 
       companyId: new Types.ObjectId(companyId),
       movementDate: {
-        $gte: new Date(year, today.getMonth(), 1),
-        $lt: new Date(year, today.getMonth() + 1, 1)
+        $gte: new Date(year, today.getMonth(), today.getDate()),
+        $lt: new Date(year, today.getMonth(), today.getDate() + 1)
       }
     });
 
-    return `MOV${year}${month}${(count + 1).toString().padStart(4, '0')}`;
+    // Create a more unique number with timestamp components
+    return `MOV${year}${month}${day}${hours}${minutes}${seconds}${milliseconds}${(count + 1).toString().padStart(3, '0')}`;
   }
 
   /**

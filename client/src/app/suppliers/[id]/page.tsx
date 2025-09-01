@@ -72,15 +72,11 @@ export default function SupplierDetailsPage() {
     isLoading: ordersLoading,
     error: ordersError,
     refetch: refetchOrders
-  } = useGetSupplierOrdersQuery({
-    supplierId,
-    page: ordersPage,
-    limit: ordersLimit
-  })
+  } = useGetSupplierOrdersQuery(supplierId)
 
   const supplier = supplierData?.data
   const orders = ordersData?.data || []
-  const ordersPagination = ordersData?.pagination
+  const ordersPagination = null
 
   // Helper functions
   const formatDate = (dateString: string | null | undefined) => {
@@ -636,19 +632,7 @@ export default function SupplierDetailsPage() {
                   </table>
                 </div>
 
-                {/* Orders Pagination */}
-                {ordersPagination && ordersPagination.pages > 1 && (
-                  <div className="p-6 border-t border-gray-200">
-                    <Pagination
-                      currentPage={ordersPagination.page}
-                      totalPages={ordersPagination.pages}
-                      totalItems={ordersPagination.total}
-                      itemsPerPage={ordersPagination.limit}
-                      onPageChange={setOrdersPage}
-                      onLimitChange={setOrdersLimit}
-                    />
-                  </div>
-                )}
+                {/* Orders Pagination - Removed since ordersPagination is null */}
               </>
             )}
           </div>
