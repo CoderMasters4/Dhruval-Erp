@@ -37,8 +37,8 @@ export const generateAccessToken = (payload: JWTPayload): string => {
   };
   
   const token = jwt.sign(accessPayload, config.JWT_SECRET, {
-    issuer: 'dhruval-erp',
-    audience: 'dhruval-erp-users'
+    issuer: config.JWT_ISSUER,
+    audience: config.JWT_AUDIENCE
   });
   
   console.log('JWT: Access token generated successfully, length:', token.length);
@@ -59,8 +59,8 @@ export const generateRefreshToken = (payload: JWTPayload): string => {
   console.log('JWT: Generating refresh token for user:', payload.userId);
   
   const token = jwt.sign(refreshPayload, config.JWT_REFRESH_SECRET, {
-    issuer: 'dhruval-erp',
-    audience: 'dhruval-erp-users'
+    issuer: config.JWT_ISSUER,
+    audience: config.JWT_AUDIENCE
   });
   
   console.log('JWT: Refresh token generated successfully, length:', token.length);
@@ -104,8 +104,8 @@ export const verifyAccessToken = (token: string): JWTPayload => {
     console.log('JWT: Verifying access token, length:', token.length);
     
     const decoded = jwt.verify(token, config.JWT_SECRET, {
-      issuer: 'dhruval-erp',
-      audience: 'dhruval-erp-users'
+      issuer: config.JWT_ISSUER,
+      audience: config.JWT_AUDIENCE
     }) as JWTPayload;
     
     console.log('JWT: Access token verified successfully for user:', decoded.userId);
@@ -124,8 +124,8 @@ export const verifyRefreshToken = async (token: string): Promise<RefreshTokenPay
     console.log('JWT: Verifying refresh token, length:', token.length);
     
     const decoded = jwt.verify(token, config.JWT_REFRESH_SECRET, {
-      issuer: 'dhruval-erp',
-      audience: 'dhruval-erp-users'
+      issuer: config.JWT_ISSUER,
+      audience: config.JWT_AUDIENCE
     }) as RefreshTokenPayload;
     
     console.log('JWT: Refresh token verified successfully for user:', decoded.userId);
@@ -151,18 +151,18 @@ export const setTokenCookies = (res: Response, tokens: TokenPair): void => {
     cookieOptions: {
       httpOnly: true,
       secure: isProduction,
-      sameSite: isLocalhost ? 'lax' : 'strict',
+      sameSite: isLocalhost ? 'lax' : 'none', // Use 'none' for production cross-domain
       path: '/'
     }
   });
   
-  // For localhost development, we need to be more permissive with cookies
+  // Cookie options based on environment
   const cookieOptions = {
     httpOnly: true,
     secure: isProduction, // Only use secure in production (HTTPS)
-    sameSite: (isLocalhost ? 'lax' : 'strict') as 'lax' | 'strict', // Use 'lax' for localhost development
+    sameSite: (isLocalhost ? 'lax' : 'none') as 'lax' | 'none', // Use 'none' for production cross-domain
     path: '/',
-    domain: undefined, // Let browser set domain automatically
+    domain: isProduction ? config.COOKIE_DOMAIN : undefined, // Use configured domain in production
     maxAge: undefined // Let browser handle expiration
   };
   
@@ -202,17 +202,17 @@ export const clearTokenCookies = (res: Response): void => {
   res.clearCookie('accessToken', {
     httpOnly: true,
     secure: isProduction,
-    sameSite: isLocalhost ? 'lax' : 'strict',
+    sameSite: isLocalhost ? 'lax' : 'none',
     path: '/',
-    domain: isLocalhost ? undefined : undefined
+    domain: isProduction ? config.COOKIE_DOMAIN : undefined
   });
 
   res.clearCookie('refreshToken', {
     httpOnly: true,
     secure: isProduction,
-    sameSite: isLocalhost ? 'lax' : 'strict',
+    sameSite: isLocalhost ? 'lax' : 'none',
     path: '/',
-    domain: isLocalhost ? undefined : undefined
+    domain: isProduction ? config.COOKIE_DOMAIN : undefined
   });
 };
 

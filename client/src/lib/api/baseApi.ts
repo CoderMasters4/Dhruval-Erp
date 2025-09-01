@@ -97,7 +97,10 @@ const baseQueryWithReauth = async (args: any, api: any, extraOptions: any) => {
 
     try {
       // Try to get a new token using baseQueryWithoutAuth (no Authorization header)
-      const refreshResult = await baseQueryWithoutAuth('/auth/refresh-token', api, extraOptions)
+      const refreshResult = await baseQueryWithoutAuth({
+        url: '/auth/refresh-token',
+        method: 'POST'
+      }, api, extraOptions)
 
       if (refreshResult?.data) {
         console.log('baseApi: Token refresh successful, retrying original request...')
