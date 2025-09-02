@@ -433,7 +433,6 @@ export function CreatePurchaseOrderModal({ onSuccess, open: controlledOpen, onOp
                       <SelectValue placeholder="Select Company" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">Select Company</SelectItem>
                       <SelectItem value="company1">Company 1</SelectItem>
                       <SelectItem value="company2">Company 2</SelectItem>
                     </SelectContent>

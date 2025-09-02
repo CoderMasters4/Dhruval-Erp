@@ -347,7 +347,7 @@ const BatchPage = () => {
                     <td className="p-3">
                       <div className="space-y-2">
                         <Badge className={getStatusColor(batch.status)}>
-                          {batch.status.replace('_', ' ')}
+                          {batch.status?.replace('_', ' ') || 'Unknown Status'}
                         </Badge>
                         
                         {/* Progress Bar */}

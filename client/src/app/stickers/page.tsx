@@ -306,7 +306,7 @@ const StickerPage = () => {
                     </td>
                     <td className="border border-gray-200 px-4 py-2">
                       <Badge className={getTypeColor(sticker.type)}>
-                        {sticker.type.replace('_', ' ')}
+                        {sticker.type?.replace('_', ' ') || 'Unknown Type'}
                       </Badge>
                     </td>
                     <td className="border border-gray-200 px-4 py-2">

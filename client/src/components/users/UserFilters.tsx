@@ -15,6 +15,8 @@ interface UserFilters {
   companyId: string
   sortBy: string
   sortOrder: 'asc' | 'desc'
+  permissionModule: string
+  permissionAction: string
 }
 
 interface UserFiltersProps {
@@ -76,7 +78,7 @@ export default function UserFilters({
       </div>
 
       {/* Filters */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-6 gap-4">
         {/* Search */}
         <div>
           <label className="block text-sm font-semibold text-gray-700 mb-2">
@@ -108,9 +110,14 @@ export default function UserFilters({
           >
             <option value="all">All Roles</option>
             <option value="super_admin">Super Admin</option>
-            <option value="admin">Admin</option>
+            <option value="owner">Owner</option>
             <option value="manager">Manager</option>
-            <option value="user">User</option>
+            <option value="production_manager">Production Manager</option>
+            <option value="accountant">Accountant</option>
+            <option value="sales_executive">Sales Executive</option>
+            <option value="security_guard">Security Guard</option>
+            <option value="operator">Operator</option>
+            <option value="helper">Helper</option>
           </select>
         </div>
 
@@ -128,6 +135,51 @@ export default function UserFilters({
             <option value="all">All Status</option>
             <option value="active">Active</option>
             <option value="inactive">Inactive</option>
+          </select>
+        </div>
+
+        {/* Permission Module Filter */}
+        <div>
+          <label className="block text-sm font-semibold text-gray-700 mb-2">
+            Permission Module
+          </label>
+          <select
+            value={filters.permissionModule}
+            onChange={(e) => onFiltersChange({ permissionModule: e.target.value })}
+            disabled={isLoading}
+            className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-all duration-200 disabled:bg-gray-50 disabled:cursor-not-allowed"
+          >
+            <option value="all">All Modules</option>
+            <option value="inventory">Inventory</option>
+            <option value="production">Production</option>
+            <option value="orders">Orders</option>
+            <option value="financial">Financial</option>
+            <option value="security">Security</option>
+            <option value="hr">Human Resources</option>
+            <option value="admin">Administration</option>
+          </select>
+        </div>
+
+        {/* Permission Action Filter */}
+        <div>
+          <label className="block text-sm font-semibold text-gray-700 mb-2">
+            Permission Action
+          </label>
+          <select
+            value={filters.permissionAction}
+            onChange={(e) => onFiltersChange({ permissionAction: e.target.value })}
+            disabled={isLoading}
+            className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-all duration-200 disabled:bg-gray-50 disabled:cursor-not-allowed"
+          >
+            <option value="all">All Actions</option>
+            <option value="view">View</option>
+            <option value="create">Create</option>
+            <option value="edit">Edit</option>
+            <option value="delete">Delete</option>
+            <option value="approve">Approve</option>
+            <option value="viewReports">View Reports</option>
+            <option value="userManagement">User Management</option>
+            <option value="systemSettings">System Settings</option>
           </select>
         </div>
 
@@ -152,29 +204,33 @@ export default function UserFilters({
             </select>
           </div>
         )}
+      </div>
 
-        {/* Sort */}
-        <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-2">
-            Sort By
-          </label>
-          <select
-            value={`${filters.sortBy}-${filters.sortOrder}`}
-            onChange={(e) => {
-              const [sortBy, sortOrder] = e.target.value.split('-')
-              onFiltersChange({ sortBy, sortOrder: sortOrder as 'asc' | 'desc' })
-            }}
-            disabled={isLoading}
-            className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-all duration-200 disabled:bg-gray-50 disabled:cursor-not-allowed"
-          >
-            <option value="name-asc">Name (A-Z)</option>
-            <option value="name-desc">Name (Z-A)</option>
-            <option value="email-asc">Email (A-Z)</option>
-            <option value="email-desc">Email (Z-A)</option>
-            <option value="createdAt-desc">Newest First</option>
-            <option value="createdAt-asc">Oldest First</option>
-            <option value="lastLogin-desc">Recent Login</option>
-          </select>
+      {/* Sort Options */}
+      <div className="mt-4">
+        <div className="flex items-center gap-4">
+          <div className="flex-1">
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
+              Sort By
+            </label>
+            <select
+              value={`${filters.sortBy}-${filters.sortOrder}`}
+              onChange={(e) => {
+                const [sortBy, sortOrder] = e.target.value.split('-')
+                onFiltersChange({ sortBy, sortOrder: sortOrder as 'asc' | 'desc' })
+              }}
+              disabled={isLoading}
+              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-all duration-200 disabled:bg-gray-50 disabled:cursor-not-allowed"
+            >
+              <option value="name-asc">Name (A-Z)</option>
+              <option value="name-desc">Name (Z-A)</option>
+              <option value="email-asc">Email (A-Z)</option>
+              <option value="email-desc">Email (Z-A)</option>
+              <option value="createdAt-desc">Newest First</option>
+              <option value="createdAt-asc">Oldest First</option>
+              <option value="lastLogin-desc">Recent Login</option>
+            </select>
+          </div>
         </div>
       </div>
 
@@ -201,9 +257,21 @@ export default function UserFilters({
                 Status: {filters.status.charAt(0).toUpperCase() + filters.status.slice(1)}
               </span>
             )}
+
+            {filters.permissionModule !== 'all' && (
+              <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 border border-blue-200">
+                Module: {filters.permissionModule.charAt(0).toUpperCase() + filters.permissionModule.slice(1)}
+              </span>
+            )}
+
+            {filters.permissionAction !== 'all' && (
+              <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800 border border-purple-200">
+                Action: {filters.permissionAction.charAt(0).toUpperCase() + filters.permissionAction.slice(1)}
+              </span>
+            )}
             
             {filters.companyId !== 'all' && (
-              <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800 border border-purple-200">
+              <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800 border border-indigo-200">
                 Company: {companies.find(c => c._id === filters.companyId)?.companyName || filters.companyId}
               </span>
             )}

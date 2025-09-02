@@ -106,12 +106,12 @@ const navigationItems: NavigationItem[] = [
         icon: Users,
         permission: 'view:User'
       },
-      {
-        name: 'Roles',
-        href: '/roles',
-        icon: UserCheck,
-        permission: 'view:Role'
-      }
+      // {
+      //   name: 'Roles',
+      //   href: '/roles',
+      //   icon: UserCheck,
+      //   permission: 'view:Role'
+      // }
     ]
   },
 
@@ -136,23 +136,23 @@ const navigationItems: NavigationItem[] = [
         permission: 'view:Sale'
       },
       {
-        name: 'Orders Management',
-        href: '/sales?tab=orders',
-        icon: FileText,
-        permission: 'view:Order'
-      },
-      {
         name: 'Sales Analytics',
-        href: '/sales?tab=analytics',
+        href: '/sales/analytics',
         icon: BarChart3,
         permission: 'view:Sale',
         roles: ['admin', 'manager', 'sales']
       },
       {
         name: 'Sales Reports',
-        href: '/sales?tab=reports',
+        href: '/sales/reports',
         icon: PieChart,
         permission: 'view:Sale'
+      },
+      {
+        name: 'Sales Orders',
+        href: '/sales/orders',
+        icon: FileText,
+        permission: 'view:Order'
       },
       {
         name: 'Quotations',

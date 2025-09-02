@@ -87,6 +87,7 @@ export interface CreateCustomerRequest {
 }
 
 export const customersApi = baseApi.injectEndpoints({
+  overrideExisting: true,
   endpoints: (builder) => ({
     // Get all customers with filtering and pagination
     getCustomers: builder.query<

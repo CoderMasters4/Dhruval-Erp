@@ -226,7 +226,7 @@ export const salesApi = baseApi.injectEndpoints({
 
     // Get all sales orders
     getSalesOrders: builder.query<
-      { success: boolean; data: SalesOrder[]; pagination: any },
+      { success: boolean; data: { orders: SalesOrder[]; pagination: any } },
       SalesFilters
     >({
       query: (filters) => ({

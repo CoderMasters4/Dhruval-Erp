@@ -11,7 +11,20 @@ import {
   Key,
   CheckCircle,
   XCircle,
-  AlertTriangle
+  AlertTriangle,
+  Eye,
+  Plus,
+  Settings,
+  Trash2,
+  FileText,
+  Users,
+  Lock,
+  BarChart3,
+  Truck,
+  CreditCard,
+  Camera,
+  Bell,
+  Package
 } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Modal, ModalContent, ModalFooter } from '@/components/ui/Modal'
@@ -188,6 +201,255 @@ export default function UserDetailsModal({
                     </p>
                   </div>
                 </div>
+              </div>
+            </div>
+
+            {/* Permissions Section */}
+            <div className="bg-blue-50 rounded-xl p-6 border border-blue-200">
+              <h3 className="text-lg font-semibold text-black mb-4 flex items-center">
+                <Shield className="w-5 h-5 mr-2 text-blue-600" />
+                Access & Permissions
+              </h3>
+              
+              <div className="space-y-4">
+                {/* Role Information */}
+                <div className="bg-white p-4 rounded-lg border border-blue-200">
+                  <h4 className="text-md font-semibold text-gray-800 mb-3 flex items-center">
+                    <Users className="w-4 h-4 mr-2" />
+                    Role Information
+                  </h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-medium text-gray-600">Primary Role:</span>
+                      <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium">
+                        {user.companyAccess?.[0]?.role || user.role || 'No Role Assigned'}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-medium text-gray-600">Department:</span>
+                      <span className="px-2 py-1 bg-gray-100 text-gray-800 rounded-full text-xs font-medium">
+                        {user.companyAccess?.[0]?.department || 'Not Specified'}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-medium text-gray-600">Designation:</span>
+                      <span className="px-2 py-1 bg-gray-100 text-gray-800 rounded-full text-xs font-medium">
+                        {user.companyAccess?.[0]?.designation || 'Not Specified'}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-medium text-gray-600">Super Admin:</span>
+                      <span className={clsx(
+                        'px-2 py-1 rounded-full text-xs font-medium',
+                        user.isSuperAdmin 
+                          ? 'bg-red-100 text-red-800' 
+                          : 'bg-gray-100 text-gray-800'
+                      )}>
+                        {user.isSuperAdmin ? 'Yes' : 'No'}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Permissions Display */}
+                {user.companyAccess?.[0]?.permissions && (
+                  <div className="bg-white p-4 rounded-lg border border-blue-200">
+                    <h4 className="text-md font-semibold text-gray-800 mb-3 flex items-center">
+                      <Lock className="w-4 h-4 mr-2" />
+                      Detailed Permissions
+                    </h4>
+                    
+                    <div className="space-y-4">
+                      {/* Inventory Permissions */}
+                      <div className="border-b border-gray-200 pb-3">
+                        <h5 className="text-sm font-semibold text-gray-700 mb-2 flex items-center">
+                          <Package className="w-4 h-4 mr-2" />
+                          Inventory Management
+                        </h5>
+                        <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                          {Object.entries(user.companyAccess[0].permissions.inventory || {}).map(([action, allowed]) => (
+                            <div key={action} className="flex items-center gap-2">
+                              <span className={clsx(
+                                'w-2 h-2 rounded-full',
+                                allowed ? 'bg-green-500' : 'bg-gray-300'
+                              )}></span>
+                              <span className="text-xs text-gray-600 capitalize">{action.replace(/([A-Z])/g, ' $1').trim()}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Production Permissions */}
+                      <div className="border-b border-gray-200 pb-3">
+                        <h5 className="text-sm font-semibold text-gray-700 mb-2 flex items-center">
+                          <Settings className="w-4 h-4 mr-2" />
+                          Production Management
+                        </h5>
+                        <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                          {Object.entries(user.companyAccess[0].permissions.production || {}).map(([action, allowed]) => (
+                            <div key={action} className="flex items-center gap-2">
+                              <span className={clsx(
+                                'w-2 h-2 rounded-full',
+                                allowed ? 'bg-green-500' : 'bg-gray-300'
+                              )}></span>
+                              <span className="text-xs text-gray-600 capitalize">{action.replace(/([A-Z])/g, ' $1').trim()}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Orders Permissions */}
+                      <div className="border-b border-gray-200 pb-3">
+                        <h5 className="text-sm font-semibold text-gray-700 mb-2 flex items-center">
+                          <Truck className="w-4 h-4 mr-2" />
+                          Order Management
+                        </h5>
+                        <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                          {Object.entries(user.companyAccess[0].permissions.orders || {}).map(([action, allowed]) => (
+                            <div key={action} className="flex items-center gap-2">
+                              <span className={clsx(
+                                'w-2 h-2 rounded-full',
+                                allowed ? 'bg-green-500' : 'bg-gray-300'
+                              )}></span>
+                              <span className="text-xs text-gray-600 capitalize">{action.replace(/([A-Z])/g, ' $1').trim()}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Financial Permissions */}
+                      <div className="border-b border-gray-200 pb-3">
+                        <h5 className="text-sm font-semibold text-gray-700 mb-2 flex items-center">
+                          <CreditCard className="w-4 h-4 mr-2" />
+                          Financial Management
+                        </h5>
+                        <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                          {Object.entries(user.companyAccess[0].permissions.financial || {}).map(([action, allowed]) => (
+                            <div key={action} className="flex items-center gap-2">
+                              <span className={clsx(
+                                'w-2 h-2 rounded-full',
+                                allowed ? 'bg-green-500' : 'bg-gray-300'
+                              )}></span>
+                              <span className="text-xs text-gray-600 capitalize">{action.replace(/([A-Z])/g, ' $1').trim()}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Security Permissions */}
+                      <div className="border-b border-gray-200 pb-3">
+                        <h5 className="text-sm font-semibold text-gray-700 mb-2 flex items-center">
+                          <Camera className="w-4 h-4 mr-2" />
+                          Security Management
+                        </h5>
+                        <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                          {Object.entries(user.companyAccess[0].permissions.security || {}).map(([action, allowed]) => (
+                            <div key={action} className="flex items-center gap-2">
+                              <span className={clsx(
+                                'w-2 h-2 rounded-full',
+                                allowed ? 'bg-green-500' : 'bg-gray-300'
+                              )}></span>
+                              <span className="text-xs text-gray-600 capitalize">{action.replace(/([A-Z])/g, ' $1').trim()}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* HR Permissions */}
+                      <div className="border-b border-gray-200 pb-3">
+                        <h5 className="text-sm font-semibold text-gray-700 mb-2 flex items-center">
+                          <Users className="w-4 h-4 mr-2" />
+                          Human Resources
+                        </h5>
+                        <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                          {Object.entries(user.companyAccess[0].permissions.hr || {}).map(([action, allowed]) => (
+                            <div key={action} className="flex items-center gap-2">
+                              <span className={clsx(
+                                'w-2 h-2 rounded-full',
+                                allowed ? 'bg-green-500' : 'bg-gray-300'
+                              )}></span>
+                              <span className="text-xs text-gray-600 capitalize">{action.replace(/([A-Z])/g, ' $1').trim()}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Admin Permissions */}
+                      <div>
+                        <h5 className="text-sm font-semibold text-gray-700 mb-2 flex items-center">
+                          <Shield className="w-4 h-4 mr-2" />
+                          System Administration
+                        </h5>
+                        <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                          {Object.entries(user.companyAccess[0].permissions.admin || {}).map(([action, allowed]) => (
+                            <div key={action} className="flex items-center gap-2">
+                              <span className={clsx(
+                                'w-2 h-2 rounded-full',
+                                allowed ? 'bg-green-500' : 'bg-gray-300'
+                              )}></span>
+                              <span className="text-xs text-gray-600 capitalize">{action.replace(/([A-Z])/g, ' $1').trim()}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Permission Summary */}
+                <div className="bg-white p-4 rounded-lg border border-blue-200">
+                  <h4 className="text-md font-semibold text-gray-800 mb-3 flex items-center">
+                    <BarChart3 className="w-4 h-4 mr-2" />
+                    Permission Summary
+                  </h4>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    {user.companyAccess?.[0]?.permissions && Object.entries(user.companyAccess[0].permissions).map(([module, permissions]) => {
+                      const totalPermissions = Object.keys(permissions).length;
+                      const grantedPermissions = Object.values(permissions).filter(Boolean).length;
+                      const percentage = totalPermissions > 0 ? Math.round((grantedPermissions / totalPermissions) * 100) : 0;
+                      
+                      return (
+                        <div key={module} className="text-center p-3 bg-gray-50 rounded-lg">
+                          <div className="text-lg font-bold text-gray-800">{percentage}%</div>
+                          <div className="text-xs text-gray-600 capitalize">{module.replace(/([A-Z])/g, ' $1').trim()}</div>
+                          <div className="text-xs text-gray-500">{grantedPermissions}/{totalPermissions} permissions</div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Company Access Information */}
+                {user.companyAccess && user.companyAccess.length > 0 && (
+                  <div className="bg-white p-4 rounded-lg border border-blue-200">
+                    <h4 className="text-md font-semibold text-gray-800 mb-3 flex items-center">
+                      <Building2 className="w-4 h-4 mr-2" />
+                      Company Access
+                    </h4>
+                    <div className="space-y-2">
+                      {user.companyAccess.map((access, index) => (
+                        <div key={index} className="flex items-center justify-between p-2 bg-gray-50 rounded">
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm font-medium text-gray-700">
+                              {typeof access.companyId === 'string' ? access.companyId : access.companyId?.companyName || 'Unknown Company'}
+                            </span>
+                            <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs">
+                              {access.role}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className={clsx(
+                              'px-2 py-1 rounded-full text-xs',
+                              access.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                            )}>
+                              {access.isActive ? 'Active' : 'Inactive'}
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
 

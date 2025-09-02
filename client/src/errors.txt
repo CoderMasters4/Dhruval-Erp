@@ -1,21 +1,111 @@
-All errors have been fixed successfully!
+npx tsc --noEmit --skipLibCheck
+src/app/sales/analytics/page.tsx:141:16 - error TS2322: Type 'ForwardRefExoticComponent<Omit<LucideProps, "ref"> & RefAttributes<SVGSVGElement>>' is not assignable to type 'ReactNode'.
 
-The following issues were resolved:
+141           icon={BarChart3}
+                   ~~~~~~~~~~~
 
-1. **Case sensitivity issues with Badge component imports** - Fixed imports in FormSuppliersManagement.tsx and FormQualityManagement.tsx to use lowercase 'badge' instead of 'Badge'
+  src/app/sales/analytics/page.tsx:141:16
+    141           icon={BarChart3}
+                       ~~~~~~~~~~~
+    Did you mean to call this expression?
 
-2. **TypeScript errors in spares components**:
-   - Fixed FormSuppliersManagement.tsx to properly access supplier properties from the suppliers array
-   - Fixed SuppliersManagement.tsx to use suppliersData.data instead of undefined suppliers variable
-   - Fixed type errors with supplierIndex parameter
-   - Fixed property access issues (id vs _id)
+src/app/sales/analytics/page.tsx:175:61 - error TS2339: Property 'totalSales' does not exist on type 'SalesAnalytics'.
 
-3. **Missing UI components** - Created missing components:
-   - select.tsx (with @radix-ui/react-select dependency)
-   - dialog.tsx (with @radix-ui/react-dialog dependency) 
-   - label.tsx (with @radix-ui/react-label dependency)
-   - textarea.tsx
+175                       {analytics ? formatCurrency(analytics.totalSales) : '₹0'}
+                                                                ~~~~~~~~~~
 
-4. **API parameter issues** - Fixed useGetPurchaseStatsQuery to pass required parameters
+src/app/sales/analytics/page.tsx:177:77 - error TS2339: Property 'growthRate' does not exist on type 'SalesAnalytics'.
 
-The application now builds successfully without any TypeScript errors. 
+177                     <p className={clsx("text-sm", getGrowthColor(analytics?.growthRate ?? 0))}>
+                                                                                ~~~~~~~~~~
+
+src/app/sales/analytics/page.tsx:178:35 - error TS2339: Property 'growthRate' does not exist on type 'SalesAnalytics'.
+
+178                       {analytics?.growthRate && analytics.growthRate >= 0 ? '+' : ''}{analytics?.growthRate ?? 0}% from last period
+                                      ~~~~~~~~~~
+
+src/app/sales/analytics/page.tsx:178:59 - error TS2339: Property 'growthRate' does not exist on type 'SalesAnalytics'.
+
+178                       {analytics?.growthRate && analytics.growthRate >= 0 ? '+' : ''}{analytics?.growthRate ?? 0}% from last period
+                                                              ~~~~~~~~~~
+
+src/app/sales/analytics/page.tsx:178:98 - error TS2339: Property 'growthRate' does not exist on type 'SalesAnalytics'.
+
+178                       {analytics?.growthRate && analytics.growthRate >= 0 ? '+' : ''}{analytics?.growthRate ?? 0}% from last period
+                                                                                                     ~~~~~~~~~~
+
+src/app/sales/analytics/page.tsx:192:48 - error TS2339: Property 'totalOrders' does not exist on type 'SalesAnalytics'.
+
+192                       {formatNumber(analytics?.totalOrders || 0)}
+                                                   ~~~~~~~~~~~
+
+src/app/sales/analytics/page.tsx:195:66 - error TS2339: Property 'averageOrderValue' does not exist on type 'SalesAnalytics'.
+
+195                       Avg: {analytics ? formatCurrency(analytics.averageOrderValue) : '₹0'}
+                                                                     ~~~~~~~~~~~~~~~~~
+
+src/app/sales/analytics/page.tsx:226:35 - error TS2339: Property 'conversionRate' does not exist on type 'SalesAnalytics'.
+
+226                       {analytics?.conversionRate ? `${analytics.conversionRate}%` : '0%'}
+                                      ~~~~~~~~~~~~~~
+
+src/app/sales/analytics/page.tsx:226:65 - error TS2339: Property 'conversionRate' does not exist on type 'SalesAnalytics'.
+
+226                       {analytics?.conversionRate ? `${analytics.conversionRate}%` : '0%'}
+                                                                    ~~~~~~~~~~~~~~
+
+src/app/sales/orders/page.tsx:84:35 - error TS2353: Object literal may only specify known properties, and 'orderId' does not exist in type '{ id: string; paymentStatus: "pending" | "overdue" | "partial" | "paid"; amount?: number | undefined; }'.
+
+84       await updatePaymentStatus({ orderId, paymentStatus }).unwrap()
+                                     ~~~~~~~
+
+src/app/sales/orders/page.tsx:196:16 - error TS2322: Type 'ForwardRefExoticComponent<Omit<LucideProps, "ref"> & RefAttributes<SVGSVGElement>>' is not assignable to type 'ReactNode'.
+
+196           icon={FileText}
+                   ~~~~~~~~~~
+
+  src/app/sales/orders/page.tsx:196:16
+    196           icon={FileText}
+                       ~~~~~~~~~~
+    Did you mean to call this expression?
+
+src/app/sales/orders/page.tsx:424:11 - error TS2322: Type '{ isOpen: boolean; onClose: () => void; mode: "create"; onSubmit: (orderData: any) => Promise<void>; }' is not assignable to type 'IntrinsicAttributes & SalesOrderModalProps'.
+  Property 'onSubmit' does not exist on type 'IntrinsicAttributes & SalesOrderModalProps'.
+
+424           onSubmit={handleCreateOrder}
+              ~~~~~~~~
+
+src/app/sales/orders/page.tsx:435:11 - error TS2322: Type '{ isOpen: boolean; onClose: () => void; order: any; mode: "edit"; onSubmit: (orderData: any) => Promise<void>; }' is not assignable to type 'IntrinsicAttributes & SalesOrderModalProps'.
+  Property 'onSubmit' does not exist on type 'IntrinsicAttributes & SalesOrderModalProps'.
+
+435           onSubmit={handleUpdateOrder}
+              ~~~~~~~~
+
+src/app/sales/reports/page.tsx:94:39 - error TS2353: Object literal may only specify known properties, and 'period' does not exist in type '{ format: "pdf" | "excel" | "csv"; filters: any; }'.
+
+94       await exportSalesData({ format, period: timeRange }).unwrap()
+                                         ~~~~~~
+
+src/app/sales/reports/page.tsx:139:8 - error TS2746: This JSX tag's 'children' prop expects a single child of type 'ReactElement<unknown, string | JSXElementConstructor<any>>', but multiple children were provided.
+
+139       <ResponsiveContainer>
+           ~~~~~~~~~~~~~~~~~~~
+
+src/app/sales/reports/page.tsx:143:16 - error TS2322: Type 'ForwardRefExoticComponent<Omit<LucideProps, "ref"> & RefAttributes<SVGSVGElement>>' is not assignable to type 'ReactNode'.
+
+143           icon={PieChart}
+                   ~~~~~~~~~~
+
+  src/app/sales/reports/page.tsx:143:16
+    143           icon={PieChart}
+                       ~~~~~~~~~~
+    Did you mean to call this expression?
+
+
+Found 17 errors in 3 files.
+
+Errors  Files
+    10  src/app/sales/analytics/page.tsx:141
+     4  src/app/sales/orders/page.tsx:84
+     3  src/app/sales/reports/page.tsx:94
+rim@rims-MacBook-Pro client % 

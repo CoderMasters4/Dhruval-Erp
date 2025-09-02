@@ -29,6 +29,8 @@ interface UserFilters {
   companyId: string
   sortBy: string
   sortOrder: 'asc' | 'desc'
+  permissionModule: string
+  permissionAction: string
 }
 
 interface PaginationState {
@@ -53,7 +55,9 @@ export default function UsersPage() {
     status: 'all',
     companyId: 'all',
     sortBy: 'name',
-    sortOrder: 'asc'
+    sortOrder: 'asc',
+    permissionModule: 'all',
+    permissionAction: 'all'
   })
 
   const [pagination, setPagination] = useState<PaginationState>({
@@ -176,7 +180,9 @@ export default function UsersPage() {
       status: 'all',
       companyId: 'all',
       sortBy: 'name',
-      sortOrder: 'asc'
+      sortOrder: 'asc',
+      permissionModule: 'all',
+      permissionAction: 'all'
     })
   }
 
@@ -360,7 +366,9 @@ export default function UsersPage() {
                     status: 'all',
                     companyId: 'all',
                     sortBy: 'name',
-                    sortOrder: 'asc'
+                    sortOrder: 'asc',
+                    permissionModule: 'all',
+                    permissionAction: 'all'
                   })}
                     variant="outline"
                     className="border-blue-300 dark:border-blue-600 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all duration-200"

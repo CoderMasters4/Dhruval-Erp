@@ -283,7 +283,7 @@ export default function EnhancedDispatchPage() {
                       </div>
                       <div className="text-right">
                         <Badge className={getStatusColor(dispatch.status)}>
-                          {dispatch.status.replace('_', ' ')}
+                          {dispatch.status?.replace('_', ' ') || 'Unknown Status'}
                         </Badge>
                         <p className="text-sm text-gray-600 mt-1">AWB: {dispatch.awb}</p>
                         <p className="text-xs text-gray-500">{dispatch.courier}</p>

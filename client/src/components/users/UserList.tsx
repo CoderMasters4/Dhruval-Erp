@@ -278,6 +278,29 @@ export default function UserList({
                         </div>
                       )}
 
+                      {/* Permission Summary */}
+                      {user.companyAccess?.[0]?.permissions && (
+                        <div className="flex flex-wrap items-center gap-2">
+                          <Shield className="w-4 h-4" />
+                          <span className="text-xs text-gray-600 font-medium">Permissions:</span>
+                          {Object.entries(user.companyAccess[0].permissions).map(([module, permissions]) => {
+                            const grantedPermissions = Object.values(permissions).filter(Boolean).length;
+                            const totalPermissions = Object.keys(permissions).length;
+                            if (grantedPermissions === 0) return null;
+                            
+                            return (
+                              <span
+                                key={module}
+                                className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 border border-green-200"
+                                title={`${grantedPermissions}/${totalPermissions} ${module} permissions granted`}
+                              >
+                                {module.charAt(0).toUpperCase() + module.slice(1)} ({grantedPermissions})
+                              </span>
+                            );
+                          })}
+                        </div>
+                      )}
+
                       <div className="flex items-center gap-1">
                         <Clock className="w-4 h-4" />
                         <span>Last login: {formatLastLogin(user.security?.lastLogin)}</span>

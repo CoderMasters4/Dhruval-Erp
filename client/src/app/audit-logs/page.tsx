@@ -332,7 +332,7 @@ export default function AuditLogsPage() {
                         <div className="flex items-center space-x-2">
                           {getActionIcon(log.action)}
                           <span className={getActionBadge(log.action)}>
-                            {log.action.replace('_', ' ')}
+                            {log.action?.replace('_', ' ') || 'Unknown Action'}
                           </span>
                         </div>
                       </td>

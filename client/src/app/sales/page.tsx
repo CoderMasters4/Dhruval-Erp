@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { AppLayout } from '@/components/layout/AppLayout'
 import { DashboardHeader } from '@/components/ui/DashboardHeader'
-import { ResponsiveGrid } from '@/components/ui/ResponsiveLayout'
+import { ResponsiveGrid, ResponsiveContainer } from '@/components/ui/ResponsiveLayout'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
@@ -57,7 +57,7 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
-  ResponsiveContainer,
+  ResponsiveContainer as RechartsResponsiveContainer,
   BarChart,
   Bar,
   PieChart as RechartsPieChart,
@@ -68,7 +68,7 @@ import {
 } from 'recharts'
 import toast from 'react-hot-toast'
 import clsx from 'clsx'
-import { SalesOrderModal } from '@/components/modals/SalesOrderModal'
+import SalesOrderModal from '@/components/modals/SalesOrderModal'
 
 const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4']
 
@@ -221,8 +221,8 @@ export default function SalesPage() {
   const dashboard = dashboardData?.data
   const stats = dashboard?.stats
   const analytics = dashboard?.analytics
-  const orders = ordersData?.data || []
-  const pagination = ordersData?.pagination
+  const orders = ordersData?.data?.orders || []
+  const pagination = ordersData?.data?.pagination
   const customerReport = customerReportData?.data || []
   const productPerformance = productPerformanceData?.data || []
   const salesTrends = salesTrendsData?.data || []
@@ -364,15 +364,15 @@ export default function SalesPage() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <ResponsiveContainer width="100%" height={300}>
-                                         <RechartsLineChart data={salesTrends}>
+                  <RechartsResponsiveContainer width="100%" height={300}>
+                    <RechartsLineChart data={salesTrends}>
                       <CartesianGrid strokeDasharray="3 3" />
                       <XAxis dataKey="_id" />
                       <YAxis />
                       <Tooltip formatter={(value) => formatCurrency(Number(value))} />
                       <Line type="monotone" dataKey="amount" stroke="#3b82f6" strokeWidth={2} />
-                                         </RechartsLineChart>
-                  </ResponsiveContainer>
+                    </RechartsLineChart>
+                  </RechartsResponsiveContainer>
                 </CardContent>
               </Card>
 
@@ -385,7 +385,7 @@ export default function SalesPage() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <ResponsiveContainer width="100%" height={300}>
+                  <RechartsResponsiveContainer width="100%" height={300}>
                     <BarChart data={productPerformance.slice(0, 5)}>
                       <CartesianGrid strokeDasharray="3 3" />
                       <XAxis dataKey="_id" />
@@ -393,7 +393,7 @@ export default function SalesPage() {
                       <Tooltip formatter={(value) => formatCurrency(Number(value))} />
                       <Bar dataKey="totalRevenue" fill="#10b981" />
                     </BarChart>
-                  </ResponsiveContainer>
+                  </RechartsResponsiveContainer>
                 </CardContent>
               </Card>
             </ResponsiveGrid>
@@ -579,14 +579,14 @@ export default function SalesPage() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <ResponsiveContainer width="100%" height={300}>
+                  <RechartsResponsiveContainer width="100%" height={300}>
                     <RechartsPieChart>
                       <Pie
                         data={analytics?.customerSegmentation || []}
                         cx="50%"
                         cy="50%"
                         labelLine={false}
-                                                 label={({ name, percent }) => `${name} ${((percent ?? 0) * 100).toFixed(0)}%`}
+                        label={({ name, percent }) => `${name} ${((percent ?? 0) * 100).toFixed(0)}%`}
                         outerRadius={80}
                         fill="#8884d8"
                         dataKey="count"
@@ -597,7 +597,7 @@ export default function SalesPage() {
                       </Pie>
                       <Tooltip />
                     </RechartsPieChart>
-                  </ResponsiveContainer>
+                  </RechartsResponsiveContainer>
                 </CardContent>
               </Card>
 
@@ -610,7 +610,7 @@ export default function SalesPage() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <ResponsiveContainer width="100%" height={300}>
+                  <RechartsResponsiveContainer width="100%" height={300}>
                     <BarChart data={analytics?.salesByStatus || []}>
                       <CartesianGrid strokeDasharray="3 3" />
                       <XAxis dataKey="_id" />
@@ -618,7 +618,7 @@ export default function SalesPage() {
                       <Tooltip formatter={(value) => formatCurrency(Number(value))} />
                       <Bar dataKey="amount" fill="#8b5cf6" />
                     </BarChart>
-                  </ResponsiveContainer>
+                  </RechartsResponsiveContainer>
                 </CardContent>
               </Card>
             </ResponsiveGrid>

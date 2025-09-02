@@ -60,7 +60,7 @@ function PurchasePageContent() {
   const [selectedCategory, setSelectedCategory] = useState('all')
   const [currentPage, setCurrentPage] = useState(1)
   const [selectedPeriod, setSelectedPeriod] = useState<'week' | 'month' | 'quarter' | 'year'>('month')
-  const [selectedCompanyId, setSelectedCompanyId] = useState<string>('')
+  const [selectedCompanyId, setSelectedCompanyId] = useState<string>('all')
   const [activeTab, setActiveTab] = useState('overview')
   const [showCreateModal, setShowCreateModal] = useState(false)
 
@@ -71,7 +71,7 @@ function PurchasePageContent() {
   const userCompanyId = user?.companyAccess?.[0]?.companyId
 
   // Determine which company ID to use
-  const targetCompanyId = isSuperAdmin && selectedCompanyId ? selectedCompanyId : userCompanyId
+  const targetCompanyId = isSuperAdmin && selectedCompanyId && selectedCompanyId !== 'all' ? selectedCompanyId : userCompanyId
 
   // RTK Query hooks
   const {
@@ -172,7 +172,9 @@ function PurchasePageContent() {
   const analytics = analyticsData?.data
 
   // Category icon mapping
-  const getCategoryIcon = (category: string) => {
+  const getCategoryIcon = (category: string | null | undefined) => {
+    if (!category) return <Package className="h-4 w-4 text-gray-600" />
+    
     switch (category) {
       case 'chemicals':
         return <Droplets className="h-4 w-4 text-blue-600" />
@@ -247,7 +249,7 @@ function PurchasePageContent() {
                     <SelectValue placeholder="Select Company" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">All Companies</SelectItem>
+                    <SelectItem value="all">All Companies</SelectItem>
                     {/* Add company options here */}
                   </SelectContent>
                 </Select>
@@ -360,7 +362,7 @@ function PurchasePageContent() {
                               <div className="flex justify-between items-center">
                                 <div className="flex items-center space-x-2">
                                   {getCategoryIcon(category.category)}
-                                  <span className="text-sm font-medium">{category.category.replace('_', ' ')}</span>
+                                  <span className="text-sm font-medium">{category.category?.replace('_', ' ') || 'Unknown Category'}</span>
                                 </div>
                                 <span className="text-sm text-gray-600">
                                   {formatCurrency(category.amount)} ({category.percentage.toFixed(1)}%)
@@ -383,7 +385,7 @@ function PurchasePageContent() {
                                 cx="50%"
                                 cy="50%"
                                 labelLine={false}
-                                label={({ category, percentage }) => `${category.replace('_', ' ')} ${percentage.toFixed(1)}%`}
+                                label={({ category, percentage }) => `${category?.replace('_', ' ') || 'Unknown'} ${percentage.toFixed(1)}%`}
                                 outerRadius={80}
                                 fill="#8884d8"
                                 dataKey="amount"

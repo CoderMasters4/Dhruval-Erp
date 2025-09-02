@@ -70,7 +70,7 @@ export class PurchaseService extends BaseService<IPurchaseOrder> {
     // Get total suppliers
     const totalSuppliers = await PurchaseOrder.aggregate([
       { $match: { companyId: new Types.ObjectId(companyId) } },
-      { $group: { _id: '$supplierId' } },
+      { $group: { _id: '$supplier.supplierId' } },
       { $count: 'total' }
     ]);
 
@@ -188,7 +188,7 @@ export class PurchaseService extends BaseService<IPurchaseOrder> {
       {
         $lookup: {
           from: 'suppliers',
-          localField: 'supplierId',
+          localField: 'supplier.supplierId',
           foreignField: '_id',
           as: 'supplier'
         }
@@ -196,7 +196,7 @@ export class PurchaseService extends BaseService<IPurchaseOrder> {
       { $unwind: '$supplier' },
       {
         $group: {
-          _id: '$supplierId',
+          _id: '$supplier.supplierId',
           supplier: { $first: '$supplier.name' },
           amount: { $sum: '$totalAmount' },
           orders: { $sum: 1 }
@@ -307,7 +307,7 @@ export class PurchaseService extends BaseService<IPurchaseOrder> {
 
     if (status) query.status = status;
     if (paymentStatus) query.paymentStatus = paymentStatus;
-    if (supplierId) query.supplierId = new Types.ObjectId(supplierId);
+    if (supplierId) query['supplier.supplierId'] = new Types.ObjectId(supplierId);
     if (dateFrom || dateTo) {
       query.createdAt = {};
       if (dateFrom) query.createdAt.$gte = new Date(dateFrom);
@@ -330,7 +330,7 @@ export class PurchaseService extends BaseService<IPurchaseOrder> {
 
     const [orders, total] = await Promise.all([
       PurchaseOrder.find(query)
-        .populate('supplierId', 'name email phone category')
+        .populate('supplier.supplierId', 'name email phone category')
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limit)
@@ -392,7 +392,7 @@ export class PurchaseService extends BaseService<IPurchaseOrder> {
     }
 
     const order = await PurchaseOrder.findOne(query)
-      .populate('supplierId', 'name email phone category')
+      .populate('supplier.supplierId', 'name email phone category')
       .lean();
 
     if (!order) {
@@ -424,7 +424,7 @@ export class PurchaseService extends BaseService<IPurchaseOrder> {
         updatedAt: new Date()
       },
       { new: true }
-    ).populate('supplierId', 'name email phone category');
+    ).populate('supplier.supplierId', 'name email phone category');
 
     if (!order) {
       throw new Error('Purchase order not found');
@@ -477,7 +477,7 @@ export class PurchaseService extends BaseService<IPurchaseOrder> {
       query,
       updateData,
       { new: true }
-    ).populate('supplierId', 'name email phone category');
+    ).populate('supplier.supplierId', 'name email phone category');
 
     if (!order) {
       throw new Error('Purchase order not found');
@@ -514,7 +514,7 @@ export class PurchaseService extends BaseService<IPurchaseOrder> {
     }
 
     return await PurchaseOrder.find(query)
-      .populate('supplierId', 'name email phone category')
+      .populate('supplier.supplierId', 'name email phone category')
       .lean();
   }
 
@@ -534,7 +534,7 @@ export class PurchaseService extends BaseService<IPurchaseOrder> {
         companyId: new Types.ObjectId(companyId),
         status
       })
-        .populate('supplierId', 'name email phone category')
+        .populate('supplier.supplierId', 'name email phone category')
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limit)
@@ -570,16 +570,16 @@ export class PurchaseService extends BaseService<IPurchaseOrder> {
     const [orders, total] = await Promise.all([
       PurchaseOrder.find({
         companyId: new Types.ObjectId(companyId),
-        supplierId: new Types.ObjectId(supplierId)
+        'supplier.supplierId': new Types.ObjectId(supplierId)
       })
-        .populate('supplierId', 'name email phone category')
+        .populate('supplier.supplierId', 'name email phone category')
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limit)
         .lean(),
       PurchaseOrder.countDocuments({
         companyId: new Types.ObjectId(companyId),
-        supplierId: new Types.ObjectId(supplierId)
+        'supplier.supplierId': new Types.ObjectId(supplierId)
       })
     ]);
 
@@ -611,7 +611,7 @@ export class PurchaseService extends BaseService<IPurchaseOrder> {
       {
         $lookup: {
           from: 'suppliers',
-          localField: 'supplierId',
+          localField: 'supplier.supplierId',
           foreignField: '_id',
           as: 'supplier'
         }
@@ -619,8 +619,8 @@ export class PurchaseService extends BaseService<IPurchaseOrder> {
       { $unwind: '$supplier' },
       {
         $group: {
-          _id: '$supplierId',
-          supplierId: { $first: '$supplierId' },
+          _id: '$supplier.supplierId',
+          supplierId: { $first: '$supplier.supplierId' },
           supplierName: { $first: '$supplier.name' },
           category: { $first: '$supplier.category' },
           totalPurchases: { $sum: '$totalAmount' },
