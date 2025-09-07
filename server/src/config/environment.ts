@@ -62,12 +62,20 @@ interface EnvironmentConfig {
   UPLOAD_ALLOWED_TYPES: string[];
   UPLOAD_DESTINATION: string;
 
-  // AWS S3
+  // AWS S3 / Contabo S3
   AWS_ACCESS_KEY_ID: string;
   AWS_SECRET_ACCESS_KEY: string;
   AWS_REGION: string;
   AWS_S3_BUCKET: string;
   AWS_S3_ACL: string;
+  
+  // Contabo S3 Configuration
+  CONTABO_REGION: string;
+  CONTABO_ENDPOINT: string;
+  CONTABO_ACCESS_KEY: string;
+  CONTABO_SECRET_KEY: string;
+  CONTABO_BUCKET_NAME: string;
+  CONTABO_BASE_URL: string;
 
   // Email
   SMTP_HOST: string;
@@ -189,12 +197,20 @@ const config: EnvironmentConfig = {
   UPLOAD_ALLOWED_TYPES: process.env.UPLOAD_ALLOWED_TYPES?.split(',') || ['image/jpeg', 'image/png'],
   UPLOAD_DESTINATION: process.env.UPLOAD_DESTINATION || 'uploads/',
 
-  // AWS S3
-  AWS_ACCESS_KEY_ID: process.env.AWS_ACCESS_KEY_ID || '',
-  AWS_SECRET_ACCESS_KEY: process.env.AWS_SECRET_ACCESS_KEY || '',
-  AWS_REGION: process.env.AWS_REGION || 'us-east-1',
-  AWS_S3_BUCKET: process.env.AWS_S3_BUCKET || '',
+  // AWS S3 / Contabo S3
+  AWS_ACCESS_KEY_ID: process.env.CONTABO_ACCESS_KEY || process.env.AWS_ACCESS_KEY_ID || '',
+  AWS_SECRET_ACCESS_KEY: process.env.CONTABO_SECRET_KEY || process.env.AWS_SECRET_ACCESS_KEY || '',
+  AWS_REGION: process.env.CONTABO_REGION || process.env.AWS_REGION || 'usc1',
+  AWS_S3_BUCKET: process.env.CONTABO_BUCKET_NAME || process.env.AWS_S3_BUCKET || '',
   AWS_S3_ACL: process.env.AWS_S3_ACL || 'private',
+  
+  // Contabo S3 Configuration
+  CONTABO_REGION: process.env.CONTABO_REGION || 'usc1',
+  CONTABO_ENDPOINT: process.env.CONTABO_ENDPOINT || 'https://usc1.contabostorage.com',
+  CONTABO_ACCESS_KEY: process.env.CONTABO_ACCESS_KEY || '',
+  CONTABO_SECRET_KEY: process.env.CONTABO_SECRET_KEY || '',
+  CONTABO_BUCKET_NAME: process.env.CONTABO_BUCKET_NAME || 'erp',
+  CONTABO_BASE_URL: process.env.CONTABO_BASE_URL || 'https://usc1.contabostorage.com/erp',
 
   // Email
   SMTP_HOST: process.env.SMTP_HOST || 'smtp.gmail.com',

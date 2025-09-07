@@ -18,7 +18,7 @@ export class PurchaseOrderController extends BaseController<IPurchaseOrder> {
   async createPurchaseOrder(req: Request, res: Response): Promise<void> {
     try {
       const orderData = req.body;
-      const createdBy = req.user?.id;
+      const createdBy = (req.user?.userId || req.user?._id)?.toString();
 
       const order = await this.purchaseOrderService.createPurchaseOrder(orderData, createdBy);
 
@@ -35,7 +35,7 @@ export class PurchaseOrderController extends BaseController<IPurchaseOrder> {
     try {
       const { orderId } = req.params;
       const { status } = req.body;
-      const updatedBy = req.user?.id;
+      const updatedBy = (req.user?.userId || req.user?._id)?.toString();
 
       const order = await this.purchaseOrderService.updateOrderStatus(orderId, status, updatedBy);
 
@@ -52,13 +52,29 @@ export class PurchaseOrderController extends BaseController<IPurchaseOrder> {
     try {
       const { orderId } = req.params;
       const { receivedItems } = req.body;
-      const receivedBy = req.user?.id;
+      const receivedBy = (req.user?.userId || req.user?._id)?.toString();
 
       const order = await this.purchaseOrderService.receiveItems(orderId, receivedItems, receivedBy);
 
       this.sendSuccess(res, order, 'Items received successfully');
     } catch (error) {
       this.sendError(res, error, 'Failed to receive items');
+    }
+  }
+
+  /**
+   * Cancel purchase order
+   */
+  async cancelPurchaseOrder(req: Request, res: Response): Promise<void> {
+    try {
+      const { orderId } = req.params;
+      const cancelledBy = (req.user?.userId || req.user?._id)?.toString();
+
+      const order = await this.purchaseOrderService.cancelPurchaseOrder(orderId, cancelledBy);
+
+      this.sendSuccess(res, order, 'Purchase order cancelled successfully');
+    } catch (error) {
+      this.sendError(res, error, 'Failed to cancel purchase order');
     }
   }
 
@@ -192,7 +208,7 @@ export class PurchaseOrderController extends BaseController<IPurchaseOrder> {
     try {
       const { id } = req.params;
       const updateData = req.body;
-      const updatedBy = req.user?.id;
+      const updatedBy = (req.user?.userId || req.user?._id)?.toString();
 
       const order = await this.purchaseOrderService.update(id, updateData, updatedBy);
 
@@ -233,7 +249,7 @@ export class PurchaseOrderController extends BaseController<IPurchaseOrder> {
   async deletePurchaseOrder(req: Request, res: Response): Promise<void> {
     try {
       const { id } = req.params;
-      const deletedBy = req.user?.id;
+      const deletedBy = (req.user?.userId || req.user?._id)?.toString();
 
       const order = await this.purchaseOrderService.update(id, {
         status: 'cancelled',

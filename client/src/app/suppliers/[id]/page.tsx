@@ -1,85 +1,81 @@
 'use client'
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { useParams } from 'next/navigation'
+import { useState, useEffect } from 'react'
+import { useRouter, useParams } from 'next/navigation'
 import {
   ArrowLeft,
-  Building,
+  Edit,
   Phone,
   Mail,
   MapPin,
-  Calendar,
+  Building,
   DollarSign,
   Package,
-  TrendingUp,
   Star,
   Clock,
-  Edit,
-  Trash2,
-  Download,
-  RefreshCw,
-  MoreVertical,
-  X,
-  ChevronDown,
-  Users,
-  Award,
-  Target,
-  Zap,
-  FileText,
-  CreditCard,
-  Globe,
   Shield,
   AlertCircle,
   CheckCircle,
-  XCircle,
   Loader2,
   Factory,
   Briefcase,
   Settings,
-  BarChart3,
+  Calendar,
+  TrendingUp,
+  Users,
+  FileText,
+  Globe,
+  Truck,
+  Award,
+  Activity,
   Eye,
+  Zap,
+  Target,
+  BarChart3,
+  CreditCard,
+  Heart,
+  Award as Trophy,
+  Clock as TimeIcon,
+  TrendingDown,
+  AlertTriangle,
+  CheckCircle2,
+  XCircle,
+  Minus,
   Plus,
-  Filter
+  ExternalLink,
+  Download,
+  Share2,
+  Bookmark,
+  MoreHorizontal
 } from 'lucide-react'
 import { AppLayout } from '@/components/layout/AppLayout'
 import { Button } from '@/components/ui/Button'
-import { Pagination } from '@/components/ui/Pagination'
-import { useGetSupplierByIdQuery, useGetSupplierOrdersQuery } from '@/lib/api/suppliersApi'
-import { toast } from 'react-hot-toast'
+import { useGetSupplierByIdQuery } from '@/lib/api/suppliersApi'
+import { SupplierFormModal } from '@/components/suppliers/modals/SupplierFormModal'
 import clsx from 'clsx'
 
 export default function SupplierDetailsPage() {
   const router = useRouter()
   const params = useParams()
-  const supplierId = params?.id as string
+  const supplierId = params.id as string
 
-  // State management
+  const [showSupplierForm, setShowSupplierForm] = useState(false)
+  const [editingSupplier, setEditingSupplier] = useState<any>(null)
   const [activeTab, setActiveTab] = useState('overview')
-  const [ordersPage, setOrdersPage] = useState(1)
-  const [ordersLimit, setOrdersLimit] = useState(10)
 
-  // API queries
   const {
     data: supplierData,
-    isLoading: supplierLoading,
-    error: supplierError,
-    refetch: refetchSupplier
-  } = useGetSupplierByIdQuery(supplierId)
-
-  const {
-    data: ordersData,
-    isLoading: ordersLoading,
-    error: ordersError,
-    refetch: refetchOrders
-  } = useGetSupplierOrdersQuery(supplierId)
+    isLoading,
+    error,
+    refetch
+  } = useGetSupplierByIdQuery(supplierId, {
+    skip: !supplierId
+  })
 
   const supplier = supplierData?.data
-  const orders = ordersData?.data || []
-  const ordersPagination = null
 
   // Helper functions
-  const formatDate = (dateString: string | null | undefined) => {
+  const formatDate = (dateString: string | null) => {
     if (!dateString) return 'Never'
     return new Date(dateString).toLocaleDateString('en-IN', {
       day: '2-digit',
@@ -98,97 +94,113 @@ export default function SupplierDetailsPage() {
   }
 
   const getStatusColor = (status: string) => {
-    const colors = {
-      'active': 'bg-green-100 text-green-800 border-green-200',
-      'inactive': 'bg-red-100 text-red-800 border-red-200',
-      'pending': 'bg-yellow-100 text-yellow-800 border-yellow-200',
-      'blacklisted': 'bg-red-100 text-red-800 border-red-200',
-      'suspended': 'bg-orange-100 text-orange-800 border-orange-200'
+    switch (status) {
+      case 'active':
+        return 'bg-gradient-to-r from-green-500 to-emerald-500'
+      case 'inactive':
+        return 'bg-gradient-to-r from-gray-500 to-slate-500'
+      case 'blacklisted':
+        return 'bg-gradient-to-r from-red-500 to-pink-500'
+      case 'pending':
+        return 'bg-gradient-to-r from-yellow-500 to-orange-500'
+      default:
+        return 'bg-gradient-to-r from-gray-500 to-slate-500'
     }
-    return colors[status as keyof typeof colors] || 'bg-gray-100 text-gray-800 border-gray-200'
   }
 
-  const getOrderStatusColor = (status: string) => {
-    const colors = {
-      'draft': 'bg-gray-100 text-gray-800',
-      'pending_approval': 'bg-yellow-100 text-yellow-800',
-      'approved': 'bg-blue-100 text-blue-800',
-      'sent': 'bg-purple-100 text-purple-800',
-      'acknowledged': 'bg-indigo-100 text-indigo-800',
-      'in_progress': 'bg-orange-100 text-orange-800',
-      'partially_received': 'bg-amber-100 text-amber-800',
-      'completed': 'bg-green-100 text-green-800',
-      'cancelled': 'bg-red-100 text-red-800',
-      'closed': 'bg-gray-100 text-gray-800'
+  const getCategoryColor = (category: string) => {
+    switch (category) {
+      case 'approved':
+        return 'bg-gradient-to-r from-blue-500 to-indigo-500'
+      case 'preferred':
+        return 'bg-gradient-to-r from-purple-500 to-violet-500'
+      case 'strategic':
+        return 'bg-gradient-to-r from-indigo-500 to-purple-500'
+      case 'conditional':
+        return 'bg-gradient-to-r from-orange-500 to-red-500'
+      default:
+        return 'bg-gradient-to-r from-gray-500 to-slate-500'
     }
-    return colors[status as keyof typeof colors] || 'bg-gray-100 text-gray-800'
-  }
-
-  const getRatingStars = (rating: number) => {
-    return Array.from({ length: 5 }, (_, index) => (
-      <Star
-        key={index}
-        className={clsx(
-          "h-4 w-4",
-          index < rating ? "text-yellow-400 fill-current" : "text-gray-300"
-        )}
-      />
-    ))
   }
 
   const getIndustryIcon = (industry: string) => {
-    const icons = {
-      'Manufacturing': Factory,
-      'Electronics': Zap,
-      'Food Processing': Package,
-      'Pharmaceuticals': Shield,
-      'Textiles': Briefcase,
-      'Automotive': Settings
+    switch (industry?.toLowerCase()) {
+      case 'automotive':
+        return <Truck className="h-6 w-6 text-blue-600" />
+      case 'manufacturing':
+        return <Factory className="h-6 w-6 text-gray-600" />
+      case 'electronics':
+        return <Settings className="h-6 w-6 text-purple-600" />
+      case 'food processing':
+        return <Package className="h-6 w-6 text-green-600" />
+      default:
+        return <Building className="h-6 w-6 text-gray-600" />
     }
-    const IconComponent = icons[industry as keyof typeof icons] || Building
-    return <IconComponent className="h-5 w-5" />
+  }
+
+  const getPerformanceColor = (value: number, type: 'positive' | 'negative') => {
+    if (type === 'positive') {
+      if (value >= 80) return 'text-green-600'
+      if (value >= 60) return 'text-yellow-600'
+      return 'text-red-600'
+    } else {
+      if (value <= 20) return 'text-green-600'
+      if (value <= 40) return 'text-yellow-600'
+      return 'text-red-600'
+    }
+  }
+
+  const handleEditSupplier = () => {
+    setEditingSupplier(supplier)
+    setShowSupplierForm(true)
   }
 
   const tabs = [
-    { id: 'overview', name: 'Overview', icon: Building },
-    { id: 'orders', name: 'Purchase Orders', icon: Package },
+    { id: 'overview', name: 'Overview', icon: Eye },
     { id: 'performance', name: 'Performance', icon: BarChart3 },
-    { id: 'documents', name: 'Documents', icon: FileText }
+    { id: 'financial', name: 'Financial', icon: DollarSign },
+    { id: 'compliance', name: 'Compliance', icon: Shield },
+    { id: 'activity', name: 'Activity', icon: Activity }
   ]
 
-  if (supplierLoading) {
+  if (isLoading) {
     return (
       <AppLayout>
-        <div className="p-4 sm:p-6">
-          <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-12">
-            <div className="flex flex-col items-center justify-center">
-              <Loader2 className="h-8 w-8 animate-spin text-blue-600 mb-4" />
-              <p className="text-gray-600">Loading supplier details...</p>
+        <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 flex items-center justify-center">
+          <div className="text-center">
+            <div className="relative">
+              <div className="h-16 w-16 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full flex items-center justify-center mx-auto mb-4 animate-pulse">
+                <Building className="h-8 w-8 text-white" />
+              </div>
+              <div className="absolute inset-0 h-16 w-16 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full animate-ping opacity-20"></div>
             </div>
+            <p className="text-gray-600 text-lg font-medium">Loading supplier details...</p>
+            <p className="text-gray-500 text-sm mt-2">Please wait while we fetch the information</p>
           </div>
         </div>
       </AppLayout>
     )
   }
 
-  if (supplierError || !supplier) {
+  if (error || !supplier) {
     return (
       <AppLayout>
-        <div className="p-4 sm:p-6">
-          <div className="bg-white rounded-2xl shadow-lg border border-red-200 p-12">
-            <div className="flex flex-col items-center justify-center">
-              <AlertCircle className="h-12 w-12 text-red-500 mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">Supplier Not Found</h3>
-              <p className="text-red-600 text-center mb-4">
-                The supplier you're looking for doesn't exist or has been removed.
-              </p>
-              <Button
-                onClick={() => router.push('/suppliers')}
-                className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
-              >
-                Back to Suppliers
-              </Button>
+        <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 flex items-center justify-center">
+          <div className="text-center max-w-md">
+            <div className="h-20 w-20 bg-gradient-to-r from-red-500 to-pink-500 rounded-full flex items-center justify-center mx-auto mb-6">
+              <AlertCircle className="h-10 w-10 text-white" />
             </div>
+            <h3 className="text-xl font-bold text-gray-900 mb-2">Supplier Not Found</h3>
+            <p className="text-gray-600 mb-6">
+              The supplier you're looking for doesn't exist or has been removed.
+            </p>
+            <Button
+              onClick={() => router.push('/suppliers')}
+              className="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white px-6 py-3 rounded-xl font-medium shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
+            >
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back to Suppliers
+            </Button>
           </div>
         </div>
       </AppLayout>
@@ -197,567 +209,517 @@ export default function SupplierDetailsPage() {
 
   return (
     <AppLayout>
-      <div className="p-4 sm:p-6 space-y-6">
-        {/* Enhanced Header with Glassmorphism */}
-        <div className="relative overflow-hidden bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-700 rounded-3xl shadow-2xl">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
+        {/* Hero Header */}
+        <div className="relative overflow-hidden bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-700">
           {/* Background Pattern */}
-          <div className="absolute inset-0 bg-white/10">
+          <div className="absolute inset-0 bg-black/10">
             <div className="absolute inset-0" style={{
               backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.1'%3E%3Ccircle cx='30' cy='30' r='2'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
             }} />
           </div>
 
-          <div className="relative p-8 text-white">
-            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
-              <div className="flex items-center gap-6">
+          <div className="relative px-6 py-8">
+            <div className="max-w-7xl mx-auto">
+              {/* Navigation */}
+              <div className="flex items-center justify-between mb-8">
                 <Button
                   onClick={() => router.push('/suppliers')}
-                  className="p-3 bg-white/20 hover:bg-white/30 rounded-2xl transition-all duration-300 transform hover:scale-110 backdrop-blur-sm border border-white border-white/30"
+                  className="bg-white/20 hover:bg-white/30 text-white border border-white/30 px-4 py-2 rounded-xl font-medium transition-all duration-300 transform hover:scale-105 backdrop-blur-sm"
                 >
-                  <ArrowLeft className="h-6 w-6" />
+                  <ArrowLeft className="h-4 w-4 mr-2" />
+                  Back to Suppliers
                 </Button>
+                
+                <div className="flex items-center gap-3">
+                  <Button
+                    onClick={handleEditSupplier}
+                    className="bg-white text-blue-600 hover:bg-blue-50 px-6 py-2 rounded-xl font-medium shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
+                  >
+                    <Edit className="h-4 w-4 mr-2" />
+                    Edit Supplier
+                  </Button>
+                  
+                  <Button className="bg-white/20 hover:bg-white/30 text-white border border-white/30 p-2 rounded-xl transition-all duration-300 transform hover:scale-105 backdrop-blur-sm">
+                    <MoreHorizontal className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
 
+              {/* Supplier Info */}
+              <div className="flex items-center gap-6 mb-8">
                 <div className="relative">
-                  <div className="absolute inset-0 bg-white/20 rounded-2xl blur-xl"></div>
-                  <div className="relative p-4 bg-white/20 backdrop-blur-sm rounded-2xl border border-white border-white/30">
-                    <Building className="h-10 w-10 text-white drop-shadow-lg" />
+                  <div className="absolute inset-0 bg-white/20 rounded-3xl blur-xl"></div>
+                  <div className="relative h-24 w-24 bg-white/20 backdrop-blur-sm rounded-3xl border border-white/30 flex items-center justify-center">
+                    <span className="text-white font-bold text-3xl">
+                      {supplier.supplierName?.charAt(0)?.toUpperCase() || 'S'}
+                    </span>
                   </div>
                 </div>
-
-                <div>
-                  <h1 className="text-3xl lg:text-4xl font-bold bg-gradient-to-r from-white to-blue-100 bg-clip-text text-transparent drop-shadow-lg">
-                    {supplier.supplierName || supplier.displayName}
+                
+                <div className="flex-1">
+                  <h1 className="text-4xl font-bold bg-gradient-to-r from-white to-blue-100 bg-clip-text text-transparent drop-shadow-lg mb-2">
+                    {supplier.supplierName}
                   </h1>
-                  <p className="text-blue-100 mt-2 text-lg font-medium">
-                    {supplier.supplierCode} • {supplier.relationship?.supplierCategory || 'General'}
+                  <p className="text-blue-100 text-xl font-medium mb-3">
+                    {supplier.supplierCode} • {supplier.relationship?.supplierType || 'General'}
                   </p>
-                  <div className="flex items-center gap-4 mt-3">
-                    <div className="flex items-center gap-2 px-3 py-1 bg-white/20 rounded-full backdrop-blur-sm">
-                      <span className={clsx(
-                        'h-2 w-2 rounded-full',
-                        supplier.isActive ? 'bg-green-400' : 'bg-red-400'
-                      )}></span>
-                      <span className="text-sm font-medium">{supplier.isActive ? 'ACTIVE' : 'INACTIVE'}</span>
+                  
+                  <div className="flex items-center gap-4">
+                    <span className={clsx(
+                      'px-4 py-2 rounded-full text-sm font-medium text-white shadow-lg',
+                      getStatusColor(supplier.isActive ? 'active' : 'inactive')
+                    )}>
+                      {supplier.isActive ? 'ACTIVE' : 'INACTIVE'}
+                    </span>
+                    <span className={clsx(
+                      'px-4 py-2 rounded-full text-sm font-medium text-white shadow-lg',
+                      getCategoryColor(supplier.relationship?.supplierCategory || '')
+                    )}>
+                      {supplier.relationship?.supplierCategory?.toUpperCase() || 'N/A'}
+                    </span>
+                    <div className="flex items-center gap-1 px-3 py-2 bg-white/20 rounded-full backdrop-blur-sm">
+                      <Star className="h-4 w-4 text-yellow-300 fill-current" />
+                      <span className="text-white font-medium">{supplier.quality?.qualityRating || 0}/5</span>
                     </div>
-                    <div className="flex items-center gap-2 px-3 py-1 bg-white/20 rounded-full backdrop-blur-sm">
-                      <span className="text-sm font-medium">{supplier.relationship?.supplierType?.toUpperCase() || 'TRADER'}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Quick Stats */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="bg-white/20 backdrop-blur-sm rounded-2xl p-4 border border-white/30">
+                  <div className="flex items-center gap-3">
+                    <div className="h-10 w-10 bg-white/20 rounded-xl flex items-center justify-center">
+                      <Package className="h-5 w-5 text-white" />
                     </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-3">
-                <Button
-                  onClick={() => refetchSupplier()}
-                  disabled={supplierLoading}
-                  className="bg-white/20 hover:bg-white/30 text-white border border-white border-white/30 px-5 py-3 rounded-2xl transition-all duration-300 transform hover:scale-105 backdrop-blur-sm font-medium disabled:opacity-50"
-                >
-                  <RefreshCw className={clsx("h-5 w-5 mr-2 transition-transform", supplierLoading && "animate-spin")} />
-                  Refresh
-                </Button>
-
-                <Button
-                  onClick={() => router.push(`/suppliers/${supplierId}/edit`)}
-                  className="bg-white text-blue-600 hover:bg-blue-50 px-6 py-3 rounded-2xl transition-all duration-300 transform hover:scale-105 font-semibold shadow-lg hover:shadow-xl"
-                >
-                  <Edit className="h-5 w-5 mr-2" />
-                  Edit Supplier
-                </Button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Enhanced Quick Stats */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {/* Total Orders Card */}
-          <div className="group relative overflow-hidden bg-white rounded-3xl shadow-lg hover:shadow-2xl border border-gray-100 p-6 transition-all duration-500 transform hover:-translate-y-2 hover:scale-105">
-            <div className="absolute inset-0 bg-gradient-to-br from-blue-50 to-indigo-50 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-            <div className="relative flex items-center justify-between">
-              <div className="flex-1">
-                <p className="text-sm font-semibold text-gray-600 uppercase tracking-wider mb-2">Total Orders</p>
-                <p className="text-3xl font-bold text-gray-900 mb-1">
-                  {supplier.supplyHistory?.totalOrders || 0}
-                </p>
-                <div className="flex items-center text-xs text-gray-500">
-                  <div className="h-1 w-8 bg-blue-200 rounded-full mr-2">
-                    <div className="h-1 bg-blue-500 rounded-full" style={{ width: '85%' }}></div>
-                  </div>
-                  <span>Active orders</span>
-                </div>
-              </div>
-              <div className="relative">
-                <div className="absolute inset-0 bg-blue-500 rounded-2xl blur-lg opacity-20 group-hover:opacity-40 transition-opacity duration-500"></div>
-                <div className="relative p-4 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl shadow-lg group-hover:shadow-xl transition-shadow duration-500">
-                  <Package className="h-8 w-8 text-white" />
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Total Spend Card */}
-          <div className="group relative overflow-hidden bg-white rounded-3xl shadow-lg hover:shadow-2xl border border-gray-100 p-6 transition-all duration-500 transform hover:-translate-y-2 hover:scale-105">
-            <div className="absolute inset-0 bg-gradient-to-br from-green-50 to-emerald-50 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-            <div className="relative flex items-center justify-between">
-              <div className="flex-1">
-                <p className="text-sm font-semibold text-gray-600 uppercase tracking-wider mb-2">Total Spend</p>
-                <p className="text-3xl font-bold text-gray-900 mb-1">
-                  {formatCurrency(supplier.supplyHistory?.totalOrderValue || 0)}
-                </p>
-                <div className="flex items-center text-xs text-gray-500">
-                  <div className="h-1 w-8 bg-green-200 rounded-full mr-2">
-                    <div className="h-1 bg-green-500 rounded-full" style={{ width: '92%' }}></div>
-                  </div>
-                  <span>This year</span>
-                </div>
-              </div>
-              <div className="relative">
-                <div className="absolute inset-0 bg-green-500 rounded-2xl blur-lg opacity-20 group-hover:opacity-40 transition-opacity duration-500"></div>
-                <div className="relative p-4 bg-gradient-to-br from-green-500 to-green-600 rounded-2xl shadow-lg group-hover:shadow-xl transition-shadow duration-500">
-                  <DollarSign className="h-8 w-8 text-white" />
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* On-time Delivery Card */}
-          <div className="group relative overflow-hidden bg-white rounded-3xl shadow-lg hover:shadow-2xl border border-gray-100 p-6 transition-all duration-500 transform hover:-translate-y-2 hover:scale-105">
-            <div className="absolute inset-0 bg-gradient-to-br from-purple-50 to-violet-50 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-            <div className="relative flex items-center justify-between">
-              <div className="flex-1">
-                <p className="text-sm font-semibold text-gray-600 uppercase tracking-wider mb-2">On-time Delivery</p>
-                <p className="text-3xl font-bold text-gray-900 mb-1">
-                  {supplier.supplyHistory?.onTimeDeliveryRate || 0}%
-                </p>
-                <div className="flex items-center text-xs text-gray-500">
-                  <div className="h-1 w-8 bg-purple-200 rounded-full mr-2">
-                    <div className="h-1 bg-purple-500 rounded-full" style={{ width: `${supplier.supplyHistory?.onTimeDeliveryRate || 0}%` }}></div>
-                  </div>
-                  <span>Performance</span>
-                </div>
-              </div>
-              <div className="relative">
-                <div className="absolute inset-0 bg-purple-500 rounded-2xl blur-lg opacity-20 group-hover:opacity-40 transition-opacity duration-500"></div>
-                <div className="relative p-4 bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl shadow-lg group-hover:shadow-xl transition-shadow duration-500">
-                  <TrendingUp className="h-8 w-8 text-white" />
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Quality Score Card */}
-          <div className="group relative overflow-hidden bg-white rounded-3xl shadow-lg hover:shadow-2xl border border-gray-100 p-6 transition-all duration-500 transform hover:-translate-y-2 hover:scale-105">
-            <div className="absolute inset-0 bg-gradient-to-br from-orange-50 to-amber-50 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-            <div className="relative flex items-center justify-between">
-              <div className="flex-1">
-                <p className="text-sm font-semibold text-gray-600 uppercase tracking-wider mb-2">Quality Score</p>
-                <p className="text-3xl font-bold text-gray-900 mb-1">
-                  {100 - (supplier.quality?.defectRate || 0)}%
-                </p>
-                <div className="flex items-center text-xs text-gray-500">
-                  <div className="h-1 w-8 bg-orange-200 rounded-full mr-2">
-                    <div className="h-1 bg-orange-500 rounded-full" style={{ width: `${100 - (supplier.quality?.defectRate || 0)}%` }}></div>
-                  </div>
-                  <span>Rating</span>
-                </div>
-              </div>
-              <div className="relative">
-                <div className="absolute inset-0 bg-orange-500 rounded-2xl blur-lg opacity-20 group-hover:opacity-40 transition-opacity duration-500"></div>
-                <div className="relative p-4 bg-gradient-to-br from-orange-500 to-orange-600 rounded-2xl shadow-lg group-hover:shadow-xl transition-shadow duration-500">
-                  <Award className="h-8 w-8 text-white" />
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Enhanced Tabs */}
-        <div className="bg-white rounded-3xl shadow-2xl border border-gray-100 p-2 overflow-hidden">
-          <div className="flex space-x-2 overflow-x-auto">
-            {tabs.map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={clsx(
-                  "flex items-center px-6 py-4 rounded-2xl text-sm font-semibold whitespace-nowrap transition-all duration-300 transform hover:scale-105",
-                  activeTab === tab.id
-                    ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg"
-                    : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
-                )}
-              >
-                <tab.icon className={clsx(
-                  "h-5 w-5 mr-3 transition-all duration-300",
-                  activeTab === tab.id ? "text-white" : "text-gray-500"
-                )} />
-                {tab.name}
-                {activeTab === tab.id && (
-                  <div className="ml-2 h-2 w-2 bg-white rounded-full animate-pulse"></div>
-                )}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Tab Content */}
-        {activeTab === 'overview' && (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Contact Information */}
-            <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                <Phone className="h-5 w-5 mr-2 text-blue-600" />
-                Contact Information
-              </h3>
-              <div className="space-y-4">
-                <div className="flex items-center">
-                  <Mail className="h-4 w-4 mr-3 text-gray-400" />
-                  <div>
-                    <p className="text-sm text-gray-600">Primary Email</p>
-                    <p className="text-gray-900 font-medium">{supplier.contactInfo?.primaryEmail || 'N/A'}</p>
-                  </div>
-                </div>
-                {supplier.contactInfo?.alternateEmail && (
-                  <div className="flex items-center">
-                    <Mail className="h-4 w-4 mr-3 text-gray-400" />
                     <div>
-                      <p className="text-sm text-gray-600">Alternate Email</p>
-                      <p className="text-gray-900 font-medium">{supplier.contactInfo.alternateEmail}</p>
+                      <p className="text-white/80 text-sm">Total Orders</p>
+                      <p className="text-white text-xl font-bold">{supplier.supplyHistory?.totalOrders || 0}</p>
                     </div>
-                  </div>
-                )}
-                <div className="flex items-center">
-                  <Phone className="h-4 w-4 mr-3 text-gray-400" />
-                  <div>
-                    <p className="text-sm text-gray-600">Primary Phone</p>
-                    <p className="text-gray-900 font-medium">{supplier.contactInfo?.primaryPhone || 'N/A'}</p>
                   </div>
                 </div>
-                {supplier.contactInfo?.alternatePhone && (
-                  <div className="flex items-center">
-                    <Phone className="h-4 w-4 mr-3 text-gray-400" />
+                
+                <div className="bg-white/20 backdrop-blur-sm rounded-2xl p-4 border border-white/30">
+                  <div className="flex items-center gap-3">
+                    <div className="h-10 w-10 bg-white/20 rounded-xl flex items-center justify-center">
+                      <DollarSign className="h-5 w-5 text-white" />
+                    </div>
                     <div>
-                      <p className="text-sm text-gray-600">Alternate Phone</p>
-                      <p className="text-gray-900 font-medium">{supplier.contactInfo.alternatePhone}</p>
+                      <p className="text-white/80 text-sm">Total Spend</p>
+                      <p className="text-white text-xl font-bold">
+                        {formatCurrency(supplier.supplyHistory?.totalOrderValue || 0)}
+                      </p>
                     </div>
                   </div>
-                )}
-                <div className="flex items-start">
-                  <MapPin className="h-4 w-4 mr-3 text-gray-400 mt-1" />
-                  <div>
-                    <p className="text-sm text-gray-600">Address</p>
-                    {supplier.addresses?.[0] ? (
-                      <div className="text-gray-900 font-medium">
-                        <div>{supplier.addresses[0].addressLine1}</div>
-                        {supplier.addresses[0].addressLine2 && <div>{supplier.addresses[0].addressLine2}</div>}
-                        <div>{supplier.addresses[0].city}, {supplier.addresses[0].state}</div>
-                        <div>{supplier.addresses[0].pincode}, {supplier.addresses[0].country}</div>
+                </div>
+                
+                <div className="bg-white/20 backdrop-blur-sm rounded-2xl p-4 border border-white/30">
+                  <div className="flex items-center gap-3">
+                    <div className="h-10 w-10 bg-white/20 rounded-xl flex items-center justify-center">
+                      <Clock className="h-5 w-5 text-white" />
+                    </div>
+                    <div>
+                      <p className="text-white/80 text-sm">Lead Time</p>
+                      <p className="text-white text-xl font-bold">{supplier.supplyHistory?.averageLeadTime || 0} days</p>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="bg-white/20 backdrop-blur-sm rounded-2xl p-4 border border-white/30">
+                  <div className="flex items-center gap-3">
+                    <div className="h-10 w-10 bg-white/20 rounded-xl flex items-center justify-center">
+                      <TrendingUp className="h-5 w-5 text-white" />
+                    </div>
+                    <div>
+                      <p className="text-white/80 text-sm">On-time Delivery</p>
+                      <p className="text-white text-xl font-bold">{supplier.supplyHistory?.onTimeDeliveryRate || 0}%</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Main Content */}
+        <div className="max-w-7xl mx-auto px-6 py-8">
+          {/* Tabs */}
+          <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-2 mb-8">
+            <div className="flex space-x-2 overflow-x-auto">
+              {tabs.map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={clsx(
+                    "flex items-center px-6 py-3 rounded-xl text-sm font-semibold whitespace-nowrap transition-all duration-300 transform hover:scale-105",
+                    activeTab === tab.id
+                      ? "bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-lg"
+                      : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+                  )}
+                >
+                  <tab.icon className={clsx(
+                    "h-5 w-5 mr-3 transition-all duration-300",
+                    activeTab === tab.id ? "text-white" : "text-gray-500"
+                  )} />
+                  {tab.name}
+                  {activeTab === tab.id && (
+                    <div className="ml-2 h-2 w-2 bg-white rounded-full animate-pulse"></div>
+                  )}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Tab Content */}
+          {activeTab === 'overview' && (
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+              {/* Left Column */}
+              <div className="lg:col-span-2 space-y-6">
+                {/* Contact Information */}
+                <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6 hover:shadow-xl transition-shadow duration-300">
+                  <h2 className="text-xl font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                    <Users className="h-5 w-5 text-blue-600" />
+                    Contact Information
+                  </h2>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
+                      <Mail className="h-5 w-5 text-blue-600" />
+                      <div>
+                        <p className="text-sm text-gray-600">Primary Email</p>
+                        <p className="font-medium text-gray-900">{supplier.contactInfo?.primaryEmail || 'N/A'}</p>
                       </div>
-                    ) : (
-                      <p className="text-gray-900 font-medium">N/A</p>
+                    </div>
+                    <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
+                      <Phone className="h-5 w-5 text-green-600" />
+                      <div>
+                        <p className="text-sm text-gray-600">Primary Phone</p>
+                        <p className="font-medium text-gray-900">{supplier.contactInfo?.primaryPhone || 'N/A'}</p>
+                      </div>
+                    </div>
+                    {supplier.contactInfo?.alternateEmail && (
+                      <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
+                        <Mail className="h-5 w-5 text-blue-600" />
+                        <div>
+                          <p className="text-sm text-gray-600">Alternate Email</p>
+                          <p className="font-medium text-gray-900">{supplier.contactInfo.alternateEmail}</p>
+                        </div>
+                      </div>
+                    )}
+                    {supplier.contactInfo?.alternatePhone && (
+                      <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
+                        <Phone className="h-5 w-5 text-green-600" />
+                        <div>
+                          <p className="text-sm text-gray-600">Alternate Phone</p>
+                          <p className="font-medium text-gray-900">{supplier.contactInfo.alternatePhone}</p>
+                        </div>
+                      </div>
                     )}
                   </div>
                 </div>
-              </div>
-            </div>
 
-            {/* Business Details */}
-            <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                <Building className="h-5 w-5 mr-2 text-blue-600" />
-                Business Details
-              </h3>
-              <div className="space-y-4">
-                <div className="flex items-center">
-                  {getIndustryIcon(supplier.businessInfo?.industry || '')}
-                  <div className="ml-3">
-                    <p className="text-sm text-gray-600">Industry</p>
-                    <p className="text-gray-900 font-medium">{supplier.businessInfo?.industry || 'N/A'}</p>
+                {/* Business Information */}
+                <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6 hover:shadow-xl transition-shadow duration-300">
+                  <h2 className="text-xl font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                    <Building className="h-5 w-5 text-blue-600" />
+                    Business Information
+                  </h2>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
+                      {getIndustryIcon(supplier.businessInfo?.industry || '')}
+                      <div>
+                        <p className="text-sm text-gray-600">Industry</p>
+                        <p className="font-medium text-gray-900">{supplier.businessInfo?.industry || 'N/A'}</p>
+                      </div>
+                    </div>
+                    <div className="p-3 bg-gray-50 rounded-xl">
+                      <p className="text-sm text-gray-600">Business Type</p>
+                      <p className="font-medium text-gray-900">{supplier.businessInfo?.businessType || 'N/A'}</p>
+                    </div>
+                    <div className="p-3 bg-gray-50 rounded-xl">
+                      <p className="text-sm text-gray-600">GSTIN</p>
+                      <p className="font-medium text-gray-900">{supplier.registrationDetails?.gstin || 'N/A'}</p>
+                    </div>
+                    <div className="p-3 bg-gray-50 rounded-xl">
+                      <p className="text-sm text-gray-600">PAN</p>
+                      <p className="font-medium text-gray-900">{supplier.registrationDetails?.pan || 'N/A'}</p>
+                    </div>
+                    {supplier.businessInfo?.website && (
+                      <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
+                        <Globe className="h-5 w-5 text-blue-600" />
+                        <div>
+                          <p className="text-sm text-gray-600">Website</p>
+                          <a 
+                            href={supplier.businessInfo.website} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="font-medium text-blue-600 hover:underline flex items-center gap-1"
+                          >
+                            {supplier.businessInfo.website}
+                            <ExternalLink className="h-3 w-3" />
+                          </a>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
-                <div className="flex items-center">
-                  <Building className="h-4 w-4 mr-3 text-gray-400" />
-                  <div>
-                    <p className="text-sm text-gray-600">Business Type</p>
-                    <p className="text-gray-900 font-medium">{supplier.businessInfo?.businessType || 'N/A'}</p>
-                  </div>
-                </div>
-                <div className="flex items-center">
-                  <FileText className="h-4 w-4 mr-3 text-gray-400" />
-                  <div>
-                    <p className="text-sm text-gray-600">PAN Number</p>
-                    <p className="text-gray-900 font-medium">{supplier.registrationDetails?.pan || 'N/A'}</p>
-                  </div>
-                </div>
-                <div className="flex items-center">
-                  <CreditCard className="h-4 w-4 mr-3 text-gray-400" />
-                  <div>
-                    <p className="text-sm text-gray-600">Payment Terms</p>
-                    <p className="text-gray-900 font-medium">{supplier.financialInfo?.paymentTerms || 'N/A'}</p>
-                  </div>
-                </div>
-                <div className="flex items-center">
-                  <DollarSign className="h-4 w-4 mr-3 text-gray-400" />
-                  <div>
-                    <p className="text-sm text-gray-600">Credit Days</p>
-                    <p className="text-gray-900 font-medium">{supplier.financialInfo?.creditDays || 0} days</p>
-                  </div>
-                </div>
-                <div className="flex items-center">
-                  <Target className="h-4 w-4 mr-3 text-gray-400" />
-                  <div>
-                    <p className="text-sm text-gray-600">Supplier Category</p>
-                    <p className="text-gray-900 font-medium">{supplier.relationship?.supplierCategory || 'N/A'}</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
 
-        {/* Orders Tab */}
-        {activeTab === 'orders' && (
-          <div className="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden">
-            <div className="p-6 border-b border-gray-200">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-900">Purchase Orders</h3>
-                  <p className="text-sm text-gray-600 mt-1">
-                    All purchase orders from this supplier
-                  </p>
-                </div>
-                <Button
-                  onClick={() => refetchOrders()}
-                  disabled={ordersLoading}
-                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
-                >
-                  <RefreshCw className={clsx("h-4 w-4 mr-2", ordersLoading && "animate-spin")} />
-                  Refresh
-                </Button>
-              </div>
-            </div>
-
-            {ordersLoading ? (
-              <div className="p-12">
-                <div className="flex flex-col items-center justify-center">
-                  <Loader2 className="h-8 w-8 animate-spin text-blue-600 mb-4" />
-                  <p className="text-gray-600">Loading orders...</p>
-                </div>
-              </div>
-            ) : ordersError ? (
-              <div className="p-6">
-                <div className="flex items-center gap-3 text-red-600">
-                  <AlertCircle className="h-5 w-5" />
-                  <p>Failed to load orders. Please try again.</p>
-                </div>
-              </div>
-            ) : orders.length === 0 ? (
-              <div className="p-12">
-                <div className="flex flex-col items-center justify-center">
-                  <Package className="h-12 w-12 text-gray-400 mb-4" />
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">No Orders Found</h3>
-                  <p className="text-gray-600 text-center">
-                    No purchase orders have been placed with this supplier yet.
-                  </p>
-                </div>
-              </div>
-            ) : (
-              <>
-                <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead className="bg-gray-50">
-                      <tr>
-                        <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Order Details
-                        </th>
-                        <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Amount
-                        </th>
-                        <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Status
-                        </th>
-                        <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Dates
-                        </th>
-                        <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Actions
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody className="bg-white divide-y divide-gray-200">
-                      {orders.map((order: any) => (
-                        <tr key={order._id} className="hover:bg-gray-50 transition-colors">
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div>
-                              <div className="text-sm font-medium text-gray-900">
-                                {order.orderNumber}
-                              </div>
-                              <div className="text-sm text-gray-500">
-                                {order.items?.length || 0} items
-                              </div>
-                            </div>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="text-sm font-medium text-gray-900">
-                              {formatCurrency(order.totalAmount || 0)}
-                            </div>
-                            <div className="text-sm text-gray-500">
-                              Tax: {formatCurrency(order.taxAmount || 0)}
-                            </div>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <span className={clsx(
-                              'px-2 py-1 rounded-full text-xs font-medium',
-                              getOrderStatusColor(order.status)
-                            )}>
-                              {order.status?.replace('_', ' ').toUpperCase()}
-                            </span>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            <div>Order: {formatDate(order.orderDate)}</div>
-                            <div className="text-gray-500">
-                              Expected: {formatDate(order.expectedDeliveryDate)}
-                            </div>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                            <Button
-                              onClick={() => router.push(`/purchase-orders/${order._id}`)}
-                              className="text-blue-600 hover:text-blue-900 bg-transparent border-0 p-2"
-                              title="View Order"
-                            >
-                              <Eye className="h-4 w-4" />
-                            </Button>
-                          </td>
-                        </tr>
+                {/* Address Information */}
+                {supplier.addresses && supplier.addresses.length > 0 && (
+                  <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6 hover:shadow-xl transition-shadow duration-300">
+                    <h2 className="text-xl font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                      <MapPin className="h-5 w-5 text-blue-600" />
+                      Address Information
+                    </h2>
+                    <div className="space-y-4">
+                      {supplier.addresses.map((address: any, index: number) => (
+                        <div key={index} className="border border-gray-200 rounded-xl p-4 bg-gray-50">
+                          <div className="flex items-center justify-between mb-3">
+                            <h3 className="font-medium text-gray-900">{address.type} Address</h3>
+                            {address.isPrimary && (
+                              <span className="px-3 py-1 bg-blue-100 text-blue-800 text-xs rounded-full font-medium">
+                                Primary
+                              </span>
+                            )}
+                          </div>
+                          <div className="space-y-1 text-gray-700">
+                            <p>{address.addressLine1}</p>
+                            {address.addressLine2 && <p>{address.addressLine2}</p>}
+                            <p>{address.city}, {address.state} {address.pincode}</p>
+                            <p>{address.country}</p>
+                          </div>
+                        </div>
                       ))}
-                    </tbody>
-                  </table>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Right Column */}
+              <div className="space-y-6">
+                {/* Performance Metrics */}
+                <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6 hover:shadow-xl transition-shadow duration-300">
+                  <h2 className="text-xl font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                    <TrendingUp className="h-5 w-5 text-blue-600" />
+                    Performance Metrics
+                  </h2>
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between p-3 bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl">
+                      <div className="flex items-center gap-2">
+                        <CheckCircle2 className="h-4 w-4 text-green-600" />
+                        <span className="text-sm text-gray-600">On-time Delivery</span>
+                      </div>
+                      <span className={clsx("font-bold text-lg", getPerformanceColor(supplier.supplyHistory?.onTimeDeliveryRate || 0, 'positive'))}>
+                        {supplier.supplyHistory?.onTimeDeliveryRate || 0}%
+                      </span>
+                    </div>
+                    
+                    <div className="flex items-center justify-between p-3 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl">
+                      <div className="flex items-center gap-2">
+                        <Star className="h-4 w-4 text-blue-600" />
+                        <span className="text-sm text-gray-600">Quality Rating</span>
+                      </div>
+                      <span className={clsx("font-bold text-lg", getPerformanceColor(supplier.quality?.qualityRating || 0, 'positive'))}>
+                        {supplier.quality?.qualityRating || 0}%
+                      </span>
+                    </div>
+                    
+                    <div className="flex items-center justify-between p-3 bg-gradient-to-r from-red-50 to-pink-50 rounded-xl">
+                      <div className="flex items-center gap-2">
+                        <XCircle className="h-4 w-4 text-red-600" />
+                        <span className="text-sm text-gray-600">Rejection Rate</span>
+                      </div>
+                      <span className={clsx("font-bold text-lg", getPerformanceColor(supplier.supplyHistory?.qualityRejectionRate || 0, 'negative'))}>
+                        {supplier.supplyHistory?.qualityRejectionRate || 0}%
+                      </span>
+                    </div>
+                    
+                    <div className="flex items-center justify-between p-3 bg-gradient-to-r from-purple-50 to-violet-50 rounded-xl">
+                      <div className="flex items-center gap-2">
+                        <TimeIcon className="h-4 w-4 text-purple-600" />
+                        <span className="text-sm text-gray-600">Avg Lead Time</span>
+                      </div>
+                      <span className="font-bold text-lg text-purple-600">
+                        {supplier.supplyHistory?.averageLeadTime || 0} days
+                      </span>
+                    </div>
+                  </div>
                 </div>
 
-                {/* Orders Pagination - Removed since ordersPagination is null */}
-              </>
-            )}
-          </div>
-        )}
+                {/* Financial Information */}
+                <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6 hover:shadow-xl transition-shadow duration-300">
+                  <h2 className="text-xl font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                    <DollarSign className="h-5 w-5 text-blue-600" />
+                    Financial Information
+                  </h2>
+                  <div className="space-y-3">
+                    <div className="flex justify-between items-center p-3 bg-gray-50 rounded-xl">
+                      <span className="text-sm text-gray-600">Payment Terms</span>
+                      <span className="font-medium text-gray-900">{supplier.financialInfo?.paymentTerms || 'N/A'}</span>
+                    </div>
+                    <div className="flex justify-between items-center p-3 bg-gray-50 rounded-xl">
+                      <span className="text-sm text-gray-600">Credit Days</span>
+                      <span className="font-medium text-gray-900">{supplier.financialInfo?.creditDays || 0} days</span>
+                    </div>
+                    <div className="flex justify-between items-center p-3 bg-gray-50 rounded-xl">
+                      <span className="text-sm text-gray-600">Total Purchases</span>
+                      <span className="font-medium text-gray-900">{formatCurrency(supplier.financialInfo?.totalPurchases || 0)}</span>
+                    </div>
+                    <div className="flex justify-between items-center p-3 bg-gray-50 rounded-xl">
+                      <span className="text-sm text-gray-600">Outstanding</span>
+                      <span className="font-medium text-red-600">{formatCurrency(supplier.financialInfo?.outstandingPayable || 0)}</span>
+                    </div>
+                    <div className="flex justify-between items-center p-3 bg-gray-50 rounded-xl">
+                      <span className="text-sm text-gray-600">Currency</span>
+                      <span className="font-medium text-gray-900">{supplier.financialInfo?.currency || 'INR'}</span>
+                    </div>
+                  </div>
+                </div>
 
-        {/* Performance Tab */}
-        {activeTab === 'performance' && (
-          <div className="space-y-6">
+                {/* Relationship Details */}
+                <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6 hover:shadow-xl transition-shadow duration-300">
+                  <h2 className="text-xl font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                    <Briefcase className="h-5 w-5 text-blue-600" />
+                    Relationship Details
+                  </h2>
+                  <div className="space-y-3">
+                    <div className="flex justify-between items-center p-3 bg-gray-50 rounded-xl">
+                      <span className="text-sm text-gray-600">Type</span>
+                      <span className="font-medium text-gray-900">{supplier.relationship?.supplierType || 'N/A'}</span>
+                    </div>
+                    <div className="flex justify-between items-center p-3 bg-gray-50 rounded-xl">
+                      <span className="text-sm text-gray-600">Category</span>
+                      <span className="font-medium text-gray-900">{supplier.relationship?.supplierCategory || 'N/A'}</span>
+                    </div>
+                    <div className="flex justify-between items-center p-3 bg-gray-50 rounded-xl">
+                      <span className="text-sm text-gray-600">Priority</span>
+                      <span className={clsx(
+                        'font-medium px-2 py-1 rounded-full text-xs',
+                        supplier.relationship?.priority === 'high' ? 'bg-red-100 text-red-800' :
+                        supplier.relationship?.priority === 'medium' ? 'bg-yellow-100 text-yellow-800' :
+                        'bg-green-100 text-green-800'
+                      )}>
+                        {supplier.relationship?.priority || 'Low'}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center p-3 bg-gray-50 rounded-xl">
+                      <span className="text-sm text-gray-600">Since</span>
+                      <span className="font-medium text-gray-900">{formatDate(supplier.relationship?.supplierSince || null)}</span>
+                    </div>
+                    <div className="flex justify-between items-center p-3 bg-gray-50 rounded-xl">
+                      <span className="text-sm text-gray-600">Strategic Partner</span>
+                      <span className="font-medium text-gray-900">{supplier.relationship?.strategicPartner ? 'Yes' : 'No'}</span>
+                    </div>
+                    <div className="flex justify-between items-center p-3 bg-gray-50 rounded-xl">
+                      <span className="text-sm text-gray-600">Exclusive</span>
+                      <span className="font-medium text-gray-900">{supplier.relationship?.exclusiveSupplier ? 'Yes' : 'No'}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'performance' && (
             <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-6">Performance Overview</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <div className="text-center p-6 bg-green-50 rounded-xl">
-                  <div className="text-3xl font-bold text-green-600 mb-2">
-                    {supplier.supplyHistory?.onTimeDeliveryRate || 0}%
-                  </div>
-                  <div className="text-sm text-green-600 font-medium">On-time Delivery Rate</div>
-                  <div className="text-xs text-gray-600 mt-1">Last 12 months</div>
-                </div>
-                <div className="text-center p-6 bg-blue-50 rounded-xl">
-                  <div className="text-3xl font-bold text-blue-600 mb-2">
-                    {100 - (supplier.quality?.defectRate || 0)}%
-                  </div>
-                  <div className="text-sm text-blue-600 font-medium">Quality Score</div>
-                  <div className="text-xs text-gray-600 mt-1">Based on defect rate</div>
-                </div>
-                <div className="text-center p-6 bg-purple-50 rounded-xl">
-                  <div className="text-3xl font-bold text-purple-600 mb-2">
-                    {supplier.supplyHistory?.averageLeadTime || 0}
-                  </div>
-                  <div className="text-sm text-purple-600 font-medium">Average Lead Time</div>
-                  <div className="text-xs text-gray-600 mt-1">Days</div>
-                </div>
-                <div className="text-center p-6 bg-orange-50 rounded-xl">
-                  <div className="text-3xl font-bold text-orange-600 mb-2">
-                    {supplier.quality?.returnRate || 0}%
-                  </div>
-                  <div className="text-sm text-orange-600 font-medium">Return Rate</div>
-                  <div className="text-xs text-gray-600 mt-1">Quality issues</div>
-                </div>
+              <h2 className="text-xl font-semibold text-gray-900 mb-6">Performance Analytics</h2>
+              <div className="text-center py-12">
+                <BarChart3 className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-lg font-medium text-gray-900 mb-2">Performance Analytics Coming Soon</h3>
+                <p className="text-gray-600">Detailed performance charts and analytics will be available here.</p>
               </div>
             </div>
+          )}
 
-            {/* Additional Performance Details */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6">
-                <h4 className="text-lg font-semibold text-gray-900 mb-4">Supply History</h4>
+          {activeTab === 'financial' && (
+            <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6">
+              <h2 className="text-xl font-semibold text-gray-900 mb-6">Financial Details</h2>
+              <div className="text-center py-12">
+                <CreditCard className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-lg font-medium text-gray-900 mb-2">Financial Reports Coming Soon</h3>
+                <p className="text-gray-600">Detailed financial reports and analysis will be available here.</p>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'compliance' && (
+            <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6">
+              <h2 className="text-xl font-semibold text-gray-900 mb-6">Compliance & Risk</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-4">
-                  <div className="flex justify-between">
-                    <span className="text-sm text-gray-600">Total Orders</span>
-                    <span className="text-sm font-medium text-gray-900">{supplier.supplyHistory?.totalOrders || 0}</span>
+                  <div className="flex justify-between items-center p-3 bg-gray-50 rounded-xl">
+                    <span className="text-sm text-gray-600">Approval Status</span>
+                    <span className="font-medium text-gray-900">{supplier.compliance?.vendorApprovalStatus || 'N/A'}</span>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-sm text-gray-600">Total Order Value</span>
-                    <span className="text-sm font-medium text-gray-900">{formatCurrency(supplier.supplyHistory?.totalOrderValue || 0)}</span>
+                  <div className="flex justify-between items-center p-3 bg-gray-50 rounded-xl">
+                    <span className="text-sm text-gray-600">Risk Category</span>
+                    <span className="font-medium text-gray-900">{supplier.compliance?.riskCategory || 'N/A'}</span>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-sm text-gray-600">Average Order Value</span>
-                    <span className="text-sm font-medium text-gray-900">{formatCurrency(supplier.supplyHistory?.averageOrderValue || 0)}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-sm text-gray-600">Quality Rejection Rate</span>
-                    <span className="text-sm font-medium text-red-600">{supplier.supplyHistory?.qualityRejectionRate || 0}%</span>
+                  <div className="flex justify-between items-center p-3 bg-gray-50 rounded-xl">
+                    <span className="text-sm text-gray-600">Blacklisted</span>
+                    <span className="font-medium text-gray-900">{supplier.compliance?.blacklisted ? 'Yes' : 'No'}</span>
                   </div>
                 </div>
-              </div>
-
-              <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6">
-                <h4 className="text-lg font-semibold text-gray-900 mb-4">Relationship Details</h4>
                 <div className="space-y-4">
-                  <div className="flex justify-between">
-                    <span className="text-sm text-gray-600">Supplier Since</span>
-                    <span className="text-sm font-medium text-gray-900">{formatDate(supplier.relationship?.supplierSince)}</span>
+                  <div className="flex justify-between items-center p-3 bg-gray-50 rounded-xl">
+                    <span className="text-sm text-gray-600">Environmental</span>
+                    <span className="font-medium text-gray-900">{supplier.compliance?.environmentalCompliance ? 'Yes' : 'No'}</span>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-sm text-gray-600">Supplier Type</span>
-                    <span className="text-sm font-medium text-gray-900">{supplier.relationship?.supplierType || 'N/A'}</span>
+                  <div className="flex justify-between items-center p-3 bg-gray-50 rounded-xl">
+                    <span className="text-sm text-gray-600">Labor</span>
+                    <span className="font-medium text-gray-900">{supplier.compliance?.laborCompliance ? 'Yes' : 'No'}</span>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-sm text-gray-600">Priority</span>
-                    <span className={clsx(
-                      'text-sm font-medium px-2 py-1 rounded-full',
-                      supplier.relationship?.priority === 'high' ? 'bg-red-100 text-red-800' :
-                      supplier.relationship?.priority === 'medium' ? 'bg-yellow-100 text-yellow-800' :
-                      'bg-green-100 text-green-800'
-                    )}>
-                      {supplier.relationship?.priority || 'Low'}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-sm text-gray-600">Strategic Partner</span>
-                    <span className="text-sm font-medium text-gray-900">
-                      {supplier.relationship?.strategicPartner ? 'Yes' : 'No'}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-sm text-gray-600">Compliance Status</span>
-                    <span className={clsx(
-                      'text-sm font-medium px-2 py-1 rounded-full',
-                      supplier.compliance?.vendorApprovalStatus === 'approved' ? 'bg-green-100 text-green-800' :
-                      supplier.compliance?.vendorApprovalStatus === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                      'bg-red-100 text-red-800'
-                    )}>
-                      {supplier.compliance?.vendorApprovalStatus?.toUpperCase() || 'PENDING'}
-                    </span>
+                  <div className="flex justify-between items-center p-3 bg-gray-50 rounded-xl">
+                    <span className="text-sm text-gray-600">Safety</span>
+                    <span className="font-medium text-gray-900">{supplier.compliance?.safetyCompliance ? 'Yes' : 'No'}</span>
                   </div>
                 </div>
               </div>
             </div>
-          </div>
-        )}
+          )}
 
-        {/* Documents Tab */}
-        {activeTab === 'documents' && (
-          <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Documents & Certificates</h3>
-            <div className="text-center py-12">
-              <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">No Documents Available</h3>
-              <p className="text-gray-600">
-                Document management feature will be available soon.
-              </p>
+          {activeTab === 'activity' && (
+            <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6">
+              <h2 className="text-xl font-semibold text-gray-900 mb-6">Recent Activity</h2>
+              <div className="space-y-4">
+                <div className="flex justify-between items-center p-3 bg-gray-50 rounded-xl">
+                  <span className="text-sm text-gray-600">Last Order Date</span>
+                  <span className="font-medium text-gray-900">{formatDate(supplier.supplyHistory?.lastOrderDate || null)}</span>
+                </div>
+                <div className="flex justify-between items-center p-3 bg-gray-50 rounded-xl">
+                  <span className="text-sm text-gray-600">First Order Date</span>
+                  <span className="font-medium text-gray-900">{formatDate(supplier.supplyHistory?.firstOrderDate || null)}</span>
+                </div>
+                <div className="flex justify-between items-center p-3 bg-gray-50 rounded-xl">
+                  <span className="text-sm text-gray-600">Created</span>
+                  <span className="font-medium text-gray-900">{formatDate(supplier.createdAt || null)}</span>
+                </div>
+                <div className="flex justify-between items-center p-3 bg-gray-50 rounded-xl">
+                  <span className="text-sm text-gray-600">Last Updated</span>
+                  <span className="font-medium text-gray-900">{formatDate(supplier.updatedAt || null)}</span>
+                </div>
+              </div>
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
+
+      {/* Supplier Form Modal */}
+      {showSupplierForm && (
+        <SupplierFormModal
+          isOpen={showSupplierForm}
+          onClose={() => {
+            setShowSupplierForm(false)
+            setEditingSupplier(null)
+          }}
+          supplier={editingSupplier}
+          onSuccess={() => {
+            setShowSupplierForm(false)
+            setEditingSupplier(null)
+            refetch()
+          }}
+        />
+      )}
     </AppLayout>
   )
 }

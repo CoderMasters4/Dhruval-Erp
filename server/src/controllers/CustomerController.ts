@@ -18,7 +18,7 @@ export class CustomerController extends BaseController<ICustomer> {
   async createCustomer(req: Request, res: Response): Promise<void> {
     try {
       const customerData = req.body;
-      const createdBy = req.user?.id;
+      const createdBy = (req.user?.userId || req.user?._id)?.toString();
 
       const customer = await this.customerService.createCustomer(customerData, createdBy);
 
@@ -67,17 +67,20 @@ export class CustomerController extends BaseController<ICustomer> {
   async getCustomersByCompany(req: Request, res: Response): Promise<void> {
     try {
       const companyId = req.user?.companyId;
-      const { page = 1, limit = 10, search, status, companyId: filterCompanyId } = req.query;
+      const { page = 1, limit = 10, search, status, customerType, sortBy, sortOrder, companyId: filterCompanyId } = req.query;
 
       // If super admin is filtering by specific company, use that company ID
       if (filterCompanyId && req.user?.isSuperAdmin) {
-        const customers = await this.customerService.getCustomersByCompany(filterCompanyId.toString(), {
-          page: parseInt(page as string),
-          limit: parseInt(limit as string),
-          search: search as string,
-          status: status as string
-        });
-        this.sendSuccess(res, customers, 'Customers retrieved successfully');
+              const result = await this.customerService.getCustomersByCompany(filterCompanyId.toString(), {
+        page: parseInt(page as string),
+        limit: parseInt(limit as string),
+        search: search as string,
+        status: status as string,
+        customerType: customerType as string,
+        sortBy: sortBy as string,
+        sortOrder: sortOrder as string
+      });
+      this.sendPaginatedResponse(res, { documents: result.data, pagination: result.pagination }, 'Customers retrieved successfully');
         return;
       }
 
@@ -99,9 +102,21 @@ export class CustomerController extends BaseController<ICustomer> {
         options.status = status;
       }
 
-      const customers = await this.customerService.getCustomersByCompany(companyId.toString(), options);
+      if (customerType) {
+        options.customerType = customerType;
+      }
 
-      this.sendSuccess(res, customers, 'Customers retrieved successfully');
+      if (sortBy) {
+        options.sortBy = sortBy;
+      }
+
+      if (sortOrder) {
+        options.sortOrder = sortOrder;
+      }
+
+      const result = await this.customerService.getCustomersByCompany(companyId.toString(), options);
+
+      this.sendPaginatedResponse(res, { documents: result.data, pagination: result.pagination }, 'Customers retrieved successfully');
     } catch (error) {
       this.sendError(res, error, 'Failed to get customers');
     }
@@ -118,7 +133,7 @@ export class CustomerController extends BaseController<ICustomer> {
         return;
       }
 
-      const { page = 1, limit = 10, search, status, customerType, companyId } = req.query;
+      const { page = 1, limit = 10, search, status, customerType, companyId, sortBy, sortOrder } = req.query;
 
       const options: any = {
         page: parseInt(page as string),
@@ -141,9 +156,17 @@ export class CustomerController extends BaseController<ICustomer> {
         options.companyId = companyId;
       }
 
-      const customers = await this.customerService.getAllCustomers(options);
+      if (sortBy) {
+        options.sortBy = sortBy;
+      }
 
-      this.sendSuccess(res, customers, 'All customers retrieved successfully');
+      if (sortOrder) {
+        options.sortOrder = sortOrder;
+      }
+
+      const result = await this.customerService.getAllCustomers(options);
+
+      this.sendPaginatedResponse(res, { documents: result.data, pagination: result.pagination }, 'All customers retrieved successfully');
     } catch (error) {
       this.sendError(res, error, 'Failed to get all customers');
     }
@@ -156,7 +179,7 @@ export class CustomerController extends BaseController<ICustomer> {
     try {
       const { id } = req.params;
       const updateData = req.body;
-      const updatedBy = req.user?.id;
+      const updatedBy = (req.user?.userId || req.user?._id)?.toString();
 
       const customer = await this.customerService.update(id, updateData, updatedBy);
 
@@ -185,7 +208,7 @@ export class CustomerController extends BaseController<ICustomer> {
     try {
       const { id } = req.params;
       const { creditLimit } = req.body;
-      const updatedBy = req.user?.id;
+      const updatedBy = (req.user?.userId || req.user?._id)?.toString();
 
       const customer = await this.customerService.updateCreditLimit(id, creditLimit, updatedBy);
 
@@ -226,7 +249,7 @@ export class CustomerController extends BaseController<ICustomer> {
   async deleteCustomer(req: Request, res: Response): Promise<void> {
     try {
       const { id } = req.params;
-      const deletedBy = req.user?.id;
+      const deletedBy = (req.user?.userId || req.user?._id)?.toString();
 
       const customer = await this.customerService.update(id, { 
         isActive: false,
@@ -292,8 +315,8 @@ export class CustomerController extends BaseController<ICustomer> {
         companyId,
         $or: [
           { customerName: { $regex: searchTerm, $options: 'i' } },
-          { customerCode: { $regex: searchTerm, $options: 'i' } },
-          { 'contactInfo.emails.label': { $regex: searchTerm, $options: 'i' } }
+          { 'contactInfo.primaryEmail': { $regex: searchTerm, $options: 'i' } },
+          { 'contactInfo.primaryPhone': { $regex: searchTerm, $options: 'i' } }
         ],
         isActive: true
       }, { limit: parseInt(limit as string) });

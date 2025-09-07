@@ -8,6 +8,74 @@ const router = express.Router();
 // Apply authentication middleware to all routes
 router.use(authenticate);
 
+// Get supplier by ID (for standalone suppliers)
+router.get('/supplier/:supplierId', async (req, res) => {
+  try {
+    const { supplierId } = req.params;
+    const companyId = req.user?.companyId;
+
+    if (!companyId) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Company ID is required' 
+      });
+    }
+
+    // Import the SupplierService
+    const { SupplierService } = require('../services/SupplierService');
+    const supplierService = new SupplierService();
+
+    // Try to find by ID first with company filter, then by code
+    let supplier = await supplierService.findOne({ 
+      _id: supplierId, 
+      companyId: companyId 
+    }, ['companyId']);
+    
+    // If not found by ID, try by code
+    if (!supplier) {
+      supplier = await supplierService.getSupplierByCode(supplierId, companyId.toString());
+    }
+
+    if (!supplier) {
+      return res.status(404).json({ 
+        success: false, 
+        message: 'Supplier not found' 
+      });
+    }
+
+    res.json({
+      success: true,
+      data: supplier
+    });
+  } catch (error) {
+    res.status(500).json({ 
+      success: false,
+      message: 'Error fetching supplier', 
+      error: error.message 
+    });
+  }
+});
+
+// Get supplier orders
+router.get('/supplier/:supplierId/orders', async (req, res) => {
+  try {
+    const { supplierId } = req.params;
+    
+    // This would typically fetch orders for the supplier
+    // For now, return empty array
+    res.json({
+      success: true,
+      data: []
+    });
+  } catch (error) {
+    res.status(500).json({ 
+      success: false,
+      message: 'Error fetching supplier orders', 
+      error: error.message 
+    });
+  }
+});
+
 // Get all suppliers for a spare
 router.get('/:spareId', async (req, res) => {
   try {

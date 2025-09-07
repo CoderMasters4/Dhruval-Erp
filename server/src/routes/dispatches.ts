@@ -130,16 +130,19 @@ router.put('/:id', authenticate, async (req, res) => {
     const { id } = req.params;
     const { user } = req as any;
     const {
-      title,
-      description,
+      dispatchNumber,
+      dispatchDate,
+      dispatchType,
       status,
       priority,
       assignedTo,
       companyId,
-      dueDate,
-      location,
-      vehicleId,
-      vehicleNumber
+      sourceWarehouseId,
+      customerOrderId,
+      vehicleNumber,
+      deliveryPersonName,
+      deliveryPersonNumber,
+      notes
     } = req.body;
 
     const dispatch = await Dispatch.findById(id);
@@ -153,8 +156,8 @@ router.put('/:id', authenticate, async (req, res) => {
     }
 
     // Validate required fields
-    if (!title || !description || !assignedTo || !dueDate || !location) {
-      return res.status(400).json({ message: 'Missing required fields' });
+    if (!sourceWarehouseId || !customerOrderId) {
+      return res.status(400).json({ message: 'Missing required fields: source warehouse and customer order' });
     }
 
     // Set company ID based on user role
@@ -178,16 +181,19 @@ router.put('/:id', authenticate, async (req, res) => {
     }
 
     // Update dispatch
-    dispatch.title = title;
-    dispatch.description = description;
+    dispatch.dispatchNumber = dispatchNumber;
+    dispatch.dispatchDate = dispatchDate;
+    dispatch.dispatchType = dispatchType;
     dispatch.status = status;
     dispatch.priority = priority;
     dispatch.assignedTo = assignedTo;
     dispatch.companyId = finalCompanyId;
-    dispatch.dueDate = dueDate;
-    dispatch.location = location;
-    dispatch.vehicleId = vehicleId;
+    dispatch.sourceWarehouseId = sourceWarehouseId;
+    dispatch.customerOrderId = customerOrderId;
     dispatch.vehicleNumber = vehicleNumber;
+    dispatch.deliveryPersonName = deliveryPersonName;
+    dispatch.deliveryPersonNumber = deliveryPersonNumber;
+    dispatch.notes = notes;
     dispatch.updatedAt = new Date();
 
     await dispatch.save();

@@ -86,9 +86,9 @@ export class CustomerService extends BaseService<ICustomer> {
   }
 
   /**
-   * Get customers by company with optimization
+   * Get customers by company with optimization and pagination
    */
-  async getCustomersByCompany(companyId: string, options: any = {}): Promise<ICustomer[]> {
+  async getCustomersByCompany(companyId: string, options: any = {}): Promise<{ data: ICustomer[], pagination: any }> {
     try {
       const startTime = Date.now();
 
@@ -98,19 +98,70 @@ export class CustomerService extends BaseService<ICustomer> {
         ...QueryOptimizer.sanitizeFilter(options.filter || {})
       });
 
-      // Optimize query options
-      const queryOptions = QueryOptimizer.optimizeFindOptions({
-        ...options,
-        lean: true, // Use lean queries for better performance
-        sort: options.sort || { customerName: 1 }
+      // Add search filter if provided
+      if (options.search) {
+        const searchRegex = new RegExp(options.search, 'i');
+        filter.$or = [
+          { customerName: searchRegex },
+          { 'contactInfo.primaryEmail': searchRegex },
+          { 'contactInfo.primaryPhone': searchRegex },
+          // Legacy field support
+          { name: searchRegex },
+          { email: searchRegex },
+          { phone: searchRegex }
+        ];
+      }
+
+      // Add status filter if provided
+      if (options.status) {
+        filter.isActive = options.status === 'active';
+      }
+
+      // Add customer type filter if provided
+      if (options.customerType) {
+        filter['businessInfo.businessType'] = options.customerType;
+      }
+
+      // Get total count for pagination
+      const total = await this.count(filter);
+
+      // Pagination parameters
+      const page = parseInt(options.page) || 1;
+      const limit = parseInt(options.limit) || 10;
+      const skip = (page - 1) * limit;
+
+      // Sort options
+      let sort: any = { customerName: 1 };
+      if (options.sortBy) {
+        sort = { [options.sortBy]: options.sortOrder === 'desc' ? -1 : 1 };
+      }
+
+      // Get customers with pagination
+      const customers = await this.findManyLean(filter, {
+        skip,
+        limit,
+        sort,
+        lean: true
       });
 
-      // Use lean query for better performance
-      const customers = await this.findManyLean(filter, queryOptions);
+      // Calculate pagination info
+      const totalPages = Math.ceil(total / limit);
+      const hasNextPage = page < totalPages;
+      const hasPrevPage = page > 1;
 
       QueryOptimizer.logQueryPerformance('getCustomersByCompany', startTime, customers.length, { companyId });
 
-      return customers;
+      return {
+        data: customers,
+        pagination: {
+          page,
+          limit,
+          total,
+          totalPages,
+          hasNextPage,
+          hasPrevPage
+        }
+      };
     } catch (error) {
       logger.error('Error getting customers by company', { error, companyId });
       throw error;
@@ -118,9 +169,9 @@ export class CustomerService extends BaseService<ICustomer> {
   }
 
   /**
-   * Get all customers across companies (Super Admin only)
+   * Get all customers across companies (Super Admin only) with pagination
    */
-  async getAllCustomers(options: any = {}): Promise<ICustomer[]> {
+  async getAllCustomers(options: any = {}): Promise<{ data: ICustomer[], pagination: any }> {
     try {
       const startTime = Date.now();
 
@@ -129,11 +180,15 @@ export class CustomerService extends BaseService<ICustomer> {
 
       // Add search filter if provided
       if (options.search) {
+        const searchRegex = new RegExp(options.search, 'i');
         filter.$or = [
-          { customerName: { $regex: options.search, $options: 'i' } },
-          { 'contactInfo.primaryEmail': { $regex: options.search, $options: 'i' } },
-          { 'contactInfo.primaryPhone': { $regex: options.search, $options: 'i' } },
-          { customerCode: { $regex: options.search, $options: 'i' } }
+          { customerName: searchRegex },
+          { 'contactInfo.primaryEmail': searchRegex },
+          { 'contactInfo.primaryPhone': searchRegex },
+          // Legacy field support
+          { name: searchRegex },
+          { email: searchRegex },
+          { phone: searchRegex }
         ];
       }
 
@@ -152,19 +207,46 @@ export class CustomerService extends BaseService<ICustomer> {
         filter.companyId = options.companyId;
       }
 
-      // Optimize query options
-      const queryOptions = QueryOptimizer.optimizeFindOptions({
-        ...options,
-        lean: true,
-        sort: options.sort || { customerName: 1 }
+      // Get total count for pagination
+      const total = await this.count(filter);
+
+      // Pagination parameters
+      const page = parseInt(options.page) || 1;
+      const limit = parseInt(options.limit) || 10;
+      const skip = (page - 1) * limit;
+
+      // Sort options
+      let sort: any = { customerName: 1 };
+      if (options.sortBy) {
+        sort = { [options.sortBy]: options.sortOrder === 'desc' ? -1 : 1 };
+      }
+
+      // Get customers with pagination
+      const customers = await this.findManyLean(filter, {
+        skip,
+        limit,
+        sort,
+        lean: true
       });
 
-      // Use lean query for better performance
-      const customers = await this.findManyLean(filter, queryOptions);
+      // Calculate pagination info
+      const totalPages = Math.ceil(total / limit);
+      const hasNextPage = page < totalPages;
+      const hasPrevPage = page > 1;
 
       QueryOptimizer.logQueryPerformance('getAllCustomers', startTime, customers.length, { options });
 
-      return customers;
+      return {
+        data: customers,
+        pagination: {
+          page,
+          limit,
+          total,
+          totalPages,
+          hasNextPage,
+          hasPrevPage
+        }
+      };
     } catch (error) {
       logger.error('Error getting all customers', { error, options });
       throw error;

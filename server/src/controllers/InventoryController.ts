@@ -83,7 +83,14 @@ export class InventoryController extends BaseController<IInventoryItem> {
       const startTime = Date.now();
       this.validateRequestWithTracking(req);
 
-      const companyId = req.user?.companyId;
+      // Get company ID from user or query parameter (for super admin)
+      let companyId = req.user?.companyId;
+      
+      // For super admin, allow company ID from query parameter
+      if (req.user?.isSuperAdmin && req.query.companyId) {
+        companyId = req.query.companyId as any;
+      }
+      
       if (!companyId) {
         this.sendError(res, new Error('Company ID is required'), 'Company ID is required', 400);
         return;
@@ -122,6 +129,7 @@ export class InventoryController extends BaseController<IInventoryItem> {
         sort: { createdAt: -1 }
       });
 
+
       // Set cache headers for better performance
       this.setCacheHeaders(res, 180); // 3 minutes cache
 
@@ -142,7 +150,7 @@ export class InventoryController extends BaseController<IInventoryItem> {
     try {
       const { itemId } = req.params;
       const { warehouseId, quantity, movementType, reference, notes } = req.body;
-      const updatedBy = req.user?.id;
+      const updatedBy = (req.user?.userId || req.user?._id)?.toString();
 
       const result = await this.inventoryService.updateStock(
         itemId,
@@ -171,7 +179,7 @@ export class InventoryController extends BaseController<IInventoryItem> {
     try {
       const { itemId } = req.params;
       const { quantity, reference, notes } = req.body;
-      const reservedBy = req.user?.id;
+      const reservedBy = (req.user?.userId || req.user?._id)?.toString();
 
       const result = await this.inventoryService.reserveStock(
         itemId,
@@ -197,7 +205,7 @@ export class InventoryController extends BaseController<IInventoryItem> {
     try {
       const { itemId } = req.params;
       const { quantity, reference, notes } = req.body;
-      const releasedBy = req.user?.id;
+      const releasedBy = (req.user?.userId || req.user?._id)?.toString();
 
       const result = await this.inventoryService.releaseReservedStock(
         itemId,

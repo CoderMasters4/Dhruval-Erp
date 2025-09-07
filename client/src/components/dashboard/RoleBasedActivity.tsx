@@ -62,6 +62,22 @@ const getStatusBadge = (status: string) => {
   }
 }
 
+// Format timestamp for better display
+const formatTimestamp = (timestamp: string) => {
+  try {
+    const date = new Date(timestamp)
+    const now = new Date()
+    const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60))
+    
+    if (diffInMinutes < 1) return 'Just now'
+    if (diffInMinutes < 60) return `${diffInMinutes} minutes ago`
+    if (diffInMinutes < 1440) return `${Math.floor(diffInMinutes / 60)} hours ago`
+    return `${Math.floor(diffInMinutes / 1440)} days ago`
+  } catch {
+    return timestamp
+  }
+}
+
 interface RoleBasedActivityProps {
   activities?: Activity[]
   loading?: boolean
@@ -76,12 +92,22 @@ export const RoleBasedActivity: React.FC<RoleBasedActivityProps> = ({ activities
   const actualPermissions = permissions || dashboardPermissions
 
   // Fetch real activities from API if not provided
-  const { data: apiActivities, isLoading: apiLoading } = useGetRecentActivitiesQuery({ limit: 10 })
+  const { data: apiActivities, isLoading: apiLoading, error: apiError } = useGetRecentActivitiesQuery({ limit: 10 })
 
   // Use provided activities, then API activities, then empty array
   const activities = propActivities || apiActivities || []
 
   const isLoading = loading || apiLoading
+
+  // Debug logging
+  console.log('RoleBasedActivity Debug:', {
+    propActivities: propActivities?.length || 0,
+    apiActivities: apiActivities?.length || 0,
+    finalActivities: activities?.length || 0,
+    isLoading,
+    apiError,
+    isSuperAdmin
+  })
 
   if (isLoading) {
     return (
@@ -100,6 +126,24 @@ export const RoleBasedActivity: React.FC<RoleBasedActivityProps> = ({ activities
               </div>
             </div>
           ))}
+        </div>
+      </div>
+    )
+  }
+
+  // Show error state if API failed
+  if (apiError) {
+    return (
+      <div className="bg-white rounded-xl border-2 border-sky-500 p-6">
+        <div className="flex items-center justify-between mb-6">
+          <h3 className="text-lg font-semibold text-black">Recent Activity</h3>
+        </div>
+        <div className="text-center py-8">
+          <AlertTriangle className="h-12 w-12 text-red-500 mx-auto mb-4" />
+          <h3 className="text-lg font-medium text-red-900 mb-2">Error Loading Activities</h3>
+          <p className="text-red-600">
+            Failed to load recent activities. Please try refreshing the page.
+          </p>
         </div>
       </div>
     )
@@ -129,7 +173,12 @@ export const RoleBasedActivity: React.FC<RoleBasedActivityProps> = ({ activities
   return (
     <div className="bg-white rounded-xl border-2 border-sky-500 p-4 sm:p-6">
       <div className="flex items-center justify-between mb-4 sm:mb-6">
-        <h3 className="text-base sm:text-lg font-semibold text-black">Recent Activity</h3>
+        <h3 className="text-base sm:text-lg font-semibold text-black">
+          Recent Activity
+          <span className="ml-2 text-sm font-normal text-gray-500">
+            ({activities.length} activities)
+          </span>
+        </h3>
         <button className="text-xs sm:text-sm text-sky-500 hover:text-black font-medium">
           View All
         </button>
@@ -154,7 +203,7 @@ export const RoleBasedActivity: React.FC<RoleBasedActivityProps> = ({ activities
                 {activity.description}
               </p>
               <div className="flex items-center mt-1 sm:mt-2 text-xs text-black opacity-60">
-                <span>{activity.timestamp}</span>
+                <span>{formatTimestamp(activity.timestamp)}</span>
                 <span className="mx-1 sm:mx-2">•</span>
                 <span className="truncate">{activity.user}</span>
               </div>

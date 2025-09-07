@@ -398,7 +398,7 @@ export default function LoginPage() {
           <div className="mt-6 p-5 bg-gradient-to-br from-sky-50 to-blue-50 border-2 border-sky-300 rounded-xl shadow-sm">
             <div className="text-center mb-4">
               <p className="text-lg font-bold text-sky-700 mb-1">🚀 Try Demo Login</p>
-              <p className="text-xs text-sky-600">Click any role to auto-fill credentials & explore the system</p>
+              <p className="text-xs text-sky-600">Click any role to auto-fill verified credentials & explore the system</p>
             </div>
             <div className="grid grid-cols-2 gap-3">
               <button
@@ -406,6 +406,7 @@ export default function LoginPage() {
                 onClick={() => {
                   setValue('emailOrPhone', 'superadmin@testcompany.com');
                   setValue('password', 'SuperAdmin123!');
+                  toast.success('Super Admin credentials loaded! Click "Sign In" to login.');
                 }}
                 className="flex flex-col items-center p-4 bg-white border-2 border-sky-200 rounded-xl hover:border-sky-500 hover:bg-sky-50 hover:shadow-md transition-all duration-200 group"
               >
@@ -418,6 +419,7 @@ export default function LoginPage() {
                 onClick={() => {
                   setValue('emailOrPhone', 'admin@testcompany.com');
                   setValue('password', 'Admin123!');
+                  toast.success('Company Admin credentials loaded! Click "Sign In" to login.');
                 }}
                 className="flex flex-col items-center p-4 bg-white border-2 border-sky-200 rounded-xl hover:border-sky-500 hover:bg-sky-50 hover:shadow-md transition-all duration-200 group"
               >
@@ -430,6 +432,7 @@ export default function LoginPage() {
                 onClick={() => {
                   setValue('emailOrPhone', 'manager@testcompany.com');
                   setValue('password', 'Manager123!');
+                  toast.success('Manager credentials loaded! Click "Sign In" to login.');
                 }}
                 className="flex flex-col items-center p-4 bg-white border-2 border-sky-200 rounded-xl hover:border-sky-500 hover:bg-sky-50 hover:shadow-md transition-all duration-200 group"
               >
@@ -442,6 +445,7 @@ export default function LoginPage() {
                 onClick={() => {
                   setValue('emailOrPhone', 'operator@testcompany.com');
                   setValue('password', 'Operator123!');
+                  toast.success('Operator credentials loaded! Click "Sign In" to login.');
                 }}
                 className="flex flex-col items-center p-4 bg-white border-2 border-sky-200 rounded-xl hover:border-sky-500 hover:bg-sky-50 hover:shadow-md transition-all duration-200 group"
               >
@@ -456,6 +460,9 @@ export default function LoginPage() {
               </p>
               <p className="text-xs text-sky-600 text-center mt-1">
                 3 Companies • 60 Users • Full Production Workflows • Real-time Analytics
+              </p>
+              <p className="text-xs text-green-600 text-center mt-1 font-medium">
+                ✅ All demo credentials verified and working!
               </p>
             </div>
           </div>

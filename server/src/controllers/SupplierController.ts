@@ -1,9 +1,8 @@
 import { Request, Response } from 'express';
 import { BaseController } from './BaseController';
 import { SupplierService } from '../services/SupplierService';
-import { ISpareSupplier } from '../models/Supplier';
 
-export class SupplierController extends BaseController<ISpareSupplier> {
+export class SupplierController extends BaseController<any> {
   private supplierService: SupplierService;
 
   constructor() {
@@ -18,9 +17,21 @@ export class SupplierController extends BaseController<ISpareSupplier> {
   async createSupplier(req: Request, res: Response): Promise<void> {
     try {
       const supplierData = req.body;
-      const createdBy = req.user?.id;
+      const createdBy = (req.user?.userId || req.user?._id)?.toString();
+      const companyId = req.user?.companyId;
 
-      const supplier = await this.supplierService.createSupplier(supplierData, createdBy);
+      if (!companyId) {
+        res.status(400).json({
+          success: false,
+          message: 'Company ID is required'
+        });
+        return;
+      }
+
+      const supplier = await this.supplierService.createSupplier({
+        ...supplierData,
+        companyId
+      }, createdBy);
 
       res.status(201).json({
         success: true,
@@ -73,7 +84,7 @@ export class SupplierController extends BaseController<ISpareSupplier> {
   async getSuppliersByCompany(req: Request, res: Response): Promise<void> {
     try {
       const companyId = req.user?.companyId;
-      const { page = 1, limit = 10, search, category } = req.query;
+      const { page = 1, limit = 10, search, category, status } = req.query;
 
       if (!companyId) {
         this.sendError(res, new Error('Company ID is required'), 'Company ID is required', 400);
@@ -93,9 +104,13 @@ export class SupplierController extends BaseController<ISpareSupplier> {
         options.category = category;
       }
 
-      const suppliers = await this.supplierService.findMany({});
+      if (status) {
+        options.status = status;
+      }
 
-      this.sendSuccess(res, suppliers, 'Suppliers retrieved successfully');
+      const result = await this.supplierService.getSuppliersByCompany(companyId.toString(), options);
+
+      this.sendSuccess(res, result, 'Suppliers retrieved successfully');
     } catch (error) {
       this.sendError(res, error, 'Failed to get suppliers');
     }
@@ -117,7 +132,45 @@ export class SupplierController extends BaseController<ISpareSupplier> {
         return;
       }
 
-      const suppliers = await this.supplierService.findMany({});
+      const suppliers = await this.supplierService.findMany({
+        companyId,
+        'relationship.supplierCategory': category
+      });
+
+      res.json({
+        success: true,
+        data: suppliers
+      });
+    } catch (error) {
+      this.sendError(res, error, "Operation failed");
+    }
+  }
+
+  /**
+   * Search suppliers
+   */
+  async searchSuppliers(req: Request, res: Response): Promise<void> {
+    try {
+      const { q } = req.query;
+      const companyId = req.user?.companyId;
+
+      if (!companyId) {
+        res.status(400).json({
+          success: false,
+          message: 'Company ID is required'
+        });
+        return;
+      }
+
+      if (!q) {
+        res.status(400).json({
+          success: false,
+          message: 'Search query is required'
+        });
+        return;
+      }
+
+      const suppliers = await this.supplierService.searchSuppliers(q as string, companyId.toString());
 
       res.json({
         success: true,
@@ -135,7 +188,7 @@ export class SupplierController extends BaseController<ISpareSupplier> {
     try {
       const { id } = req.params;
       const updateData = req.body;
-      const updatedBy = req.user?.id;
+      const updatedBy = (req.user?.userId || req.user?._id)?.toString();
 
       const supplier = await this.supplierService.update(id, updateData, updatedBy);
 
@@ -164,7 +217,7 @@ export class SupplierController extends BaseController<ISpareSupplier> {
     try {
       const { id } = req.params;
       const { rating } = req.body;
-      const ratedBy = req.user?.id;
+      const ratedBy = (req.user?.userId || req.user?._id)?.toString();
 
       const supplier = await this.supplierService.updateSupplierRating(id, rating, ratedBy);
 
@@ -201,11 +254,7 @@ export class SupplierController extends BaseController<ISpareSupplier> {
         return;
       }
 
-      const stats = {
-        totalSuppliers: await this.supplierService.count({}),
-        activeSuppliers: await this.supplierService.count({ status: 'active' }),
-        primarySuppliers: await this.supplierService.count({ isPrimary: true })
-      };
+      const stats = await this.supplierService.getSupplierStats(companyId.toString());
 
       res.json({
         success: true,
@@ -222,7 +271,7 @@ export class SupplierController extends BaseController<ISpareSupplier> {
   async deleteSupplier(req: Request, res: Response): Promise<void> {
     try {
       const { id } = req.params;
-      const deletedBy = req.user?.id;
+      const deletedBy = (req.user?.userId || req.user?._id)?.toString();
 
       const supplier = await this.supplierService.update(id, { 
         isActive: false,
@@ -273,45 +322,30 @@ export class SupplierController extends BaseController<ISpareSupplier> {
   }
 
   /**
-   * Search suppliers
+   * Get supplier orders
    */
-  async searchSuppliers(req: Request, res: Response): Promise<void> {
+  async getSupplierOrders(req: Request, res: Response): Promise<void> {
     try {
+      const { id } = req.params;
       const companyId = req.user?.companyId;
-      const { q: searchTerm, limit = 10 } = req.query;
 
       if (!companyId) {
-        res.status(400).json({
-          success: false,
-          message: 'Company ID is required'
-        });
+        this.sendError(res, new Error('Company ID is required'), 'Company ID is required', 400);
         return;
       }
 
-      if (!searchTerm) {
-        res.status(400).json({
-          success: false,
-          message: 'Search term is required'
-        });
-        return;
-      }
-
-      const suppliers = await this.supplierService.findMany({
-        companyId,
-        $or: [
-          { supplierName: { $regex: searchTerm, $options: 'i' } },
-          { supplierCode: { $regex: searchTerm, $options: 'i' } },
-          { 'contactInfo.emails.label': { $regex: searchTerm, $options: 'i' } }
-        ],
-        isActive: true
-      }, { limit: parseInt(limit as string) });
+      // For now, return empty array since we don't have orders implemented yet
+      // TODO: Implement actual order fetching logic
+      const orders = [];
 
       res.json({
         success: true,
-        data: suppliers
+        data: orders,
+        message: 'Supplier orders retrieved successfully'
       });
     } catch (error) {
-      this.sendError(res, error, "Operation failed");
+      this.sendError(res, error, 'Failed to get supplier orders');
     }
   }
+
 }

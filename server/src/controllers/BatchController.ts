@@ -1,4 +1,5 @@
 import { Request, Response } from 'express';
+import { Types } from 'mongoose';
 import { InventoryBatch } from '@/models/InventoryBatch';
 import InventoryItem from '@/models/InventoryItem';
 
@@ -145,7 +146,7 @@ export class BatchController {
   async createBatch(req: Request, res: Response): Promise<void> {
     try {
       const companyId = req.user?.companyId;
-      const userId = req.user?.id;
+      const userId = (req.user?.userId || req.user?._id)?.toString();
 
       if (!companyId || !userId) {
         this.sendError(res, new Error('User context not found'), 'Authentication required', 401);
@@ -181,7 +182,7 @@ export class BatchController {
     try {
       const { id } = req.params;
       const companyId = req.user?.companyId;
-      const userId = req.user?.id;
+      const userId = (req.user?.userId || req.user?._id)?.toString();
 
       const batch = await InventoryBatch.findOne({ _id: id, companyId });
       if (!batch) {
@@ -270,7 +271,7 @@ export class BatchController {
       const { id } = req.params;
       const { stage, operator, machineId, notes, qualityCheck } = req.body;
       const companyId = req.user?.companyId;
-      const userId = req.user?.id;
+      const userId = (req.user?.userId || req.user?._id)?.toString();
 
       const batch = await InventoryBatch.findOne({ _id: id, companyId });
       if (!batch) {
@@ -297,7 +298,7 @@ export class BatchController {
       });
 
       batch.processStage = stage;
-      batch.lastModifiedBy = userId;
+      batch.lastModifiedBy = userId as any;
 
       // Update quality if provided
       if (qualityCheck) {

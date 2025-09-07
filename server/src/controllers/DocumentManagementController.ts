@@ -236,10 +236,11 @@ export class DocumentManagementController extends BaseController<any> {
       const filter: any = { companyId };
       
       if (query) {
+        const searchRegex = new RegExp(query as string, 'i');
         filter.$or = [
-          { fileName: { $regex: query, $options: 'i' } },
-          { description: { $regex: query, $options: 'i' } },
-          { tags: { $in: [new RegExp(query as string, 'i')] } }
+          { fileName: searchRegex },
+          { description: searchRegex },
+          { tags: { $in: [searchRegex] } }
         ];
       }
       

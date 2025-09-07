@@ -27,19 +27,19 @@ export class S3Service {
   constructor() {
     // Configure for Contabo S3-compatible storage
     this.s3Client = new S3Client({
-      region: config.AWS_REGION,
+      region: config.CONTABO_REGION,
       credentials: {
-        accessKeyId: config.AWS_ACCESS_KEY_ID,
-        secretAccessKey: config.AWS_SECRET_ACCESS_KEY,
+        accessKeyId: config.CONTABO_ACCESS_KEY,
+        secretAccessKey: config.CONTABO_SECRET_KEY,
       },
-      endpoint: process.env.CONTABO_S3_ENDPOINT || 'https://eu2.contabostorage.com', // Contabo endpoint
+      endpoint: config.CONTABO_ENDPOINT,
       forcePathStyle: true, // Required for Contabo
     });
 
-    this.bucket = config.AWS_S3_BUCKET;
+    this.bucket = config.CONTABO_BUCKET_NAME;
 
     if (!this.bucket) {
-      throw new Error('S3 bucket name is required');
+      throw new Error('Contabo bucket name is required');
     }
   }
 
@@ -78,12 +78,12 @@ export class S3Service {
         Key: key,
         Body: file,
         ContentType: contentType,
-        ACL: 'private', // Private by default
+        ACL: 'public-read', // Make files public for Contabo S3
       });
 
       await this.s3Client.send(command);
 
-      const url = `https://${this.bucket}.s3.${config.AWS_REGION}.amazonaws.com/${key}`;
+      const url = S3Service.generatePublicUrl(key);
 
       logger.info('File uploaded successfully', {
         key,
@@ -111,36 +111,101 @@ export class S3Service {
     contentType: string,
     folder?: string,
     options: PresignedUrlOptions = {}
-  ): Promise<{ uploadUrl: string; key: string }> {
+  ): Promise<{ uploadUrl: string; key: string; expiresAt: Date }> {
     try {
       const key = this.generateFileKey(fileName, folder);
       const { expiresIn = 3600, contentLength } = options; // 1 hour default
+
+      // Validate file type
+      const allowedTypes = [
+        'image/jpeg', 'image/png', 'image/gif', 'image/webp',
+        'application/pdf', 'text/csv',
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        'application/vnd.ms-excel', 'application/msword',
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+      ];
+
+      if (!allowedTypes.includes(contentType)) {
+        throw new AppError(`File type ${contentType} is not allowed`, 400);
+      }
 
       const command = new PutObjectCommand({
         Bucket: this.bucket,
         Key: key,
         ContentType: contentType,
         ContentLength: contentLength,
-        ACL: 'private',
+        ACL: 'public-read',
+        Metadata: {
+          originalName: fileName,
+          uploadedAt: new Date().toISOString(),
+          contentType: contentType
+        }
       });
 
       const uploadUrl = await getSignedUrl(this.s3Client, command, {
         expiresIn,
       });
 
+      const expiresAt = new Date(Date.now() + expiresIn * 1000);
+
       logger.info('Generated presigned upload URL', {
         key,
         expiresIn,
-        contentType
+        expiresAt: expiresAt.toISOString(),
+        contentType,
+        fileName
       });
 
       return {
         uploadUrl,
-        key
+        key,
+        expiresAt
       };
     } catch (error) {
-      logger.error('Error generating presigned upload URL', { error, fileName, folder });
+      logger.error('Error generating presigned upload URL', { error, fileName, folder, contentType });
+      if (error instanceof AppError) {
+        throw error;
+      }
       throw new AppError('Failed to generate upload URL', 500);
+    }
+  }
+
+  /**
+   * Generate public URL for uploaded file
+   */
+  static generatePublicUrl(key: string): string {
+    // Contabo S3 public URL format: https://region.contabostorage.com/accessKey:bucket/fileKey
+    const publicUrl = `https://${config.CONTABO_REGION}.contabostorage.com/${config.CONTABO_ACCESS_KEY}:${config.CONTABO_BUCKET_NAME}/${key}`;
+    
+    logger.info('Generated public URL', {
+      key,
+      region: config.CONTABO_REGION,
+      accessKey: config.CONTABO_ACCESS_KEY ? 'present' : 'missing',
+      bucket: config.CONTABO_BUCKET_NAME,
+      publicUrl
+    });
+    
+    return publicUrl;
+  }
+
+  /**
+   * Generate presigned URL for viewing file
+   */
+  async generateViewUrl(key: string, expiresIn: number = 3600): Promise<string> {
+    try {
+      const command = new GetObjectCommand({
+        Bucket: this.bucket,
+        Key: key,
+      });
+
+      const viewUrl = await getSignedUrl(this.s3Client, command, {
+        expiresIn,
+      });
+
+      return viewUrl;
+    } catch (error) {
+      logger.error('Error generating view URL', { error, key });
+      throw new AppError('Failed to generate view URL', 500);
     }
   }
 
@@ -150,8 +215,14 @@ export class S3Service {
   async getPresignedDownloadUrl(
     key: string,
     expiresIn: number = 3600
-  ): Promise<string> {
+  ): Promise<{ downloadUrl: string; expiresAt: Date }> {
     try {
+      // First check if file exists
+      const exists = await this.fileExists(key);
+      if (!exists) {
+        throw new AppError('File not found', 404);
+      }
+
       const command = new GetObjectCommand({
         Bucket: this.bucket,
         Key: key,
@@ -161,14 +232,23 @@ export class S3Service {
         expiresIn,
       });
 
+      const expiresAt = new Date(Date.now() + expiresIn * 1000);
+
       logger.info('Generated presigned download URL', {
         key,
-        expiresIn
+        expiresIn,
+        expiresAt: expiresAt.toISOString()
       });
 
-      return downloadUrl;
+      return {
+        downloadUrl,
+        expiresAt
+      };
     } catch (error) {
       logger.error('Error generating presigned download URL', { error, key });
+      if (error instanceof AppError) {
+        throw error;
+      }
       throw new AppError('Failed to generate download URL', 500);
     }
   }
@@ -261,6 +341,20 @@ export class S3Service {
     } catch (error) {
       logger.error('Error extracting key from URL', { error, url });
       return null;
+    }
+  }
+
+  /**
+   * Generate public URL for a file
+   */
+  generatePublicUrl(key: string): string {
+    try {
+      // Use the base URL from config
+      const baseUrl = config.CONTABO_BASE_URL || `https://${this.bucket}.s3.${config.CONTABO_REGION}.amazonaws.com`;
+      return `${baseUrl}/${encodeURIComponent(key)}`;
+    } catch (error) {
+      logger.error('Error generating public URL', { error, key });
+      throw new AppError('Failed to generate public URL', 500);
     }
   }
 }

@@ -27,6 +27,7 @@ import {
 } from '@/lib/features/hospitality/hospitalityApi'
 import CustomerVisitFormModal from './modals/CustomerVisitFormModal'
 import CustomerVisitDetailsModal from './modals/CustomerVisitDetailsModal'
+import ExpenseDetailsModal from './modals/ExpenseDetailsModal'
 import { toast } from 'react-hot-toast'
 import { formatDistanceToNow, format } from 'date-fns'
 
@@ -51,6 +52,7 @@ export default function CustomerVisitList({
 }: CustomerVisitListProps) {
   const [editingVisit, setEditingVisit] = useState<CustomerVisit | null>(null)
   const [viewingVisit, setViewingVisit] = useState<CustomerVisit | null>(null)
+  const [viewingExpenses, setViewingExpenses] = useState<CustomerVisit | null>(null)
 
   const [deleteVisit, { isLoading: isDeleting }] = useDeleteCustomerVisitMutation()
   const [approveVisit, { isLoading: isApproving }] = useApproveVisitMutation()
@@ -63,6 +65,10 @@ export default function CustomerVisitList({
 
   const handleView = (visit: CustomerVisit) => {
     setViewingVisit(visit)
+  }
+
+  const handleViewExpenses = (visit: CustomerVisit) => {
+    setViewingExpenses(visit)
   }
 
   const handleDelete = async (visitId: string) => {
@@ -356,8 +362,19 @@ export default function CustomerVisitList({
                     onClick={() => handleView(visit)}
                     variant="outline"
                     size="sm"
+                    title="View Details"
                   >
                     <Eye className="w-4 h-4" />
+                  </Button>
+                  
+                  <Button
+                    onClick={() => handleViewExpenses(visit)}
+                    variant="outline"
+                    size="sm"
+                    title="View Expenses"
+                    className="text-green-600 hover:text-green-700 hover:bg-green-50"
+                  >
+                    <DollarSign className="w-4 h-4" />
                   </Button>
                   
                   <Button
@@ -466,6 +483,19 @@ export default function CustomerVisitList({
           isOpen={true}
           onClose={() => setViewingVisit(null)}
           visit={viewingVisit}
+        />
+      )}
+
+      {/* Expense Details Modal */}
+      {viewingExpenses && (
+        <ExpenseDetailsModal
+          isOpen={true}
+          onClose={() => setViewingExpenses(null)}
+          visit={viewingExpenses}
+          onEdit={() => {
+            setViewingExpenses(null)
+            setEditingVisit(viewingExpenses)
+          }}
         />
       )}
     </>

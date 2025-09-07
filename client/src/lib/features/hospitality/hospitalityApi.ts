@@ -103,6 +103,7 @@ export interface CustomerVisit {
   } | string
   
   totalExpenses: {
+    [x: string]: number
     accommodation: number
     food: number
     transportation: number

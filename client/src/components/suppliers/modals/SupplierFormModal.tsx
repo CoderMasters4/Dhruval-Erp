@@ -6,286 +6,158 @@ import {
   User,
   Mail,
   Phone,
-  Globe,
   MapPin,
   Package,
-  Clock,
-  Star,
-  Shield,
-  FileText,
+  Save,
   Loader2,
-  Plus,
-  Trash2,
-  Briefcase,
-  DollarSign
+  FileText
 } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
+import { Label } from '@/components/ui/label'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Textarea } from '@/components/ui/textarea'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { 
   Supplier, 
   useCreateSupplierMutation, 
   useUpdateGeneralSupplierMutation 
 } from '@/lib/api/suppliersApi'
-import { useAuth } from '@/components/auth/AuthProvider'
-import { clsx } from 'clsx'
+import { useGetAllCompaniesQuery } from '@/lib/api/authApi'
+import { useSelector } from 'react-redux'
+import { selectCurrentUser, selectIsSuperAdmin } from '@/lib/features/auth/authSlice'
 
 interface SupplierFormModalProps {
   isOpen: boolean
   onClose: () => void
   onSuccess: () => void
   supplier?: Supplier | null
-  spareId?: string
 }
 
-interface FormData {
+interface SimpleFormData {
+  companyId: string
   supplierName: string
-  displayName: string
   supplierCode: string
-  partNumber: string
-  isPrimary: boolean
-  leadTime: number
-  minOrderQuantity: number
-  qualityRating: number
-  warrantyPeriod: number
   contactPerson: string
   email: string
   phone: string
-  website: string
   address: string
-  status: 'active' | 'inactive' | 'blacklisted' | 'pending'
-  
-  // Contact Information
-  contactInfo: {
-    primaryEmail: string
-    alternateEmail: string
-    primaryPhone: string
-    alternatePhone: string
-  }
-  
-  // Business Information
-  businessInfo: {
-    industry: string
-    businessType: string
-  }
-  
-  // Registration Details
-  registrationDetails: {
-    pan: string
-    gstin: string
-  }
-  
-  // Financial Information
-  financialInfo: {
-    paymentTerms: string
-    creditDays: number
-  }
-  
-  // Relationship Information
-  relationship: {
-    supplierCategory: string
-    supplierType: string
-    supplierSince: string
-    priority: 'low' | 'medium' | 'high'
-    strategicPartner: boolean
-  }
-  
+  city: string
+  state: string
+  pincode: string
+  gstin: string
+  pan: string
+  status: 'active' | 'inactive' | 'pending'
   notes: string
 }
 
-const initialFormData: FormData = {
+const initialFormData: SimpleFormData = {
+  companyId: '',
   supplierName: '',
-  displayName: '',
   supplierCode: '',
-  partNumber: '',
-  isPrimary: false,
-  leadTime: 0,
-  minOrderQuantity: 1,
-  qualityRating: 3,
-  warrantyPeriod: 12,
   contactPerson: '',
   email: '',
   phone: '',
-  website: '',
   address: '',
+  city: '',
+  state: '',
+  pincode: '',
+  gstin: '',
+  pan: '',
   status: 'active',
-  
-  contactInfo: {
-    primaryEmail: '',
-    alternateEmail: '',
-    primaryPhone: '',
-    alternatePhone: ''
-  },
-  
-  businessInfo: {
-    industry: '',
-    businessType: ''
-  },
-  
-  registrationDetails: {
-    pan: '',
-    gstin: ''
-  },
-  
-  financialInfo: {
-    paymentTerms: '',
-    creditDays: 30
-  },
-  
-  relationship: {
-    supplierCategory: '',
-    supplierType: 'trader',
-    supplierSince: new Date().toISOString().split('T')[0],
-    priority: 'medium',
-    strategicPartner: false
-  },
-  
   notes: ''
 }
 
-export const SupplierFormModal: React.FC<SupplierFormModalProps> = ({
-  isOpen,
-  onClose,
-  onSuccess,
-  supplier,
-  spareId
-}) => {
-  const { user } = useAuth()
+export function SupplierFormModal({ isOpen, onClose, onSuccess, supplier }: SupplierFormModalProps) {
+  const [formData, setFormData] = useState<SimpleFormData>(initialFormData)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [errors, setErrors] = useState<Partial<SimpleFormData>>({})
+
+  // User and company info
+  const user = useSelector(selectCurrentUser)
+  const isSuperAdmin = useSelector(selectIsSuperAdmin)
+  const userCompanyId = user?.companyAccess?.[0]?.companyId
+
+  // API hooks
+  const [createSupplier] = useCreateSupplierMutation()
+  const [updateSupplier] = useUpdateGeneralSupplierMutation()
+  const { data: companiesData } = useGetAllCompaniesQuery(undefined, {
+    skip: !isSuperAdmin
+  })
+
+  const companies = companiesData?.data || []
   const isEditing = !!supplier
-  
-  const [formData, setFormData] = useState<FormData>(initialFormData)
-  const [errors, setErrors] = useState<Record<string, string>>({})
-  const [activeTab, setActiveTab] = useState('basic')
-  
-  const [createSupplier, { isLoading: isCreating }] = useCreateSupplierMutation()
-  const [updateSupplier, { isLoading: isUpdating }] = useUpdateGeneralSupplierMutation()
-  
-  const isLoading = isCreating || isUpdating
 
-  // Auto-generate supplier code
-  const generateSupplierCode = () => {
-    const timestamp = Date.now().toString().slice(-6)
-    const random = Math.random().toString(36).substring(2, 5).toUpperCase()
-    return `SUP-${timestamp}-${random}`
-  }
-
-  // Auto-generate supplier ID
-  const generateSupplierId = () => {
-    const timestamp = Date.now().toString().slice(-8)
-    const random = Math.random().toString(36).substring(2, 6).toUpperCase()
-    return `SUPPLIER-${timestamp}-${random}`
-  }
-
-  // Auto-generate part number
-  const generatePartNumber = () => {
-    const timestamp = Date.now().toString().slice(-6)
-    const random = Math.random().toString(36).substring(2, 4).toUpperCase()
-    return `PART-${timestamp}-${random}`
-  }
-
-  // Initialize form data when editing
+  // Reset form when modal opens/closes
   useEffect(() => {
-    if (supplier && isEditing) {
-      setFormData({
-        supplierName: supplier.supplierName || '',
-        displayName: supplier.displayName || '',
-        supplierCode: supplier.supplierCode || '',
-        partNumber: supplier.partNumber || '',
-        isPrimary: supplier.isPrimary || false,
-        leadTime: supplier.leadTime || 0,
-        minOrderQuantity: supplier.minOrderQuantity || 1,
-        qualityRating: supplier.qualityRating || 3,
-        warrantyPeriod: supplier.warrantyPeriod || 12,
-        contactPerson: supplier.contactPerson || '',
-        email: supplier.email || '',
-        phone: supplier.phone || '',
-        website: supplier.website || '',
-        address: supplier.address || '',
-        status: supplier.status || 'active',
-        
-        contactInfo: {
-          primaryEmail: supplier.contactInfo?.primaryEmail || '',
-          alternateEmail: supplier.contactInfo?.alternateEmail || '',
-          primaryPhone: supplier.contactInfo?.primaryPhone || '',
-          alternatePhone: supplier.contactInfo?.alternatePhone || ''
-        },
-        
-        businessInfo: {
-          industry: supplier.businessInfo?.industry || '',
-          businessType: supplier.businessInfo?.businessType || ''
-        },
-        
-        registrationDetails: {
+    if (isOpen) {
+      if (supplier) {
+        // Edit mode - populate with existing data
+        setFormData({
+          companyId: userCompanyId || '',
+          supplierName: supplier.supplierName || '',
+          supplierCode: supplier.supplierCode || '',
+          contactPerson: supplier.contactPerson || '',
+          email: supplier.email || '',
+          phone: supplier.phone || '',
+          address: supplier.address || '',
+          city: supplier.addresses?.[0]?.city || '',
+          state: supplier.addresses?.[0]?.state || '',
+          pincode: supplier.addresses?.[0]?.pincode || '',
+          gstin: supplier.registrationDetails?.gstin || '',
           pan: supplier.registrationDetails?.pan || '',
-          gstin: supplier.registrationDetails?.gstin || ''
-        },
-        
-        financialInfo: {
-          paymentTerms: supplier.financialInfo?.paymentTerms || '',
-          creditDays: supplier.financialInfo?.creditDays || 30
-        },
-        
-        relationship: {
-          supplierCategory: supplier.relationship?.supplierCategory || '',
-          supplierType: supplier.relationship?.supplierType || 'trader',
-          supplierSince: supplier.relationship?.supplierSince ? 
-            new Date(supplier.relationship.supplierSince).toISOString().split('T')[0] : 
-            new Date().toISOString().split('T')[0],
-          priority: supplier.relationship?.priority || 'medium',
-          strategicPartner: supplier.relationship?.strategicPartner || false
-        },
-        
-        notes: supplier.notes || ''
-      })
-    } else {
-      setFormData(initialFormData)
+          status: (supplier.status === 'blacklisted' ? 'inactive' : supplier.status) || 'active',
+          notes: supplier.notes || ''
+        })
+      } else {
+        // Create mode - set defaults
+        setFormData({
+          ...initialFormData,
+          companyId: isSuperAdmin ? '' : userCompanyId || '',
+          supplierCode: `SUPP${Date.now().toString().slice(-6)}`
+        })
+      }
+      setErrors({})
     }
-  }, [supplier, isEditing])
+  }, [isOpen, supplier, isSuperAdmin, userCompanyId])
 
-  const updateFormData = (updates: Partial<FormData>) => {
-    setFormData(prev => ({ ...prev, ...updates }))
-    // Clear errors for updated fields
-    setErrors(prev => {
-      const newErrors = { ...prev }
-      Object.keys(updates).forEach(key => {
-        delete newErrors[key]
-      })
-      return newErrors
-    })
+  const handleInputChange = (field: keyof SimpleFormData, value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: value
+    }))
+    
+    // Clear error for this field
+    if (errors[field]) {
+      setErrors(prev => ({
+        ...prev,
+        [field]: undefined
+      }))
+    }
   }
 
   const validateForm = (): boolean => {
-    const newErrors: Record<string, string> = {}
+    const newErrors: Partial<SimpleFormData> = {}
 
+    if (!formData.companyId) {
+      newErrors.companyId = 'Company is required'
+    }
     if (!formData.supplierName.trim()) {
       newErrors.supplierName = 'Supplier name is required'
     }
-
     if (!formData.supplierCode.trim()) {
       newErrors.supplierCode = 'Supplier code is required'
     }
-
-    if (!formData.partNumber.trim()) {
-      newErrors.partNumber = 'Part number is required'
+    if (!formData.contactPerson.trim()) {
+      newErrors.contactPerson = 'Contact person is required'
     }
-
-    if (formData.leadTime < 0) {
-      newErrors.leadTime = 'Lead time must be positive'
+    if (!formData.phone.trim()) {
+      newErrors.phone = 'Phone number is required'
     }
-
-    if (formData.minOrderQuantity < 1) {
-      newErrors.minOrderQuantity = 'Minimum order quantity must be at least 1'
-    }
-
-    if (formData.qualityRating < 1 || formData.qualityRating > 5) {
-      newErrors.qualityRating = 'Quality rating must be between 1 and 5'
-    }
-
-    if (formData.contactInfo.primaryEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.contactInfo.primaryEmail)) {
-      newErrors.primaryEmail = 'Invalid email format'
-    }
-
-    if (formData.contactInfo.primaryPhone && !/^[\d\s\-\+\(\)]+$/.test(formData.contactInfo.primaryPhone)) {
-      newErrors.primaryPhone = 'Invalid phone format'
+    if (!formData.email.trim()) {
+      newErrors.email = 'Email is required'
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      newErrors.email = 'Invalid email format'
     }
 
     setErrors(newErrors)
@@ -300,596 +172,364 @@ export const SupplierFormModal: React.FC<SupplierFormModalProps> = ({
       return
     }
 
+    setIsSubmitting(true)
+
     try {
-      const supplierData = {
-        supplierId: generateSupplierId(),
+            const supplierData = {
+        companyId: formData.companyId,
+        supplierId: formData.supplierCode,
         supplierName: formData.supplierName,
-        displayName: formData.displayName,
-        supplierCode: formData.supplierCode || generateSupplierCode(),
-        partNumber: formData.partNumber || generatePartNumber(),
-        isPrimary: formData.isPrimary,
-        leadTime: formData.leadTime,
-        minOrderQuantity: formData.minOrderQuantity,
-        qualityRating: formData.qualityRating,
-        warrantyPeriod: formData.warrantyPeriod,
+        supplierCode: formData.supplierCode,
+        partNumber: formData.supplierCode,
+        isPrimary: false,
+        leadTime: 0,
+        minOrderQuantity: 1,
+        qualityRating: 3,
         contactPerson: formData.contactPerson,
-        email: formData.contactInfo.primaryEmail,
-        phone: formData.contactInfo.primaryPhone,
-        website: formData.website,
+        email: formData.email,
+        phone: formData.phone,
         address: formData.address,
+        isActive: formData.status === 'active',
         status: formData.status,
-        
-        contactInfo: formData.contactInfo,
-        businessInfo: formData.businessInfo,
-        registrationDetails: formData.registrationDetails,
-        financialInfo: formData.financialInfo,
-        relationship: formData.relationship,
-        
-        notes: formData.notes,
-        
-        // Performance metrics initialization
+        contactInfo: {
+          primaryEmail: formData.email,
+          primaryPhone: formData.phone
+        },
+        addresses: [{
+          addressLine1: formData.address,
+          city: formData.city,
+          state: formData.state,
+          pincode: formData.pincode,
+          country: 'India'
+        }],
+        registrationDetails: {
+          gstin: formData.gstin,
+          pan: formData.pan
+        },
+        relationship: {
+          supplierType: 'manufacturer',
+          supplierCategory: 'approved',
+          priority: 'medium' as 'medium'
+        },
         performanceMetrics: {
           onTimeDeliveryRate: 0,
           qualityRejectionRate: 0,
-          averageLeadTime: formData.leadTime,
+          averageLeadTime: 0,
           totalOrders: 0,
           totalOrderValue: 0,
           averageOrderValue: 0
         },
-        
-        // Initialize pricing history
         pricingHistory: []
       }
 
       if (isEditing && supplier?._id) {
         await updateSupplier({ id: supplier._id, data: supplierData }).unwrap()
-        toast.success('Supplier updated successfully')
+        toast.success('Supplier updated successfully!')
       } else {
         await createSupplier(supplierData).unwrap()
-        toast.success('Supplier created successfully')
+        toast.success('Supplier created successfully!')
       }
 
       onSuccess()
       onClose()
-      setFormData(initialFormData)
-      setErrors({})
     } catch (error: any) {
       toast.error(error?.data?.message || 'Failed to save supplier')
+    } finally {
+      setIsSubmitting(false)
     }
   }
-
-  const tabs = [
-    { id: 'basic', label: 'Basic Info', icon: Building2 },
-    { id: 'contact', label: 'Contact', icon: User },
-    { id: 'business', label: 'Business', icon: Briefcase },
-    { id: 'financial', label: 'Financial', icon: DollarSign },
-    { id: 'relationship', label: 'Relationship', icon: Shield }
-  ]
 
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl shadow-xl w-full max-w-4xl max-h-[90vh] overflow-hidden">
-        {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-200">
-          <div>
-            <h2 className="text-xl font-semibold text-gray-900">
-              {isEditing ? 'Edit Supplier' : 'Add New Supplier'}
-            </h2>
-            <p className="text-gray-600">
-              {isEditing ? 'Update supplier information' : 'Create a new supplier record'}
-            </p>
-          </div>
+    <div className="fixed inset-0 z-50 overflow-y-auto bg-black bg-opacity-50 flex items-center justify-center p-4">
+      <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+        <div className="flex items-center justify-between p-6 border-b">
+          <h2 className="text-xl font-semibold text-gray-900">
+            {isEditing ? 'Edit Supplier' : 'Create New Supplier'}
+          </h2>
           <Button
+            onClick={onClose}
             variant="ghost"
             size="sm"
-            onClick={onClose}
-            className="text-gray-400 hover:text-gray-600"
+            className="h-8 w-8 p-0"
           >
-            <X className="w-5 h-5" />
+            <X className="h-4 w-4" />
           </Button>
         </div>
 
-        {/* Tabs */}
-        <div className="border-b border-gray-200">
-          <div className="flex space-x-1 p-4">
-            {tabs.map((tab) => {
-              const Icon = tab.icon
-              return (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  className={clsx(
-                    'flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors',
-                    activeTab === tab.id
-                      ? 'bg-blue-100 text-blue-700'
-                      : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+        <form onSubmit={handleSubmit} className="p-6 space-y-6">
+          {/* Company Selection (Super Admin Only) */}
+          {isSuperAdmin && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-lg">
+                  <Building2 className="h-5 w-5" />
+                  Company Selection
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2">
+                  <Label>Select Company *</Label>
+                  <Select value={formData.companyId} onValueChange={(value) => handleInputChange('companyId', value)}>
+                    <SelectTrigger className={errors.companyId ? 'border-red-500' : ''}>
+                      <SelectValue placeholder="Select a company" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {companies.map((company) => (
+                        <SelectItem key={company._id} value={company._id}>
+                          {company.companyName} ({company.companyCode})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {errors.companyId && (
+                    <p className="text-sm text-red-600">{errors.companyId}</p>
                   )}
-                >
-                  <Icon className="w-4 h-4" />
-                  <span>{tab.label}</span>
-                </button>
-              )
-            })}
-          </div>
-        </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
-        {/* Form */}
-        <form onSubmit={handleSubmit} className="p-6 overflow-y-auto max-h-[60vh]">
-          {/* Basic Information Tab */}
-          {activeTab === 'basic' && (
-            <div className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-semibold text-black mb-2">
-                    Supplier Name *
-                  </label>
+          {/* Basic Information */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <User className="h-5 w-5" />
+                Basic Information
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Supplier Name *</Label>
                   <Input
                     value={formData.supplierName}
-                    onChange={(e) => updateFormData({ supplierName: e.target.value })}
+                    onChange={(e) => handleInputChange('supplierName', e.target.value)}
                     placeholder="Enter supplier name"
-                    className={errors.supplierName ? 'border-red-300 bg-red-50' : ''}
+                    className={errors.supplierName ? 'border-red-500' : ''}
                   />
                   {errors.supplierName && (
-                    <p className="text-red-500 text-sm mt-1">{errors.supplierName}</p>
+                    <p className="text-sm text-red-600">{errors.supplierName}</p>
                   )}
                 </div>
 
-                <div>
-                  <label className="block text-sm font-semibold text-black mb-2">
-                    Display Name
-                  </label>
-                  <Input
-                    value={formData.displayName}
-                    onChange={(e) => updateFormData({ displayName: e.target.value })}
-                    placeholder="Enter display name"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-semibold text-black mb-2">
-                    Supplier Code *
-                  </label>
+                <div className="space-y-2">
+                  <Label>Supplier Code *</Label>
                   <Input
                     value={formData.supplierCode}
-                    onChange={(e) => updateFormData({ supplierCode: e.target.value })}
+                    onChange={(e) => handleInputChange('supplierCode', e.target.value)}
                     placeholder="Enter supplier code"
-                    className={errors.supplierCode ? 'border-red-300 bg-red-50' : ''}
+                    className={errors.supplierCode ? 'border-red-500' : ''}
                   />
                   {errors.supplierCode && (
-                    <p className="text-red-500 text-sm mt-1">{errors.supplierCode}</p>
+                    <p className="text-sm text-red-600">{errors.supplierCode}</p>
                   )}
                 </div>
 
-                <div>
-                  <label className="block text-sm font-semibold text-black mb-2">
-                    Part Number *
-                  </label>
+                <div className="space-y-2">
+                  <Label>Contact Person *</Label>
                   <Input
-                    value={formData.partNumber}
-                    onChange={(e) => updateFormData({ partNumber: e.target.value })}
-                    placeholder="Enter part number"
-                    className={errors.partNumber ? 'border-red-300 bg-red-50' : ''}
+                    value={formData.contactPerson}
+                    onChange={(e) => handleInputChange('contactPerson', e.target.value)}
+                    placeholder="Enter contact person name"
+                    className={errors.contactPerson ? 'border-red-500' : ''}
                   />
-                  {errors.partNumber && (
-                    <p className="text-red-500 text-sm mt-1">{errors.partNumber}</p>
+                  {errors.contactPerson && (
+                    <p className="text-sm text-red-600">{errors.contactPerson}</p>
                   )}
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Status</Label>
+                  <Select value={formData.status} onValueChange={(value: any) => handleInputChange('status', value)}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="active">Active</SelectItem>
+                      <SelectItem value="inactive">Inactive</SelectItem>
+                      <SelectItem value="pending">Pending</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
+            </CardContent>
+          </Card>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div>
-                  <label className="block text-sm font-semibold text-black mb-2">
-                    Lead Time (days) *
-                  </label>
-                  <Input
-                    type="number"
-                    value={formData.leadTime}
-                    onChange={(e) => updateFormData({ leadTime: parseInt(e.target.value) || 0 })}
-                    placeholder="Enter lead time"
-                    className={errors.leadTime ? 'border-red-300 bg-red-50' : ''}
-                  />
-                  {errors.leadTime && (
-                    <p className="text-red-500 text-sm mt-1">{errors.leadTime}</p>
-                  )}
-                </div>
-
-                <div>
-                  <label className="block text-sm font-semibold text-black mb-2">
-                    Min Order Quantity *
-                  </label>
-                  <Input
-                    type="number"
-                    value={formData.minOrderQuantity}
-                    onChange={(e) => updateFormData({ minOrderQuantity: parseInt(e.target.value) || 1 })}
-                    placeholder="Enter min order qty"
-                    className={errors.minOrderQuantity ? 'border-red-300 bg-red-50' : ''}
-                  />
-                  {errors.minOrderQuantity && (
-                    <p className="text-red-500 text-sm mt-1">{errors.minOrderQuantity}</p>
-                  )}
-                </div>
-
-                <div>
-                  <label className="block text-sm font-semibold text-black mb-2">
-                    Quality Rating *
-                  </label>
-                  <select
-                    value={formData.qualityRating}
-                    onChange={(e) => updateFormData({ qualityRating: parseInt(e.target.value) })}
-                    className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 ${
-                      errors.qualityRating ? 'border-red-300 bg-red-50' : 'border-gray-300 bg-white'
-                    }`}
-                  >
-                    <option value={1}>1 Star</option>
-                    <option value={2}>2 Stars</option>
-                    <option value={3}>3 Stars</option>
-                    <option value={4}>4 Stars</option>
-                    <option value={5}>5 Stars</option>
-                  </select>
-                  {errors.qualityRating && (
-                    <p className="text-red-500 text-sm mt-1">{errors.qualityRating}</p>
-                  )}
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-semibold text-black mb-2">
-                    Warranty Period (months)
-                  </label>
-                  <Input
-                    type="number"
-                    value={formData.warrantyPeriod}
-                    onChange={(e) => updateFormData({ warrantyPeriod: parseInt(e.target.value) || 0 })}
-                    placeholder="Enter warranty period"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-semibold text-black mb-2">
-                    Status *
-                  </label>
-                  <select
-                    value={formData.status}
-                    onChange={(e) => updateFormData({ status: e.target.value as any })}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white"
-                  >
-                    <option value="active">Active</option>
-                    <option value="inactive">Inactive</option>
-                    <option value="pending">Pending</option>
-                    <option value="blacklisted">Blacklisted</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="flex items-center">
-                <input
-                  type="checkbox"
-                  id="isPrimary"
-                  checked={formData.isPrimary}
-                  onChange={(e) => updateFormData({ isPrimary: e.target.checked })}
-                  className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                />
-                <label htmlFor="isPrimary" className="ml-2 text-sm text-gray-700">
-                  This is the primary supplier
-                </label>
-              </div>
-            </div>
-          )}
-
-          {/* Contact Information Tab */}
-          {activeTab === 'contact' && (
-            <div className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-semibold text-black mb-2">
-                    Primary Email
-                  </label>
+          {/* Contact Information */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <Mail className="h-5 w-5" />
+                Contact Information
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Email *</Label>
                   <Input
                     type="email"
-                    value={formData.contactInfo.primaryEmail}
-                    onChange={(e) => updateFormData({ 
-                      contactInfo: { ...formData.contactInfo, primaryEmail: e.target.value }
-                    })}
-                    placeholder="Enter primary email"
-                    className={errors.primaryEmail ? 'border-red-300 bg-red-50' : ''}
+                    value={formData.email}
+                    onChange={(e) => handleInputChange('email', e.target.value)}
+                    placeholder="Enter email address"
+                    className={errors.email ? 'border-red-500' : ''}
                   />
-                  {errors.primaryEmail && (
-                    <p className="text-red-500 text-sm mt-1">{errors.primaryEmail}</p>
+                  {errors.email && (
+                    <p className="text-sm text-red-600">{errors.email}</p>
                   )}
                 </div>
 
-                <div>
-                  <label className="block text-sm font-semibold text-black mb-2">
-                    Alternate Email
-                  </label>
+                <div className="space-y-2">
+                  <Label>Phone *</Label>
                   <Input
-                    type="email"
-                    value={formData.contactInfo.alternateEmail}
-                    onChange={(e) => updateFormData({ 
-                      contactInfo: { ...formData.contactInfo, alternateEmail: e.target.value }
-                    })}
-                    placeholder="Enter alternate email"
+                    value={formData.phone}
+                    onChange={(e) => handleInputChange('phone', e.target.value)}
+                    placeholder="Enter phone number"
+                    className={errors.phone ? 'border-red-500' : ''}
                   />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-semibold text-black mb-2">
-                    Primary Phone
-                  </label>
-                  <Input
-                    value={formData.contactInfo.primaryPhone}
-                    onChange={(e) => updateFormData({ 
-                      contactInfo: { ...formData.contactInfo, primaryPhone: e.target.value }
-                    })}
-                    placeholder="Enter primary phone"
-                    className={errors.primaryPhone ? 'border-red-300 bg-red-50' : ''}
-                  />
-                  {errors.primaryPhone && (
-                    <p className="text-red-500 text-sm mt-1">{errors.primaryPhone}</p>
+                  {errors.phone && (
+                    <p className="text-sm text-red-600">{errors.phone}</p>
                   )}
                 </div>
-
-                <div>
-                  <label className="block text-sm font-semibold text-black mb-2">
-                    Alternate Phone
-                  </label>
-                  <Input
-                    value={formData.contactInfo.alternatePhone}
-                    onChange={(e) => updateFormData({ 
-                      contactInfo: { ...formData.contactInfo, alternatePhone: e.target.value }
-                    })}
-                    placeholder="Enter alternate phone"
-                  />
-                </div>
               </div>
+            </CardContent>
+          </Card>
 
-              <div>
-                <label className="block text-sm font-semibold text-black mb-2">
-                  Website
-                </label>
-                <Input
-                  value={formData.website}
-                  onChange={(e) => updateFormData({ website: e.target.value })}
-                  placeholder="Enter website URL"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-semibold text-black mb-2">
-                  Address
-                </label>
-                <textarea
-                  value={formData.address}
-                  onChange={(e) => updateFormData({ address: e.target.value })}
-                  rows={3}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white"
-                  placeholder="Enter complete address"
-                />
-              </div>
-            </div>
-          )}
-
-          {/* Business Information Tab */}
-          {activeTab === 'business' && (
-            <div className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-semibold text-black mb-2">
-                    Industry
-                  </label>
-                  <Input
-                    value={formData.businessInfo.industry}
-                    onChange={(e) => updateFormData({ 
-                      businessInfo: { ...formData.businessInfo, industry: e.target.value }
-                    })}
-                    placeholder="Enter industry"
+          {/* Address Information */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <MapPin className="h-5 w-5" />
+                Address Information
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label>Address</Label>
+                  <Textarea
+                    value={formData.address}
+                    onChange={(e) => handleInputChange('address', e.target.value)}
+                    placeholder="Enter complete address"
+                    rows={3}
                   />
                 </div>
 
-                <div>
-                  <label className="block text-sm font-semibold text-black mb-2">
-                    Business Type
-                  </label>
-                  <Input
-                    value={formData.businessInfo.businessType}
-                    onChange={(e) => updateFormData({ 
-                      businessInfo: { ...formData.businessInfo, businessType: e.target.value }
-                    })}
-                    placeholder="Enter business type"
-                  />
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="space-y-2">
+                    <Label>City</Label>
+                    <Input
+                      value={formData.city}
+                      onChange={(e) => handleInputChange('city', e.target.value)}
+                      placeholder="Enter city"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>State</Label>
+                    <Input
+                      value={formData.state}
+                      onChange={(e) => handleInputChange('state', e.target.value)}
+                      placeholder="Enter state"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Pincode</Label>
+                    <Input
+                      value={formData.pincode}
+                      onChange={(e) => handleInputChange('pincode', e.target.value)}
+                      placeholder="Enter pincode"
+                    />
+                  </div>
                 </div>
               </div>
+            </CardContent>
+          </Card>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-semibold text-black mb-2">
-                    PAN Number
-                  </label>
+          {/* Registration Details */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <Package className="h-5 w-5" />
+                Registration Details
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>GSTIN</Label>
                   <Input
-                    value={formData.registrationDetails.pan}
-                    onChange={(e) => updateFormData({ 
-                      registrationDetails: { ...formData.registrationDetails, pan: e.target.value }
-                    })}
+                    value={formData.gstin}
+                    onChange={(e) => handleInputChange('gstin', e.target.value)}
+                    placeholder="Enter GSTIN number"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label>PAN</Label>
+                  <Input
+                    value={formData.pan}
+                    onChange={(e) => handleInputChange('pan', e.target.value)}
                     placeholder="Enter PAN number"
                   />
                 </div>
-
-                <div>
-                  <label className="block text-sm font-semibold text-black mb-2">
-                    GSTIN
-                  </label>
-                  <Input
-                    value={formData.registrationDetails.gstin}
-                    onChange={(e) => updateFormData({ 
-                      registrationDetails: { ...formData.registrationDetails, gstin: e.target.value }
-                    })}
-                    placeholder="Enter GSTIN"
-                  />
-                </div>
               </div>
-            </div>
-          )}
+            </CardContent>
+          </Card>
 
-          {/* Financial Information Tab */}
-          {activeTab === 'financial' && (
-            <div className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-semibold text-black mb-2">
-                    Payment Terms
-                  </label>
-                  <Input
-                    value={formData.financialInfo.paymentTerms}
-                    onChange={(e) => updateFormData({ 
-                      financialInfo: { ...formData.financialInfo, paymentTerms: e.target.value }
-                    })}
-                    placeholder="e.g., Net 30 days"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-semibold text-black mb-2">
-                    Credit Days
-                  </label>
-                  <Input
-                    type="number"
-                    value={formData.financialInfo.creditDays}
-                    onChange={(e) => updateFormData({ 
-                      financialInfo: { ...formData.financialInfo, creditDays: parseInt(e.target.value) || 0 }
-                    })}
-                    placeholder="Enter credit days"
-                  />
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Relationship Information Tab */}
-          {activeTab === 'relationship' && (
-            <div className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-semibold text-black mb-2">
-                    Supplier Category
-                  </label>
-                  <Input
-                    value={formData.relationship.supplierCategory}
-                    onChange={(e) => updateFormData({ 
-                      relationship: { ...formData.relationship, supplierCategory: e.target.value }
-                    })}
-                    placeholder="Enter supplier category"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-semibold text-black mb-2">
-                    Supplier Type
-                  </label>
-                  <select
-                    value={formData.relationship.supplierType}
-                    onChange={(e) => updateFormData({ 
-                      relationship: { ...formData.relationship, supplierType: e.target.value }
-                    })}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white"
-                  >
-                    <option value="trader">Trader</option>
-                    <option value="manufacturer">Manufacturer</option>
-                    <option value="distributor">Distributor</option>
-                    <option value="wholesaler">Wholesaler</option>
-                    <option value="retailer">Retailer</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-semibold text-black mb-2">
-                    Supplier Since
-                  </label>
-                  <Input
-                    type="date"
-                    value={formData.relationship.supplierSince}
-                    onChange={(e) => updateFormData({ 
-                      relationship: { ...formData.relationship, supplierSince: e.target.value }
-                    })}
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-semibold text-black mb-2">
-                    Priority
-                  </label>
-                  <select
-                    value={formData.relationship.priority}
-                    onChange={(e) => updateFormData({ 
-                      relationship: { ...formData.relationship, priority: e.target.value as any }
-                    })}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white"
-                  >
-                    <option value="low">Low</option>
-                    <option value="medium">Medium</option>
-                    <option value="high">High</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="flex items-center">
-                <input
-                  type="checkbox"
-                  id="strategicPartner"
-                  checked={formData.relationship.strategicPartner}
-                  onChange={(e) => updateFormData({ 
-                    relationship: { ...formData.relationship, strategicPartner: e.target.checked }
-                  })}
-                  className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                />
-                <label htmlFor="strategicPartner" className="ml-2 text-sm text-gray-700">
-                  Strategic Partner
-                </label>
-              </div>
-
-              <div>
-                <label className="block text-sm font-semibold text-black mb-2">
-                  Notes
-                </label>
-                <textarea
+          {/* Additional Notes */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <FileText className="h-5 w-5" />
+                Additional Information
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                <Label>Notes</Label>
+                <Textarea
                   value={formData.notes}
-                  onChange={(e) => updateFormData({ notes: e.target.value })}
-                  rows={4}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white"
-                  placeholder="Enter additional notes about the supplier"
+                  onChange={(e) => handleInputChange('notes', e.target.value)}
+                  placeholder="Any additional notes or comments..."
+                  rows={3}
                 />
               </div>
-            </div>
-          )}
-        </form>
+            </CardContent>
+          </Card>
 
-        {/* Footer */}
-        <div className="flex items-center justify-end space-x-3 p-6 border-t border-gray-200">
-          <Button
-            variant="outline"
-            onClick={onClose}
-            disabled={isLoading}
-          >
-            Cancel
-          </Button>
-          <Button
-            type="submit"
-            onClick={handleSubmit}
-            disabled={isLoading}
-            className="bg-blue-500 hover:bg-blue-600 text-white px-8 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
-          >
-            {isLoading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-            {isEditing ? 'Update Supplier' : 'Create Supplier'}
-          </Button>
-        </div>
+          {/* Form Actions */}
+          <div className="flex justify-end gap-3 pt-4 border-t">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={onClose}
+              disabled={isSubmitting}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              disabled={isSubmitting}
+              className="min-w-[120px]"
+            >
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                <>
+                  <Save className="h-4 w-4 mr-2" />
+                  {isEditing ? 'Update' : 'Create'} Supplier
+                </>
+              )}
+            </Button>
+          </div>
+        </form>
       </div>
     </div>
   )

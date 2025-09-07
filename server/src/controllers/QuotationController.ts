@@ -18,7 +18,7 @@ export class QuotationController extends BaseController<IQuotation> {
   async createQuotation(req: Request, res: Response): Promise<void> {
     try {
       const quotationData = req.body;
-      const createdBy = req.user?.id;
+      const createdBy = (req.user?.userId || req.user?._id)?.toString();
 
       const quotation = await this.quotationService.createQuotation(quotationData, createdBy);
 
@@ -35,7 +35,7 @@ export class QuotationController extends BaseController<IQuotation> {
     try {
       const { quotationId } = req.params;
       const { status } = req.body;
-      const updatedBy = req.user?.id;
+      const updatedBy = (req.user?.userId || req.user?._id)?.toString();
 
       const quotation = await this.quotationService.updateQuotationStatus(quotationId, status, updatedBy);
 
@@ -51,7 +51,7 @@ export class QuotationController extends BaseController<IQuotation> {
   async convertToOrder(req: Request, res: Response): Promise<void> {
     try {
       const { quotationId } = req.params;
-      const convertedBy = req.user?.id;
+      const convertedBy = (req.user?.userId || req.user?._id)?.toString();
 
       const orderData = await this.quotationService.convertToOrder(quotationId, convertedBy);
 
@@ -184,7 +184,7 @@ export class QuotationController extends BaseController<IQuotation> {
     try {
       const { id } = req.params;
       const updateData = req.body;
-      const updatedBy = req.user?.id;
+      const updatedBy = (req.user?.userId || req.user?._id)?.toString();
 
       const quotation = await this.quotationService.update(id, updateData, updatedBy);
 
@@ -225,7 +225,7 @@ export class QuotationController extends BaseController<IQuotation> {
   async deleteQuotation(req: Request, res: Response): Promise<void> {
     try {
       const { id } = req.params;
-      const deletedBy = req.user?.id;
+      const deletedBy = (req.user?.userId || req.user?._id)?.toString();
 
       const quotation = await this.quotationService.update(id, {
         status: 'cancelled',

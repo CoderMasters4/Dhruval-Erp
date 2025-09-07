@@ -2,6 +2,7 @@ import { Types } from 'mongoose';
 import { BaseService } from './BaseService';
 import { Dispatch } from '../models/Dispatch';
 import { AppError } from '../utils/errors';
+import S3Service from './S3Service';
 
 export class EnhancedDispatchService extends BaseService<any> {
   constructor() {
@@ -10,17 +11,56 @@ export class EnhancedDispatchService extends BaseService<any> {
 
   async createDispatch(dispatchData: any) {
     try {
+      // Auto-generate dispatch number if not provided
+      if (!dispatchData.dispatchNumber) {
+        dispatchData.dispatchNumber = this.generateDispatchNumber();
+      }
+      
+      // Auto-set dispatch type to pickup if not provided
+      if (!dispatchData.dispatchType) {
+        dispatchData.dispatchType = 'pickup';
+      }
+      
       const dispatch = new Dispatch(dispatchData);
       await dispatch.save();
       
       const populatedDispatch = await Dispatch.findById(dispatch._id)
-        .populate('assignedTo', 'name email')
-        .populate('companyId', 'name');
+        .populate('companyId', 'companyName')
+        .populate('sourceWarehouseId', 'warehouseName warehouseCode')
+        .populate('customerOrderId', 'orderNumber customerName customerId')
+        .populate('createdBy', 'name email')
+        .populate('assignedTo', 'name email');
+      
+      // Update customer order status to 'in-production' when dispatch is created
+      if (populatedDispatch?.customerOrderId?._id) {
+        try {
+          const { CustomerOrderService } = await import('./CustomerOrderService');
+          const customerOrderService = new CustomerOrderService();
+          
+          await customerOrderService.updateOrderStatus(
+            populatedDispatch.customerOrderId._id.toString(),
+            'in-production',
+            dispatchData.createdBy || 'system'
+          );
+        } catch (orderError) {
+          console.error('Failed to update customer order status:', orderError);
+          // Don't throw error here, as dispatch creation was successful
+        }
+      }
       
       return populatedDispatch;
     } catch (error) {
       throw new AppError('Failed to create dispatch', 500);
     }
+  }
+
+  private generateDispatchNumber(): string {
+    const currentDate = new Date();
+    const year = currentDate.getFullYear();
+    const month = String(currentDate.getMonth() + 1).padStart(2, '0');
+    const day = String(currentDate.getDate()).padStart(2, '0');
+    const timestamp = Date.now().toString().slice(-6);
+    return `DISP-${year}${month}${day}-${timestamp}`;
   }
 
   async getDispatches(filters: any = {}, search?: string) {
@@ -39,15 +79,17 @@ export class EnhancedDispatchService extends BaseService<any> {
       // Add search functionality
       if (search) {
         query.$or = [
-          { title: { $regex: search, $options: 'i' } },
-          { description: { $regex: search, $options: 'i' } },
-          { location: { $regex: search, $options: 'i' } }
+          { dispatchNumber: { $regex: search, $options: 'i' } },
+          { dispatchType: { $regex: search, $options: 'i' } }
         ];
       }
 
       const dispatches = await Dispatch.find(query)
+        .populate('companyId', 'companyName')
+        .populate('sourceWarehouseId', 'warehouseName warehouseCode')
+        .populate('customerOrderId', 'orderNumber customerName customerId')
+        .populate('createdBy', 'name email')
         .populate('assignedTo', 'name email')
-        .populate('companyId', 'name')
         .sort({ createdAt: -1 });
 
       return dispatches;
@@ -59,8 +101,11 @@ export class EnhancedDispatchService extends BaseService<any> {
   async getDispatchById(id: string) {
     try {
       const dispatch = await Dispatch.findById(id)
-        .populate('assignedTo', 'name email')
-        .populate('companyId', 'name');
+        .populate('companyId', 'companyName')
+        .populate('sourceWarehouseId', 'warehouseName warehouseCode')
+        .populate('customerOrderId', 'orderNumber customerName customerId')
+        .populate('createdBy', 'name email')
+        .populate('assignedTo', 'name email');
       
       return dispatch;
     } catch (error) {
@@ -74,8 +119,44 @@ export class EnhancedDispatchService extends BaseService<any> {
         id,
         { ...updateData, updatedAt: new Date() },
         { new: true }
-      ).populate('assignedTo', 'name email')
-       .populate('companyId', 'name');
+      ).populate('companyId', 'companyName')
+       .populate('sourceWarehouseId', 'warehouseName warehouseCode')
+       .populate('customerOrderId', 'orderNumber customerName customerId')
+       .populate('createdBy', 'name email');
+      
+      // If status is being updated, also update the customer order status
+      if (updateData.status && dispatch?.customerOrderId?._id) {
+        try {
+          const { CustomerOrderService } = await import('./CustomerOrderService');
+          const customerOrderService = new CustomerOrderService();
+          
+          // Map dispatch status to customer order status
+          let orderStatus = 'pending';
+          switch (updateData.status) {
+            case 'in-progress':
+              orderStatus = 'in-production';
+              break;
+            case 'completed':
+            case 'delivered':
+              orderStatus = 'completed';
+              break;
+            case 'cancelled':
+              orderStatus = 'cancelled';
+              break;
+            default:
+              orderStatus = 'pending';
+          }
+          
+          await customerOrderService.updateOrderStatus(
+            dispatch.customerOrderId._id.toString(),
+            orderStatus,
+            updateData.updatedBy || 'system'
+          );
+        } catch (orderError) {
+          console.error('Failed to update customer order status:', orderError);
+          // Don't throw error here, as dispatch update was successful
+        }
+      }
       
       return dispatch;
     } catch (error) {
@@ -90,6 +171,48 @@ export class EnhancedDispatchService extends BaseService<any> {
     } catch (error) {
       throw new AppError('Failed to delete dispatch', 500);
     }
+  }
+
+  async getUploadUrl(fileKey: string, contentType: string) {
+    try {
+      const { uploadUrl, key, expiresAt } = await S3Service.getPresignedUploadUrl(
+        fileKey,
+        contentType,
+        'dispatches' // folder
+      );
+      
+      // Generate the correct public URL using S3Service
+      const publicUrl = S3Service.generatePublicUrl(key);
+      
+      return {
+        uploadUrl,
+        key,
+        publicUrl,
+        expiresAt
+      };
+    } catch (error) {
+      throw new AppError('Failed to generate upload URL', 500);
+    }
+  }
+
+  async getDownloadUrl(fileKey: string) {
+    try {
+      const { downloadUrl, expiresAt } = await S3Service.getPresignedDownloadUrl(
+        fileKey,
+        3600 // 1 hour expiry
+      );
+      
+      return {
+        downloadUrl,
+        expiresAt
+      };
+    } catch (error) {
+      throw new AppError('Failed to generate download URL', 500);
+    }
+  }
+
+  generatePublicUrl(key: string): string {
+    return S3Service.generatePublicUrl(key);
   }
 
   async getDispatchesByCompany(companyId: string, options: any = {}) {

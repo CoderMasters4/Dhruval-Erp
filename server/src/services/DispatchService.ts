@@ -24,7 +24,7 @@ export class DispatchService extends BaseService<IDispatch> {
 
       logger.info('Dispatch entry created successfully', {
         dispatchId: dispatch._id,
-        title: dispatch.title,
+        dispatchNumber: dispatch.dispatchNumber,
         createdBy
       });
 
@@ -51,10 +51,10 @@ export class DispatchService extends BaseService<IDispatch> {
       };
 
       // Set specific dates based on status
-      if (status === 'dispatched') {
-        updateData.actualDispatchDate = new Date();
+      if (status === 'in-progress') {
+        updateData.dispatchDate = new Date();
       } else if (status === 'delivered') {
-        updateData.deliveryDate = new Date();
+        updateData.dispatchDate = new Date();
       }
 
       const updatedDispatch = await this.update(dispatchId, updateData, updatedBy);
@@ -87,7 +87,8 @@ export class DispatchService extends BaseService<IDispatch> {
       }
 
       if (options.customerName) {
-        query.customerName = { $regex: options.customerName, $options: 'i' };
+        // Search in customer order details
+        query['customerOrderId.customerName'] = { $regex: options.customerName, $options: 'i' };
       }
 
       if (options.dateRange) {
@@ -125,29 +126,31 @@ export class DispatchService extends BaseService<IDispatch> {
       const [
         totalDispatches,
         dispatchesByStatus,
-        totalQuantity,
         avgDeliveryTime,
         topCustomers
       ] = await Promise.all([
         this.count(matchQuery),
         this.model.aggregate([
           { $match: matchQuery },
-          { $group: { _id: '$status', count: { $sum: 1 }, totalQty: { $sum: '$totalQuantity' } } }
+          { $group: { _id: '$status', count: { $sum: 1 } } }
         ]),
         this.model.aggregate([
-          { $match: matchQuery },
-          { $group: { _id: null, totalQty: { $sum: '$totalQuantity' } } }
-        ]),
-        this.model.aggregate([
-          { $match: { ...matchQuery, deliveryDate: { $exists: true }, actualDispatchDate: { $exists: true } } },
+          { $match: { ...matchQuery, status: 'delivered' } },
           { $project: {
-            deliveryTime: { $subtract: ['$deliveryDate', '$actualDispatchDate'] }
+            deliveryTime: { $subtract: ['$updatedAt', '$dispatchDate'] }
           }},
           { $group: { _id: null, avgTime: { $avg: '$deliveryTime' } } }
         ]),
         this.model.aggregate([
           { $match: matchQuery },
-          { $group: { _id: '$customerName', totalDispatches: { $sum: 1 }, totalQuantity: { $sum: '$totalQuantity' } } },
+          { $lookup: {
+            from: 'customerorders',
+            localField: 'customerOrderId',
+            foreignField: '_id',
+            as: 'customerOrder'
+          }},
+          { $unwind: '$customerOrder' },
+          { $group: { _id: '$customerOrder.customerName', totalDispatches: { $sum: 1 } } },
           { $sort: { totalDispatches: -1 } },
           { $limit: 10 }
         ])
@@ -156,7 +159,6 @@ export class DispatchService extends BaseService<IDispatch> {
       return {
         totalDispatches,
         dispatchesByStatus,
-        totalQuantity: totalQuantity[0]?.totalQty || 0,
         averageDeliveryTime: avgDeliveryTime[0]?.avgTime || 0,
         topCustomers
       };
@@ -193,8 +195,12 @@ export class DispatchService extends BaseService<IDispatch> {
       throw new AppError('Company ID is required', 400);
     }
 
-    if (!dispatchData.title) {
-              throw new AppError('Dispatch title is required', 400);
+    if (!dispatchData.sourceWarehouseId) {
+      throw new AppError('Source warehouse ID is required', 400);
+    }
+
+    if (!dispatchData.customerOrderId) {
+      throw new AppError('Customer order ID is required', 400);
     }
 
     if (!dispatchData.priority) {

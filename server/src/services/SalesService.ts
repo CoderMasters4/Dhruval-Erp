@@ -5,6 +5,8 @@ import CustomerOrder from '../models/CustomerOrder';
 import Customer from '../models/Customer';
 import Invoice from '../models/Invoice';
 import Quotation from '../models/Quotation';
+import { InventoryService } from './InventoryService';
+import { AppError } from '../utils/errors';
 
 export class SalesService extends BaseService<ICustomerOrder> {
   constructor() {
@@ -362,10 +364,87 @@ export class SalesService extends BaseService<ICustomerOrder> {
   }
 
   /**
-   * Create a new sales order
+   * Create a new sales order with inventory validation and stock reservation
    */
   async createSalesOrder(orderData: any, userId: string): Promise<any> {
     try {
+      const inventoryService = new InventoryService();
+      
+      // Validate inventory items and check stock availability
+      if (orderData.orderItems && orderData.orderItems.length > 0) {
+        const stockValidationResults = [];
+        
+        for (const item of orderData.orderItems) {
+          // Find the inventory item by productId, itemId, or itemName
+          let inventoryItem;
+          if (item.productId) {
+            inventoryItem = await inventoryService.findById(item.productId);
+          } else if (item.itemId) {
+            // Handle case where client sends itemId instead of productId
+            inventoryItem = await inventoryService.findById(item.itemId);
+          } else if (item.itemName) {
+            inventoryItem = await inventoryService.findOne({
+              itemName: item.itemName,
+              companyId: orderData.companyId
+            });
+          }
+          
+          if (!inventoryItem) {
+            throw new AppError(`Inventory item "${item.itemName}" not found`, 400);
+          }
+          
+          // Check if sufficient stock is available
+          const availableStock = inventoryItem.stock?.availableStock || 0;
+          if (availableStock < item.quantity) {
+            stockValidationResults.push({
+              itemName: item.itemName,
+              requested: item.quantity,
+              available: availableStock,
+              insufficient: item.quantity - availableStock
+            });
+          }
+        }
+        
+        // If any items have insufficient stock, throw error with details
+        if (stockValidationResults.length > 0) {
+          const errorMessage = stockValidationResults.map(result => 
+            `${result.itemName}: Requested ${result.requested}, Available ${result.available}`
+          ).join('; ');
+          throw new AppError(`Insufficient stock for: ${errorMessage}`, 400);
+        }
+        
+        // Reserve stock for all items and update orderItems with productId
+        for (const item of orderData.orderItems) {
+          let inventoryItem;
+          if (item.productId) {
+            inventoryItem = await inventoryService.findById(item.productId);
+          } else if (item.itemId) {
+            // Handle case where client sends itemId instead of productId
+            inventoryItem = await inventoryService.findById(item.itemId);
+          } else if (item.itemName) {
+            inventoryItem = await inventoryService.findOne({
+              itemName: item.itemName,
+              companyId: orderData.companyId
+            });
+          }
+          
+          if (inventoryItem) {
+            // Add productId to the item if not present
+            if (!item.productId) {
+              item.productId = inventoryItem._id;
+            }
+            
+            await inventoryService.reserveStock(
+              inventoryItem._id.toString(),
+              item.quantity,
+              `Sales Order: ${orderData.orderNumber || 'Pending'}`,
+              userId
+            );
+          }
+        }
+      }
+      
+      // Create the sales order
       const order = new CustomerOrder({
         ...orderData,
         createdBy: userId,
@@ -373,6 +452,14 @@ export class SalesService extends BaseService<ICustomerOrder> {
       });
 
       await order.save();
+      
+      console.log('Sales order created successfully with inventory validation', {
+        orderId: order._id,
+        orderNumber: order.orderNumber,
+        itemsCount: orderData.orderItems?.length || 0,
+        createdBy: userId
+      });
+      
       return order;
     } catch (error) {
       console.error('Error in createSalesOrder:', error);

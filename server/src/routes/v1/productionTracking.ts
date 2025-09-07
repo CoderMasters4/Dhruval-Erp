@@ -28,11 +28,7 @@ router.patch('/update-status', productionTrackingController.updateProductionStat
 router.post('/start-stage', productionTrackingController.startProductionStage.bind(productionTrackingController));
 router.post('/complete-stage', productionTrackingController.completeProductionStage.bind(productionTrackingController));
 
-// Quality Management
-router.post('/quality-check', productionTrackingController.addQualityCheck.bind(productionTrackingController));
-
-// Monitoring and Alerts
-router.get('/alerts', productionTrackingController.getProductionAlerts.bind(productionTrackingController));
+// Efficiency and Analytics
 router.get('/efficiency', productionTrackingController.getProductionEfficiency.bind(productionTrackingController));
 
 // Real-time Dashboard

@@ -161,9 +161,17 @@ export class SalesController extends BaseController<ICustomerOrder> {
         return;
       }
 
+      // Use _id instead of id for user ID
+      const userId = user?._id?.toString() || user?.id?.toString();
+
+      if (!userId) {
+        this.sendError(res, new Error('User ID is required'), 'User ID is required', 400);
+        return;
+      }
+
       const order = await this.salesService.createSalesOrder(
         { ...orderData, companyId: targetCompanyId }, 
-        user?.id
+        userId
       );
       this.sendSuccess(res, order, 'Sales order created successfully', 201);
     } catch (error) {
@@ -195,10 +203,13 @@ export class SalesController extends BaseController<ICustomerOrder> {
       const updateData = req.body;
       const user = req.user;
 
+      // Use _id instead of id for user ID
+      const userId = user?._id?.toString() || user?.id?.toString();
+
       const order = await this.salesService.updateSalesOrder(
         id, 
         updateData, 
-        user?.id, 
+        userId, 
         user?.companyId?.toString()
       );
       this.sendSuccess(res, order, 'Sales order updated successfully');
@@ -231,11 +242,14 @@ export class SalesController extends BaseController<ICustomerOrder> {
       const { paymentStatus, amount } = req.body;
       const user = req.user;
 
+      // Use _id instead of id for user ID
+      const userId = user?._id?.toString() || user?.id?.toString();
+
       const order = await this.salesService.updatePaymentStatus(
         id, 
         paymentStatus, 
         amount, 
-        user?.id, 
+        userId, 
         user?.companyId?.toString()
       );
       this.sendSuccess(res, order, 'Payment status updated successfully');
@@ -252,10 +266,13 @@ export class SalesController extends BaseController<ICustomerOrder> {
       const { orderIds, updates } = req.body;
       const user = req.user;
 
+      // Use _id instead of id for user ID
+      const userId = user?._id?.toString() || user?.id?.toString();
+
       const orders = await this.salesService.bulkUpdateOrders(
         orderIds, 
         updates, 
-        user?.id, 
+        userId, 
         user?.companyId?.toString()
       );
       this.sendSuccess(res, orders, 'Orders updated successfully');

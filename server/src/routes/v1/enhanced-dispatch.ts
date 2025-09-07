@@ -44,12 +44,26 @@ router.get('/:id', authenticate, async (req, res) => {
 // Create new dispatch
 router.post('/', authenticate, async (req, res) => {
   try {
-    const { title, description, status, priority, assignedTo, companyId, dueDate, location, vehicleId, vehicleNumber } = req.body;
+                    const {
+                  dispatchNumber,
+                  dispatchDate,
+                  dispatchType,
+                  status,
+                  priority,
+                  companyId,
+                  sourceWarehouseId,
+                  customerOrderId,
+                  vehicleNumber,
+                  deliveryPersonName,
+                  deliveryPersonNumber,
+                  documents,
+                  notes
+                } = req.body;
     
-    // Validate required fields
-    if (!title || !description || !assignedTo || !dueDate || !location) {
-      return res.status(400).json({ message: 'Missing required fields' });
-    }
+                    // Validate required fields
+                if (!sourceWarehouseId || !customerOrderId) {
+                  return res.status(400).json({ message: 'Missing required fields: source warehouse and customer order' });
+                }
 
     // Auto-fill company ID for non-superadmin users
     let finalCompanyId = companyId;
@@ -58,16 +72,20 @@ router.post('/', authenticate, async (req, res) => {
     }
 
     const dispatchData = {
-      title,
-      description,
+      dispatchNumber, // Will be auto-generated if not provided
+      dispatchDate: dispatchDate || new Date(),
+      dispatchType: dispatchType || 'pickup', // Default to pickup
       status: status || 'pending',
       priority: priority || 'medium',
-      assignedTo,
       companyId: finalCompanyId,
-      dueDate,
-      location,
-      vehicleId,
-      vehicleNumber
+      sourceWarehouseId,
+      customerOrderId,
+      vehicleNumber,
+      deliveryPersonName,
+      deliveryPersonNumber,
+      documents,
+      notes,
+      createdBy: req.user._id
     };
 
     const dispatch = await enhancedDispatchService.createDispatch(dispatchData);
@@ -141,6 +159,62 @@ router.get('/users/list', authenticate, async (req, res) => {
     res.json(users);
   } catch (error) {
     res.status(500).json({ message: 'Failed to fetch users', error: error.message });
+  }
+});
+
+// =============================================
+// S3 PRESIGNED URL ROUTES
+// =============================================
+
+// Get presigned URL for file upload
+router.post('/upload-url', authenticate, async (req, res) => {
+  try {
+    const { fileName, contentType, fileType } = req.body;
+    
+    if (!fileName || !contentType) {
+      return res.status(400).json({ message: 'fileName and contentType are required' });
+    }
+
+    // Generate unique file key
+    const timestamp = Date.now();
+    const fileKey = `dispatches/${req.user.companyId}/${timestamp}-${fileName}`;
+    
+    // Get presigned URL from S3 service
+    const uploadData = await enhancedDispatchService.getUploadUrl(fileKey, contentType);
+    
+    // Generate public URL for the uploaded file
+    const publicUrl = enhancedDispatchService.generatePublicUrl(uploadData.key);
+    
+    res.json({
+      uploadUrl: uploadData.uploadUrl,
+      key: uploadData.key,
+      publicUrl: publicUrl,
+      expiresAt: uploadData.expiresAt
+    });
+  } catch (error) {
+    res.status(500).json({ message: 'Failed to generate upload URL', error: error.message });
+  }
+});
+
+// Get presigned URL for file download
+router.get('/download/:key', authenticate, async (req, res) => {
+  try {
+    const { key } = req.params;
+    
+    if (!key) {
+      return res.status(400).json({ message: 'File key is required' });
+    }
+
+    // Get download URL from S3 service
+    const downloadUrl = await enhancedDispatchService.getDownloadUrl(key);
+    
+    res.json({
+      success: true,
+      downloadUrl,
+      message: 'Download URL generated successfully'
+    });
+  } catch (error) {
+    res.status(500).json({ message: 'Failed to generate download URL', error: error.message });
   }
 });
 

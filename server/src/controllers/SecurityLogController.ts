@@ -18,7 +18,7 @@ export class SecurityLogController extends BaseController<ISecurityLog> {
   async createSecurityLog(req: Request, res: Response): Promise<void> {
     try {
       const securityData = req.body;
-      const createdBy = req.user?.id;
+      const createdBy = (req.user?.userId || req.user?._id)?.toString();
 
       const securityLog = await this.securityLogService.createSecurityLog(securityData, createdBy);
 
@@ -125,7 +125,7 @@ export class SecurityLogController extends BaseController<ISecurityLog> {
     try {
       const { id } = req.params;
       const updateData = req.body;
-      const updatedBy = req.user?.id;
+      const updatedBy = (req.user?.userId || req.user?._id)?.toString();
 
       const securityLog = await this.securityLogService.update(id, updateData, updatedBy);
 

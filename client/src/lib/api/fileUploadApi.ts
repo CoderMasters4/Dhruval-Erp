@@ -3,10 +3,14 @@ import { baseApi } from './baseApi'
 export interface UploadUrlResponse {
   uploadUrl: string
   key: string
+  expiresAt: string
+  expiresIn: number
 }
 
 export interface DownloadUrlResponse {
   downloadUrl: string
+  expiresAt: string
+  expiresIn: number
 }
 
 export interface FileUploadRequest {
@@ -210,7 +214,7 @@ export const createVisitorFormData = (visitorData: any, files: any): FormData =>
 // Helper function to get file URL from key
 export const getFileUrl = (key: string): string => {
   // This would typically be your S3 bucket URL or CDN URL
-  const baseUrl = process.env.NEXT_PUBLIC_S3_BASE_URL || 'https://your-bucket.s3.amazonaws.com'
+  const baseUrl = process.env.NEXT_PUBLIC_S3_BASE_URL || 'https://usc1.contabostorage.com/erp'
   return `${baseUrl}/${key}`
 }
 

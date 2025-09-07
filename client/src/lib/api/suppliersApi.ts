@@ -22,6 +22,7 @@ export interface Supplier {
   address?: string
   isActive?: boolean
   status: 'active' | 'inactive' | 'blacklisted' | 'pending'
+  companyId?: string | { _id: string; companyName: string; companyCode: string }
   
   // Contact Information
   contactInfo?: {
@@ -45,6 +46,7 @@ export interface Supplier {
   businessInfo?: {
     industry?: string
     businessType?: string
+    website?: string
   }
   
   // Registration Details
@@ -57,6 +59,9 @@ export interface Supplier {
   financialInfo?: {
     paymentTerms?: string
     creditDays?: number
+    totalPurchases?: number
+    outstandingPayable?: number
+    currency?: string
   }
   
   // Relationship Information
@@ -66,6 +71,7 @@ export interface Supplier {
     supplierSince?: string
     priority?: 'low' | 'medium' | 'high'
     strategicPartner?: boolean
+    exclusiveSupplier?: boolean
   }
   
   // Supply History
@@ -76,17 +82,25 @@ export interface Supplier {
     onTimeDeliveryRate?: number
     averageLeadTime?: number
     qualityRejectionRate?: number
+    firstOrderDate?: string
+    lastOrderDate?: string
   }
   
   // Quality Information
   quality?: {
     defectRate?: number
     returnRate?: number
+    qualityRating?: number
   }
   
   // Compliance Information
   compliance?: {
     vendorApprovalStatus?: 'approved' | 'pending' | 'rejected'
+    riskCategory?: string
+    blacklisted?: boolean
+    environmentalCompliance?: boolean
+    laborCompliance?: boolean
+    safetyCompliance?: boolean
   }
   
   // Performance Metrics (legacy)
@@ -164,7 +178,7 @@ export const suppliersApi = baseApi.injectEndpoints({
 
     // Get all suppliers with filters
     getSuppliers: builder.query<
-      { success: boolean; data: Supplier[]; pagination?: any },
+      { success: boolean; data: { data: Supplier[]; pagination: any }; message: string; timestamp: string },
       {
         page?: number;
         limit?: number;

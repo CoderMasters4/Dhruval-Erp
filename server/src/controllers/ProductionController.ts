@@ -18,7 +18,7 @@ export class ProductionController extends BaseController<IProductionOrder> {
   async createProductionOrder(req: Request, res: Response): Promise<void> {
     try {
       const orderData = req.body;
-      const createdBy = req.user?.id;
+      const createdBy = (req.user?.userId || req.user?._id)?.toString();
 
       const order = await this.productionService.createProductionOrder(orderData, createdBy);
 
@@ -38,7 +38,7 @@ export class ProductionController extends BaseController<IProductionOrder> {
   async startProduction(req: Request, res: Response): Promise<void> {
     try {
       const { orderId } = req.params;
-      const startedBy = req.user?.id;
+      const startedBy = (req.user?.userId || req.user?._id)?.toString();
 
       const order = await this.productionService.startProduction(orderId, startedBy);
 
@@ -99,7 +99,7 @@ export class ProductionController extends BaseController<IProductionOrder> {
     try {
       const { orderId } = req.params;
       const { reason } = req.body;
-      const cancelledBy = req.user?.id;
+      const cancelledBy = (req.user?.userId || req.user?._id)?.toString();
 
       const order = await this.productionService.cancelProduction(orderId, reason, cancelledBy);
 
@@ -242,7 +242,7 @@ export class ProductionController extends BaseController<IProductionOrder> {
     try {
       const { id } = req.params;
       const updateData = req.body;
-      const updatedBy = req.user?.id;
+      const updatedBy = (req.user?.userId || req.user?._id)?.toString();
 
       const order = await this.productionService.update(id, updateData, updatedBy);
 

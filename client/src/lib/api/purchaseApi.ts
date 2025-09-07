@@ -220,7 +220,7 @@ export const purchaseApi = baseApi.injectEndpoints({
 
     // Get All Purchase Orders with Company ID support
     getPurchaseOrders: builder.query<
-      { success: boolean; data: PurchaseOrder[]; pagination: any },
+      { success: boolean; data: { data: PurchaseOrder[]; pagination: any } },
       PurchaseFilters
     >({
       query: (filters) => ({

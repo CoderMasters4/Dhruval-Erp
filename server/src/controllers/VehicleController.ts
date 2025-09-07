@@ -51,7 +51,7 @@ export class VehicleController {
   async createVehicle(req: Request, res: Response): Promise<void> {
     try {
       const vehicleData = req.body;
-      const createdBy = req.user?.id;
+      const createdBy = (req.user?.userId || req.user?._id)?.toString();
 
       const vehicle = await this.vehicleService.createVehicle(vehicleData, createdBy);
 
@@ -153,7 +153,7 @@ export class VehicleController {
     try {
       const { vehicleId } = req.params;
       const { status } = req.body;
-      const updatedBy = req.user?.id;
+      const updatedBy = (req.user?.userId || req.user?._id)?.toString();
 
       const vehicle = await this.vehicleService.updateVehicleStatus(vehicleId, status, updatedBy);
 
@@ -170,7 +170,7 @@ export class VehicleController {
     try {
       const { vehicleId } = req.params;
       const maintenanceData = req.body;
-      const addedBy = req.user?.id;
+      const addedBy = (req.user?.userId || req.user?._id)?.toString();
 
       const vehicle = await this.vehicleService.addMaintenanceRecord(vehicleId, maintenanceData, addedBy);
 
@@ -242,7 +242,7 @@ export class VehicleController {
     try {
       const { id } = req.params;
       const updateData = req.body;
-      const updatedBy = req.user?.id;
+      const updatedBy = (req.user?.userId || req.user?._id)?.toString();
 
       const vehicle = await this.vehicleService.update(id, updateData, updatedBy);
 
@@ -283,7 +283,7 @@ export class VehicleController {
   async checkoutVehicle(req: Request, res: Response): Promise<void> {
     try {
       const { id } = req.params;
-      const updatedBy = req.user?.id;
+      const updatedBy = (req.user?.userId || req.user?._id)?.toString();
 
       const vehicle = await this.vehicleService.checkoutVehicle(id, updatedBy);
 

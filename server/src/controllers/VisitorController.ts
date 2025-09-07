@@ -547,7 +547,7 @@ export class VisitorController extends BaseController<IVisitor> {
 
       const folder = `visitors/${companyId}/${fileType || 'general'}`;
 
-      const { uploadUrl, key } = await S3Service.getPresignedUploadUrl(
+      const { uploadUrl, key, expiresAt } = await S3Service.getPresignedUploadUrl(
         fileName,
         contentType,
         folder,
@@ -558,10 +558,16 @@ export class VisitorController extends BaseController<IVisitor> {
         fileName,
         contentType,
         folder,
-        key
+        key,
+        expiresAt: expiresAt.toISOString()
       });
 
-      this.sendSuccess(res, { uploadUrl, key }, 'Upload URL generated successfully');
+      this.sendSuccess(res, { 
+        uploadUrl, 
+        key, 
+        expiresAt: expiresAt.toISOString(),
+        expiresIn: 3600
+      }, 'Upload URL generated successfully');
     } catch (error) {
       next(error);
     }
@@ -580,11 +586,19 @@ export class VisitorController extends BaseController<IVisitor> {
         throw new AppError('Access denied', 403);
       }
 
-      const downloadUrl = await S3Service.getPresignedDownloadUrl(key, 3600); // 1 hour
+      const { downloadUrl, expiresAt } = await S3Service.getPresignedDownloadUrl(key, 3600); // 1 hour
 
-      logger.info('Generated download URL for visitor file', { key, companyId });
+      logger.info('Generated download URL for visitor file', { 
+        key, 
+        companyId,
+        expiresAt: expiresAt.toISOString()
+      });
 
-      this.sendSuccess(res, { downloadUrl }, 'Download URL generated successfully');
+      this.sendSuccess(res, { 
+        downloadUrl, 
+        expiresAt: expiresAt.toISOString(),
+        expiresIn: 3600
+      }, 'Download URL generated successfully');
     } catch (error) {
       next(error);
     }

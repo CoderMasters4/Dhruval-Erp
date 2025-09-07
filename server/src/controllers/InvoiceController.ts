@@ -18,7 +18,7 @@ export class InvoiceController extends BaseController<IInvoice> {
   async createInvoice(req: Request, res: Response): Promise<void> {
     try {
       const invoiceData = req.body;
-      const createdBy = req.user?.id;
+      const createdBy = (req.user?.userId || req.user?._id)?.toString();
 
       const invoice = await this.invoiceService.createInvoice(invoiceData, createdBy);
 
@@ -35,7 +35,7 @@ export class InvoiceController extends BaseController<IInvoice> {
     try {
       const { invoiceId } = req.params;
       const { status } = req.body;
-      const updatedBy = req.user?.id;
+      const updatedBy = (req.user?.userId || req.user?._id)?.toString();
 
       const invoice = await this.invoiceService.updateInvoiceStatus(invoiceId, status, updatedBy);
 
@@ -52,7 +52,7 @@ export class InvoiceController extends BaseController<IInvoice> {
     try {
       const { invoiceId } = req.params;
       const { paymentAmount, paymentMethod, paymentDate } = req.body;
-      const recordedBy = req.user?.id;
+      const recordedBy = (req.user?.userId || req.user?._id)?.toString();
 
       const invoice = await this.invoiceService.recordPayment(
         invoiceId,
@@ -191,7 +191,7 @@ export class InvoiceController extends BaseController<IInvoice> {
     try {
       const { id } = req.params;
       const updateData = req.body;
-      const updatedBy = req.user?.id;
+      const updatedBy = (req.user?.userId || req.user?._id)?.toString();
 
       const invoice = await this.invoiceService.update(id, updateData, updatedBy);
 
@@ -232,7 +232,7 @@ export class InvoiceController extends BaseController<IInvoice> {
   async deleteInvoice(req: Request, res: Response): Promise<void> {
     try {
       const { id } = req.params;
-      const deletedBy = req.user?.id;
+      const deletedBy = (req.user?.userId || req.user?._id)?.toString();
 
       const invoice = await this.invoiceService.update(id, {
         status: 'cancelled',

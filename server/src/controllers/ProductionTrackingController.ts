@@ -29,7 +29,6 @@ export class ProductionTrackingController {
   async getProductionTrackingData(req: Request, res: Response): Promise<void> {
     try {
       const {
-        companyId,
         date,
         firmId,
         machineId,
@@ -37,8 +36,21 @@ export class ProductionTrackingController {
         includeDetails = false
       } = req.query;
 
+      // For super admin, don't require companyId, show all companies
+      let companyId = req.query.companyId as string;
+      if (!companyId && req.user?.isSuperAdmin) {
+        companyId = undefined; // Will show data from all companies
+      } else if (!companyId) {
+        companyId = req.user?.companyId?.toString() || req.user?.companyAccess?.[0]?.companyId?.toString();
+      }
+
+      if (!companyId && !req.user?.isSuperAdmin) {
+        this.sendError(res, new Error('Company ID is required'), 'Company ID is required', 400);
+        return;
+      }
+
       const result = await this.productionTrackingService.getProductionTrackingData({
-        companyId: companyId as string,
+        companyId,
         date: date as string,
         firmId: firmId as string,
         machineId: machineId as string,
@@ -55,15 +67,27 @@ export class ProductionTrackingController {
   async getPrintingStatus(req: Request, res: Response): Promise<void> {
     try {
       const {
-        companyId,
         printingType,
         status,
         machineId,
         operatorId
       } = req.query;
 
+      // For super admin, don't require companyId, show all companies
+      let companyId = req.query.companyId as string;
+      if (!companyId && req.user?.isSuperAdmin) {
+        companyId = undefined; // Will show data from all companies
+      } else if (!companyId) {
+        companyId = req.user?.companyId?.toString() || req.user?.companyAccess?.[0]?.companyId?.toString();
+      }
+
+      if (!companyId && !req.user?.isSuperAdmin) {
+        this.sendError(res, new Error('Company ID is required'), 'Company ID is required', 400);
+        return;
+      }
+
       const result = await this.productionTrackingService.getPrintingStatus({
-        companyId: companyId as string,
+        companyId,
         printingType: printingType as 'table' | 'machine',
         status: status as string,
         machineId: machineId as string,
@@ -79,7 +103,6 @@ export class ProductionTrackingController {
   async getJobWorkTracking(req: Request, res: Response): Promise<void> {
     try {
       const {
-        companyId,
         jobType,
         status,
         contractorId,
@@ -87,8 +110,21 @@ export class ProductionTrackingController {
         endDate
       } = req.query;
 
+      // For super admin, don't require companyId, show all companies
+      let companyId = req.query.companyId as string;
+      if (!companyId && req.user?.isSuperAdmin) {
+        companyId = undefined; // Will show data from all companies
+      } else if (!companyId) {
+        companyId = req.user?.companyId?.toString() || req.user?.companyAccess?.[0]?.companyId?.toString();
+      }
+
+      if (!companyId && !req.user?.isSuperAdmin) {
+        this.sendError(res, new Error('Company ID is required'), 'Company ID is required', 400);
+        return;
+      }
+
       const result = await this.productionTrackingService.getJobWorkTracking({
-        companyId: companyId as string,
+        companyId,
         jobType: jobType as 'in_house' | 'third_party',
         status: status as string,
         contractorId: contractorId as string,
@@ -105,15 +141,27 @@ export class ProductionTrackingController {
   async getProcessTracking(req: Request, res: Response): Promise<void> {
     try {
       const {
-        companyId,
         jobId,
         stage,
         status,
         includeQualityChecks = false
       } = req.query;
 
+      // For super admin, don't require companyId, show all companies
+      let companyId = req.query.companyId as string;
+      if (!companyId && req.user?.isSuperAdmin) {
+        companyId = undefined; // Will show data from all companies
+      } else if (!companyId) {
+        companyId = req.user?.companyId?.toString() || req.user?.companyAccess?.[0]?.companyId?.toString();
+      }
+
+      if (!companyId && !req.user?.isSuperAdmin) {
+        this.sendError(res, new Error('Company ID is required'), 'Company ID is required', 400);
+        return;
+      }
+
       const result = await this.productionTrackingService.getProcessTracking({
-        companyId: companyId as string,
+        companyId,
         jobId: jobId as string,
         stage: stage as string,
         status: status as string,
@@ -129,14 +177,26 @@ export class ProductionTrackingController {
   async getDailyProductionSummary(req: Request, res: Response): Promise<void> {
     try {
       const {
-        companyId,
         date,
         firmId,
         includeBreakdown = false
       } = req.query;
 
+      // For super admin, don't require companyId, show all companies
+      let companyId = req.query.companyId as string;
+      if (!companyId && req.user?.isSuperAdmin) {
+        companyId = undefined; // Will show data from all companies
+      } else if (!companyId) {
+        companyId = req.user?.companyId?.toString() || req.user?.companyAccess?.[0]?.companyId?.toString();
+      }
+
+      if (!companyId && !req.user?.isSuperAdmin) {
+        this.sendError(res, new Error('Company ID is required'), 'Company ID is required', 400);
+        return;
+      }
+
       const result = await this.productionTrackingService.getDailyProductionSummary({
-        companyId: companyId as string,
+        companyId,
         date: date as string,
         firmId: firmId as string,
         includeBreakdown: includeBreakdown === 'true'
@@ -177,10 +237,9 @@ export class ProductionTrackingController {
         stageId,
         status,
         progress,
-        operatorId,
-        machineId,
-        notes,
-        qualityChecks
+        completedQuantity,
+        qualityChecks,
+        notes
       } = req.body;
 
       const result = await this.productionTrackingService.updateProductionStatus({
@@ -188,10 +247,9 @@ export class ProductionTrackingController {
         stageId,
         status,
         progress,
-        operatorId,
-        machineId,
-        notes,
-        qualityChecks
+        completedQuantity,
+        qualityChecks,
+        notes
       });
 
       this.sendSuccess(res, result);
@@ -231,69 +289,19 @@ export class ProductionTrackingController {
       const {
         jobId,
         stageId,
-        operatorId,
-        completionTime,
-        qualityChecks,
-        notes
+        completedQuantity,
+        qualityNotes,
+        defectQuantity,
+        completedBy
       } = req.body;
 
       const result = await this.productionTrackingService.completeProductionStage({
         jobId,
         stageId,
-        operatorId,
-        completionTime,
-        qualityChecks,
-        notes
-      });
-
-      this.sendSuccess(res, result);
-    } catch (error) {
-      this.sendError(res, error);
-    }
-  }
-
-  async addQualityCheck(req: Request, res: Response): Promise<void> {
-    try {
-      const {
-        jobId,
-        stageId,
-        checkType,
-        status,
-        notes,
-        operatorId,
-        timestamp
-      } = req.body;
-
-      const result = await this.productionTrackingService.addQualityCheck({
-        jobId,
-        stageId,
-        checkType,
-        status,
-        notes,
-        operatorId,
-        timestamp
-      });
-
-      this.sendSuccess(res, result);
-    } catch (error) {
-      this.sendError(res, error);
-    }
-  }
-
-  async getProductionAlerts(req: Request, res: Response): Promise<void> {
-    try {
-      const {
-        companyId,
-        alertType,
-        severity,
-        includeResolved = false
-      } = req.query;
-
-      const result = await this.productionTrackingService.getProductionAlerts({
-        companyId: companyId as string,
-        alertType: alertType as 'delayed' | 'quality' | 'maintenance' | 'efficiency',
-        severity: severity as 'low' | 'medium' | 'high' | 'critical',
-        includeResolved: includeResolved === 'true'
+        completedQuantity,
+        qualityNotes,
+        defectQuantity,
+        completedBy
       });
 
       this.sendSuccess(res, result);

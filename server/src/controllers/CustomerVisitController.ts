@@ -71,7 +71,7 @@ export class CustomerVisitController {
   async createCustomerVisit(req: Request, res: Response): Promise<void> {
     try {
       const visitData = req.body;
-      const createdBy = req.user?.id;
+      const createdBy = (req.user?.userId || req.user?._id)?.toString();
 
       const visit = await this.customerVisitService.createCustomerVisit(visitData, createdBy);
       this.sendSuccess(res, visit, 'Customer visit created successfully', 201);
@@ -99,13 +99,20 @@ export class CustomerVisitController {
       } = req.query;
 
       const companyId = req.user?.companyId;
-      if (!companyId) {
-        this.sendError(res, new Error('Company ID not found'), 'Company ID is required', 400);
-        return;
-      }
+      const isSuperAdmin = req.user?.isSuperAdmin;
 
       // Build query
-      const query: any = { companyId };
+      const query: any = {};
+      
+      // If not super admin, filter by company ID
+      if (!isSuperAdmin) {
+        if (!companyId) {
+          this.sendError(res, new Error('Company ID not found'), 'Company ID is required', 400);
+          return;
+        }
+        query.companyId = companyId;
+      }
+      // If super admin, don't filter by company - show all visits
 
       if (search) {
         query.$or = [
@@ -131,13 +138,33 @@ export class CustomerVisitController {
         limit: parseInt(limit as string),
         sort: { [sortBy as string]: sortOrder === 'desc' ? -1 : 1 },
         populate: [
-          { path: 'createdBy', select: 'firstName lastName email' },
-          { path: 'approvedBy', select: 'firstName lastName email' },
-          { path: 'companyId', select: 'companyName companyCode address phone email' }
+          { path: 'createdBy', select: 'username email personalInfo.firstName personalInfo.lastName' },
+          { path: 'approvedBy', select: 'username email personalInfo.firstName personalInfo.lastName' },
+          { path: 'companyId', select: 'companyName companyCode' }
         ]
       };
 
+      console.log('CustomerVisitController.getAllCustomerVisits - Query:', {
+        query,
+        options,
+        isSuperAdmin,
+        companyId,
+        user: {
+          userId: req.user?.userId,
+          username: req.user?.username,
+          isSuperAdmin: req.user?.isSuperAdmin
+        }
+      });
+
       const result = await this.customerVisitService.findManyWithPagination(query, options);
+      
+      console.log('CustomerVisitController.getAllCustomerVisits - Result:', {
+        total: result.total,
+        dataLength: result.data?.length || 0,
+        page: result.page,
+        limit: result.limit
+      });
+      
       res.status(200).json(result);
     } catch (error) {
       this.sendError(res, error, 'Failed to retrieve customer visits');
@@ -170,7 +197,7 @@ export class CustomerVisitController {
     try {
       const { id } = req.params;
       const updateData = req.body;
-      const updatedBy = req.user?.id;
+      const updatedBy = (req.user?.userId || req.user?._id)?.toString();
 
       const visit = await this.customerVisitService.update(id, updateData, updatedBy);
 
@@ -212,7 +239,7 @@ export class CustomerVisitController {
     try {
       const { id } = req.params;
       const { reimbursementAmount } = req.body;
-      const approvedBy = req.user?.id;
+      const approvedBy = (req.user?.userId || req.user?._id)?.toString();
 
       const visit = await this.customerVisitService.approveVisit(id, approvedBy, reimbursementAmount);
 
@@ -234,7 +261,7 @@ export class CustomerVisitController {
     try {
       const { id } = req.params;
       const { reason } = req.body;
-      const rejectedBy = req.user?.id;
+      const rejectedBy = (req.user?.userId || req.user?._id)?.toString();
 
       const visit = await this.customerVisitService.rejectVisit(id, rejectedBy, reason);
 
@@ -255,7 +282,7 @@ export class CustomerVisitController {
   async markAsReimbursed(req: Request, res: Response): Promise<void> {
     try {
       const { id } = req.params;
-      const reimbursedBy = req.user?.id;
+      const reimbursedBy = (req.user?.userId || req.user?._id)?.toString();
 
       const visit = await this.customerVisitService.markAsReimbursed(id, reimbursedBy);
 
@@ -277,7 +304,7 @@ export class CustomerVisitController {
     try {
       const { id } = req.params;
       const expenseData = req.body;
-      const updatedBy = req.user?.id;
+      const updatedBy = (req.user?.userId || req.user?._id)?.toString();
 
       const visit = await this.customerVisitService.addFoodExpense(id, expenseData, updatedBy);
 
@@ -299,7 +326,7 @@ export class CustomerVisitController {
     try {
       const { id } = req.params;
       const giftData = req.body;
-      const updatedBy = req.user?.id;
+      const updatedBy = (req.user?.userId || req.user?._id)?.toString();
 
       const visit = await this.customerVisitService.addGift(id, giftData, updatedBy);
 
@@ -321,8 +348,11 @@ export class CustomerVisitController {
     try {
       const { dateFrom, dateTo } = req.query;
       const companyId = req.user?.companyId;
+      const isSuperAdmin = req.user?.isSuperAdmin;
 
-      if (!companyId) {
+      // For super admin, get stats across all companies
+      // For regular users, require company ID
+      if (!isSuperAdmin && !companyId) {
         this.sendError(res, new Error('Company ID not found'), 'Company ID is required', 400);
         return;
       }
@@ -330,7 +360,9 @@ export class CustomerVisitController {
       const startDate = dateFrom ? new Date(dateFrom as string) : undefined;
       const endDate = dateTo ? new Date(dateTo as string) : undefined;
 
-      const stats = await this.customerVisitService.getExpenseStats(companyId.toString(), startDate, endDate);
+      // If super admin, pass null to get stats across all companies
+      const targetCompanyId = isSuperAdmin ? null : companyId.toString();
+      const stats = await this.customerVisitService.getExpenseStats(targetCompanyId, startDate, endDate);
       this.sendSuccess(res, stats, 'Expense statistics retrieved successfully');
     } catch (error) {
       this.sendError(res, error, 'Failed to retrieve expense statistics');
@@ -343,13 +375,18 @@ export class CustomerVisitController {
   async getPendingApprovals(req: Request, res: Response): Promise<void> {
     try {
       const companyId = req.user?.companyId;
+      const isSuperAdmin = req.user?.isSuperAdmin;
 
-      if (!companyId) {
+      // For super admin, get pending approvals across all companies
+      // For regular users, require company ID
+      if (!isSuperAdmin && !companyId) {
         this.sendError(res, new Error('Company ID not found'), 'Company ID is required', 400);
         return;
       }
 
-      const visits = await this.customerVisitService.getPendingApprovals(companyId.toString());
+      // If super admin, pass null to get pending approvals across all companies
+      const targetCompanyId = isSuperAdmin ? null : companyId.toString();
+      const visits = await this.customerVisitService.getPendingApprovals(targetCompanyId);
       this.sendSuccess(res, visits, 'Pending approvals retrieved successfully');
     } catch (error) {
       this.sendError(res, error, 'Failed to retrieve pending approvals');

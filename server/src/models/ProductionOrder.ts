@@ -141,7 +141,8 @@ const ProductionStageSchema = new Schema<IProductionStage>({
       location: { type: String }
     },
     batchNumber: { type: String },
-    outputImages: [String]
+    outputImages: [String],
+    defectQuantity: { type: Number, default: 0, min: 0 }
   },
 
   // Cost Tracking
@@ -159,6 +160,12 @@ const ProductionStageSchema = new Schema<IProductionStage>({
   instructions: { type: String },
   images: [String],
   documents: [String],
+
+  // Progress tracking
+  progress: { type: Number, default: 0, min: 0, max: 100 },
+
+  // Stage completion tracking
+  completedBy: { type: Schema.Types.ObjectId, ref: 'User' },
 
   // Tracking
   createdBy: { type: Schema.Types.ObjectId, ref: 'User' },

@@ -54,8 +54,8 @@ export class CustomerVisitService {
   async findById(id: string): Promise<any> {
     try {
       return await CustomerVisit.findById(id)
-        .populate('createdBy', 'username email')
-        .populate('companyId', 'name')
+        .populate('createdBy', 'username email personalInfo.firstName personalInfo.lastName')
+        .populate('companyId', 'companyName companyCode')
         .lean();
     } catch (error) {
       logger.error('Error finding customer visit by ID', { error, id });
@@ -111,8 +111,8 @@ export class CustomerVisitService {
   async findMany(query: any, options?: any): Promise<any[]> {
     try {
       return await CustomerVisit.find(query)
-        .populate('createdBy', 'username email')
-        .populate('companyId', 'name')
+        .populate('createdBy', 'username email personalInfo.firstName personalInfo.lastName')
+        .populate('companyId', 'companyName companyCode')
         .sort(options?.sort || { createdAt: -1 })
         .lean();
     } catch (error) {
@@ -154,7 +154,13 @@ export class CustomerVisitService {
 
       const visit = await this.create({
         ...visitData,
+        createdBy,
         approvalStatus: 'pending',
+        visitOutcome: {
+          status: visitData.visitOutcome?.status || 'pending',
+          notes: visitData.visitOutcome?.notes || 'Visit scheduled',
+          ...visitData.visitOutcome
+        },
         totalExpenses: {
           accommodation: 0,
           food: 0,
@@ -214,12 +220,17 @@ export class CustomerVisitService {
   /**
    * Get pending approvals
    */
-  async getPendingApprovals(companyId: string): Promise<ICustomerVisit[]> {
+  async getPendingApprovals(companyId: string | null): Promise<ICustomerVisit[]> {
     try {
-      return await this.findMany({ 
-        companyId: new Types.ObjectId(companyId),
-        approvalStatus: 'pending'
-      });
+      const query: any = { approvalStatus: 'pending' };
+      
+      // If companyId is provided, filter by company
+      if (companyId) {
+        query.companyId = new Types.ObjectId(companyId);
+      }
+      // If companyId is null (super admin), don't filter by company
+      
+      return await this.findMany(query);
     } catch (error) {
       logger.error('Error getting pending approvals', { error, companyId });
       throw error;
@@ -393,9 +404,16 @@ export class CustomerVisitService {
   /**
    * Get expense statistics
    */
-  async getExpenseStats(companyId: string, startDate?: Date, endDate?: Date): Promise<any> {
+  async getExpenseStats(companyId: string | null, startDate?: Date, endDate?: Date): Promise<any> {
     try {
-      const matchQuery: any = { companyId: new Types.ObjectId(companyId) };
+      const matchQuery: any = {};
+      
+      // If companyId is provided, filter by company
+      if (companyId) {
+        matchQuery.companyId = new Types.ObjectId(companyId);
+      }
+      // If companyId is null (super admin), don't filter by company
+      
       if (startDate && endDate) {
         matchQuery.visitDate = { $gte: startDate, $lte: endDate };
       }
@@ -450,19 +468,47 @@ export class CustomerVisitService {
    */
   async findManyWithPagination(query: any, options: any): Promise<any> {
     try {
-      const { page = 1, limit = 10, sort = { createdAt: -1 } } = options;
+      const { page = 1, limit = 10, sort = { createdAt: -1 }, populate = [] } = options;
       const skip = (page - 1) * limit;
 
+      console.log('CustomerVisitService.findManyWithPagination - Input:', {
+        query,
+        options,
+        skip,
+        limit
+      });
+
+      let queryBuilder = CustomerVisit.find(query)
+        .sort(sort)
+        .skip(skip)
+        .limit(limit);
+
+      // Apply populate options if provided
+      if (populate && populate.length > 0) {
+        populate.forEach((populateOption: any) => {
+          queryBuilder = queryBuilder.populate(populateOption.path, populateOption.select);
+        });
+      } else {
+        // Default populate if no options provided
+        queryBuilder = queryBuilder
+          .populate('createdBy', 'username email personalInfo.firstName personalInfo.lastName')
+          .populate('companyId', 'companyName companyCode');
+      }
+
       const [data, total] = await Promise.all([
-        CustomerVisit.find(query)
-          .sort(sort)
-          .skip(skip)
-          .limit(limit)
-          .populate('createdBy', 'username email')
-          .populate('companyId', 'name')
-          .lean(),
+        queryBuilder.lean(),
         CustomerVisit.countDocuments(query)
       ]);
+
+      console.log('CustomerVisitService.findManyWithPagination - Database result:', {
+        total,
+        dataLength: data?.length || 0,
+        firstRecord: data?.[0] ? {
+          _id: data[0]._id,
+          partyName: data[0].partyName,
+          companyId: data[0].companyId
+        } : null
+      });
 
       return {
         data,

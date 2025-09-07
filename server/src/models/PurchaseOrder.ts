@@ -207,6 +207,16 @@ const PurchaseOrderSchema = new Schema<IPurchaseOrder>({
     }]
   },
 
+  // Payment Status
+  paymentStatus: {
+    type: String,
+    enum: ['pending', 'partial', 'paid', 'overdue'],
+    default: 'pending',
+    index: true
+  },
+  lastPaymentDate: { type: Date },
+  lastPaymentAmount: { type: Number, default: 0, min: 0 },
+
   // Delivery Schedules (for multiple deliveries)
   deliverySchedules: [DeliveryScheduleSchema],
 

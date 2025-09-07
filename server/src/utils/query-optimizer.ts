@@ -1,4 +1,4 @@
-import { FilterQuery, QueryOptions, PipelineStage } from 'mongoose';
+import { FilterQuery, QueryOptions, PipelineStage, Types } from 'mongoose';
 import { logger } from './logger';
 
 /**
@@ -73,7 +73,7 @@ export class QueryOptimizer {
    */
   static createCompanyFilter<T>(companyId: string, additionalFilter: FilterQuery<T> = {}): FilterQuery<T> {
     return {
-      companyId: companyId,
+      companyId: new Types.ObjectId(companyId),
       ...additionalFilter
     } as FilterQuery<T>;
   }

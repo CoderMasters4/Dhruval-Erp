@@ -18,7 +18,7 @@ export class BusinessAnalyticsController extends BaseController<IBusinessAnalyti
   async createAnalytics(req: Request, res: Response): Promise<void> {
     try {
       const analyticsData = req.body;
-      const createdBy = req.user?.id;
+      const createdBy = (req.user?.userId || req.user?._id)?.toString();
 
       const analytics = await this.businessAnalyticsService.createAnalytics(analyticsData, createdBy);
 

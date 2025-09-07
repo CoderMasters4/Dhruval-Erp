@@ -362,7 +362,7 @@ export class AnalyticsController {
         groupBy,
         sortBy,
         sortOrder: sortOrder || 'desc',
-        createdBy: req.user?.id,
+        createdBy: (req.user?.userId || req.user?._id)?.toString(),
       };
 
       const savedTemplate = await this.analyticsService.saveReportTemplate(templateData);

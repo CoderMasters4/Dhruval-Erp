@@ -2,40 +2,65 @@ import { baseApi } from './baseApi'
 
 export interface Customer {
   _id: string
-  customerCode: string
-  name?: string
-  companyName?: string
-  type: 'corporate' | 'individual' | 'government'
-  status: 'active' | 'inactive' | 'pending'
-  email?: string
-  phone?: string
-  address?: {
-    street?: string
-    city?: string
-    state?: string
-    pincode?: string
-    country?: string
-  }
-  contactPerson?: {
-    name: string
-    designation?: string
-    email?: string
-    phone?: string
-  }
-  businessDetails?: {
-    gstin?: string
-    pan?: string
-    industry?: string
-    website?: string
-  }
-  totalOrders?: number
-  totalRevenue?: number
-  lastOrderDate?: string
-  creditLimit?: number
-  paymentTerms?: string
   companyId: string
+  customerCode: string
+  customerName: string
+  businessInfo: {
+    businessType: string
+    industry: string
+  }
+  contactInfo: {
+    primaryPhone?: string
+    alternatePhone?: string
+    primaryEmail?: string
+    alternateEmail?: string
+  }
+  financialInfo: {
+    creditLimit: number
+    creditDays: number
+    securityDeposit: number
+    outstandingAmount: number
+    advanceAmount: number
+    totalPurchases: number
+    currency: string
+    discountPercentage: number
+    taxExempt: boolean
+  }
+  purchaseHistory: {
+    totalOrders: number
+    totalOrderValue: number
+    averageOrderValue: number
+    preferredProducts: any[]
+    seasonalPatterns: any[]
+  }
+  marketing: {
+    marketingConsent: boolean
+    emailMarketing: boolean
+    smsMarketing: boolean
+    whatsappMarketing: boolean
+    language: string
+  }
+  relationship: {
+    customerType: string
+    priority: string
+    loyaltyPoints: number
+  }
+  compliance: {
+    kycStatus: string
+    kycDocuments: any[]
+    riskCategory: string
+    blacklisted: boolean
+  }
+  tags: any[]
+  attachments: any[]
+  isActive: boolean
+  createdBy: string
+  addresses: any[]
+  contactPersons: any[]
   createdAt: string
   updatedAt: string
+  displayName: string
+  __v: number
 }
 
 export interface CustomerStats {

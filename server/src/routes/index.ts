@@ -13,7 +13,7 @@ import v1SuppliersRoutes from './v1/suppliers';
 import v1InventoryRoutes from './v1/inventory';
 import v1ProductionRoutes from './v1/production';
 import v1CustomerOrdersRoutes from './v1/customer-orders';
-import v1PurchaseOrdersRoutes from './v1/purchase-orders';
+import v1PurchaseOrdersRoutes from './v1/purchase-orders'; // Commented out to prevent route conflicts
 import v1PurchaseRoutes from './v1/purchase';
 import v1InvoicesRoutes from './v1/invoices';
 import v1WarehousesRoutes from './v1/warehouses';
@@ -45,6 +45,8 @@ import v1AdvancedReportsRoutes from './v1/advanced-reports';
 import v1DocumentManagementRoutes from './v1/document-management';
 import v1DashboardRoutes from './v1/dashboard';
 import v1OrdersRoutes from './v1/orders';
+import v1FileAccessRoutes from './v1/file-access';
+import v1CustomerVisitsRoutes from './v1/customer-visits';
 
 // Import new feature routes
 import maintenanceRoutes from './maintenance';
@@ -176,7 +178,7 @@ router.use('/batches', v1BatchesRoutes);
 
 // Orders and financial
 router.use('/customer-orders', v1CustomerOrdersRoutes);
-router.use('/purchase-orders', v1PurchaseOrdersRoutes);
+router.use('/purchase-orders', v1PurchaseOrdersRoutes); 
 router.use('/purchase', v1PurchaseRoutes);
 router.use('/invoices', v1InvoicesRoutes);
 router.use('/quotations', v1QuotationsRoutes);
@@ -205,11 +207,13 @@ router.use('/audit-logs', v1AuditLogsRoutes);
 
 // Specialized services
 router.use('/hospitality', v1HospitalityRoutes);
+router.use('/customer-visits', v1CustomerVisitsRoutes);
 router.use('/dispatch', v1DispatchRoutes);
 router.use('/enhanced-dispatch', v1EnhancedDispatchRoutes);
 router.use('/reports', v1ReportsRoutes);
 
 // Advanced features
+router.use('/file-access', v1FileAccessRoutes);
 
 router.use('/production-dashboard', v1ProductionDashboardRoutes); // 🔍 TESTING: Temporarily disabled to isolate hanging issue
 router.use('/advanced-reports', v1AdvancedReportsRoutes); // 🔍 ISSUE: Still causing infinite restart loop

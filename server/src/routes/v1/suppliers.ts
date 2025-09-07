@@ -78,4 +78,11 @@ router.put('/:id/rating', supplierController.updateSupplierRating.bind(supplierC
  */
 router.delete('/:id', supplierController.deleteSupplier.bind(supplierController));
 
+/**
+ * @route   GET /api/v2/suppliers/:id/orders
+ * @desc    Get supplier orders
+ * @access  Private
+ */
+router.get('/:id/orders', supplierController.getSupplierOrders.bind(supplierController));
+
 export default router;

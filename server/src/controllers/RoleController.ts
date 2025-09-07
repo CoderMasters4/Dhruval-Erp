@@ -18,7 +18,7 @@ export class RoleController extends BaseController<IRole> {
   async createRole(req: Request, res: Response): Promise<void> {
     try {
       const roleData = req.body;
-      const createdBy = req.user?.id;
+      const createdBy = (req.user?.userId || req.user?._id)?.toString();
 
       const role = await this.roleService.createRole(roleData, createdBy);
 
@@ -95,7 +95,7 @@ export class RoleController extends BaseController<IRole> {
     try {
       const { roleId } = req.params;
       const { permissions } = req.body;
-      const updatedBy = req.user?.id;
+      const updatedBy = (req.user?.userId || req.user?._id)?.toString();
 
       const role = await this.roleService.updateRolePermissions(roleId, permissions, updatedBy);
 
@@ -133,7 +133,7 @@ export class RoleController extends BaseController<IRole> {
     try {
       const { roleId } = req.params;
       const { newRoleName } = req.body;
-      const clonedBy = req.user?.id;
+      const clonedBy = (req.user?.userId || req.user?._id)?.toString();
 
       const clonedRole = await this.roleService.cloneRole(roleId, newRoleName, clonedBy);
 
@@ -170,7 +170,7 @@ export class RoleController extends BaseController<IRole> {
     try {
       const { id } = req.params;
       const updateData = req.body;
-      const updatedBy = req.user?.id;
+      const updatedBy = (req.user?.userId || req.user?._id)?.toString();
 
       const role = await this.roleService.update(id, updateData, updatedBy);
 
@@ -211,7 +211,7 @@ export class RoleController extends BaseController<IRole> {
   async deleteRole(req: Request, res: Response): Promise<void> {
     try {
       const { id } = req.params;
-      const deletedBy = req.user?.id;
+      const deletedBy = (req.user?.userId || req.user?._id)?.toString();
 
       const role = await this.roleService.update(id, {
         isActive: false,

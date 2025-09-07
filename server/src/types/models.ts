@@ -923,6 +923,7 @@ export interface IProductionStage {
     };
     batchNumber?: string;
     outputImages: string[];
+    defectQuantity?: number;
   };
 
   costs: {
@@ -938,6 +939,12 @@ export interface IProductionStage {
   instructions?: string;
   images: string[];
   documents: string[];
+
+  // Progress tracking
+  progress?: number;
+
+  // Stage completion tracking
+  completedBy?: Types.ObjectId;
 
   createdBy?: Types.ObjectId;
   updatedBy?: Types.ObjectId;
@@ -1114,6 +1121,7 @@ export interface ICustomerOrder extends AuditableDocument {
 export interface IOrderItem {
   itemId: Types.ObjectId;
   productId?: Types.ObjectId;
+  itemName: string; // Added itemName field
   productType: 'saree' | 'african_cotton' | 'garment_fabric' | 'digital_print' | 'custom';
 
   specifications: {
@@ -3186,6 +3194,9 @@ export interface IPurchaseOrder extends AuditableDocument {
   amounts: IPOAmounts;
   taxDetails: IPOTaxDetails;
   paymentTerms: IPOPaymentTerms;
+  paymentStatus: 'pending' | 'partial' | 'paid' | 'overdue';
+  lastPaymentDate?: Date;
+  lastPaymentAmount?: number;
   deliverySchedules: IDeliverySchedule[];
   status: 'draft' | 'pending_approval' | 'approved' | 'sent' | 'acknowledged' | 'in_progress' | 'partially_received' | 'completed' | 'cancelled' | 'closed';
   approvalStatus: 'pending' | 'approved' | 'rejected';

@@ -8,6 +8,7 @@ import CustomerVisitList from '@/components/hospitality/CustomerVisitList'
 import CustomerVisitFormModal from '@/components/hospitality/modals/CustomerVisitFormModal'
 import HospitalityFilters from '@/components/hospitality/HospitalityFilters'
 import HospitalityStats from '@/components/hospitality/HospitalityStats'
+import ExpenseTracking from '@/components/hospitality/ExpenseTracking'
 import { useGetAllCustomerVisitsQuery, useGetHospitalityStatsQuery } from '@/lib/features/hospitality/hospitalityApi'
 import { toast } from 'react-hot-toast'
 
@@ -143,6 +144,15 @@ export default function HospitalityPage() {
         <HospitalityStats
           stats={statsData}
           isLoading={isLoadingStats}
+        />
+      </div>
+
+      {/* Expense Tracking Section */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-6">
+        <ExpenseTracking
+          visits={visits}
+          isLoading={isLoadingVisits}
+          onExport={handleExport}
         />
       </div>
 

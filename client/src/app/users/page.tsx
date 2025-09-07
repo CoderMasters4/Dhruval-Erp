@@ -94,7 +94,9 @@ export default function UsersPage() {
         openUserForm({
           user,
           onSuccess: () => {
-            refetch()
+            setTimeout(() => {
+              refetch()
+            }, 500)
             toast.success('User updated successfully!')
           }
         })
@@ -103,7 +105,9 @@ export default function UsersPage() {
         openPasswordModal({
           user,
           onSuccess: () => {
-            refetch()
+            setTimeout(() => {
+              refetch()
+            }, 500)
             toast.success('Password updated successfully!')
           }
         })
@@ -112,7 +116,9 @@ export default function UsersPage() {
         openToggle2FA({
           user,
           onSuccess: () => {
-            refetch()
+            setTimeout(() => {
+              refetch()
+            }, 500)
             toast.success(`2FA ${(user.is2FAEnabled || user.twoFactorEnabled) ? 'disabled' : 'enabled'} successfully!`)
           }
         })
@@ -124,7 +130,9 @@ export default function UsersPage() {
     openUserForm({
       user,
       onSuccess: () => {
-        refetch()
+        setTimeout(() => {
+          refetch()
+        }, 500)
         toast.success('User updated successfully!')
       }
     })
@@ -134,7 +142,9 @@ export default function UsersPage() {
     openDeleteUser({
       user,
       onSuccess: () => {
-        refetch()
+        setTimeout(() => {
+          refetch()
+        }, 500)
         toast.success('User deleted successfully!')
       }
     })
@@ -144,7 +154,9 @@ export default function UsersPage() {
     openPasswordModal({
       user,
       onSuccess: () => {
-        refetch()
+        setTimeout(() => {
+          refetch()
+        }, 500)
         toast.success('Password updated successfully!')
       }
     })
@@ -154,7 +166,9 @@ export default function UsersPage() {
     openToggle2FA({
       user,
       onSuccess: () => {
-        refetch()
+        setTimeout(() => {
+          refetch()
+        }, 500)
         toast.success(`2FA ${(user.is2FAEnabled || user.twoFactorEnabled) ? 'disabled' : 'enabled'} successfully!`)
       }
     })
@@ -163,7 +177,10 @@ export default function UsersPage() {
   const handleCreateNew = () => {
     openUserForm({
       onSuccess: () => {
-        refetch()
+        // Add a small delay to avoid race conditions
+        setTimeout(() => {
+          refetch()
+        }, 500)
         toast.success('User created successfully!')
       }
     })
@@ -211,13 +228,19 @@ export default function UsersPage() {
 
   // Error state
   if (error) {
+    console.error('Users page error:', error)
     return (
       <AppLayout>
         <div className="flex items-center justify-center min-h-[60vh]">
           <div className="text-center">
             <AlertCircle className="mx-auto h-12 w-12 text-red-400 mb-4" />
             <h3 className="text-lg font-medium text-gray-900 mb-2">Error Loading Users</h3>
-            <p className="text-gray-600 mb-4">There was an error loading the users data.</p>
+            <p className="text-gray-600 mb-4">
+              {error && 'data' in error
+                ? (error.data as any)?.message || 'Failed to load users'
+                : 'An unexpected error occurred'
+              }
+            </p>
             <Button onClick={() => refetch()} className="bg-sky-500 hover:bg-sky-600 text-white">
               Try Again
             </Button>
@@ -245,7 +268,9 @@ export default function UsersPage() {
               <Button
                 onClick={() => openUserForm({
                   onSuccess: () => {
-                    refetch()
+                    setTimeout(() => {
+                      refetch()
+                    }, 500)
                     toast.success('User created successfully!')
                   }
                 })}
@@ -300,7 +325,9 @@ export default function UsersPage() {
               onReset={handleReset}
               onCreateNew={() => openUserForm({
                 onSuccess: (operation: 'create' | 'update') => {
-                  refetch()
+                  setTimeout(() => {
+                    refetch()
+                  }, 500)
                   if (operation === 'create') {
                     toast.success('User created successfully!')
                   } else {
@@ -429,7 +456,9 @@ export default function UsersPage() {
                     openUserForm({
                       user,
                       onSuccess: () => {
-                        refetch()
+                        setTimeout(() => {
+                          refetch()
+                        }, 500)
                         toast.success('User updated successfully!')
                       }
                     })
@@ -438,7 +467,9 @@ export default function UsersPage() {
                     openPasswordModal({
                       user,
                       onSuccess: () => {
-                        refetch()
+                        setTimeout(() => {
+                          refetch()
+                        }, 500)
                         toast.success('Password updated successfully!')
                       }
                     })
@@ -447,7 +478,9 @@ export default function UsersPage() {
                     openToggle2FA({
                       user,
                       onSuccess: () => {
-                        refetch()
+                        setTimeout(() => {
+                          refetch()
+                        }, 500)
                         toast.success('2FA status updated successfully!')
                       }
                     })
@@ -456,14 +489,18 @@ export default function UsersPage() {
                 onEdit={(user) => openUserForm({
                   user,
                   onSuccess: () => {
-                    refetch()
+                    setTimeout(() => {
+                      refetch()
+                    }, 500)
                     toast.success('User updated successfully!')
                   }
                 })}
                 onDelete={(user) => openDeleteUser({
                   user,
                   onSuccess: () => {
-                    refetch()
+                    setTimeout(() => {
+                      refetch()
+                    }, 500)
                     toast.success('User deleted successfully!')
                   }
                 })}

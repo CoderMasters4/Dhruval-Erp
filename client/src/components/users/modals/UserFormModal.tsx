@@ -9,7 +9,8 @@ import {
   Building2,
   Eye,
   EyeOff,
-  Loader2
+  Loader2,
+  AlertCircle
 } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Modal, ModalContent, ModalFooter } from '@/components/ui/Modal'
@@ -191,6 +192,9 @@ export default function UserFormModal({ isOpen, onClose, onSuccess, user }: User
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [errors, setErrors] = useState<Partial<FormData>>({})
+  const [apiErrors, setApiErrors] = useState<string[]>([])
+  const [showSuccess, setShowSuccess] = useState(false)
+  const [isServerReachable, setIsServerReachable] = useState(true)
 
   const [createUser, { isLoading: isCreating }] = useCreateUserMutation()
   const [updateUser, { isLoading: isUpdating }] = useUpdateUserMutation()
@@ -203,7 +207,7 @@ export default function UserFormModal({ isOpen, onClose, onSuccess, user }: User
   const companies = companiesResponse?.data || []
 
   const isEditing = !!user
-  const isLoading = isCreating || isUpdating
+  const isLoading = isCreating || isUpdating || showSuccess
 
   // Helper function to get user ID
   const getUserId = (user: UserType) => user.id || user._id
@@ -270,6 +274,9 @@ export default function UserFormModal({ isOpen, onClose, onSuccess, user }: User
         })
       }
       setErrors({})
+      setApiErrors([])
+      setShowSuccess(false)
+      setIsServerReachable(true)
     }
   }, [user, isOpen])
 
@@ -352,9 +359,15 @@ export default function UserFormModal({ isOpen, onClose, onSuccess, user }: User
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
+    // Clear previous API errors
+    setApiErrors([])
+    
     if (!validateForm()) {
       return
     }
+
+    // Add loading state
+    const startTime = Date.now()
 
     try {
       if (isEditing && user) {
@@ -428,29 +441,168 @@ export default function UserFormModal({ isOpen, onClose, onSuccess, user }: User
         // Success message is handled by parent component's onSuccess callback
       }
 
-      onSuccess(isEditing ? 'update' : 'create')
-      onClose()
+      // Log success timing
+      const endTime = Date.now()
+      console.log(`${isEditing ? 'Update' : 'Create'} user successful in ${endTime - startTime}ms`)
+
+      // Show success message
+      setShowSuccess(true)
+      
+      // Close modal after a short delay to show success message
+      setTimeout(() => {
+        onSuccess(isEditing ? 'update' : 'create')
+        onClose()
+      }, 1500)
     } catch (error: any) {
+      // Enhanced error logging for debugging
       console.error(`${isEditing ? 'Update' : 'Create'} user error:`, error)
+      console.error('Error type:', typeof error)
+      console.error('Error keys:', Object.keys(error || {}))
+      console.error('Error stringified:', JSON.stringify(error, null, 2))
+      console.error('Error stack:', error?.stack)
+      console.error('Error occurred after:', Date.now() - startTime, 'ms')
 
-      // Handle different types of errors
-      let errorMessage = `Failed to ${isEditing ? 'update' : 'create'} user`
+      // Handle different types of errors and collect them
+      const errorMessages: string[] = []
 
-      if (error?.data?.message) {
-        errorMessage = error.data.message
-      } else if (error?.data?.error) {
-        errorMessage = error.data.error
-      } else if (error?.message) {
-        errorMessage = error.message
-      } else if (error?.status === 500) {
-        errorMessage = 'Server error occurred. Please try again later.'
-      } else if (error?.status === 400) {
-        errorMessage = 'Invalid data provided. Please check your inputs.'
-      } else if (error?.status === 409) {
-        errorMessage = 'Username or email already exists.'
+      // Handle RTK Query specific error structure
+      if (error?.data) {
+        console.log('Error data found:', error.data)
+        
+        // Handle validation errors from server
+        if (error.data.errors && Array.isArray(error.data.errors)) {
+          error.data.errors.forEach((err: any) => {
+            if (err.field && err.message) {
+              errorMessages.push(`${err.field}: ${err.message}`)
+              
+              // Map server field errors to form field errors
+              const fieldMap: { [key: string]: keyof FormData } = {
+                'username': 'username',
+                'email': 'email',
+                'password': 'password',
+                'firstName': 'firstName',
+                'lastName': 'lastName',
+                'phone': 'phone',
+                'primaryCompanyId': 'primaryCompanyId'
+              }
+              
+              const formField = fieldMap[err.field]
+              if (formField) {
+                setErrors(prev => ({
+                  ...prev,
+                  [formField]: err.message
+                }))
+              }
+            } else if (err.message) {
+              errorMessages.push(err.message)
+            }
+          })
+        }
+
+        // Handle single error message
+        if (error.data.message) {
+          errorMessages.push(error.data.message)
+        } else if (error.data.error) {
+          errorMessages.push(error.data.error)
+        }
       }
 
-      toast.error(errorMessage)
+      // Handle error message directly
+      if (error?.message) {
+        errorMessages.push(error.message)
+      }
+
+      // Handle specific HTTP status codes
+      if (error?.status === 500) {
+        errorMessages.push('Server error occurred. Please try again later.')
+      } else if (error?.status === 400) {
+        errorMessages.push('Invalid data provided. Please check your inputs.')
+      } else if (error?.status === 409) {
+        errorMessages.push('Username or email already exists.')
+      } else if (error?.status === 401) {
+        errorMessages.push('Unauthorized. Please check your permissions.')
+      } else if (error?.status === 403) {
+        errorMessages.push('Forbidden. You do not have permission to perform this action.')
+      } else if (error?.status === 404) {
+        errorMessages.push('Resource not found.')
+      } else if (error?.status === 422) {
+        errorMessages.push('Validation error. Please check your input data.')
+      }
+
+      // Handle network errors
+      if (error?.error) {
+        if (error.error === 'FETCH_ERROR') {
+          errorMessages.push('Network error. Please check your internet connection.')
+        } else if (error.error === 'TIMEOUT_ERROR') {
+          errorMessages.push('Request timeout. Please try again.')
+        } else if (error.error === 'PARSING_ERROR') {
+          errorMessages.push('Server response error. Please try again.')
+        } else {
+          errorMessages.push(`Network error: ${error.error}`)
+        }
+      }
+
+      // Handle CORS errors
+      if (error?.status === 0) {
+        errorMessages.push('CORS error or server unreachable. Please check if the server is running.')
+        setIsServerReachable(false)
+      }
+
+      // Handle specific error types
+      if (error?.originalStatus) {
+        console.log('Original status:', error.originalStatus)
+        if (error.originalStatus === 500) {
+          errorMessages.push('Internal server error. Please try again later.')
+        } else if (error.originalStatus === 503) {
+          errorMessages.push('Service temporarily unavailable. Please try again later.')
+        }
+      }
+
+      // Handle empty error object case
+      if (error && typeof error === 'object' && Object.keys(error).length === 0) {
+        errorMessages.push('Unknown error occurred. Please try again.')
+        console.error('Empty error object detected - this might indicate a network issue or server problem')
+      }
+
+      // Handle null or undefined error
+      if (!error) {
+        errorMessages.push('No error information available. Please check your connection and try again.')
+        console.error('Error object is null or undefined')
+      }
+
+      // If no specific errors found, add a generic message
+      if (errorMessages.length === 0) {
+        errorMessages.push(`Failed to ${isEditing ? 'update' : 'create'} user. Please try again.`)
+      }
+
+      // Set API errors to display in the form
+      setApiErrors(errorMessages)
+
+      // Also show toast for immediate feedback
+      toast.error(errorMessages[0] || `Failed to ${isEditing ? 'update' : 'create'} user`)
+
+      // Additional debugging information
+      console.log('Final error messages:', errorMessages)
+      console.log('Error status:', error?.status)
+      console.log('Error data:', error?.data)
+      console.log('Error originalStatus:', error?.originalStatus)
+    }
+  }
+
+  // Function to test server connectivity
+  const testServerConnectivity = async () => {
+    try {
+      const response = await fetch(process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api/v1/health', {
+        method: 'GET',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
+      return response.ok
+    } catch (error) {
+      console.error('Server connectivity test failed:', error)
+      return false
     }
   }
 
@@ -475,6 +627,16 @@ export default function UserFormModal({ isOpen, onClose, onSuccess, user }: User
       delete newErrors[key as keyof FormData]
     })
     setErrors(newErrors)
+    
+          // Clear API errors when user starts editing
+      if (apiErrors.length > 0) {
+        setApiErrors([])
+      }
+      
+      // Clear success message when user starts editing
+      if (showSuccess) {
+        setShowSuccess(false)
+      }
   }
 
   return (
@@ -487,6 +649,117 @@ export default function UserFormModal({ isOpen, onClose, onSuccess, user }: User
     >
       <ModalContent>
         <form id="user-form" onSubmit={handleSubmit}>
+          {/* Success Message Display */}
+          {showSuccess && (
+            <div className="mb-6 bg-green-50 border border-green-200 rounded-xl p-4">
+              <div className="flex items-start justify-between">
+                <div className="flex items-start flex-1">
+                  <svg className="w-5 h-5 text-green-500 mt-0.5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                  <div className="flex-1">
+                    <h4 className="text-sm font-semibold text-green-800 mb-1">
+                      Success!
+                    </h4>
+                    <p className="text-sm text-green-700 font-medium">
+                      User {isEditing ? 'updated' : 'created'} successfully. Closing modal...
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Server Status Indicator */}
+          {!isServerReachable && (
+            <div className="mb-6 bg-orange-50 border border-orange-200 rounded-xl p-4">
+              <div className="flex items-start justify-between">
+                <div className="flex items-start flex-1">
+                  <svg className="w-5 h-5 text-orange-500 mt-0.5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                  </svg>
+                  <div className="flex-1">
+                    <h4 className="text-sm font-semibold text-orange-800 mb-1">
+                      Server Connection Issue
+                    </h4>
+                    <p className="text-sm text-orange-700 font-medium">
+                      Unable to reach the server. Please check if the server is running and try again.
+                    </p>
+                    <div className="mt-3">
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          const isReachable = await testServerConnectivity()
+                          if (isReachable) {
+                            setIsServerReachable(true)
+                            toast.success('Server connection restored!')
+                          } else {
+                            toast.error('Server still unreachable')
+                          }
+                        }}
+                        className="px-3 py-1 text-xs bg-orange-100 text-orange-700 rounded border border-orange-300 hover:bg-orange-200 transition-colors"
+                      >
+                        Test Connection
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* API Errors Display */}
+          {apiErrors.length > 0 && (
+            <div className="mb-6 bg-red-50 border border-red-200 rounded-xl p-4">
+              <div className="flex items-start justify-between">
+                <div className="flex items-start flex-1">
+                  <AlertCircle className="w-5 h-5 text-red-500 mt-0.5 mr-3 flex-shrink-0" />
+                  <div className="flex-1">
+                    <h4 className="text-sm font-semibold text-red-800 mb-2">
+                      {apiErrors.length === 1 ? 'Error occurred:' : `${apiErrors.length} errors occurred:`}
+                    </h4>
+                    <ul className="space-y-1">
+                      {apiErrors.map((error, index) => (
+                        <li key={index} className="text-sm text-red-700 font-medium">
+                          • {error}
+                        </li>
+                      ))}
+                    </ul>
+                    <div className="mt-3 flex gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setApiErrors([])}
+                        className="px-3 py-1 text-xs bg-red-100 text-red-700 rounded border border-red-300 hover:bg-red-200 transition-colors"
+                      >
+                        Dismiss
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setApiErrors([])
+                          handleSubmit(new Event('submit') as any)
+                        }}
+                        className="px-3 py-1 text-xs bg-blue-100 text-blue-700 rounded border border-blue-300 hover:bg-blue-200 transition-colors"
+                      >
+                        Retry
+                      </button>
+                    </div>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setApiErrors([])}
+                  className="ml-4 text-red-500 hover:text-red-700 transition-colors"
+                  title="Dismiss errors"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+          )}
+          
           <div className="space-y-6">
             {/* Basic Information */}
             <div className="bg-sky-50 rounded-xl p-6 border border-sky-200">
@@ -1221,7 +1494,7 @@ export default function UserFormModal({ isOpen, onClose, onSuccess, user }: User
           className="bg-sky-500 hover:bg-sky-600 text-white px-8 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
         >
           {isLoading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-          {isEditing ? 'Update User' : 'Create User'}
+          {showSuccess ? 'Success!' : (isEditing ? 'Update User' : 'Create User')}
         </Button>
       </ModalFooter>
     </Modal>

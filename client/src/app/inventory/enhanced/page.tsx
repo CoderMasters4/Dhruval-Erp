@@ -96,9 +96,9 @@ const EnhancedInventoryPage = () => {
   
   const filteredItems = safeItems.filter((item: any) => {
     const matchesSearch = !searchTerm || 
-      item.itemName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.itemCode.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (item.itemDescription || '').toLowerCase().includes(searchTerm.toLowerCase());
+      (item.itemName?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+      (item.itemCode?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+      (item.itemDescription?.toLowerCase() || '').includes(searchTerm.toLowerCase());
     const matchesCategory = !categoryFilter || item.category?.primary === categoryFilter;
     const matchesStatus = !statusFilter || getStockStatus(item) === statusFilter;
     

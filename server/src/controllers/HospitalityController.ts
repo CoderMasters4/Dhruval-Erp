@@ -18,7 +18,7 @@ export class HospitalityController extends BaseController<IHospitality> {
   async createHospitalityEntry(req: Request, res: Response): Promise<void> {
     try {
       const hospitalityData = req.body;
-      const createdBy = req.user?.id;
+      const createdBy = (req.user?.userId || req.user?._id)?.toString();
 
       const hospitality = await this.hospitalityService.createHospitalityFacility(hospitalityData, createdBy);
 
@@ -155,7 +155,7 @@ export class HospitalityController extends BaseController<IHospitality> {
     try {
       const { id } = req.params;
       const updateData = req.body;
-      const updatedBy = req.user?.id;
+      const updatedBy = (req.user?.userId || req.user?._id)?.toString();
 
       const hospitality = await this.hospitalityService.update(id, updateData, updatedBy);
 

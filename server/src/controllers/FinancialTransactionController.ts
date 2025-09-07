@@ -18,7 +18,7 @@ export class FinancialTransactionController extends BaseController<IFinancialTra
   async createTransaction(req: Request, res: Response): Promise<void> {
     try {
       const transactionData = req.body;
-      const createdBy = req.user?.id;
+      const createdBy = (req.user?.userId || req.user?._id)?.toString();
 
       const transaction = await this.financialTransactionService.createTransaction(transactionData, createdBy);
 
@@ -35,7 +35,7 @@ export class FinancialTransactionController extends BaseController<IFinancialTra
     try {
       const { transactionId } = req.params;
       const { status } = req.body;
-      const updatedBy = req.user?.id;
+      const updatedBy = (req.user?.userId || req.user?._id)?.toString();
 
       const transaction = await this.financialTransactionService.updateTransactionStatus(transactionId, status, updatedBy);
 
@@ -173,7 +173,7 @@ export class FinancialTransactionController extends BaseController<IFinancialTra
     try {
       const { id } = req.params;
       const updateData = req.body;
-      const updatedBy = req.user?.id;
+      const updatedBy = (req.user?.userId || req.user?._id)?.toString();
 
       const transaction = await this.financialTransactionService.update(id, updateData, updatedBy);
 
@@ -194,7 +194,7 @@ export class FinancialTransactionController extends BaseController<IFinancialTra
   async deleteTransaction(req: Request, res: Response): Promise<void> {
     try {
       const { id } = req.params;
-      const deletedBy = req.user?.id;
+      const deletedBy = (req.user?.userId || req.user?._id)?.toString();
 
       const transaction = await this.financialTransactionService.update(id, {
         'paymentDetails.paymentStatus': 'cancelled',

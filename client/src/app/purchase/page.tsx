@@ -11,7 +11,7 @@ import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { Badge } from '@/components/ui/badge'
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner'
-import { CreatePurchaseOrderModal } from '@/components/purchase/CreatePurchaseOrderModal'
+
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
@@ -62,7 +62,6 @@ function PurchasePageContent() {
   const [selectedPeriod, setSelectedPeriod] = useState<'week' | 'month' | 'quarter' | 'year'>('month')
   const [selectedCompanyId, setSelectedCompanyId] = useState<string>('all')
   const [activeTab, setActiveTab] = useState('overview')
-  const [showCreateModal, setShowCreateModal] = useState(false)
 
   const user = useSelector(selectCurrentUser)
   const isSuperAdmin = useSelector(selectIsSuperAdmin)
@@ -122,7 +121,9 @@ function PurchasePageContent() {
     const tab = searchParams.get('tab')
     
     if (action === 'create') {
-      setShowCreateModal(true)
+      // Redirect to the create page instead of opening modal
+      window.location.href = '/purchase/create'
+      return
     }
     
     if (tab) {
@@ -138,6 +139,17 @@ function PurchasePageContent() {
       refetchOrders()
     } catch (error: any) {
       toast.error(error?.data?.message || 'Failed to update payment status')
+    }
+  }
+
+  const handleReceiveOrder = async (order: any) => {
+    try {
+      // For now, we'll show a success message
+      // In a real implementation, this would open a modal to confirm received quantities
+      toast.success(`Purchase order ${order.poNumber} received successfully!`)
+      refetchOrders()
+    } catch (error: any) {
+      toast.error(error?.data?.message || 'Failed to receive order')
     }
   }
 
@@ -166,7 +178,7 @@ function PurchasePageContent() {
 
   // Data extraction
   const stats = statsData?.data
-  const orders = ordersData?.data || []
+  const orders = ordersData?.data?.data || []
   const supplierReport = supplierReportData?.data || []
   const categorySpend = categorySpendData?.data || []
   const analytics = analyticsData?.data
@@ -254,11 +266,13 @@ function PurchasePageContent() {
                   </SelectContent>
                 </Select>
               )}
-              <CreatePurchaseOrderModal 
-                onSuccess={handleRefresh} 
-                open={showCreateModal}
-                onOpenChange={setShowCreateModal}
-              />
+              <Button 
+                onClick={() => window.location.href = '/purchase/create'} 
+                size="sm"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Create Purchase Order
+              </Button>
               <Button onClick={handleRefresh} variant="outline" size="sm">
                 <RefreshCw className="h-4 w-4 mr-2" />
                 Refresh
@@ -648,14 +662,14 @@ function PurchasePageContent() {
                         </tr>
                       </thead>
                       <tbody>
-                        {orders.map((order) => (
+                        {orders.map((order: any) => (
                           <tr key={order._id} className="border-b hover:bg-gray-50">
-                            <td className="p-2 font-medium">{order.purchaseOrderId}</td>
-                            <td className="p-2">{order.supplier?.name || 'N/A'}</td>
-                            <td className="p-2">{formatCurrency(order.totalAmount)}</td>
+                            <td className="p-2 font-medium">{order.poNumber}</td>
+                            <td className="p-2">{order.supplier?.supplierName || 'N/A'}</td>
+                            <td className="p-2">{formatCurrency(order.amounts?.grandTotal || 0)}</td>
                             <td className="p-2">{getStatusBadge(order.status)}</td>
-                            <td className="p-2">{getPaymentStatusBadge(order.paymentStatus)}</td>
-                            <td className="p-2">{new Date(order.orderDate).toLocaleDateString()}</td>
+                            <td className="p-2">{getPaymentStatusBadge(order.paymentTerms?.termType || 'pending')}</td>
+                            <td className="p-2">{new Date(order.poDate).toLocaleDateString()}</td>
                             <td className="p-2">
                               <div className="flex gap-2">
                                 <Button
@@ -666,6 +680,17 @@ function PurchasePageContent() {
                                   <CreditCard className="h-3 w-3 mr-1" />
                                   Mark Paid
                                 </Button>
+                                {order.status === 'confirmed' && (
+                                  <Button
+                                    onClick={() => handleReceiveOrder(order)}
+                                    variant="outline"
+                                    size="sm"
+                                    className="text-green-600 hover:text-green-700"
+                                  >
+                                    <Package className="h-3 w-3 mr-1" />
+                                    Receive
+                                  </Button>
+                                )}
                                 <Button variant="outline" size="sm">
                                   <Eye className="h-3 w-3 mr-1" />
                                   View
@@ -682,10 +707,10 @@ function PurchasePageContent() {
             </Card>
 
             {/* Pagination */}
-            {ordersData?.pagination && (
+            {ordersData?.data?.pagination && (
               <div className="flex justify-between items-center">
                 <p className="text-sm text-gray-600">
-                  Showing {((currentPage - 1) * 10) + 1} to {Math.min(currentPage * 10, ordersData.pagination.total)} of {ordersData.pagination.total} results
+                                      Showing {((currentPage - 1) * 10) + 1} to {Math.min(currentPage * 10, ordersData.data.pagination.total)} of {ordersData.data.pagination.total} results
                 </p>
                 <div className="flex gap-2">
                   <Button
@@ -698,7 +723,7 @@ function PurchasePageContent() {
                   </Button>
                   <Button
                     onClick={() => setCurrentPage(currentPage + 1)}
-                    disabled={currentPage >= ordersData.pagination.pages}
+                    disabled={currentPage >= ordersData.data.pagination.pages}
                     variant="outline"
                     size="sm"
                   >

@@ -36,7 +36,9 @@ import { AppLayout } from '@/components/layout/AppLayout'
 import { Button } from '@/components/ui/Button'
 import { Pagination } from '@/components/ui/Pagination'
 import { useGetSuppliersQuery } from '@/lib/api/suppliersApi'
+import { useGetAllCompaniesQuery } from '@/lib/api/authApi'
 import { SupplierFormModal } from '@/components/suppliers/modals/SupplierFormModal'
+import { SupplierDetailsModal } from '@/components/suppliers/modals/SupplierDetailsModal'
 import clsx from 'clsx'
 
 interface SupplierFilters {
@@ -82,10 +84,32 @@ export default function SuppliersPage() {
     category: filters.category !== 'all' ? filters.category : undefined
   })
 
-  const suppliers = suppliersData?.data || []
-  const pagination = suppliersData?.pagination
+  // Get companies data for displaying company names
+  const { data: companiesData } = useGetAllCompaniesQuery(undefined, {
+    skip: !suppliersData?.data?.data?.length
+  })
+
+  const companies = companiesData?.data || []
+
+  // Handle different possible data structures
+  const suppliers = (Array.isArray(suppliersData?.data?.data) 
+    ? suppliersData.data.data 
+    : Array.isArray(suppliersData?.data) 
+    ? suppliersData.data 
+    : []) as any[]
+  const pagination = suppliersData?.data?.pagination
 
   // Helper functions
+  const getCompanyName = (companyId: string | any) => {
+    // If companyId is an object (populated), use it directly
+    if (companyId && typeof companyId === 'object' && companyId.companyName) {
+      return companyId.companyName
+    }
+    // Otherwise, find in companies array
+    const company = companies.find(c => c._id === companyId)
+    return company?.companyName || 'Unknown Company'
+  }
+
   const formatDate = (dateString: string | null) => {
     if (!dateString) return 'Never'
     return new Date(dateString).toLocaleDateString('en-IN', {
@@ -93,15 +117,6 @@ export default function SuppliersPage() {
       month: 'short',
       year: 'numeric'
     })
-  }
-
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-IN', {
-      style: 'currency',
-      currency: 'INR',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0
-    }).format(amount)
   }
 
   const getStatusColor = (status: string) => {
@@ -115,6 +130,15 @@ export default function SuppliersPage() {
     return colors[status as keyof typeof colors] || 'bg-gray-100 text-gray-800 border-gray-200'
   }
 
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('en-IN', {
+      style: 'currency',
+      currency: 'INR',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
+    }).format(amount)
+  }
+
   const getCategoryColor = (category: string) => {
     const colors = {
       'raw_materials': 'bg-blue-100 text-blue-800',
@@ -126,40 +150,19 @@ export default function SuppliersPage() {
     return colors[category as keyof typeof colors] || 'bg-gray-100 text-gray-800'
   }
 
-  const getRatingStars = (rating: number) => {
-    return Array.from({ length: 5 }, (_, index) => (
-      <Star
-        key={index}
-        className={clsx(
-          "h-4 w-4",
-          index < rating ? "text-yellow-400 fill-current" : "text-gray-300"
-        )}
-      />
-    ))
-  }
-
   const getIndustryIcon = (industry: string) => {
-    const icons = {
-      'Manufacturing': Factory,
-      'Electronics': Zap,
-      'Food Processing': Package,
-      'Pharmaceuticals': Shield,
-      'Textiles': Briefcase,
-      'Automotive': Settings
+    switch (industry?.toLowerCase()) {
+      case 'automotive':
+        return <Truck className="h-4 w-4 text-blue-600" />
+      case 'manufacturing':
+        return <Factory className="h-4 w-4 text-gray-600" />
+      case 'electronics':
+        return <Settings className="h-4 w-4 text-purple-600" />
+      case 'food processing':
+        return <Package className="h-4 w-4 text-green-600" />
+      default:
+        return <Building className="h-4 w-4 text-gray-600" />
     }
-    const IconComponent = icons[industry as keyof typeof icons] || Building
-    return <IconComponent className="h-4 w-4" />
-  }
-
-  const getPaymentTermsColor = (terms: string) => {
-    const colors = {
-      'COD': 'bg-green-100 text-green-800',
-      'Advance': 'bg-blue-100 text-blue-800',
-      '30 Days': 'bg-yellow-100 text-yellow-800',
-      '45 Days': 'bg-orange-100 text-orange-800',
-      '60 Days': 'bg-red-100 text-red-800'
-    }
-    return colors[terms as keyof typeof colors] || 'bg-gray-100 text-gray-800'
   }
 
   // Event handlers
@@ -203,6 +206,12 @@ export default function SuppliersPage() {
     setShowSupplierDetails(true)
   }
 
+  const handleEditFromDetails = () => {
+    setEditingSupplier(selectedSupplier)
+    setShowSupplierDetails(false)
+    setShowSupplierForm(true)
+  }
+
   return (
     <AppLayout>
       <div className="min-h-screen bg-gradient-to-br from-white via-sky-50 to-blue-100">
@@ -220,7 +229,7 @@ export default function SuppliersPage() {
                   </div>
                   <div className="flex items-center gap-2 px-3 py-1 bg-white rounded-full shadow-sm border border-sky-200">
                     <CheckCircle className="h-4 w-4 text-green-600" />
-                    <span className="text-sm font-medium text-gray-700">{suppliers.filter(s => s.status === 'active').length} active</span>
+                    <span className="text-sm font-medium text-gray-700">{suppliers.filter(s => s.isActive).length} active</span>
                   </div>
                 </div>
               </div>
@@ -309,7 +318,7 @@ export default function SuppliersPage() {
                 <div className="flex-1">
                   <p className="text-sm font-semibold text-gray-600 uppercase tracking-wider mb-2">Active Suppliers</p>
                   <p className="text-3xl font-bold text-gray-900 mb-1">
-                    {suppliers.filter(s => s.status === 'active').length}
+                    {suppliers.filter(s => s.isActive).length}
                   </p>
                   <p className="text-xs text-gray-500">Excellent health</p>
                 </div>
@@ -325,7 +334,7 @@ export default function SuppliersPage() {
                 <div className="flex-1">
                   <p className="text-sm font-semibold text-gray-600 uppercase tracking-wider mb-2">Total Orders</p>
                   <p className="text-3xl font-bold text-gray-900 mb-1">
-                    {suppliers.reduce((sum, s) => sum + (s.totalOrders || 0), 0)}
+                    {suppliers.reduce((sum, s) => sum + (s.supplyHistory?.totalOrders || 0), 0)}
                   </p>
                   <p className="text-xs text-gray-500">+8% this quarter</p>
                 </div>
@@ -341,7 +350,7 @@ export default function SuppliersPage() {
                 <div className="flex-1">
                   <p className="text-sm font-semibold text-gray-600 uppercase tracking-wider mb-2">Total Spend</p>
                   <p className="text-3xl font-bold text-gray-900 mb-1">
-                    {formatCurrency(suppliers.reduce((sum, s) => sum + (s.totalSpend || 0), 0))}
+                    {formatCurrency(suppliers.reduce((sum, s) => sum + (s.supplyHistory?.totalOrderValue || 0), 0))}
                   </p>
                   <p className="text-xs text-gray-500">Within budget</p>
                 </div>
@@ -573,50 +582,53 @@ export default function SuppliersPage() {
                               <div className="flex items-center">
                                 <div className="h-10 w-10 bg-sky-100 rounded-full flex items-center justify-center">
                                   <span className="text-sky-600 font-semibold text-sm">
-                                    {supplier.companyName?.charAt(0)?.toUpperCase() || 'S'}
+                                    {supplier.supplierName?.charAt(0)?.toUpperCase() || 'S'}
                                   </span>
                                 </div>
                                 <div className="ml-4">
                                   <div className="text-sm font-medium text-gray-900">
-                                    {supplier.companyName}
+                                    {supplier.supplierName}
                                   </div>
                                   <div className="text-sm text-gray-500">
                                     {supplier.supplierCode}
+                                  </div>
+                                  <div className="text-xs text-gray-400">
+                                    {getCompanyName(supplier.companyId)}
                                   </div>
                                 </div>
                               </div>
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap">
-                              <div className="text-sm text-gray-900">
-                                <div className="font-medium">{supplier.email || 'N/A'}</div>
-                                <div className="text-gray-500">{supplier.phone || 'N/A'}</div>
-                              </div>
+                                                              <div className="text-sm text-gray-900">
+                                  <div className="font-medium">{supplier.contactInfo?.primaryEmail || 'N/A'}</div>
+                                  <div className="text-gray-500">{supplier.contactInfo?.primaryPhone || 'N/A'}</div>
+                                </div>
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap">
-                              <div className="text-sm text-gray-900">
-                                <div className="font-medium">{supplier.businessDetails?.industry || 'N/A'}</div>
-                                <div className="text-gray-500">{supplier.address?.city || 'N/A'}, {supplier.address?.state || 'N/A'}</div>
-                              </div>
+                                                              <div className="text-sm text-gray-900">
+                                  <div className="font-medium">{supplier.businessInfo?.industry || 'N/A'}</div>
+                                  <div className="text-gray-500">{supplier.addresses?.[0]?.city || 'N/A'}, {supplier.addresses?.[0]?.state || 'N/A'}</div>
+                                </div>
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap">
-                              <div className="text-sm text-gray-900">
-                                <div className="font-medium">{supplier.totalOrders || 0} orders</div>
-                                <div className="text-gray-500">{formatCurrency(supplier.totalSpend || 0)}</div>
-                              </div>
+                                                              <div className="text-sm text-gray-900">
+                                  <div className="font-medium">{supplier.supplyHistory?.totalOrders || 0} orders</div>
+                                  <div className="text-gray-500">{formatCurrency(supplier.supplyHistory?.totalOrderValue || 0)}</div>
+                                </div>
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap">
                               <div className="flex flex-col gap-1">
                                 <span className={clsx(
                                   'inline-flex px-2 py-1 text-xs font-semibold rounded-full',
-                                  getStatusColor(supplier.status)
+                                  getStatusColor(supplier.isActive ? 'active' : 'inactive')
                                 )}>
-                                  {supplier.status?.toUpperCase()}
+                                  {supplier.isActive ? 'ACTIVE' : 'INACTIVE'}
                                 </span>
                                 <span className={clsx(
                                   'inline-flex px-2 py-1 text-xs font-semibold rounded-full',
-                                  getCategoryColor(supplier.category)
+                                  getCategoryColor(supplier.relationship?.supplierCategory)
                                 )}>
-                                  {supplier.category?.replace('_', ' ').toUpperCase()}
+                                  {supplier.relationship?.supplierCategory?.toUpperCase()}
                                 </span>
                               </div>
                             </td>
@@ -667,15 +679,18 @@ export default function SuppliersPage() {
                         <div className="flex items-center gap-3 mb-2">
                           <div className="h-12 w-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-md">
                             <span className="text-white font-semibold">
-                              {supplier.companyName?.charAt(0)?.toUpperCase() || 'S'}
+                              {supplier.supplierName?.charAt(0)?.toUpperCase() || 'S'}
                             </span>
                           </div>
                           <div className="flex-1 min-w-0">
                             <h3 className="text-lg font-semibold text-gray-900 truncate">
-                              {supplier.companyName}
+                              {supplier.supplierName}
                             </h3>
                             <p className="text-sm text-blue-600 font-medium">
                               {supplier.supplierCode}
+                            </p>
+                            <p className="text-xs text-gray-500">
+                              {getCompanyName(supplier.companyId)}
                             </p>
                           </div>
                         </div>
@@ -683,40 +698,40 @@ export default function SuppliersPage() {
                       <div className="flex flex-col gap-1">
                         <span className={clsx(
                           'px-2 py-1 rounded-full text-xs font-medium',
-                          getStatusColor(supplier.status)
+                          getStatusColor(supplier.isActive ? 'active' : 'inactive')
                         )}>
-                          {supplier.status?.toUpperCase()}
+                          {supplier.isActive ? 'ACTIVE' : 'INACTIVE'}
                         </span>
                       </div>
                     </div>
 
                     {/* Contact Info */}
                     <div className="space-y-2 mb-4">
-                      {supplier.email && (
+                      {supplier.contactInfo?.primaryEmail && (
                         <div className="flex items-center text-sm text-gray-600">
                           <Mail className="h-4 w-4 mr-2 text-gray-400" />
-                          <span className="truncate">{supplier.email}</span>
+                          <span className="truncate">{supplier.contactInfo.primaryEmail}</span>
                         </div>
                       )}
 
-                      {supplier.phone && (
+                      {supplier.contactInfo?.primaryPhone && (
                         <div className="flex items-center text-sm text-gray-600">
                           <Phone className="h-4 w-4 mr-2 text-gray-400" />
-                          <span>{supplier.phone}</span>
+                          <span>{supplier.contactInfo.primaryPhone}</span>
                         </div>
                       )}
 
-                      {supplier.address && (
+                      {supplier.addresses?.[0] && (
                         <div className="flex items-center text-sm text-gray-600">
                           <MapPin className="h-4 w-4 mr-2 text-gray-400" />
-                          <span className="truncate">{supplier.address.city}, {supplier.address.state}</span>
+                          <span className="truncate">{supplier.addresses[0].city}, {supplier.addresses[0].state}</span>
                         </div>
                       )}
 
-                      {supplier.businessDetails?.industry && (
+                      {supplier.businessInfo?.industry && (
                         <div className="flex items-center text-sm text-gray-600">
-                          {getIndustryIcon(supplier.businessDetails.industry)}
-                          <span className="ml-2 truncate">{supplier.businessDetails.industry}</span>
+                          {getIndustryIcon(supplier.businessInfo.industry)}
+                          <span className="ml-2 truncate">{supplier.businessInfo.industry}</span>
                         </div>
                       )}
                     </div>
@@ -725,21 +740,21 @@ export default function SuppliersPage() {
                     <div className="mb-4">
                       <span className={clsx(
                         'px-3 py-1 rounded-full text-xs font-medium',
-                        getCategoryColor(supplier.category)
+                        getCategoryColor(supplier.relationship?.supplierCategory)
                       )}>
-                        {supplier.category?.replace('_', ' ').toUpperCase()}
+                        {supplier.relationship?.supplierCategory?.toUpperCase()}
                       </span>
                     </div>
 
                     {/* Stats */}
                     <div className="grid grid-cols-2 gap-4 mb-4 p-3 bg-gray-50 rounded-lg">
                       <div className="text-center">
-                        <p className="text-lg font-bold text-gray-900">{supplier.totalOrders || 0}</p>
+                        <p className="text-lg font-bold text-gray-900">{supplier.supplyHistory?.totalOrders || 0}</p>
                         <p className="text-xs text-gray-600">Orders</p>
                       </div>
                       <div className="text-center">
                         <p className="text-lg font-bold text-blue-600">
-                          {formatCurrency(supplier.totalSpend || 0)}
+                          {formatCurrency(supplier.supplyHistory?.totalOrderValue || 0)}
                         </p>
                         <p className="text-xs text-gray-600">Total Spend</p>
                       </div>
@@ -749,23 +764,20 @@ export default function SuppliersPage() {
                     <div className="space-y-2 mb-4">
                       <div className="flex justify-between text-xs">
                         <span className="text-gray-600">On-time Delivery</span>
-                        <span className="font-medium text-green-600">{supplier.onTimeDelivery || 0}%</span>
+                        <span className="font-medium text-green-600">{supplier.supplyHistory?.onTimeDeliveryRate || 0}%</span>
                       </div>
                       <div className="flex justify-between text-xs">
                         <span className="text-gray-600">Quality Score</span>
-                        <span className="font-medium text-blue-600">{supplier.qualityScore || 0}%</span>
+                        <span className="font-medium text-blue-600">{supplier.quality?.qualityRating || 0}%</span>
                       </div>
                       <div className="flex justify-between text-xs">
                         <span className="text-gray-600">Lead Time</span>
-                        <span className="font-medium text-gray-900">{supplier.leadTime || 0} days</span>
+                        <span className="font-medium text-gray-900">{supplier.supplyHistory?.averageLeadTime || 0} days</span>
                       </div>
                       <div className="flex justify-between text-xs">
                         <span className="text-gray-600">Payment Terms</span>
-                        <span className={clsx(
-                          'font-medium px-2 py-1 rounded text-xs',
-                          getPaymentTermsColor(supplier.paymentTerms)
-                        )}>
-                          {supplier.paymentTerms || 'N/A'}
+                        <span className="font-medium text-gray-900">
+                          {supplier.financialInfo?.paymentTerms || 'N/A'}
                         </span>
                       </div>
                     </div>
@@ -799,7 +811,7 @@ export default function SuppliersPage() {
                       <div className="flex items-center text-xs text-gray-500">
                         <Clock className="h-3 w-3 mr-1" />
                         <span>
-                          {supplier.lastOrderDate ? formatDate(supplier.lastOrderDate) : 'No orders'}
+                          {supplier.supplyHistory?.lastOrderDate ? formatDate(supplier.supplyHistory.lastOrderDate) : 'No orders'}
                         </span>
                       </div>
                     </div>
@@ -825,186 +837,37 @@ export default function SuppliersPage() {
             </div>
           )}
 
-          {/* Supplier Details Modal */}
-          {showSupplierDetails && selectedSupplier && (
-            <div className="fixed inset-0 bg-black/60 backdrop-blur-lg z-50 flex items-center justify-center p-4 animate-in fade-in duration-300">
-            <div className="bg-white rounded-3xl shadow-2xl w-full max-w-5xl max-h-[95vh] overflow-hidden transform animate-in zoom-in-95 duration-500">
-              {/* Enhanced Modal Header */}
-              <div className="relative overflow-hidden bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-700">
-                {/* Background Pattern */}
-                <div className="absolute inset-0 bg-white/10">
-                  <div className="absolute inset-0" style={{
-                    backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.1'%3E%3Ccircle cx='30' cy='30' r='2'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
-                  }} />
-                </div>
 
-                <div className="relative p-8 text-white">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-6">
-                      <div className="relative">
-                        <div className="absolute inset-0 bg-white/20 rounded-2xl blur-xl"></div>
-                        <div className="relative h-16 w-16 bg-white/20 backdrop-blur-sm rounded-2xl border border-white border-white/30 flex items-center justify-center">
-                          <Building className="h-8 w-8 text-white drop-shadow-lg" />
-                        </div>
-                      </div>
-                      <div>
-                        <h3 className="text-2xl font-bold bg-gradient-to-r from-white to-blue-100 bg-clip-text text-transparent drop-shadow-lg">
-                          {selectedSupplier.companyName}
-                        </h3>
-                        <p className="text-blue-100 mt-1 text-lg font-medium">
-                          {selectedSupplier.supplierCode} • {selectedSupplier.category?.replace('_', ' ')}
-                        </p>
-                        <div className="flex items-center gap-4 mt-3">
-                          <div className="flex items-center gap-2 px-3 py-1 bg-white/20 rounded-full backdrop-blur-sm">
-                            <span className={clsx(
-                              'h-2 w-2 rounded-full',
-                              selectedSupplier.status === 'active' ? 'bg-green-400' : 'bg-red-400'
-                            )}></span>
-                            <span className="text-sm font-medium">{selectedSupplier.status?.toUpperCase()}</span>
-                          </div>
-                          <div className="flex items-center gap-1">
-                            {getRatingStars(selectedSupplier.rating || 0)}
-                            <span className="text-sm font-medium ml-1">({selectedSupplier.rating || 0}/5)</span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                    <Button
-                      onClick={() => setShowSupplierDetails(false)}
-                      className="p-3 text-white hover:bg-white/20 rounded-2xl bg-transparent border-0 transition-all duration-300 transform hover:scale-110"
-                    >
-                      <X className="h-6 w-6" />
-                    </Button>
-                  </div>
-                </div>
-              </div>
-
-              {/* Modal Content */}
-              <div className="p-6 overflow-y-auto max-h-[calc(90vh-120px)]">
-                {/* Quick Stats */}
-                <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 mb-6">
-                  <div className="bg-blue-50 rounded-xl p-4 text-center">
-                    <div className="text-2xl font-bold text-blue-600">
-                      {selectedSupplier.totalOrders || 0}
-                    </div>
-                    <div className="text-sm text-blue-600">Total Orders</div>
-                  </div>
-                  <div className="bg-green-50 rounded-xl p-4 text-center">
-                    <div className="text-2xl font-bold text-green-600">
-                      {formatCurrency(selectedSupplier.totalSpend || 0)}
-                    </div>
-                    <div className="text-sm text-green-600">Total Spend</div>
-                  </div>
-                  <div className="bg-purple-50 rounded-xl p-4 text-center">
-                    <div className="text-2xl font-bold text-purple-600">
-                      {selectedSupplier.onTimeDelivery || 0}%
-                    </div>
-                    <div className="text-sm text-purple-600">On-time Delivery</div>
-                  </div>
-                  <div className="bg-orange-50 rounded-xl p-4 text-center">
-                    <div className="text-2xl font-bold text-orange-600">
-                      {selectedSupplier.leadTime || 0}
-                    </div>
-                    <div className="text-sm text-orange-600">Lead Time (days)</div>
-                  </div>
-                </div>
-
-                {/* Detailed Information */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  {/* Contact Information */}
-                  <div className="bg-gray-50 rounded-xl p-6">
-                    <h4 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                      <Phone className="h-5 w-5 mr-2 text-blue-600" />
-                      Contact Information
-                    </h4>
-                    <div className="space-y-3">
-                      <div className="flex items-center">
-                        <Mail className="h-4 w-4 mr-3 text-gray-400" />
-                        <span className="text-gray-900">{selectedSupplier.email}</span>
-                      </div>
-                      <div className="flex items-center">
-                        <Phone className="h-4 w-4 mr-3 text-gray-400" />
-                        <span className="text-gray-900">{selectedSupplier.phone}</span>
-                      </div>
-                      <div className="flex items-start">
-                        <MapPin className="h-4 w-4 mr-3 text-gray-400 mt-0.5" />
-                        <div className="text-gray-900">
-                          <div>{selectedSupplier.address?.street}</div>
-                          <div>{selectedSupplier.address?.city}, {selectedSupplier.address?.state}</div>
-                          <div>{selectedSupplier.address?.pincode}, {selectedSupplier.address?.country}</div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Business Details */}
-                  <div className="bg-gray-50 rounded-xl p-6">
-                    <h4 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                      <Building className="h-5 w-5 mr-2 text-blue-600" />
-                      Business Details
-                    </h4>
-                    <div className="space-y-3">
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">Industry:</span>
-                        <span className="text-gray-900 font-medium">{selectedSupplier.businessDetails?.industry || 'N/A'}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">PAN:</span>
-                        <span className="text-gray-900 font-medium">{selectedSupplier.businessDetails?.pan || 'N/A'}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">GSTIN:</span>
-                        <span className="text-gray-900 font-medium">{selectedSupplier.businessDetails?.gstin || 'N/A'}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">Payment Terms:</span>
-                        <span className="text-gray-900 font-medium">{selectedSupplier.paymentTerms}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">Credit Limit:</span>
-                        <span className="text-gray-900 font-medium">{formatCurrency(selectedSupplier.creditLimit || 0)}</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Action Buttons */}
-                <div className="flex items-center justify-end gap-3 mt-6 pt-6 border-t border-gray-200">
-                  <Button
-                    onClick={() => setShowSupplierDetails(false)}
-                    className="px-6 py-2 text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
-                  >
-                    Close
-                  </Button>
-                  <Button
-                    onClick={() => {
-                      setShowSupplierDetails(false)
-                      handleEditSupplier(selectedSupplier)
-                    }}
-                    className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
-                  >
-                    Edit Supplier
-                  </Button>
-                </div>
-              </div>
-            </div>
-          </div>
-          )}
 
           {/* Supplier Form Modal */}
-          <SupplierFormModal
-            isOpen={showSupplierForm}
-            onClose={() => {
-              setShowSupplierForm(false)
-              setEditingSupplier(null)
-            }}
-            onSuccess={() => {
-              refetch()
-              setShowSupplierForm(false)
-              setEditingSupplier(null)
-            }}
-            supplier={editingSupplier}
-          />
+          {showSupplierForm && (
+            <SupplierFormModal
+              isOpen={showSupplierForm}
+              onClose={() => {
+                setShowSupplierForm(false)
+                setEditingSupplier(null)
+              }}
+              onSuccess={() => {
+                refetch()
+                setShowSupplierForm(false)
+                setEditingSupplier(null)
+              }}
+              supplier={editingSupplier}
+            />
+          )}
+
+          {/* Supplier Details Modal */}
+          {showSupplierDetails && selectedSupplier && (
+            <SupplierDetailsModal
+              isOpen={showSupplierDetails}
+              onClose={() => {
+                setShowSupplierDetails(false)
+                setSelectedSupplier(null)
+              }}
+              supplier={selectedSupplier}
+              onEdit={handleEditFromDetails}
+            />
+          )}
         </div>
       </div>
     </AppLayout>

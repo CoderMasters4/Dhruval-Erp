@@ -91,6 +91,7 @@ export interface DashboardOverview {
   totalCustomers?: number
   totalProducts?: number
   totalInventory?: number
+  totalProduction?: number
   activeProduction?: number
   pendingOrders?: number
   completedOrders?: number
@@ -152,6 +153,7 @@ export const dashboardApi = baseApi.injectEndpoints({
                 totalCustomers: response.data.overview.totalCustomers || 0,
                 totalProducts: response.data.overview.totalProducts || 0,
                 totalInventory: response.data.overview.totalInventory || 0,
+                totalProduction: response.data.overview.totalProduction || 0,
                 activeProduction: response.data.overview.activeProduction || 0,
                 pendingOrders: response.data.overview.pendingOrders || 0,
                 completedOrders: response.data.overview.completedOrders || 0,

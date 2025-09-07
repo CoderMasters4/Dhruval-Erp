@@ -108,7 +108,14 @@ export default function CustomerFilters({
           >
             <option value="all">All Types</option>
             <option value="individual">Individual</option>
-            <option value="business">Business</option>
+            <option value="proprietorship">Proprietorship</option>
+            <option value="partnership">Partnership</option>
+            <option value="private_limited">Private Limited</option>
+            <option value="public_limited">Public Limited</option>
+            <option value="llp">LLP</option>
+            <option value="trust">Trust</option>
+            <option value="society">Society</option>
+            <option value="government">Government</option>
           </select>
         </div>
 

@@ -10,12 +10,12 @@ import { v4 as uuidv4 } from 'uuid';
 
 // Configure S3 client for Contabo
 const s3Client = new S3Client({
-  region: config.AWS_REGION,
+  region: config.CONTABO_REGION,
   credentials: {
-    accessKeyId: config.AWS_ACCESS_KEY_ID,
-    secretAccessKey: config.AWS_SECRET_ACCESS_KEY,
+    accessKeyId: config.CONTABO_ACCESS_KEY,
+    secretAccessKey: config.CONTABO_SECRET_KEY,
   },
-  endpoint: process.env.CONTABO_S3_ENDPOINT || 'https://eu2.contabostorage.com',
+  endpoint: config.CONTABO_ENDPOINT,
   forcePathStyle: true,
 });
 
@@ -62,7 +62,7 @@ const generateFileName = (req: Request, file: Express.Multer.File, folder: strin
 // S3 storage configuration
 const s3Storage = multerS3({
   s3: s3Client,
-  bucket: config.AWS_S3_BUCKET,
+  bucket: config.CONTABO_BUCKET_NAME,
   acl: 'private',
   contentType: multerS3.AUTO_CONTENT_TYPE,
   key: (req: Request, file: Express.Multer.File, cb) => {

@@ -72,8 +72,15 @@ router.put('/:orderId/status', purchaseOrderController.updateOrderStatus.bind(pu
 router.post('/:orderId/receive', purchaseOrderController.receiveItems.bind(purchaseOrderController));
 
 /**
- * @route   DELETE /api/v2/purchase-orders/:id
+ * @route   POST /api/v2/purchase-orders/:orderId/cancel
  * @desc    Cancel purchase order
+ * @access  Private
+ */
+router.post('/:orderId/cancel', purchaseOrderController.cancelPurchaseOrder.bind(purchaseOrderController));
+
+/**
+ * @route   DELETE /api/v2/purchase-orders/:id
+ * @desc    Delete purchase order
  * @access  Private
  */
 router.delete('/:id', purchaseOrderController.deletePurchaseOrder.bind(purchaseOrderController));

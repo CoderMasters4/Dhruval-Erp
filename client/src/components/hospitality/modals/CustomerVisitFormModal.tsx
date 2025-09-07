@@ -30,6 +30,8 @@ interface FormData {
   destination: string
   travelMode: 'flight' | 'train' | 'bus' | 'car' | 'taxi' | 'other'
   companyId: string
+  visitOutcomeStatus: string
+  visitOutcomeNotes: string
 }
 
 export default function CustomerVisitFormModal({ 
@@ -50,7 +52,9 @@ export default function CustomerVisitFormModal({
     origin: '',
     destination: '',
     travelMode: 'car',
-    companyId: ''
+    companyId: '',
+    visitOutcomeStatus: 'pending',
+    visitOutcomeNotes: 'Visit scheduled'
   })
   const [errors, setErrors] = useState<Partial<FormData>>({})
 
@@ -77,7 +81,9 @@ export default function CustomerVisitFormModal({
         origin: visit.travelDetails?.origin || '',
         destination: visit.travelDetails?.destination || '',
         travelMode: visit.travelDetails?.travelMode || 'car',
-        companyId: visit.companyId || ''
+        companyId: visit.companyId || '',
+        visitOutcomeStatus: (typeof visit.visitOutcome === 'object' ? visit.visitOutcome?.status : 'pending') || 'pending',
+        visitOutcomeNotes: (typeof visit.visitOutcome === 'object' ? visit.visitOutcome?.notes : '') || ''
       })
     } else {
       setFormData({
@@ -92,7 +98,9 @@ export default function CustomerVisitFormModal({
         origin: '',
         destination: '',
         travelMode: 'car',
-        companyId: ''
+        companyId: '',
+        visitOutcomeStatus: 'pending',
+        visitOutcomeNotes: 'Visit scheduled'
       })
     }
     setErrors({})
@@ -173,6 +181,10 @@ export default function CustomerVisitFormModal({
           destination: formData.destination,
           travelMode: formData.travelMode
         },
+        visitOutcome: {
+          status: formData.visitOutcomeStatus as 'successful' | 'partially_successful' | 'unsuccessful' | 'follow_up_required',
+          notes: formData.visitOutcomeNotes
+        },
         companyId: formData.companyId
       }
 
@@ -191,7 +203,7 @@ export default function CustomerVisitFormModal({
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 bg-black bg-black/50 flex items-center justify-center p-4 z-50">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
       <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200">

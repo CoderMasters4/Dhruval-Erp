@@ -33,11 +33,11 @@ router.get('/stats', async (req: Request, res: Response) => {
         totalCompanies,
         totalUsers,
         activeCompanies,
-        systemHealth: 98, // This could be calculated from system metrics
+        systemHealth: 0, // Will be calculated from real system monitoring
         totalRevenue: 0, // Will be calculated from all companies when we have order/invoice models
         pendingApprovals: 0, // Will be calculated from pending user approvals
         securityAlerts: 0, // Will be calculated from security logs
-        systemUptime: '99.9%' // This could come from monitoring system
+        systemUptime: '0%' // Will be calculated from real system monitoring
       }
     } else {
       // Company-specific stats from database
@@ -289,7 +289,7 @@ router.get('/', async (req: Request, res: Response) => {
       ])
 
       const avgUsersPerCompany = totalCompanies > 0 ? Math.round(totalUsers / totalCompanies) : 0
-      const systemHealth = Math.round(95 + Math.random() * 5) // 95-100%
+      const systemHealth = 0 // Will be calculated from real system monitoring
 
       stats = {
         totalCompanies,
@@ -298,11 +298,11 @@ router.get('/', async (req: Request, res: Response) => {
         totalEmployees: totalUsers,
         avgUsersPerCompany,
         systemHealth,
-        totalOrders: Math.floor(totalUsers * 2.5), // Estimated
-        totalRevenue: Math.floor(totalUsers * 15000), // Estimated ₹15k per user
-        monthlyRevenue: Math.floor(totalUsers * 1250), // Monthly estimate
-        outstandingPayments: Math.floor(totalUsers * 500), // Estimated
-        profitMargin: 18.5,
+        totalOrders: 0, // Will be calculated from real order data
+        totalRevenue: 0, // Will be calculated from real financial data
+        monthlyRevenue: 0, // Will be calculated from real financial data
+        outstandingPayments: 0, // Will be calculated from real financial data
+        profitMargin: 0, // Will be calculated from real financial data
         companiesWithUsers: companiesWithUsers.length
       }
     } else {
@@ -328,18 +328,18 @@ router.get('/', async (req: Request, res: Response) => {
         totalEmployees: companyUsers,
         activeUsers: activeCompanyUsers,
         companyAge,
-        totalOrders: Math.floor(companyUsers * 3.2), // Estimated based on team size
-        totalRevenue: Math.floor(companyUsers * 18000), // Company revenue estimate
-        monthlyRevenue: Math.floor(companyUsers * 1500),
-        outstandingPayments: Math.floor(companyUsers * 600),
-        profitMargin: 15.8 + Math.random() * 5,
-        totalCustomers: Math.floor(companyUsers * 4.5),
-        totalProducts: Math.floor(companyUsers * 2.1),
-        totalProduction: Math.floor(companyUsers * 125),
-        totalInventory: Math.floor(companyUsers * 85),
-        productionEfficiency: 92 + Math.random() * 6,
-        qualityScore: 96 + Math.random() * 3,
-        inventoryTurnover: 8.5 + Math.random() * 2
+        totalOrders: 0, // Will be calculated from real order data
+        totalRevenue: 0, // Will be calculated from real financial data
+        monthlyRevenue: 0, // Will be calculated from real financial data
+        outstandingPayments: 0, // Will be calculated from real financial data
+        profitMargin: 0, // Will be calculated from real financial data
+        totalCustomers: 0, // Will be calculated from real customer data
+        totalProducts: 0, // Will be calculated from real product data
+        totalProduction: 0, // Will be calculated from real production data
+        totalInventory: 0, // Will be calculated from real inventory data
+        productionEfficiency: 0, // Will be calculated from real production data
+        qualityScore: 0, // Will be calculated from real quality data
+        inventoryTurnover: 0 // Will be calculated from real inventory data
       }
     }
 

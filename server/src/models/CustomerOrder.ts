@@ -39,6 +39,7 @@ const CommunicationSchema = new Schema<ICommunication>({
 const OrderItemSchema = new Schema<IOrderItem>({
   itemId: { type: Schema.Types.ObjectId, auto: true },
   productId: { type: Schema.Types.ObjectId, ref: 'InventoryItem' },
+  itemName: { type: String, required: true }, // Added itemName field
   productType: { 
     type: String, 
     enum: ['saree', 'african_cotton', 'garment_fabric', 'digital_print', 'custom'], 

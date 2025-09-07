@@ -18,7 +18,7 @@ export class AuditLogController extends BaseController<IAuditLog> {
   async createAuditLog(req: Request, res: Response): Promise<void> {
     try {
       const auditData = req.body;
-      const createdBy = req.user?.id;
+      const createdBy = (req.user?.userId || req.user?._id)?.toString();
 
       const auditLog = await this.auditLogService.createAuditLog(auditData, createdBy);
 
@@ -34,7 +34,7 @@ export class AuditLogController extends BaseController<IAuditLog> {
   async logUserAction(req: Request, res: Response): Promise<void> {
     try {
       const { action, resourceType, resourceId, details } = req.body;
-      const userId = req.user?.id;
+      const userId = (req.user?.userId || req.user?._id)?.toString();
       const companyId = req.user?.companyId;
 
       if (!userId || !companyId) {

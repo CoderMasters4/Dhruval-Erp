@@ -20,6 +20,7 @@ interface SalesOrderModalProps {
   onClose: () => void
   order?: any
   mode: 'create' | 'edit'
+  onSuccess?: (orderData: any) => void
 }
 
 // Simple Searchable Dropdown Component
@@ -171,12 +172,40 @@ function SearchableDropdown({
   )
 }
 
-export default function SalesOrderModal({ isOpen, onClose, order, mode }: SalesOrderModalProps) {
+export default function SalesOrderModal({ isOpen, onClose, order, mode, onSuccess }: SalesOrderModalProps) {
   const currentUser = useSelector(selectCurrentUser)
   const [selectedCompanyId, setSelectedCompanyId] = useState('')
+  const [isAddressAutoPopulated, setIsAddressAutoPopulated] = useState(false)
+
+  // Function to handle delivery address field changes
+  const handleDeliveryAddressChange = (field: string, value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      delivery: {
+        ...prev.delivery,
+        deliveryAddress: {
+          ...prev.delivery.deliveryAddress,
+          [field]: value
+        }
+      }
+    }))
+    
+    // If user manually edits, mark as not auto-populated
+    if (isAddressAutoPopulated) {
+      setIsAddressAutoPopulated(false)
+    }
+  }
   const [formData, setFormData] = useState({
     customerId: '',
-    orderItems: [{ itemId: '', itemName: '', quantity: 1, unitPrice: 0, category: '' }],
+    orderItems: [{ 
+      itemId: '', 
+      itemName: '', 
+      quantity: 1, 
+      rate: 0, // Changed from unitPrice to rate to match backend
+      category: '', 
+      stockInfo: null as any,
+      productType: 'saree' // Added required productType
+    }],
     orderSummary: {
       subtotal: 0,
       totalTax: 0,
@@ -185,7 +214,7 @@ export default function SalesOrderModal({ isOpen, onClose, order, mode }: SalesO
     },
     payment: {
       paymentTerms: '',
-      paymentMethod: 'cash',
+      paymentMethod: 'bank_transfer', // Changed default to match backend
       creditDays: 0,
       advancePercentage: 0,
       advanceAmount: 0
@@ -193,13 +222,25 @@ export default function SalesOrderModal({ isOpen, onClose, order, mode }: SalesO
     delivery: {
       deliveryType: 'delivery',
       expectedDeliveryDate: '',
-      deliveryInstructions: ''
+      deliveryInstructions: '',
+      deliveryAddress: { // Added delivery address structure
+        contactPerson: '',
+        phone: '',
+        email: '',
+        addressLine1: '',
+        addressLine2: '',
+        city: '',
+        state: '',
+        pincode: '',
+        country: 'India',
+        landmark: ''
+      }
     },
     priority: 'medium',
     status: 'draft',
     specialInstructions: '',
-    orderType: 'local', // Added orderType
-    orderSource: 'direct' // Added orderSource
+    orderType: 'local',
+    orderSource: 'direct'
   })
 
   // Debug logging for dropdown values
@@ -220,6 +261,13 @@ export default function SalesOrderModal({ isOpen, onClose, order, mode }: SalesO
   
   // Check if user is superadmin (has access to multiple companies)
   const isSuperAdmin = companies.length > 1
+  
+  // Set company ID for non-superadmin users
+  useEffect(() => {
+    if (!isSuperAdmin && currentUser?.companyId) {
+      setSelectedCompanyId(currentUser.companyId)
+    }
+  }, [isSuperAdmin, currentUser?.companyId])
   
   // Get customers based on selected company (or all if not superadmin)
   const { data: customersData } = useGetCustomersQuery(
@@ -246,7 +294,15 @@ export default function SalesOrderModal({ isOpen, onClose, order, mode }: SalesO
     if (order && mode === 'edit') {
       setFormData({
         customerId: order.customerId || '',
-        orderItems: order.orderItems || [{ itemId: '', itemName: '', quantity: 1, unitPrice: 0, category: '' }],
+        orderItems: order.orderItems || [{ 
+          itemId: '', 
+          itemName: '', 
+          quantity: 1, 
+          rate: 0, // Changed from unitPrice to rate
+          category: '', 
+          stockInfo: null as any,
+          productType: 'saree'
+        }],
         orderSummary: order.orderSummary || {
           subtotal: 0,
           totalTax: 0,
@@ -255,7 +311,7 @@ export default function SalesOrderModal({ isOpen, onClose, order, mode }: SalesO
         },
         payment: order.payment || {
           paymentTerms: '',
-          paymentMethod: 'cash',
+          paymentMethod: 'bank_transfer',
           creditDays: 0,
           advancePercentage: 0,
           advanceAmount: 0
@@ -263,13 +319,25 @@ export default function SalesOrderModal({ isOpen, onClose, order, mode }: SalesO
         delivery: order.delivery || {
           deliveryType: 'delivery',
           expectedDeliveryDate: '',
-          deliveryInstructions: ''
+          deliveryInstructions: '',
+          deliveryAddress: {
+            contactPerson: '',
+            phone: '',
+            email: '',
+            addressLine1: '',
+            addressLine2: '',
+            city: '',
+            state: '',
+            pincode: '',
+            country: 'India',
+            landmark: ''
+          }
         },
         priority: order.priority || 'medium',
         status: order.status || 'draft',
         specialInstructions: order.specialInstructions || '',
-        orderType: order.orderType || 'local', // Set orderType for edit mode
-        orderSource: order.orderSource || 'direct' // Set orderSource for edit mode
+        orderType: order.orderType || 'local',
+        orderSource: order.orderSource || 'direct'
       })
       
       // Set company ID for edit mode
@@ -280,7 +348,7 @@ export default function SalesOrderModal({ isOpen, onClose, order, mode }: SalesO
   }, [order, mode])
 
   const calculateTotals = () => {
-    const subtotal = formData.orderItems.reduce((sum, item) => sum + (item.quantity * item.unitPrice), 0)
+    const subtotal = formData.orderItems.reduce((sum, item) => sum + (item.quantity * item.rate), 0)
     const tax = subtotal * 0.18 // 18% GST
     const discount = 0 // Can be made configurable
     const finalAmount = subtotal + tax - discount
@@ -299,7 +367,15 @@ export default function SalesOrderModal({ isOpen, onClose, order, mode }: SalesO
   const addOrderItem = () => {
     setFormData(prev => ({
       ...prev,
-      orderItems: [...prev.orderItems, { itemId: '', itemName: '', quantity: 1, unitPrice: 0, category: '' }]
+      orderItems: [...prev.orderItems, { 
+        itemId: '', 
+        itemName: '', 
+        quantity: 1, 
+        rate: 0, // Changed from unitPrice to rate
+        category: '', 
+        stockInfo: null as any,
+        productType: 'saree'
+      }]
     }))
   }
 
@@ -328,8 +404,21 @@ export default function SalesOrderModal({ isOpen, onClose, order, mode }: SalesO
             console.log('Selected item:', selectedItem)
             if (selectedItem) {
               updatedItem.itemName = selectedItem.itemName
-              updatedItem.unitPrice = selectedItem.pricing.sellingPrice || 0
+              updatedItem.rate = selectedItem.pricing.sellingPrice || 0 // Changed from unitPrice to rate
               updatedItem.category = selectedItem.category.primary || ''
+              
+              // Add stock information
+              const availableStock = selectedItem.stock?.availableStock || 0
+              const currentStock = selectedItem.stock?.currentStock || 0
+              const reservedStock = selectedItem.stock?.reservedStock || 0
+              
+              updatedItem.stockInfo = {
+                available: availableStock,
+                current: currentStock,
+                reserved: reservedStock,
+                unit: selectedItem.stock?.unit || 'pcs'
+              }
+              
               console.log('Updated item with details:', updatedItem)
             }
           }
@@ -344,7 +433,7 @@ export default function SalesOrderModal({ isOpen, onClose, order, mode }: SalesO
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
-    if (!selectedCompanyId) {
+    if (isSuperAdmin && !selectedCompanyId) {
       toast.error('Please select a company')
       return
     }
@@ -354,22 +443,35 @@ export default function SalesOrderModal({ isOpen, onClose, order, mode }: SalesO
       return
     }
     
+    // Validate stock availability
+    const insufficientStockItems = formData.orderItems.filter(item => 
+      item.stockInfo && item.stockInfo.available < item.quantity
+    )
+    
+    if (insufficientStockItems.length > 0) {
+      const errorMessage = insufficientStockItems.map(item => 
+        `${item.itemName}: Requested ${item.quantity}, Available ${item.stockInfo?.available}`
+      ).join('; ')
+      toast.error(`Insufficient stock for: ${errorMessage}`)
+      return
+    }
+    
     try {
       // Create data that matches the backend API requirements
       const backendOrderData = {
-        companyId: selectedCompanyId, // Add companyId as it's required
+        companyId: selectedCompanyId || currentUser?.companyId,
         customerId: formData.customerId,
-        orderSource: formData.orderSource, // Use formData.orderSource
-        orderType: formData.orderType, // Use formData.orderType
+        orderSource: formData.orderSource,
+        orderType: formData.orderType,
         orderNumber: `SO-${Date.now()}`,
-        createdBy: currentUser?._id || 'current-user-id', // Add createdBy field
 
         orderItems: formData.orderItems.map(item => ({
+          productId: item.itemId, // Send the selected item's _id as productId
           itemName: item.itemName,
           quantity: item.quantity,
-          rate: item.unitPrice, // Backend expects 'rate' not 'unitPrice'
+          rate: item.rate, // Backend expects 'rate'
           unit: 'pieces',
-          productType: 'saree', // Valid enum: 'saree', 'african_cotton', 'garment_fabric', 'digital_print', 'custom'
+          productType: item.productType || 'saree', // Required field
           category: item.category
         })),
         orderSummary: formData.orderSummary,
@@ -386,12 +488,26 @@ export default function SalesOrderModal({ isOpen, onClose, order, mode }: SalesO
       // Use the backend data structure for API calls
       const orderData = backendOrderData as any
 
-      if (mode === 'create') {
-        await createSalesOrder(orderData).unwrap()
-        toast.success('Sales order created successfully!')
+      // Debug: Log the order data being sent
+      console.log('Sending order data:', {
+        orderItems: orderData.orderItems.map((item: any) => ({
+          productId: item.productId,
+          itemName: item.itemName,
+          quantity: item.quantity
+        }))
+      })
+
+      if (onSuccess) {
+        await onSuccess(orderData)
       } else {
-        await updateSalesOrder({ id: order._id, data: orderData }).unwrap()
-        toast.success('Sales order updated successfully!')
+        // Fallback to internal API calls if no onSuccess callback provided
+        if (mode === 'create') {
+          await createSalesOrder(orderData).unwrap()
+          toast.success('Sales order created successfully!')
+        } else {
+          await updateSalesOrder({ id: order._id, data: orderData }).unwrap()
+          toast.success('Sales order updated successfully!')
+        }
       }
       
       onClose()
@@ -487,12 +603,55 @@ export default function SalesOrderModal({ isOpen, onClose, order, mode }: SalesO
             <SearchableDropdown
               options={customers.map(customer => ({
                 ...customer,
-                displayName: (customer as any).customerName || customer.name || customer.companyName || customer.customerCode
+                displayName: (customer as any).customerName || (customer as any).name || (customer as any).companyName || customer.customerCode
               }))}
               value={formData.customerId}
               onSelect={(value) => {
                 console.log('Customer selected:', value)
-                setFormData(prev => ({ ...prev, customerId: value }))
+                // Find the selected customer
+                const selectedCustomer = customers?.find(customer => customer._id === value) || null
+                
+                if (selectedCustomer) {
+                  // Auto-populate delivery address with customer's primary address
+                  const primaryAddress = selectedCustomer.addresses?.find(addr => addr.isPrimary) || selectedCustomer.addresses?.[0]
+                  const primaryContact = selectedCustomer.contactPersons?.find(cp => cp.isPrimary) || selectedCustomer.contactPersons?.[0]
+                  
+                  // Ensure we have safe access to customer properties
+                  const customerName = selectedCustomer.customerName || ''
+                  const contactInfo = selectedCustomer.contactInfo || {}
+                  
+                  setFormData(prev => ({
+                    ...prev,
+                    customerId: value,
+                    delivery: {
+                      ...prev.delivery,
+                      deliveryAddress: {
+                        contactPerson: primaryContact?.name || customerName || '',
+                        phone: primaryContact?.phone || contactInfo.primaryPhone || '',
+                        email: primaryContact?.email || contactInfo.primaryEmail || '',
+                        addressLine1: primaryAddress?.addressLine1 || '',
+                        addressLine2: primaryAddress?.addressLine2 || '',
+                        city: primaryAddress?.city || '',
+                        state: primaryAddress?.state || '',
+                        pincode: primaryAddress?.pincode || '',
+                        country: primaryAddress?.country || 'India',
+                        landmark: primaryAddress?.landmark || ''
+                      }
+                    }
+                  }))
+                  
+                  // Set flag to indicate address was auto-populated
+                  setIsAddressAutoPopulated(true)
+                  
+                  console.log('Auto-populated delivery address:', {
+                    customer: selectedCustomer.customerName,
+                    address: primaryAddress,
+                    contact: primaryContact
+                  })
+                } else {
+                  setFormData(prev => ({ ...prev, customerId: value }))
+                  setIsAddressAutoPopulated(false)
+                }
               }}
               placeholder="Select a customer..."
               searchPlaceholder="Search customers by name or code..."
@@ -500,47 +659,6 @@ export default function SalesOrderModal({ isOpen, onClose, order, mode }: SalesO
               valueKey="_id"
               showDetails={true}
             />
-          </div>
-
-          {/* Order Type and Source */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Order Type *
-              </label>
-              <select
-                value={formData.orderType || 'local'}
-                onChange={(e) => setFormData(prev => ({ ...prev, orderType: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              >
-                <option value="local">Local</option>
-                <option value="export">Export</option>
-                <option value="custom">Custom</option>
-                <option value="sample">Sample</option>
-                <option value="bulk">Bulk</option>
-                <option value="repeat">Repeat</option>
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Order Source *
-              </label>
-              <select
-                value={formData.orderSource || 'direct'}
-                onChange={(e) => setFormData(prev => ({ ...prev, orderSource: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              >
-                <option value="direct">Direct</option>
-                <option value="meesho">Meesho</option>
-                <option value="indiamart">IndiaMART</option>
-                <option value="website">Website</option>
-                <option value="phone">Phone</option>
-                <option value="email">Email</option>
-                <option value="whatsapp">WhatsApp</option>
-                <option value="exhibition">Exhibition</option>
-              </select>
-            </div>
           </div>
 
           {/* Order Items */}
@@ -599,17 +717,17 @@ export default function SalesOrderModal({ isOpen, onClose, order, mode }: SalesO
                       />
                     </div>
 
-                    {/* Unit Price */}
+                    {/* Rate */}
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Unit Price (₹)
+                        Rate (₹)
                       </label>
                       <Input
                         type="number"
                         min="0"
                         step="0.01"
-                        value={item.unitPrice}
-                        onChange={(e) => updateOrderItem(index, 'unitPrice', parseFloat(e.target.value) || 0)}
+                        value={item.rate}
+                        onChange={(e) => updateOrderItem(index, 'rate', parseFloat(e.target.value) || 0)}
                         className="w-full"
                       />
                     </div>
@@ -640,6 +758,56 @@ export default function SalesOrderModal({ isOpen, onClose, order, mode }: SalesO
                       />
                     </div>
                   </div>
+
+                  {/* Product Type */}
+                  <div className="mt-3">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Product Type
+                    </label>
+                    <select
+                      value={item.productType}
+                      onChange={(e) => updateOrderItem(index, 'productType', e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    >
+                      <option value="saree">Saree</option>
+                      <option value="african_cotton">African Cotton</option>
+                      <option value="garment_fabric">Garment Fabric</option>
+                      <option value="digital_print">Digital Print</option>
+                      <option value="custom">Custom</option>
+                    </select>
+                  </div>
+
+                  {/* Stock Information */}
+                  {item.stockInfo && (
+                    <div className="mt-3 p-3 bg-blue-50 rounded-lg">
+                      <h4 className="text-sm font-medium text-gray-700 mb-2">Stock Information</h4>
+                      <div className="grid grid-cols-3 gap-4 text-sm">
+                        <div>
+                          <span className="text-gray-600">Available:</span>
+                          <span className={`ml-1 font-medium ${item.stockInfo.available >= item.quantity ? 'text-green-600' : 'text-red-600'}`}>
+                            {item.stockInfo.available} {item.stockInfo.unit}
+                          </span>
+                        </div>
+                        <div>
+                          <span className="text-gray-600">Current:</span>
+                          <span className="ml-1 font-medium text-gray-900">
+                            {item.stockInfo.current} {item.stockInfo.unit}
+                          </span>
+                        </div>
+                        <div>
+                          <span className="text-gray-600">Reserved:</span>
+                          <span className="ml-1 font-medium text-gray-900">
+                            {item.stockInfo.reserved} {item.stockInfo.unit}
+                          </span>
+                        </div>
+                      </div>
+                      {item.stockInfo.available < item.quantity && (
+                        <div className="mt-2 p-2 bg-red-100 rounded text-red-700 text-sm">
+                          ⚠️ Insufficient stock! Requested: {item.quantity}, Available: {item.stockInfo.available}
+                        </div>
+                      )}
+                    </div>
+                  )}
 
                   {/* Remove Button */}
                   {formData.orderItems.length > 1 && (
@@ -704,6 +872,8 @@ export default function SalesOrderModal({ isOpen, onClose, order, mode }: SalesO
                 <option value="bank_transfer">Bank Transfer</option>
                 <option value="cheque">Cheque</option>
                 <option value="upi">UPI</option>
+                <option value="card">Card</option>
+                <option value="credit">Credit</option>
               </select>
             </div>
 
@@ -736,9 +906,9 @@ export default function SalesOrderModal({ isOpen, onClose, order, mode }: SalesO
                 className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 onClick={() => console.log('Delivery type dropdown clicked')}
               >
-                <option value="delivery">Delivery</option>
                 <option value="pickup">Pickup</option>
-                <option value="shipping">Shipping</option>
+                <option value="delivery">Delivery</option>
+                <option value="courier">Courier</option>
               </select>
             </div>
 
@@ -752,6 +922,113 @@ export default function SalesOrderModal({ isOpen, onClose, order, mode }: SalesO
                   delivery: { ...prev.delivery, expectedDeliveryDate: e.target.value }
                 }))}
               />
+            </div>
+          </div>
+
+          {/* Delivery Address */}
+          <div className="border border-gray-200 rounded-lg p-4">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-medium">Delivery Address</h3>
+              {formData.customerId && (
+                <div className={`flex items-center gap-2 text-sm px-3 py-1 rounded-full ${
+                  isAddressAutoPopulated 
+                    ? 'text-blue-600 bg-blue-50' 
+                    : 'text-green-600 bg-green-50'
+                }`}>
+                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                  </svg>
+                  <span>
+                    {isAddressAutoPopulated 
+                      ? 'Auto-populated from customer • Editable' 
+                      : 'Manually entered • Editable'
+                    }
+                  </span>
+                </div>
+              )}
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Contact Person</label>
+                <Input
+                  value={formData.delivery.deliveryAddress.contactPerson}
+                  onChange={(e) => handleDeliveryAddressChange('contactPerson', e.target.value)}
+                  placeholder="Contact person name"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Phone</label>
+                <Input
+                  value={formData.delivery.deliveryAddress.phone}
+                  onChange={(e) => handleDeliveryAddressChange('phone', e.target.value)}
+                  placeholder="Phone number"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                <Input
+                  type="email"
+                  value={formData.delivery.deliveryAddress.email}
+                  onChange={(e) => handleDeliveryAddressChange('email', e.target.value)}
+                  placeholder="Email address"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Country</label>
+                <Input
+                  value={formData.delivery.deliveryAddress.country}
+                  onChange={(e) => handleDeliveryAddressChange('country', e.target.value)}
+                  placeholder="Country"
+                />
+              </div>
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-gray-700 mb-2">Address Line 1</label>
+                <Input
+                  value={formData.delivery.deliveryAddress.addressLine1}
+                  onChange={(e) => handleDeliveryAddressChange('addressLine1', e.target.value)}
+                  placeholder="Street address"
+                />
+              </div>
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-gray-700 mb-2">Address Line 2</label>
+                <Input
+                  value={formData.delivery.deliveryAddress.addressLine2}
+                  onChange={(e) => handleDeliveryAddressChange('addressLine2', e.target.value)}
+                  placeholder="Apartment, suite, etc."
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">City</label>
+                <Input
+                  value={formData.delivery.deliveryAddress.city}
+                  onChange={(e) => handleDeliveryAddressChange('city', e.target.value)}
+                  placeholder="City"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">State</label>
+                <Input
+                  value={formData.delivery.deliveryAddress.state}
+                  onChange={(e) => handleDeliveryAddressChange('state', e.target.value)}
+                  placeholder="State"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Pincode</label>
+                <Input
+                  value={formData.delivery.deliveryAddress.pincode}
+                  onChange={(e) => handleDeliveryAddressChange('pincode', e.target.value)}
+                  placeholder="Pincode"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Landmark</label>
+                <Input
+                  value={formData.delivery.deliveryAddress.landmark}
+                  onChange={(e) => handleDeliveryAddressChange('landmark', e.target.value)}
+                  placeholder="Nearby landmark"
+                />
+              </div>
             </div>
           </div>
 
@@ -785,6 +1062,7 @@ export default function SalesOrderModal({ isOpen, onClose, order, mode }: SalesO
                 <option value="medium">Medium</option>
                 <option value="high">High</option>
                 <option value="urgent">Urgent</option>
+                <option value="rush">Rush</option>
               </select>
             </div>
 
@@ -800,11 +1078,14 @@ export default function SalesOrderModal({ isOpen, onClose, order, mode }: SalesO
                 onClick={() => console.log('Status dropdown clicked')}
               >
                 <option value="draft">Draft</option>
-                <option value="pending">Pending</option>
                 <option value="confirmed">Confirmed</option>
-                <option value="processing">Processing</option>
+                <option value="in_production">In Production</option>
+                <option value="ready_to_dispatch">Ready to Dispatch</option>
+                <option value="dispatched">Dispatched</option>
+                <option value="delivered">Delivered</option>
                 <option value="completed">Completed</option>
                 <option value="cancelled">Cancelled</option>
+                <option value="returned">Returned</option>
               </select>
             </div>
           </div>

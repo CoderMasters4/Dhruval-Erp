@@ -92,6 +92,8 @@ interface RoleBasedStatsProps {
     totalCompanies?: number
     totalUsers?: number
     systemHealth?: number
+    systemUptime?: string
+    activeCompanies?: number
   }
   loading?: boolean
 }
@@ -101,6 +103,14 @@ export const RoleBasedStats: React.FC<RoleBasedStatsProps> = ({ stats, loading =
   const user = useSelector(selectCurrentUser)
   const isSuperAdmin = useSelector(selectIsSuperAdmin)
 
+  // Debug logging
+  console.log('RoleBasedStats Debug:', {
+    stats,
+    totalProduction: stats?.totalProduction,
+    isSuperAdmin,
+    user: user?.username
+  })
+
   const getStatsForRole = () => {
     const roleStats = []
 
@@ -109,8 +119,12 @@ export const RoleBasedStats: React.FC<RoleBasedStatsProps> = ({ stats, loading =
       roleStats.push(
         { title: 'Total Companies', value: stats?.totalCompanies || '0', change: undefined, changeType: undefined, icon: Building2, color: 'sky' as const },
         { title: 'Total Users', value: stats?.totalUsers || '0', change: undefined, changeType: undefined, icon: Users, color: 'black' as const },
-        { title: 'System Health', value: `${stats?.systemHealth || 0}%`, change: undefined, changeType: undefined, icon: Settings, color: 'sky' as const },
-        { title: 'Total Revenue', value: `₹${(stats?.totalRevenue || 0).toLocaleString()}`, change: undefined, changeType: undefined, icon: DollarSign, color: 'black' as const }
+        { title: 'Total Customers', value: stats?.totalCustomers || '0', change: undefined, changeType: undefined, icon: Users, color: 'sky' as const },
+        { title: 'Total Orders', value: stats?.totalOrders || '0', change: undefined, changeType: undefined, icon: ShoppingCart, color: 'black' as const },
+        { title: 'Total Revenue', value: `₹${(stats?.totalRevenue || 0).toLocaleString()}`, change: undefined, changeType: undefined, icon: DollarSign, color: 'sky' as const },
+        { title: 'Total Inventory', value: stats?.totalInventory || '0', change: undefined, changeType: undefined, icon: Package, color: 'black' as const },
+        { title: 'Total Production', value: stats?.totalProduction || '0', change: undefined, changeType: undefined, icon: Factory, color: 'sky' as const },
+        { title: 'Active Companies', value: stats?.activeCompanies || '0', change: undefined, changeType: undefined, icon: Building2, color: 'black' as const }
       )
     }
     // Company Owner - Business overview
@@ -119,16 +133,20 @@ export const RoleBasedStats: React.FC<RoleBasedStatsProps> = ({ stats, loading =
         { title: 'Total Orders', value: stats?.totalOrders || '0', change: undefined, changeType: undefined, icon: ShoppingCart, color: 'sky' as const },
         { title: 'Revenue', value: `₹${(stats?.totalRevenue || 0).toLocaleString()}`, change: undefined, changeType: undefined, icon: DollarSign, color: 'black' as const },
         { title: 'Customers', value: stats?.totalCustomers || '0', change: undefined, changeType: undefined, icon: Users, color: 'sky' as const },
-        { title: 'Products', value: stats?.totalProducts || '0', change: undefined, changeType: undefined, icon: Package, color: 'black' as const }
+        { title: 'Inventory', value: stats?.totalInventory || '0', change: undefined, changeType: undefined, icon: Package, color: 'black' as const },
+        { title: 'Production', value: stats?.totalProduction || '0', change: undefined, changeType: undefined, icon: Factory, color: 'sky' as const },
+        { title: 'Pending Orders', value: stats?.pendingOrders || '0', change: undefined, changeType: undefined, icon: ShoppingCart, color: 'black' as const }
       )
     }
     // Production Manager - Production focused
     else if (permissions.canViewProduction) {
       roleStats.push(
         { title: 'Active Production', value: stats?.activeProduction || '0', change: undefined, changeType: undefined, icon: Factory, color: 'sky' as const },
-        { title: 'Completed Orders', value: stats?.completedOrders || '0', change: undefined, changeType: undefined, icon: UserCheck, color: 'black' as const },
+        { title: 'Total Production', value: stats?.totalProduction || '0', change: undefined, changeType: undefined, icon: Factory, color: 'black' as const },
         { title: 'Inventory Items', value: stats?.totalInventory || '0', change: undefined, changeType: undefined, icon: Package, color: 'sky' as const },
-        { title: 'Low Stock Alerts', value: stats?.lowStockItems || '0', change: undefined, changeType: undefined, icon: AlertTriangle, color: 'black' as const }
+        { title: 'Low Stock Alerts', value: stats?.lowStockItems || '0', change: undefined, changeType: undefined, icon: AlertTriangle, color: 'black' as const },
+        { title: 'Completed Orders', value: stats?.completedOrders || '0', change: undefined, changeType: undefined, icon: UserCheck, color: 'sky' as const },
+        { title: 'Pending Orders', value: stats?.pendingOrders || '0', change: undefined, changeType: undefined, icon: ShoppingCart, color: 'black' as const }
       )
     }
     // Operator - Basic operational stats
@@ -137,7 +155,9 @@ export const RoleBasedStats: React.FC<RoleBasedStatsProps> = ({ stats, loading =
         { title: 'My Tasks', value: stats?.pendingOrders || '0', change: undefined, changeType: undefined, icon: UserCheck, color: 'sky' as const },
         { title: 'Production Units', value: stats?.totalProduction || '0', change: undefined, changeType: undefined, icon: Factory, color: 'black' as const },
         { title: 'Quality Checks', value: stats?.completedOrders || '0', change: undefined, changeType: undefined, icon: BarChart3, color: 'sky' as const },
-        { title: 'Pending Items', value: stats?.lowStockItems || '0', change: undefined, changeType: undefined, icon: AlertTriangle, color: 'black' as const }
+        { title: 'Inventory Items', value: stats?.totalInventory || '0', change: undefined, changeType: undefined, icon: Package, color: 'black' as const },
+        { title: 'Low Stock Alerts', value: stats?.lowStockItems || '0', change: undefined, changeType: undefined, icon: AlertTriangle, color: 'sky' as const },
+        { title: 'Active Production', value: stats?.activeProduction || '0', change: undefined, changeType: undefined, icon: Factory, color: 'black' as const }
       )
     }
 
@@ -147,7 +167,7 @@ export const RoleBasedStats: React.FC<RoleBasedStatsProps> = ({ stats, loading =
   const statsToShow = getStatsForRole()
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
+    <div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-4 2xl:grid-cols-4 gap-3 sm:gap-4 lg:gap-6`}>
       {statsToShow.map((stat, index) => (
         <StatCard
           key={index}

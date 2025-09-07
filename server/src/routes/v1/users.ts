@@ -1,4 +1,5 @@
 import { Router, Request, Response } from 'express'
+import { Types } from 'mongoose'
 import { authenticate, requireCompany } from '../../middleware/auth'
 import User from '../../models/User'
 import Company from '../../models/Company'
@@ -35,28 +36,30 @@ router.get('/', async (req: Request, res: Response) => {
     if (isSuperAdmin) {
       // Super Admin can see all users
       if (search) {
+        const searchRegex = new RegExp(search, 'i');
         filter.$or = [
-          { username: { $regex: search, $options: 'i' } },
-          { email: { $regex: search, $options: 'i' } },
-          { 'personalInfo.firstName': { $regex: search, $options: 'i' } },
-          { 'personalInfo.lastName': { $regex: search, $options: 'i' } }
+          { username: searchRegex },
+          { email: searchRegex },
+          { 'personalInfo.firstName': searchRegex },
+          { 'personalInfo.lastName': searchRegex }
         ]
       }
       
       // Add company filter if specified
       if (filterCompanyId) {
-        filter['companyAccess.companyId'] = filterCompanyId
+        filter['companyAccess.companyId'] = new Types.ObjectId(filterCompanyId)
       }
     } else {
       // Company users can only see users in their company
-      filter['companyAccess.companyId'] = userCompanyId
+      filter['companyAccess.companyId'] = new Types.ObjectId(userCompanyId)
       
       if (search) {
+        const searchRegex = new RegExp(search, 'i');
         filter.$or = [
-          { username: { $regex: search, $options: 'i' } },
-          { email: { $regex: search, $options: 'i' } },
-          { 'personalInfo.firstName': { $regex: search, $options: 'i' } },
-          { 'personalInfo.lastName': { $regex: search, $options: 'i' } }
+          { username: searchRegex },
+          { email: searchRegex },
+          { 'personalInfo.firstName': searchRegex },
+          { 'personalInfo.lastName': searchRegex }
         ]
       }
     }
@@ -66,7 +69,7 @@ router.get('/', async (req: Request, res: Response) => {
     }
 
     if (status) {
-      filter.status = status
+      filter.isActive = status === 'active'
     }
 
     const skip = (page - 1) * limit

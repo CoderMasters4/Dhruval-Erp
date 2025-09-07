@@ -1,6 +1,8 @@
 'use client'
 
 import { useState } from 'react'
+import { useSelector } from 'react-redux'
+import { selectCurrentUser } from '@/lib/features/auth/authSlice'
 import { AppLayout } from '@/components/layout/AppLayout'
 import { DashboardHeader } from '@/components/ui/DashboardHeader'
 import { ResponsiveGrid } from '@/components/ui/ResponsiveLayout'
@@ -41,13 +43,17 @@ import {
   Clock,
   Package,
   UserCheck,
-  FileText
+  FileText,
+  Truck
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import clsx from 'clsx'
 import SalesOrderModal from '@/components/modals/SalesOrderModal'
+import { useRouter } from 'next/navigation'
 
 export default function SalesOrdersPage() {
+  const user = useSelector(selectCurrentUser)
+  const router = useRouter()
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedFilter, setSelectedFilter] = useState('all')
   const [currentPage, setCurrentPage] = useState(1)
@@ -79,6 +85,16 @@ export default function SalesOrdersPage() {
   const pagination = ordersData?.data?.pagination
 
   // Handler functions
+  const handleQuickStatusUpdate = async (orderId: string, newStatus: string) => {
+    try {
+      await updateSalesOrder({ id: orderId, data: { status: newStatus } }).unwrap()
+      toast.success(`Order status updated to ${newStatus}!`)
+      refetchOrders()
+    } catch (error) {
+      toast.error('Failed to update order status!')
+    }
+  }
+
   const handlePaymentStatusUpdate = async (orderId: string, paymentStatus: 'pending' | 'paid' | 'overdue' | 'partial') => {
     try {
       await updatePaymentStatus({ id: orderId, paymentStatus }).unwrap()
@@ -91,7 +107,11 @@ export default function SalesOrdersPage() {
 
   const handleCreateOrder = async (orderData: any) => {
     try {
-      await createSalesOrder(orderData).unwrap()
+      const orderWithCompany = {
+        ...orderData,
+        companyId: user?.companyId || user?.companyAccess?.[0]?.companyId
+      }
+      await createSalesOrder(orderWithCompany).unwrap()
       toast.success('Sales order created successfully!')
       setShowCreateModal(false)
       refetchOrders()
@@ -107,7 +127,11 @@ export default function SalesOrdersPage() {
 
   const handleUpdateOrder = async (orderData: any) => {
     try {
-      await updateSalesOrder({ id: selectedOrder._id, ...orderData }).unwrap()
+      const orderWithCompany = {
+        ...orderData,
+        companyId: user?.companyId || user?.companyAccess?.[0]?.companyId
+      }
+      await updateSalesOrder({ id: selectedOrder._id, data: orderWithCompany }).unwrap()
       toast.success('Sales order updated successfully!')
       setShowEditModal(false)
       setSelectedOrder(null)
@@ -127,6 +151,22 @@ export default function SalesOrdersPage() {
         toast.error('Failed to delete sales order!')
       }
     }
+  }
+
+  const handleCreateDispatch = (order: any) => {
+    // Navigate to dispatch page with query parameters
+                    const params = new URLSearchParams({
+                  customerOrderId: order._id,
+                  companyId: order.companyId || '',
+                  customerId: order.customerId || '',
+                  customerName: order.customerName || '',
+                  customerCode: order.customerCode || '',
+                  orderNumber: order.orderNumber || '',
+                  orderAmount: order.orderSummary?.finalAmount?.toString() || '0'
+                })
+    
+    // Navigate to dispatch page with query parameters
+    router.push(`/operations/dispatch/enhanced?${params.toString()}`)
   }
 
   const handleRefresh = () => {
@@ -199,6 +239,23 @@ export default function SalesOrdersPage() {
               <Button onClick={() => setShowCreateModal(true)} variant="default" size="sm">
                 <Plus className="h-4 w-4 mr-2" />
                 New Order
+              </Button>
+              <Button 
+                onClick={() => {
+                  // Find first pending order and create dispatch
+                  const firstPendingOrder = orders.find((o: any) => o.status === 'pending' || o.status === 'confirmed');
+                  if (firstPendingOrder) {
+                    handleCreateDispatch(firstPendingOrder);
+                  } else {
+                    toast.error('No pending orders found to create dispatch');
+                  }
+                }} 
+                variant="outline" 
+                size="sm"
+                className="text-blue-600 border-blue-600 hover:bg-blue-50"
+              >
+                <Truck className="h-4 w-4 mr-2" />
+                Quick Dispatch
               </Button>
               <Button onClick={handleRefresh} variant="outline" size="sm">
                 <RefreshCw className="h-4 w-4 mr-2" />
@@ -273,7 +330,7 @@ export default function SalesOrdersPage() {
                         Date
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Actions
+                        Quick Actions
                       </th>
                     </tr>
                   </thead>
@@ -281,22 +338,60 @@ export default function SalesOrdersPage() {
                     {orders.map((order: any) => (
                       <tr key={order._id} className="hover:bg-gray-50">
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm font-medium text-gray-900">#{order.orderNumber}</div>
-                          <div className="text-sm text-gray-500">{order._id}</div>
+                          <div className="flex items-center gap-2">
+                            <div>
+                              <div className="text-sm font-medium text-gray-900">#{order.orderNumber}</div>
+                              <div className="text-sm text-gray-500">{order._id}</div>
+                            </div>
+                            {(order.status === 'pending' || order.status === 'confirmed') && (
+                              <div className="flex items-center gap-1 text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded-full">
+                                <Truck className="h-3 w-3" />
+                                <span>Dispatch Ready</span>
+                              </div>
+                            )}
+                          </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="text-sm text-gray-900">{order.customerName}</div>
                           <div className="text-sm text-gray-500">{order.customerCode}</div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <Badge className={getStatusColor(order.status)}>
-                            {order.status}
-                          </Badge>
+                          <div className="flex items-center gap-2">
+                            <Badge className={getStatusColor(order.status)}>
+                              {order.status}
+                            </Badge>
+                            <select
+                              value={order.status}
+                              onChange={(e) => handleQuickStatusUpdate(order._id, e.target.value)}
+                              className="text-xs border border-gray-300 rounded px-2 py-1 bg-white hover:bg-gray-50 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                              disabled={order.status === 'completed' || order.status === 'cancelled'}
+                            >
+                              <option value="pending">Pending</option>
+                              <option value="confirmed">Confirmed</option>
+                              <option value="processing">Processing</option>
+                              <option value="shipped">Shipped</option>
+                              <option value="delivered">Delivered</option>
+                              <option value="completed">Completed</option>
+                              <option value="cancelled">Cancelled</option>
+                            </select>
+                          </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <Badge className={getPaymentStatusColor(order.payment.paymentStatus)}>
-                            {order.payment.paymentStatus}
-                          </Badge>
+                          <div className="flex items-center gap-2">
+                            <Badge className={getPaymentStatusColor(order.payment.paymentStatus)}>
+                              {order.payment.paymentStatus}
+                            </Badge>
+                            <select
+                              value={order.payment.paymentStatus}
+                              onChange={(e) => handlePaymentStatusUpdate(order._id, e.target.value as any)}
+                              className="text-xs border border-gray-300 rounded px-2 py-1 bg-white hover:bg-gray-50 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                            >
+                              <option value="pending">Pending</option>
+                              <option value="partial">Partial</option>
+                              <option value="paid">Paid</option>
+                              <option value="overdue">Overdue</option>
+                            </select>
+                          </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                           {formatCurrency(order.orderSummary.finalAmount)}
@@ -305,15 +400,56 @@ export default function SalesOrdersPage() {
                           {new Date(order.createdAt).toLocaleDateString()}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                          <div className="flex items-center gap-2">
-                            <Button variant="ghost" size="sm">
-                              <Eye className="h-4 w-4" />
+                          <div className="flex items-center gap-1">
+                            {/* Quick Status Update */}
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              onClick={() => handleQuickStatusUpdate(order._id, 'processing')}
+                              className="text-green-600 hover:text-green-700 hover:bg-green-50"
+                              title="Mark as Processing"
+                              disabled={order.status === 'completed' || order.status === 'cancelled'}
+                            >
+                              <RefreshCw className="h-3 w-3" />
                             </Button>
-                            <Button variant="ghost" size="sm" onClick={() => handleEditOrder(order)}>
-                              <Edit className="h-4 w-4" />
+                            
+                            {/* Quick Payment Update */}
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              onClick={() => handlePaymentStatusUpdate(order._id, 'paid')}
+                              className="text-green-600 hover:text-green-700 hover:bg-green-50"
+                              title="Mark as Paid"
+                              disabled={order.payment.paymentStatus === 'paid'}
+                            >
+                              <CreditCard className="h-3 w-3" />
                             </Button>
-                            <Button variant="ghost" size="sm" onClick={() => handleDeleteOrder(order._id)}>
-                              <Trash2 className="h-4 w-4" />
+                            
+                            {/* Create Dispatch */}
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              onClick={() => handleCreateDispatch(order)}
+                              className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                              title="Create Dispatch"
+                              disabled={order.status === 'completed' || order.status === 'cancelled'}
+                            >
+                              <Truck className="h-3 w-3" />
+                            </Button>
+                            
+                            {/* View Details */}
+                            <Button variant="ghost" size="sm" title="View Details">
+                              <Eye className="h-3 w-3" />
+                            </Button>
+                            
+                            {/* Edit Order */}
+                            <Button variant="ghost" size="sm" onClick={() => handleEditOrder(order)} title="Edit Order">
+                              <Edit className="h-3 w-3" />
+                            </Button>
+                            
+                            {/* Delete Order */}
+                            <Button variant="ghost" size="sm" onClick={() => handleDeleteOrder(order._id)} title="Delete Order">
+                              <Trash2 className="h-3 w-3" />
                             </Button>
                           </div>
                         </td>
@@ -421,6 +557,7 @@ export default function SalesOrdersPage() {
           isOpen={showCreateModal}
           onClose={() => setShowCreateModal(false)}
           mode="create"
+          onSuccess={handleCreateOrder}
         />
         
         <SalesOrderModal
@@ -431,6 +568,7 @@ export default function SalesOrdersPage() {
           }}
           order={selectedOrder}
           mode="edit"
+          onSuccess={handleUpdateOrder}
         />
       </ResponsiveGrid>
     </AppLayout>

@@ -49,28 +49,28 @@ export const RoleBasedQuickActions: React.FC<RoleBasedQuickActionsProps> = ({ lo
           description: 'Register new company',
           icon: Building2,
           color: 'sky',
-          href: '/admin/companies/new'
+          href: '/companies'
         },
         {
           title: 'Manage Users',
           description: 'System user management',
           icon: Users,
           color: 'black',
-          href: '/admin/users'
+          href: '/users'
         },
         {
           title: 'System Settings',
           description: 'Configure system',
           icon: Settings,
           color: 'sky',
-          href: '/admin/settings'
+          href: '/settings'
         },
         {
           title: 'Security Logs',
           description: 'View security events',
           icon: Shield,
           color: 'black',
-          href: '/admin/security'
+          href: '/security'
         }
       ]
     }
@@ -83,14 +83,14 @@ export const RoleBasedQuickActions: React.FC<RoleBasedQuickActionsProps> = ({ lo
           description: 'Create customer order',
           icon: ShoppingCart,
           color: 'sky',
-          href: '/orders/new'
+          href: '/sales/orders'
         },
         {
           title: 'Add Customer',
           description: 'Register new customer',
           icon: UserPlus,
           color: 'black',
-          href: '/customers/new'
+          href: '/sales/customers/'
         },
         {
           title: 'View Reports',
@@ -117,7 +117,7 @@ export const RoleBasedQuickActions: React.FC<RoleBasedQuickActionsProps> = ({ lo
           description: 'Begin production run',
           icon: Factory,
           color: 'sky',
-          href: '/production/new'
+          href: '/production'
         },
         {
           title: 'Quality Check',
@@ -127,11 +127,11 @@ export const RoleBasedQuickActions: React.FC<RoleBasedQuickActionsProps> = ({ lo
           href: '/quality/check'
         },
         {
-          title: 'Inventory Update',
+          title: 'Inventory ',
           description: 'Update stock levels',
           icon: Package,
           color: 'sky',
-          href: '/inventory/update'
+          href: '/inventory'
         },
         {
           title: 'Maintenance',

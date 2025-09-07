@@ -9,7 +9,8 @@
     "start": "next start -p 4001",
     "start:prod": "NODE_ENV=production next start -p 4001",
     "lint": "next lint",
-    "export": "next export"
+    "export": "next export",
+    "error":"npx tsc --noEmit --skipLibCheck"
   },
   "dependencies": {
     "@casl/ability": "^6.7.3",
@@ -44,6 +45,7 @@
     "qrcode.react": "^4.2.0",
     "react": "19.1.0",
     "react-dom": "19.1.0",
+    "react-dropzone": "^14.3.8",
     "react-hook-form": "^7.61.1",
     "react-hot-toast": "^2.5.2",
     "react-i18next": "^15.6.1",

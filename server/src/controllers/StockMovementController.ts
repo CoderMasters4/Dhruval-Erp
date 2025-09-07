@@ -323,7 +323,7 @@ export class StockMovementController extends BaseController<IStockMovement> {
     try {
       const { id } = req.params;
       const updateData = req.body;
-      const updatedBy = req.user?.id;
+      const updatedBy = (req.user?.userId || req.user?._id)?.toString();
 
       const movement = await this.stockMovementService.update(id, updateData, updatedBy);
 

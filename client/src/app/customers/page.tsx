@@ -75,7 +75,9 @@ export default function CustomersPage() {
     openCustomerForm({
       customer,
       onSuccess: () => {
-        refetch()
+        setTimeout(() => {
+          refetch()
+        }, 500)
         toast.success('Customer updated successfully!')
       }
     })
@@ -85,7 +87,9 @@ export default function CustomersPage() {
     openDeleteCustomer({
       customer,
       onSuccess: () => {
-        refetch()
+        setTimeout(() => {
+          refetch()
+        }, 500)
         toast.success('Customer deleted successfully!')
       }
     })
@@ -94,7 +98,9 @@ export default function CustomersPage() {
   const handleCreateNew = () => {
     openCustomerForm({
       onSuccess: () => {
-        refetch()
+        setTimeout(() => {
+          refetch()
+        }, 500)
         toast.success('Customer created successfully!')
       }
     })
@@ -132,6 +138,7 @@ export default function CustomersPage() {
 
   // Error handling
   if (error) {
+    console.error('Customers page error:', error)
     return (
       <AppLayout>
         <div className="flex items-center justify-center min-h-[60vh]">
@@ -148,24 +155,6 @@ export default function CustomersPage() {
               onClick={() => refetch()}
               className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg"
             >
-              Try Again
-            </Button>
-          </div>
-        </div>
-      </AppLayout>
-    )
-  }
-
-  // Error state
-  if (error) {
-    return (
-      <AppLayout>
-        <div className="flex items-center justify-center min-h-[60vh]">
-          <div className="text-center">
-            <AlertCircle className="mx-auto h-12 w-12 text-red-400 mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">Error Loading Customers</h3>
-            <p className="text-gray-600 mb-4">There was an error loading the customers data.</p>
-            <Button onClick={() => refetch()} className="bg-sky-500 hover:bg-sky-600 text-white">
               Try Again
             </Button>
           </div>
@@ -288,21 +277,6 @@ export default function CustomersPage() {
             />
           )}
 
-          {/* Error State */}
-          {error && (
-            <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 rounded-xl p-8 text-center transition-all duration-300">
-              <AlertCircle className="h-16 w-16 text-red-400 dark:text-red-500 mx-auto mb-4" />
-              <h3 className="text-xl font-semibold text-red-800 dark:text-red-200 mb-2">
-                Error Loading Customers
-              </h3>
-              <p className="text-red-600 dark:text-red-300 mb-4">
-                There was an error loading the customers data.
-              </p>
-              <Button onClick={() => refetch()} variant="outline" className="border-red-300 dark:border-red-600 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20">
-                Try Again
-              </Button>
-            </div>
-          )}
         </div>
       </div>
     </AppLayout>

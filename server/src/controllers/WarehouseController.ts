@@ -18,7 +18,7 @@ export class WarehouseController extends BaseController<IWarehouse> {
   async createWarehouse(req: Request, res: Response): Promise<void> {
     try {
       const warehouseData = req.body;
-      const createdBy = req.user?.id;
+      const createdBy = (req.user?.userId || req.user?._id)?.toString();
 
       const warehouse = await this.warehouseService.createWarehouse(warehouseData, createdBy);
 
@@ -116,7 +116,7 @@ export class WarehouseController extends BaseController<IWarehouse> {
     try {
       const { warehouseId } = req.params;
       const capacity = req.body;
-      const updatedBy = req.user?.id;
+      const updatedBy = (req.user?.userId || req.user?._id)?.toString();
 
       const warehouse = await this.warehouseService.updateWarehouseCapacity(warehouseId, capacity, updatedBy);
 
@@ -133,7 +133,7 @@ export class WarehouseController extends BaseController<IWarehouse> {
     try {
       const { warehouseId } = req.params;
       const zoneData = req.body;
-      const addedBy = req.user?.id;
+      const addedBy = (req.user?.userId || req.user?._id)?.toString();
 
       const warehouse = await this.warehouseService.addStorageZone(warehouseId, zoneData, addedBy);
 
@@ -185,7 +185,7 @@ export class WarehouseController extends BaseController<IWarehouse> {
     try {
       const { id } = req.params;
       const updateData = req.body;
-      const updatedBy = req.user?.id;
+      const updatedBy = (req.user?.userId || req.user?._id)?.toString();
 
       const warehouse = await this.warehouseService.update(id, updateData, updatedBy);
 
@@ -226,7 +226,7 @@ export class WarehouseController extends BaseController<IWarehouse> {
   async deleteWarehouse(req: Request, res: Response): Promise<void> {
     try {
       const { id } = req.params;
-      const deletedBy = req.user?.id;
+      const deletedBy = (req.user?.userId || req.user?._id)?.toString();
 
       const warehouse = await this.warehouseService.update(id, {
         isActive: false,

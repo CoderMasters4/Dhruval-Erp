@@ -4,6 +4,8 @@ import { PurchaseOrder } from '../models';
 import { IPurchaseOrder } from '../types/models';
 import { AppError } from '../utils/errors';
 import { logger } from '../utils/logger';
+import { InventoryService } from './InventoryService';
+import { StockMovementService } from './StockMovementService';
 
 export class PurchaseOrderService extends BaseService<IPurchaseOrder> {
   constructor() {
@@ -81,11 +83,11 @@ export class PurchaseOrderService extends BaseService<IPurchaseOrder> {
       } else if (status === 'acknowledged') {
         updateData.acknowledgedAt = new Date();
       } else if (status === 'partially_received') {
-        updateData.firstReceiptAt = new Date();
+        updateData.lastReceivedDate = new Date();
       } else if (status === 'received') {
-        updateData.fullyReceivedAt = new Date();
+        updateData.lastReceivedDate = new Date();
       } else if (status === 'cancelled') {
-        updateData.cancelledAt = new Date();
+        // cancelledAt is not part of IPurchaseOrder interface
       }
 
       const updatedOrder = await this.update(orderId, updateData, updatedBy);
@@ -281,6 +283,53 @@ export class PurchaseOrderService extends BaseService<IPurchaseOrder> {
   }
 
   /**
+   * Get purchase order summary with stock impact
+   */
+  async getPurchaseOrderSummary(orderId: string): Promise<any> {
+    try {
+      const order = await this.findById(orderId);
+      if (!order) {
+        throw new AppError('Purchase order not found', 404);
+      }
+
+      const summary = {
+        orderId: order._id,
+        poNumber: order.poNumber,
+        status: order.status,
+        supplier: order.supplier,
+        totalItems: order.items.length,
+        totalQuantity: order.items.reduce((sum, item) => sum + item.quantity, 0),
+        totalReceived: order.items.reduce((sum, item) => sum + (item.receivedQuantity || 0), 0),
+        totalPending: order.items.reduce((sum, item) => sum + (item.pendingQuantity || 0), 0),
+        totalValue: order.amounts?.grandTotal || 0,
+        stockImpact: {
+          itemsReceived: order.items.filter(item => (item.receivedQuantity || 0) > 0).length,
+          totalStockAdded: order.items.reduce((sum, item) => sum + (item.receivedQuantity || 0), 0),
+          itemsWithStockMovement: order.items.filter(item => (item.receivedQuantity || 0) > 0).map(item => ({
+            itemId: item.itemId,
+            itemName: item.itemName,
+            quantityReceived: item.receivedQuantity || 0,
+            stockValue: (item.receivedQuantity || 0) * (item.rate || 0)
+          }))
+        },
+        dates: {
+          created: order.createdAt,
+          expectedDelivery: order.expectedDeliveryDate,
+          firstReceipt: order.lastReceivedDate || null,
+          fullyReceived: order.lastReceivedDate || null,
+          completed: order.lastReceivedDate || null,
+          cancelled: null
+        }
+      };
+
+      return summary;
+    } catch (error) {
+      logger.error('Error getting purchase order summary', { error, orderId });
+      throw error;
+    }
+  }
+
+  /**
    * Calculate order totals
    */
   private calculateOrderTotals(items: any[]): { subtotal: number; totalTax: number; totalAmount: number } {
@@ -333,21 +382,105 @@ export class PurchaseOrderService extends BaseService<IPurchaseOrder> {
         throw new AppError('Only acknowledged orders can receive items', 400);
       }
 
+      // Initialize services
+      const inventoryService = new InventoryService();
+      const stockMovementService = new StockMovementService();
+
+      // Update stock for each received item
+      for (const receivedItem of receivedItems) {
+        const orderItem = order.items.find(item => item.itemId.toString() === receivedItem.itemId);
+        if (!orderItem) {
+          throw new AppError(`Item ${receivedItem.itemId} not found in purchase order`, 404);
+        }
+
+        // Validate received quantity
+        if (receivedItem.receivedQuantity <= 0) {
+          throw new AppError(`Received quantity must be greater than 0 for item ${orderItem.itemName}`, 400);
+        }
+
+        if (receivedItem.receivedQuantity > orderItem.quantity) {
+          throw new AppError(`Received quantity (${receivedItem.receivedQuantity}) cannot exceed ordered quantity (${orderItem.quantity}) for item ${orderItem.itemName}`, 400);
+        }
+
+        // Update stock quantity
+        await inventoryService.updateStock(
+          receivedItem.itemId,
+          (order.deliveryInfo?.warehouseId || order.companyId).toString(), // Use delivery warehouse or company as default
+          receivedItem.receivedQuantity,
+          'in',
+          `PO-${order.poNumber}`,
+          `Received from purchase order ${order.poNumber}`,
+          receivedBy
+        );
+
+        // Create stock movement record
+        await stockMovementService.createStockMovement({
+          companyId: order.companyId,
+          itemId: receivedItem.itemId,
+          itemCode: orderItem.itemCode,
+          itemName: orderItem.itemName,
+          movementType: 'inward',
+          referenceDocument: {
+            documentType: 'purchase_order',
+            documentId: order._id,
+            documentNumber: order.poNumber
+          },
+          quantity: receivedItem.receivedQuantity,
+          unit: orderItem.unit,
+          rate: orderItem.rate,
+          totalValue: receivedItem.receivedQuantity * orderItem.rate,
+          toLocation: {
+            warehouseId: order.deliveryInfo?.warehouseId || order.companyId,
+            warehouseName: order.deliveryInfo?.warehouseName || 'Main Warehouse',
+            isExternal: false
+          },
+          notes: `Received from purchase order ${order.poNumber}`,
+          movementDate: new Date()
+        }, receivedBy);
+
+        // Update the item's received quantity in the order
+        orderItem.receivedQuantity = (orderItem.receivedQuantity || 0) + receivedItem.receivedQuantity;
+        orderItem.pendingQuantity = orderItem.quantity - orderItem.receivedQuantity - (orderItem.rejectedQuantity || 0);
+
+        logger.info('Stock updated for received item', {
+          itemId: receivedItem.itemId,
+          itemName: orderItem.itemName,
+          quantity: receivedItem.receivedQuantity,
+          totalReceived: orderItem.receivedQuantity,
+          pending: orderItem.pendingQuantity,
+          poNumber: order.poNumber,
+          receivedBy
+        });
+      }
+
       // Update received quantities
       const updateData: any = {
         receivedItems,
-        firstReceiptAt: new Date(),
+        lastReceivedDate: new Date(),
         status: 'partially_received'
       };
 
       // Check if all items are fully received
-      const allReceived = receivedItems.every(item =>
-        item.receivedQuantity >= item.orderedQuantity
+      const allReceived = order.items.every(item => 
+        (item.receivedQuantity || 0) >= item.quantity
       );
 
       if (allReceived) {
-        updateData.status = 'received';
-        updateData.fullyReceivedAt = new Date();
+        updateData.status = 'completed';
+        updateData.lastReceivedDate = new Date();
+        
+        logger.info('Purchase order completed', {
+          orderId,
+          poNumber: order.poNumber,
+          completedAt: new Date(),
+          receivedBy
+        });
+      } else {
+        // Check if any items have been received
+        const hasReceivedItems = order.items.some(item => (item.receivedQuantity || 0) > 0);
+        if (hasReceivedItems) {
+          updateData.status = 'partially_received';
+        }
       }
 
       const updatedOrder = await this.update(orderId, updateData, receivedBy);
@@ -361,6 +494,38 @@ export class PurchaseOrderService extends BaseService<IPurchaseOrder> {
       return updatedOrder;
     } catch (error) {
       logger.error('Error receiving items', { error, orderId, receivedItems, receivedBy });
+      throw error;
+    }
+  }
+
+  /**
+   * Cancel purchase order
+   */
+  async cancelPurchaseOrder(orderId: string, cancelledBy?: string): Promise<IPurchaseOrder | null> {
+    try {
+      const order = await this.findById(orderId);
+      if (!order) {
+        throw new AppError('Purchase order not found', 404);
+      }
+
+      // Validate status transition
+      this.validateStatusTransition(order.status, 'cancelled');
+
+      const updateData: any = { 
+        status: 'cancelled'
+      };
+
+      const updatedOrder = await this.update(orderId, updateData, cancelledBy);
+
+      logger.info('Purchase order cancelled', { 
+        orderId, 
+        oldStatus: order.status,
+        cancelledBy 
+      });
+
+      return updatedOrder;
+    } catch (error) {
+      logger.error('Error cancelling purchase order', { error, orderId, cancelledBy });
       throw error;
     }
   }

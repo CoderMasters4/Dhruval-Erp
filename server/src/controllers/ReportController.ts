@@ -18,7 +18,7 @@ export class ReportController extends BaseController<IReport> {
   async createReport(req: Request, res: Response): Promise<void> {
     try {
       const reportData = req.body;
-      const createdBy = req.user?.id;
+      const createdBy = (req.user?.userId || req.user?._id)?.toString();
 
       const report = await this.reportService.createReport(reportData, createdBy);
 

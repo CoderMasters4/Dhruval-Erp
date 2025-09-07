@@ -18,7 +18,7 @@ export class CustomerOrderController extends BaseController<ICustomerOrder> {
   async createCustomerOrder(req: Request, res: Response): Promise<void> {
     try {
       const orderData = req.body;
-      const createdBy = req.user?.id;
+      const createdBy = (req.user?.userId || req.user?._id)?.toString();
 
       const order = await this.customerOrderService.createCustomerOrder(orderData, createdBy);
 
@@ -39,7 +39,7 @@ export class CustomerOrderController extends BaseController<ICustomerOrder> {
     try {
       const { orderId } = req.params;
       const { status } = req.body;
-      const updatedBy = req.user?.id;
+      const updatedBy = (req.user?.userId || req.user?._id)?.toString();
 
       const order = await this.customerOrderService.updateOrderStatus(orderId, status, updatedBy);
 
@@ -207,7 +207,7 @@ export class CustomerOrderController extends BaseController<ICustomerOrder> {
     try {
       const { id } = req.params;
       const updateData = req.body;
-      const updatedBy = req.user?.id;
+      const updatedBy = (req.user?.userId || req.user?._id)?.toString();
 
       const order = await this.customerOrderService.update(id, updateData, updatedBy);
 
@@ -261,7 +261,7 @@ export class CustomerOrderController extends BaseController<ICustomerOrder> {
   async deleteCustomerOrder(req: Request, res: Response): Promise<void> {
     try {
       const { id } = req.params;
-      const deletedBy = req.user?.id;
+      const deletedBy = (req.user?.userId || req.user?._id)?.toString();
 
       const order = await this.customerOrderService.update(id, {
         status: 'cancelled',

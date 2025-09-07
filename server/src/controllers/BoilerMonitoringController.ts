@@ -18,7 +18,7 @@ export class BoilerMonitoringController extends BaseController<IBoilerMonitoring
   async createMonitoringEntry(req: Request, res: Response): Promise<void> {
     try {
       const monitoringData = req.body;
-      const createdBy = req.user?.id;
+      const createdBy = (req.user?.userId || req.user?._id)?.toString();
 
       const monitoring = await this.boilerMonitoringService.createBoilerMonitoring(monitoringData, createdBy);
 

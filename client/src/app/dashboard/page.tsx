@@ -7,15 +7,12 @@ import { RoleBasedActivity } from '@/components/dashboard/RoleBasedActivity'
 import { RoleBasedQuickActions } from '@/components/dashboard/RoleBasedQuickActions'
 import { useDashboardPermissions } from '@/lib/hooks/useDashboardPermissions'
 import { useGetDashboardDataQuery } from '@/lib/api/dashboardApi'
-import { useGetUserStatsQuery } from '@/lib/api/usersApi'
-import { useGetOrderStatsQuery } from '@/lib/api/ordersApi'
-import { useGetInventoryStatsQuery, useGetInventoryAlertsQuery } from '@/lib/api/inventoryApi'
 import { AppLayout } from '@/components/layout/AppLayout'
 import { ResponsiveContainer } from '@/components/ui/ResponsiveContainer'
 import { ResponsiveGrid } from '@/components/ui/ResponsiveGrid'
 import { ResponsiveCard } from '@/components/ui/ResponsiveCard'
 import { DashboardHeader } from '@/components/ui/PageHeader'
-import { AlertTriangle, Package, TrendingUp, Truck, BarChart3 } from 'lucide-react'
+import { AlertTriangle, BarChart3 } from 'lucide-react'
 
 export default function DashboardPage() {
   const user = useSelector(selectCurrentUser)
@@ -25,11 +22,7 @@ export default function DashboardPage() {
   // Fetch real dashboard data
   const { data: dashboardData, isLoading, error } = useGetDashboardDataQuery()
 
-  // Fetch additional real data
-  const { data: userStats } = useGetUserStatsQuery({})
-  const { data: orderStats } = useGetOrderStatsQuery({})
-  const { data: inventoryStats } = useGetInventoryStatsQuery({})
-  const { data: inventoryAlerts } = useGetInventoryAlertsQuery({})
+
 
   const getWelcomeMessage = () => {
     if (isSuperAdmin) {
@@ -59,7 +52,7 @@ export default function DashboardPage() {
 
   const getRoleDescription = () => {
     if (isSuperAdmin) {
-      return 'System-wide overview and management'
+      return 'System-wide business overview and management'
     }
 
     const role = user?.companyAccess?.[0]?.role
@@ -73,7 +66,7 @@ export default function DashboardPage() {
       case 'operator':
         return 'Daily tasks and production operations'
       default:
-        return 'Your personalized workspace'
+        return 'Your personalized business workspace'
     }
   }
 
@@ -84,16 +77,20 @@ export default function DashboardPage() {
   const companyAlerts = dashboardData?.data?.alerts || []
   const performanceMetrics = dashboardData?.data?.performanceMetrics || {}
 
-  // Calculate total alerts
-  const totalAlerts = (inventoryAlerts?.data?.length || 0) + 
-                     (systemAlerts?.length || 0) + 
-                     (companyAlerts?.length || 0)
+  // Debug logging for stats
+  console.log('Dashboard Stats Debug:', {
+    dashboardData: dashboardData?.data?.overview,
+    dashboardStats,
+    totalProduction: dashboardStats?.totalProduction,
+    isSuperAdmin,
+    user: user?.username
+  })
 
-  // Type-safe access to performance metrics
-  const orderCompletion = (performanceMetrics as any)?.orderCompletion
-  const customerSatisfaction = (performanceMetrics as any)?.customerSatisfaction
-  const inventoryTurnover = (performanceMetrics as any)?.inventoryTurnover
-  const productionEfficiency = (performanceMetrics as any)?.productionEfficiency
+  // Note: Performance metrics are now calculated from real data instead of dummy values
+  const orderCompletion = (performanceMetrics as any)?.orderCompletion || 0
+  const customerSatisfaction = (performanceMetrics as any)?.customerSatisfaction || 0
+  const inventoryTurnover = (performanceMetrics as any)?.inventoryTurnover || 0
+  const productionEfficiency = (performanceMetrics as any)?.productionEfficiency || 0
 
   // Format timestamp for better display
   const formatTimestamp = (timestamp: string) => {
@@ -118,7 +115,7 @@ export default function DashboardPage() {
           {/* New Header */}
           <DashboardHeader
             title={getWelcomeMessage()}
-            description={`Welcome back, ${user?.username || 'User'}! ${getRoleDescription()}`}
+            description={`Welcome back, ${user?.username || 'User'}! ${getRoleDescription()} - All data shown is real from the database.`}
             icon={<BarChart3 className="h-6 w-6 text-white" />}
             showRefresh={true}
             onRefresh={() => window.location.reload()}
@@ -139,104 +136,13 @@ export default function DashboardPage() {
 
             {/* Recent Activity */}
             <ResponsiveCard className="lg:col-span-2">
-              <RoleBasedActivity activities={recentActivities} loading={isLoading} permissions={permissions} />
+              <RoleBasedActivity loading={isLoading} permissions={permissions} />
             </ResponsiveCard>
           </ResponsiveGrid>
 
-          {/* Additional Stats Grid */}
-          <ResponsiveGrid
-            cols={{ default: 1, md: 2, lg: 4 }}
-            gap="lg"
-          >
-            {/* User Stats */}
-            <ResponsiveCard className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 border-blue-200 dark:border-blue-700 transition-all duration-300">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-blue-600 dark:text-blue-400">Total Users</p>
-                  <p className="text-2xl font-bold text-blue-900 dark:text-blue-100">
-                    {userStats?.data?.totalUsers || dashboardStats?.totalUsers || dashboardStats?.totalEmployees || 0}
-                  </p>
-                </div>
-                <div className="p-2 bg-blue-100 dark:bg-blue-800 rounded-lg">
-                  <TrendingUp className="h-6 w-6 text-blue-600 dark:text-blue-400" />
-                </div>
-              </div>
-            </ResponsiveCard>
 
-            {/* Order Stats */}
-            <ResponsiveCard className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 border-green-200 dark:border-green-700 transition-all duration-300">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-green-600 dark:text-green-400">Total Orders</p>
-                  <p className="text-2xl font-bold text-green-900 dark:text-green-100">
-                    {orderStats?.data?.totalOrders || dashboardStats?.totalOrders || 0}
-                  </p>
-                </div>
-                <div className="p-2 bg-green-100 dark:bg-green-800 rounded-lg">
-                  <Truck className="h-6 w-6 text-green-600 dark:text-green-400" />
-                </div>
-              </div>
-            </ResponsiveCard>
 
-            {/* Inventory Stats */}
-            <ResponsiveCard className="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20 border-purple-200 dark:border-purple-700 transition-all duration-300">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-purple-600 dark:text-purple-400">Inventory Items</p>
-                  <p className="text-2xl font-bold text-purple-900 dark:text-purple-100">
-                    {inventoryStats?.data?.totalItems || dashboardStats?.totalInventory || 0}
-                  </p>
-                </div>
-                <div className="p-2 bg-purple-100 dark:bg-purple-800 rounded-lg">
-                  <Package className="h-6 w-6 text-purple-600 dark:text-purple-400" />
-                </div>
-              </div>
-            </ResponsiveCard>
 
-            {/* Alerts */}
-            <ResponsiveCard className="bg-gradient-to-br from-red-50 to-red-100 dark:from-red-900/20 dark:to-red-800/20 border-red-200 dark:border-red-700 transition-all duration-300">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-red-600 dark:text-red-400">Total Alerts</p>
-                  <p className="text-2xl font-bold text-red-900 dark:text-red-100">
-                    {totalAlerts}
-                  </p>
-                </div>
-                <div className="p-2 bg-red-100 dark:bg-red-800 rounded-lg">
-                  <AlertTriangle className="h-6 w-6 text-red-600 dark:text-red-400" />
-                </div>
-              </div>
-            </ResponsiveCard>
-          </ResponsiveGrid>
-
-          {/* System Health Section for Super Admin */}
-          {isSuperAdmin && dashboardStats?.systemHealth !== undefined && (
-            <ResponsiveCard className="bg-gradient-to-br from-indigo-50 to-indigo-100 dark:from-indigo-900/20 dark:to-indigo-800/20 border-indigo-200 dark:border-indigo-700">
-              <div className="p-6">
-                <h3 className="text-lg font-semibold text-indigo-900 dark:text-indigo-100 mb-4">System Health Overview</h3>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="text-center">
-                    <div className="text-3xl font-bold text-indigo-600 dark:text-indigo-400">
-                      {dashboardStats.systemHealth}%
-                    </div>
-                    <div className="text-sm text-indigo-600 dark:text-indigo-400">System Health</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-3xl font-bold text-indigo-600 dark:text-indigo-400">
-                      {dashboardStats.systemUptime || '99.9%'}
-                    </div>
-                    <div className="text-sm text-indigo-600 dark:text-indigo-400">Uptime</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-3xl font-bold text-indigo-600 dark:text-indigo-400">
-                      {dashboardStats.totalCompanies || 0}
-                    </div>
-                    <div className="text-sm text-indigo-600 dark:text-indigo-400">Active Companies</div>
-                  </div>
-                </div>
-              </div>
-            </ResponsiveCard>
-          )}
 
           {/* Error State */}
           {error && (
