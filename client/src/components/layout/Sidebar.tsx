@@ -251,46 +251,46 @@ const navigationItems: NavigationItem[] = [
   },
 
   // Human Resources Management
-  {
-    name: 'Human Resources',
-    href: '/manpower',
-    icon: Users,
-    permission: 'view:Manpower',
-    children: [
-      {
-        name: 'HR Overview',
-        href: '/manpower',
-        icon: Users,
-        permission: 'view:Manpower'
-      },
-      {
-        name: 'Employee Management',
-        href: '/employees',
-        icon: UserPlus,
-        permission: 'view:Employee',
-        roles: ['admin', 'hr', 'manager']
-      },
-      {
-        name: 'Shift Management',
-        href: '/shifts',
-        icon: Clock,
-        permission: 'view:Shift',
-        roles: ['admin', 'hr', 'manager']
-      },
-      {
-        name: 'Attendance Tracking',
-        href: '/attendance',
-        icon: UserCheck,
-        permission: 'view:Attendance'
-      },
-      {
-        name: 'Stickers & Labels',
-        href: '/stickers',
-        icon: FileText,
-        permission: 'view:Sticker'
-      }
-    ]
-  },
+  // {
+  //   name: 'Human Resources',
+  //   href: '/manpower',
+  //   icon: Users,
+  //   permission: 'view:Manpower',
+  //   children: [
+  //     {
+  //       name: 'HR Overview',
+  //       href: '/manpower',
+  //       icon: Users,
+  //       permission: 'view:Manpower'
+  //     },
+  //     {
+  //       name: 'Employee Management',
+  //       href: '/employees',
+  //       icon: UserPlus,
+  //       permission: 'view:Employee',
+  //       roles: ['admin', 'hr', 'manager']
+  //     },
+  //     {
+  //       name: 'Shift Management',
+  //       href: '/shifts',
+  //       icon: Clock,
+  //       permission: 'view:Shift',
+  //       roles: ['admin', 'hr', 'manager']
+  //     },
+  //     {
+  //       name: 'Attendance Tracking',
+  //       href: '/attendance',
+  //       icon: UserCheck,
+  //       permission: 'view:Attendance'
+  //     },
+  //     {
+  //       name: 'Stickers & Labels',
+  //       href: '/stickers',
+  //       icon: FileText,
+  //       permission: 'view:Sticker'
+  //     }
+  //   ]
+  // },
 
   // Production Management
   {
@@ -444,18 +444,18 @@ const navigationItems: NavigationItem[] = [
         icon: Car,
         permission: 'view:Vehicle'
       },
-      {
-        name: 'Security Logs',
-        href: '/security/logs',
-        icon: AlertTriangle,
-        permission: 'view:SecurityLog'
-      },
-      {
-        name: 'Audit Logs',
-        href: '/audit-logs',
-        icon: FileSearch,
-        permission: 'view:AuditLog'
-      }
+      // {
+      //   name: 'Security Logs',
+      //   href: '/security/logs',
+      //   icon: AlertTriangle,
+      //   permission: 'view:SecurityLog'
+      // },
+      // {
+      //   name: 'Audit Logs',
+      //   href: '/audit-logs',
+      //   icon: FileSearch,
+      //   permission: 'view:AuditLog'
+      // }
     ]
   },
 
