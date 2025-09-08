@@ -477,7 +477,7 @@ export default function DispatchManagementPage() {
                     </div>
                     <div className="flex items-center space-x-3 text-gray-600">
                       <MapPin className="h-4 w-4 text-blue-500" />
-                      <span className="text-sm">{dispatch.destination}</span>
+                      <span className="text-sm">{dispatch.customerName || 'N/A'}</span>
                     </div>
                     <div className="flex items-center space-x-3 text-gray-600">
                       <Truck className="h-4 w-4 text-blue-500" />

@@ -293,7 +293,7 @@ export default function EnhancedDispatchPage() {
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
                       <div className="flex items-center space-x-2">
                         <MapPin className="h-4 w-4 text-gray-400" />
-                        <span>{dispatch.destination}</span>
+                        <span>{dispatch.destination || 'N/A'}</span>
                       </div>
                       <div className="flex items-center space-x-2">
                         <Calendar className="h-4 w-4 text-gray-400" />
