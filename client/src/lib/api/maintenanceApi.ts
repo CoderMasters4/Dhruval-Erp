@@ -81,6 +81,7 @@ export interface MaintenanceFilters {
 }
 
 export const maintenanceApi = baseApi.injectEndpoints({
+  overrideExisting: true,
   endpoints: (builder) => ({
     // Get maintenance schedules for a spare
     getMaintenanceSchedules: builder.query<

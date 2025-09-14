@@ -218,6 +218,7 @@ export interface SparesResponse {
 }
 
 export const sparesApi = baseApi.injectEndpoints({
+  overrideExisting: true,
   endpoints: (builder) => ({
     // Get spares with filtering and pagination
     getSpares: builder.query<

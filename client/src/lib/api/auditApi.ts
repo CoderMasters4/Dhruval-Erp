@@ -82,6 +82,7 @@ export interface AuditStats {
 }
 
 export const auditApi = baseApi.injectEndpoints({
+  overrideExisting: true,
   endpoints: (builder) => ({
     // Get all audit logs with filtering and pagination
     getAuditLogs: builder.query<

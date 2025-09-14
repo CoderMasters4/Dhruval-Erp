@@ -49,6 +49,7 @@ export interface HospitalityTrends {
 }
 
 export const hospitalityApi = baseApi.injectEndpoints({
+  overrideExisting: true,
   endpoints: (builder) => ({
     // Get all hospitality services
     getHospitalityServices: builder.query<

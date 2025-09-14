@@ -179,6 +179,7 @@ export interface SalesTeamPerformance {
 // =============================================
 
 export const salesApi = baseApi.injectEndpoints({
+  overrideExisting: true,
   endpoints: (builder) => ({
     // =============================================
     // SALES DASHBOARD (Overview + Analytics Combined)

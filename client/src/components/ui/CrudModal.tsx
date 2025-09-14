@@ -5,7 +5,7 @@ import { Button } from './Button';
 export interface FormField {
   name: string;
   label: string;
-  type: 'text' | 'email' | 'password' | 'tel' | 'url' | 'textarea' | 'select' | 'checkbox' | 'number';
+  type: 'text' | 'email' | 'password' | 'tel' | 'url' | 'textarea' | 'select' | 'checkbox' | 'number' | 'datetime-local';
   placeholder?: string;
   required?: boolean;
   options?: Array<{ value: string; label: string }>;
@@ -110,6 +110,22 @@ export const CrudModal: React.FC<CrudModalProps> = ({
               {field.label}
             </label>
           </div>
+        );
+
+      case 'datetime-local':
+        return (
+          <input
+            type="datetime-local"
+            id={field.name}
+            name={field.name}
+            value={value}
+            onChange={(e) => handleInputChange(field.name, e.target.value)}
+            placeholder={field.placeholder}
+            required={field.required}
+            min={field.validation?.min}
+            max={field.validation?.max}
+            className="w-full px-3 py-2 border-2 border-sky-200 rounded-lg focus:outline-none focus:border-sky-500 bg-white text-gray-900 font-medium placeholder:text-gray-500"
+          />
         );
 
       default:

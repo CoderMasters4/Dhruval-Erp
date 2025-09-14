@@ -33,6 +33,14 @@ import Spare from './Spare';
 import ProductionDashboard from './ProductionDashboard';
 import AdvancedReport from './AdvancedReport';
 import DocumentManagement from './DocumentManagement';
+import GreyFabricInward from './GreyFabricInward';
+import PreProcessing from './PreProcessing';
+import Dyeing from './Dyeing';
+import Printing from './Printing';
+import Finishing from './Finishing';
+import CuttingPacking from './CuttingPacking';
+import ProductionLog from './ProductionLog';
+;
 
 // Export all models
 export {
@@ -64,7 +72,14 @@ export {
   Spare,
   ProductionDashboard,
   AdvancedReport,
-  DocumentManagement
+  DocumentManagement,
+  GreyFabricInward,
+  PreProcessing,
+  Dyeing,
+  Printing,
+  Finishing,
+  CuttingPacking,
+  ProductionLog
 };
 
 // Default export with all models
@@ -97,7 +112,13 @@ export default {
   Spare,
   ProductionDashboard,
   AdvancedReport,
-  DocumentManagement
+  DocumentManagement,
+  GreyFabricInward,
+  PreProcessing,
+  Dyeing,
+  Printing,
+  Finishing,
+  CuttingPacking
 };
 
 // Model registration function

@@ -99,7 +99,18 @@ const ProductionStageSchema = new Schema<IProductionStage>({
   stageName: { type: String, required: true },
   processType: { 
     type: String, 
-    enum: ['printing', 'washing', 'fixing', 'stitching', 'finishing', 'quality_check'] 
+    enum: [
+      'grey_fabric_inward',     // GRN Entry
+      'pre_processing',         // Desizing/Bleaching
+      'dyeing',                 // Dyeing Process
+      'printing',               // Printing Process
+      'washing',                // Washing Process
+      'fixing',                 // Color Fixing
+      'finishing',              // Stenter, Coating
+      'quality_control',        // Pass/Hold/Reject
+      'cutting_packing',        // Labels & Cartons
+      'dispatch_invoice'        // Stock Deduction
+    ] 
   },
   status: {
     type: String,

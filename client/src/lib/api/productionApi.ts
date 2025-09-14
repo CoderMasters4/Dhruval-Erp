@@ -118,6 +118,7 @@ export interface CreateProductionOrderRequest {
 }
 
 export const productionApi = baseApi.injectEndpoints({
+  overrideExisting: true,
   endpoints: (builder) => ({
     // Get all production orders with filtering and pagination
     getProductionOrders: builder.query<
@@ -142,7 +143,7 @@ export const productionApi = baseApi.injectEndpoints({
       }
     >({
       query: (params = {}) => ({
-        url: '/production-orders',
+        url: '/production',
         method: 'GET',
         params,
       }),
@@ -155,7 +156,7 @@ export const productionApi = baseApi.injectEndpoints({
       { companyId?: string }
     >({
       query: (params = {}) => ({
-        url: '/production-orders/stats',
+        url: '/production/stats',
         method: 'GET',
         params,
       }),
@@ -168,7 +169,7 @@ export const productionApi = baseApi.injectEndpoints({
       string
     >({
       query: (orderId) => ({
-        url: `/production-orders/${orderId}`,
+        url: `/production/${orderId}`,
         method: 'GET',
       }),
       providesTags: ['ProductionOrder'],
@@ -180,7 +181,7 @@ export const productionApi = baseApi.injectEndpoints({
       CreateProductionOrderRequest
     >({
       query: (orderData) => ({
-        url: '/production-orders',
+        url: '/production',
         method: 'POST',
         body: orderData,
       }),
@@ -193,7 +194,7 @@ export const productionApi = baseApi.injectEndpoints({
       { orderId: string; orderData: Partial<CreateProductionOrderRequest> }
     >({
       query: ({ orderId, orderData }) => ({
-        url: `/production-orders/${orderId}`,
+        url: `/production/${orderId}`,
         method: 'PUT',
         body: orderData,
       }),
@@ -206,7 +207,7 @@ export const productionApi = baseApi.injectEndpoints({
       string
     >({
       query: (orderId) => ({
-        url: `/production-orders/${orderId}`,
+        url: `/production/${orderId}`,
         method: 'DELETE',
       }),
       invalidatesTags: ['ProductionOrder'],
@@ -218,7 +219,7 @@ export const productionApi = baseApi.injectEndpoints({
       { orderId: string; notes?: string }
     >({
       query: ({ orderId, notes }) => ({
-        url: `/production-orders/${orderId}/start`,
+        url: `/production/${orderId}/start`,
         method: 'POST',
         body: { notes },
       }),
@@ -231,7 +232,7 @@ export const productionApi = baseApi.injectEndpoints({
       { orderId: string; reason?: string }
     >({
       query: ({ orderId, reason }) => ({
-        url: `/production-orders/${orderId}/pause`,
+        url: `/production/${orderId}/pause`,
         method: 'POST',
         body: { reason },
       }),
@@ -244,7 +245,7 @@ export const productionApi = baseApi.injectEndpoints({
       { orderId: string; producedQuantity: number; notes?: string }
     >({
       query: ({ orderId, producedQuantity, notes }) => ({
-        url: `/production-orders/${orderId}/complete`,
+        url: `/production/${orderId}/complete`,
         method: 'POST',
         body: { producedQuantity, notes },
       }),
@@ -263,7 +264,7 @@ export const productionApi = baseApi.injectEndpoints({
       }
     >({
       query: ({ orderId, ...progressData }) => ({
-        url: `/production-orders/${orderId}/progress`,
+        url: `/production/${orderId}/progress`,
         method: 'POST',
         body: progressData,
       }),
@@ -281,7 +282,7 @@ export const productionApi = baseApi.injectEndpoints({
       }
     >({
       query: ({ orderId, ...checkData }) => ({
-        url: `/production-orders/${orderId}/quality-check`,
+        url: `/production/${orderId}/quality-check`,
         method: 'POST',
         body: checkData,
       }),
@@ -308,7 +309,7 @@ export const productionApi = baseApi.injectEndpoints({
       }
     >({
       query: ({ productId, ...params }) => ({
-        url: `/production-orders/product/${productId}`,
+        url: `/production/product/${productId}`,
         method: 'GET',
         params,
       }),

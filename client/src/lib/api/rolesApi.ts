@@ -46,6 +46,7 @@ export interface CreateRoleRequest {
 }
 
 export const rolesApi = baseApi.injectEndpoints({
+  overrideExisting: true,
   endpoints: (builder) => ({
     // Get all roles with filtering and pagination
     getRoles: builder.query<

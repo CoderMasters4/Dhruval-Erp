@@ -122,6 +122,7 @@ export interface CreateTransactionRequest {
 }
 
 export const financialApi = baseApi.injectEndpoints({
+  overrideExisting: true,
   endpoints: (builder) => ({
     // Get all financial transactions with filtering and pagination
     getFinancialTransactions: builder.query<

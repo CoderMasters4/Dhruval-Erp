@@ -200,6 +200,7 @@ export interface ProductionUpdateRequest {
 }
 
 export const productionTrackingApi = baseApi.injectEndpoints({
+  overrideExisting: true,
   endpoints: (builder) => ({
     // Get comprehensive production tracking data
     getProductionTrackingData: builder.query<

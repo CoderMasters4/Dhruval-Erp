@@ -104,6 +104,7 @@ export interface QualityFilters {
 }
 
 export const qualityApi = baseApi.injectEndpoints({
+  overrideExisting: true,
   endpoints: (builder) => ({
     // Get quality checks for a spare
     getQualityChecks: builder.query<

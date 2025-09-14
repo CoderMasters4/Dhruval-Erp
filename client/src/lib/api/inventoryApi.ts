@@ -174,6 +174,7 @@ export interface CreateInventoryItemRequest {
 }
 
 export const inventoryApi = baseApi.injectEndpoints({
+  overrideExisting: true,
   endpoints: (builder) => ({
     // Get all inventory items with filtering and pagination
     getInventoryItems: builder.query<

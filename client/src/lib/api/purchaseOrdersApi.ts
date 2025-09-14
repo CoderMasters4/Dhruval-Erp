@@ -104,6 +104,7 @@ export interface CreatePurchaseOrderRequest {
 }
 
 export const purchaseOrdersApi = baseApi.injectEndpoints({
+  overrideExisting: true,
   endpoints: (builder) => ({
     // Get all purchase orders with filtering and pagination
     getPurchaseOrders: builder.query<

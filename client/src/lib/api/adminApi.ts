@@ -134,7 +134,7 @@ export interface UpdateCompanyRequest {
 }
 
 export const adminApi = baseApi.injectEndpoints({
-  overrideExisting: false,
+  overrideExisting: true,
   endpoints: (builder) => ({
     // Get users with 2FA status
     getUsers2FAStatus: builder.query<AdminUsersResponse, void>({

@@ -4,6 +4,7 @@ import { ISpareSupplier, IPurchaseOrder } from '@/types/models';
 import { BaseService } from '@/services/BaseService';
 import { InventoryService } from './InventoryService';
 import { AppError } from '../utils/errors';
+import { logger } from '@/utils/logger';
 
 export interface PurchaseFilters {
   companyId: string;
@@ -416,7 +417,148 @@ export class PurchaseService extends BaseService<IPurchaseOrder> {
       orderDate: new Date(),
     });
 
-    return await order.save();
+    const savedOrder = await order.save();
+
+    // Automatically create inventory items for PO items
+    try {
+      await this.createInventoryItemsForPO(savedOrder, createdBy);
+      logger.info('Inventory items created for PO', {
+        poId: savedOrder._id,
+        poNumber: purchaseOrderId,
+        itemCount: itemsWithTotals.length
+      });
+    } catch (inventoryError) {
+      // Log error but don't fail PO creation
+      logger.error('Failed to create inventory items for PO', {
+        poId: savedOrder._id,
+        poNumber: purchaseOrderId,
+        error: inventoryError
+      });
+    }
+
+    return savedOrder;
+  }
+
+  /**
+   * Create inventory items for PO items
+   */
+  private async createInventoryItemsForPO(purchaseOrder: any, createdBy: string): Promise<void> {
+    const inventoryService = new InventoryService();
+    
+    for (const item of purchaseOrder.items) {
+      try {
+        // Check if inventory item already exists
+        const existingItem = await inventoryService.findOne({ itemCode: item.itemCode });
+        if (existingItem) {
+          // Update PO reference if item exists
+          await inventoryService.update(existingItem._id.toString(), {
+            'purchaseOrders': {
+              $addToSet: {
+                poId: purchaseOrder._id,
+                poNumber: purchaseOrder.poNumber,
+                orderedQuantity: item.quantity,
+                receivedQuantity: 0,
+                pendingQuantity: item.quantity,
+                unitRate: item.rate
+              }
+            }
+          }, createdBy);
+          continue;
+        }
+
+        // Create new inventory item
+        const inventoryItemData = {
+          itemCode: item.itemCode,
+          companyItemCode: `${purchaseOrder.poNumber}-${item.itemCode}`,
+          itemName: item.itemName,
+          description: item.description || `${item.itemName} from PO ${purchaseOrder.poNumber}`,
+          category: {
+            primary: 'raw_material' as const,
+            secondary: 'fabric',
+            tertiary: item.itemName.toLowerCase()
+          },
+          itemType: 'raw_material',
+          unit: item.unit,
+          companyId: purchaseOrder.companyId,
+          
+          // Stock information (initially 0 - will be updated by GRN)
+          stock: {
+            currentStock: 0,
+            availableStock: 0,
+            reservedStock: 0,
+            inTransitStock: item.quantity, // Expected quantity
+            damagedStock: 0,
+            unit: item.unit,
+            reorderLevel: 0,
+            minStockLevel: 0,
+            maxStockLevel: item.quantity * 2,
+            valuationMethod: 'FIFO' as const,
+            averageCost: item.rate,
+            totalValue: 0
+          },
+          
+          // Pricing information
+          pricing: {
+            costPrice: item.rate,
+            sellingPrice: item.rate * 1.2, // 20% markup
+            mrp: item.rate * 1.3, // 30% markup
+            currency: 'INR'
+          },
+          
+          // Purchase order reference
+          purchaseOrders: [{
+            poId: purchaseOrder._id,
+            poNumber: purchaseOrder.poNumber,
+            orderedQuantity: item.quantity,
+            receivedQuantity: 0,
+            pendingQuantity: item.quantity,
+            unitRate: item.rate,
+            supplierId: purchaseOrder.supplier.supplierId,
+            supplierName: purchaseOrder.supplier.supplierName
+          }],
+          
+          // Tracking information
+          tracking: {
+            createdBy: new Types.ObjectId(createdBy),
+            lastModifiedBy: new Types.ObjectId(createdBy),
+            lastStockUpdate: new Date(),
+            lastMovementDate: new Date(),
+            totalInward: 0,
+            totalOutward: 0,
+            totalAdjustments: 0
+          },
+          
+          // Status
+          status: {
+            isActive: true,
+            isDiscontinued: false,
+            isFastMoving: false,
+            isSlowMoving: false,
+            isObsolete: false,
+            requiresApproval: false
+          },
+          isActive: true
+        };
+
+        await inventoryService.createInventoryItem(inventoryItemData, createdBy);
+        
+        logger.info('Inventory item created for PO item', {
+          poId: purchaseOrder._id,
+          poNumber: purchaseOrder.poNumber,
+          itemCode: item.itemCode,
+          itemName: item.itemName,
+          quantity: item.quantity
+        });
+      } catch (error) {
+        logger.error('Failed to create inventory item for PO item', {
+          poId: purchaseOrder._id,
+          poNumber: purchaseOrder.poNumber,
+          itemCode: item.itemCode,
+          error: error
+        });
+        // Continue with other items even if one fails
+      }
+    }
   }
 
   /**
@@ -741,7 +883,7 @@ export class PurchaseService extends BaseService<IPurchaseOrder> {
   }
 
   /**
-   * Receive purchase order and update inventory
+   * Receive purchase order (NO STOCK UPDATE - Stock will be updated via GRN only)
    */
   async receivePurchaseOrder(
     orderId: string, 
@@ -758,8 +900,6 @@ export class PurchaseService extends BaseService<IPurchaseOrder> {
     companyId: string
   ): Promise<any> {
     try {
-      const inventoryService = new InventoryService();
-      
       // Find the purchase order
       const purchaseOrder = await PurchaseOrder.findOne({
         _id: orderId,
@@ -770,91 +910,36 @@ export class PurchaseService extends BaseService<IPurchaseOrder> {
         throw new AppError('Purchase order not found', 404);
       }
 
-      // Update inventory for each received item
-      for (const receivedItem of receivedItems) {
-        // Check if item exists in inventory
-        let inventoryItem = await inventoryService.findOne({
-          itemName: receivedItem.itemName,
-          companyId: companyId
-        });
-
-        if (!inventoryItem) {
-          // Create new inventory item if it doesn't exist
-          const newItemData = {
-            itemName: receivedItem.itemName,
-            itemCode: `ITEM-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-            companyItemCode: `COMP-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-            companyId: new Types.ObjectId(companyId),
-            category: {
-              primary: 'raw_material' as const
-            },
-            productType: 'saree' as const,
-            stock: {
-              currentStock: receivedItem.quantity,
-              availableStock: receivedItem.quantity,
-              reservedStock: 0,
-              inTransitStock: 0,
-              damagedStock: 0,
-              unit: receivedItem.unit,
-              minStockLevel: 0,
-              reorderLevel: 0,
-              maxStockLevel: receivedItem.quantity * 2,
-              valuationMethod: 'FIFO' as const,
-              averageCost: 0,
-              totalValue: 0
-            },
-            pricing: {
-              costPrice: 0,
-              sellingPrice: 0,
-              mrp: 0,
-              currency: 'INR'
-            },
-            status: {
-              isActive: true,
-              isDiscontinued: false,
-              isFastMoving: false,
-              isSlowMoving: false,
-              isObsolete: false,
-              requiresApproval: false
-            }
-          };
-
-          inventoryItem = await inventoryService.createInventoryItem(newItemData, receivedBy);
-        } else {
-          // Update existing item stock
-          await inventoryService.updateStock(
-            inventoryItem._id.toString(),
-            receivedItem.warehouseId,
-            receivedItem.quantity,
-            'in',
-            `Purchase Order: ${purchaseOrder.poNumber}`,
-            receivedItem.notes || 'Received from purchase order',
-            receivedBy
-          );
-        }
-      }
-
-      // Update purchase order status
+      // Update purchase order status and received quantities
+      // NOTE: NO INVENTORY STOCK UPDATE HERE - Stock will be updated via GRN approval only
       const updatedOrder = await PurchaseOrder.findOneAndUpdate(
         {
           _id: orderId,
           companyId: this.validateObjectId(companyId)
         },
         {
-          status: 'received',
+          status: 'partially_received', // Changed from 'received' to 'partially_received'
           actualDelivery: new Date(),
           receivedBy: receivedBy,
           receivedItems: receivedItems,
-          updatedAt: new Date()
+          lastReceivedDate: new Date(),
+          // Update individual item received quantities
+          $inc: {
+            'items.$[elem].receivedQuantity': receivedItems.reduce((sum, item) => sum + item.quantity, 0)
+          }
         },
-        { new: true }
+        { 
+          new: true,
+          arrayFilters: [{ 'elem.itemId': { $in: receivedItems.map(item => item.itemId) } }]
+        }
       );
 
-      console.log('Purchase order received successfully', {
+      console.log('Purchase order received successfully (NO STOCK UPDATE - Use GRN for stock updates)', {
         orderId,
         receivedItemsCount: receivedItems.length,
         receivedBy,
-        companyId
+        companyId,
+        note: 'Stock will be updated when GRN is approved'
       });
 
       return updatedOrder;

@@ -47,6 +47,10 @@ import v1DashboardRoutes from './v1/dashboard';
 import v1OrdersRoutes from './v1/orders';
 import v1FileAccessRoutes from './v1/file-access';
 import v1CustomerVisitsRoutes from './v1/customer-visits';
+import productionFlowRoutes from './productionFlow';
+import productionStagesRoutes from './productionStages';
+import greyFabricInwardRoutes from './greyFabricInward';
+import preProcessingRoutes from './preProcessing';
 
 // Import new feature routes
 import maintenanceRoutes from './maintenance';
@@ -179,7 +183,7 @@ router.use('/batches', v1BatchesRoutes);
 // Orders and financial
 router.use('/customer-orders', v1CustomerOrdersRoutes);
 router.use('/purchase-orders', v1PurchaseOrdersRoutes); 
-router.use('/purchase', v1PurchaseRoutes);
+
 router.use('/invoices', v1InvoicesRoutes);
 router.use('/quotations', v1QuotationsRoutes);
 router.use('/financial-transactions', v1FinancialTransactionsRoutes);
@@ -202,6 +206,10 @@ router.use('/sales-analytics', v1SalesAnalyticsRoutes);
 router.use('/sales', v1SalesRoutes);
 router.use('/purchase-analytics', v1PurchaseAnalyticsRoutes);
 router.use('/production-tracking', v1ProductionTrackingRoutes);
+router.use('/production-flow', productionFlowRoutes);
+router.use('/production-stages', productionStagesRoutes);
+router.use('/grey-fabric-inward', greyFabricInwardRoutes);
+router.use('/pre-processing', preProcessingRoutes);
 router.use('/security-logs', v1SecurityLogsRoutes);
 router.use('/audit-logs', v1AuditLogsRoutes);
 

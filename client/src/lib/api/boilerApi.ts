@@ -50,6 +50,7 @@ export interface BoilerTrends {
 }
 
 export const boilerApi = baseApi.injectEndpoints({
+  overrideExisting: true,
   endpoints: (builder) => ({
     // Get all boilers
     getBoilers: builder.query<

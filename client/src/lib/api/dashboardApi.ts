@@ -127,6 +127,7 @@ export interface DashboardResponse {
 }
 
 export const dashboardApi = baseApi.injectEndpoints({
+  overrideExisting: true,
   endpoints: (builder) => ({
     getDashboardData: builder.query<DashboardResponse, void>({
       query: () => ({

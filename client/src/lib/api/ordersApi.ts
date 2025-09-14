@@ -60,6 +60,7 @@ export interface CreateOrderRequest {
 }
 
 export const ordersApi = baseApi.injectEndpoints({
+  overrideExisting: true,
   endpoints: (builder) => ({
     // Get all orders with filtering and pagination
     getOrders: builder.query<

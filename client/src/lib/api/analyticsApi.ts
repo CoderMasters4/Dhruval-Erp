@@ -55,6 +55,7 @@ export interface AnalyticsData {
 }
 
 export const analyticsApi = baseApi.injectEndpoints({
+  overrideExisting: true,
   endpoints: (builder) => ({
     // Get analytics dashboard data
     getAnalyticsDashboard: builder.query<

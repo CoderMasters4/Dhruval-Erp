@@ -60,7 +60,11 @@ import {
   Activity,
   RotateCcw,
   PieChart,
-  Plus
+  Plus,
+  Palette,
+  Printer,
+  CheckCircle,
+  Scissors
 } from 'lucide-react'
 import { selectSidebarCollapsed, selectSidebarOpen, toggleSidebar, setSidebarCollapsed } from '@/lib/features/ui/uiSlice'
 import { selectCurrentUser, selectIsSuperAdmin } from '@/lib/features/auth/authSlice'
@@ -295,10 +299,66 @@ const navigationItems: NavigationItem[] = [
   // Production Management
   {
     name: 'Production',
-    href: '/production/enhanced',
+    href: '/production-flow',
     icon: Factory,
     permission: 'view:ProductionOrder',
     children: [
+      {
+        name: 'Production Flow',
+        href: '/production-flow',
+        icon: TrendingUp,
+        permission: 'view:ProductionOrder',
+        roles: ['admin', 'manager', 'production']
+      },
+      {
+        name: 'Grey Fabric Inward',
+        href: '/production/grey-fabric-inward',
+        icon: Package,
+        permission: 'view:ProductionOrder',
+        roles: ['admin', 'manager', 'production']
+      },
+      {
+        name: 'Pre-Processing',
+        href: '/production/pre-processing',
+        icon: Settings,
+        permission: 'view:ProductionOrder',
+        roles: ['admin', 'manager', 'production']
+      },
+      {
+        name: 'Dyeing Process',
+        href: '/production/dyeing',
+        icon: Palette,
+        permission: 'view:ProductionOrder',
+        roles: ['admin', 'manager', 'production']
+      },
+      {
+        name: 'Printing Process',
+        href: '/production/printing',
+        icon: Printer,
+        permission: 'view:ProductionOrder',
+        roles: ['admin', 'manager', 'production']
+      },
+      {
+        name: 'Finishing Process',
+        href: '/production/finishing',
+        icon: Zap,
+        permission: 'view:ProductionOrder',
+        roles: ['admin', 'manager', 'production']
+      },
+      {
+        name: 'Quality Control',
+        href: '/production/quality-control',
+        icon: CheckCircle,
+        permission: 'view:ProductionOrder',
+        roles: ['admin', 'manager', 'production']
+      },
+      {
+        name: 'Cutting & Packing',
+        href: '/production/cutting-packing',
+        icon: Scissors,
+        permission: 'view:ProductionOrder',
+        roles: ['admin', 'manager', 'production']
+      },
       {
         name: 'Enhanced Production',
         href: '/production/enhanced',

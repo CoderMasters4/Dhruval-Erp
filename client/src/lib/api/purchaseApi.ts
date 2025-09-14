@@ -205,6 +205,7 @@ export interface PurchaseAnalytics {
 
 // API Endpoints
 export const purchaseApi = baseApi.injectEndpoints({
+  overrideExisting: true,
   endpoints: (builder) => ({
     // Get Purchase Statistics
     getPurchaseStats: builder.query<

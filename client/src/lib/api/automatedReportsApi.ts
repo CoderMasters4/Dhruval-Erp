@@ -120,6 +120,7 @@ export interface ReportStatusResponse {
 }
 
 export const automatedReportsApi = baseApi.injectEndpoints({
+  overrideExisting: true,
   endpoints: (builder) => ({
     // Get automated reports status
     getAutomatedReportsStatus: builder.query<ReportStatusResponse, void>({

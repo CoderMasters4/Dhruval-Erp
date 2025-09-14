@@ -77,6 +77,7 @@ export interface ReportFilters {
 }
 
 export const reportsApi = baseApi.injectEndpoints({
+  overrideExisting: true,
   endpoints: (builder) => ({
     getUserAnalytics: builder.query<{ success: boolean; data: UserAnalytics }, ReportFilters | void>({
       query: (filters = {}) => ({

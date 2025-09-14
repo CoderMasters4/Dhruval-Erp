@@ -113,6 +113,7 @@ export interface SupplierPurchaseReport {
 }
 
 export const purchaseAnalyticsApi = baseApi.injectEndpoints({
+  overrideExisting: true,
   endpoints: (builder) => ({
     // Get supplier purchase analytics dashboard
     getSupplierPurchaseAnalytics: builder.query<

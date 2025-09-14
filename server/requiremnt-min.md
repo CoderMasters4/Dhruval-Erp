@@ -80,3 +80,41 @@
   - [ ] Hotels booking log
   - [ ] Food expenses
   - [ ] Gifts record
+
+ 
+ # production flow 
+
+┌────────────────────┐
+│ Grey Fabric Inward │
+│   (GRN Entry)      │
+└────────┬───────────┘
+         ↓
+┌────────────────────┐
+│ Pre-Processing     │
+│ (Desizing/Bleach)  │
+└────────┬───────────┘
+         ↓
+┌────────────────────┐
+│ Dyeing / Printing  │
+│  (Batch Process)   │
+└────────┬───────────┘
+         ↓
+┌────────────────────┐
+│ Finishing Process  │
+│ (Stenter, Coating) │
+└────────┬───────────┘
+         ↓
+┌────────────────────┐
+│ Quality Control    │
+│ (Pass/Hold/Reject) │
+└────────┬───────────┘
+         ↓
+┌────────────────────┐
+│ Cutting & Packing  │
+│ (Labels & Cartons) │
+└────────┬───────────┘
+         ↓
+┌────────────────────┐
+│ Dispatch & Invoice │
+│ (Stock Deduction)  │
+└────────────────────┘

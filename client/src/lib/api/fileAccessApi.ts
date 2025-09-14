@@ -11,6 +11,7 @@ export interface FileAccessResponse {
 }
 
 export const fileAccessApi = baseApi.injectEndpoints({
+  overrideExisting: true,
   endpoints: (builder) => ({
     // Generate presigned URL for viewing a file
     generateViewUrl: builder.mutation<

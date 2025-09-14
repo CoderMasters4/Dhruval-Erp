@@ -52,6 +52,7 @@ export interface ElectricityTrends {
 }
 
 export const electricityApi = baseApi.injectEndpoints({
+  overrideExisting: true,
   endpoints: (builder) => ({
     // Get all electrical panels
     getElectricalPanels: builder.query<

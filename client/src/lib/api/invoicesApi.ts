@@ -129,6 +129,7 @@ export interface CreateInvoiceRequest {
 }
 
 export const invoicesApi = baseApi.injectEndpoints({
+  overrideExisting: true,
   endpoints: (builder) => ({
     // Get all invoices with filtering and pagination
     getInvoices: builder.query<

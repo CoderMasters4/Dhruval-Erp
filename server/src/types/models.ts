@@ -891,7 +891,7 @@ export interface IProductionStage {
   processId?: Types.ObjectId;
   stageNumber: number;
   stageName: string;
-  processType?: 'printing' | 'washing' | 'fixing' | 'stitching' | 'finishing' | 'quality_check';
+  processType?: 'grey_fabric_inward' | 'pre_processing' | 'dyeing' | 'printing' | 'washing' | 'fixing' | 'finishing' | 'quality_control' | 'cutting_packing' | 'dispatch_invoice';
   status: 'pending' | 'in_progress' | 'completed' | 'on_hold' | 'rejected' | 'rework';
 
   assignment: {

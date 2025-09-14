@@ -161,6 +161,7 @@ export interface SupplierFilters {
 }
 
 export const suppliersApi = baseApi.injectEndpoints({
+  overrideExisting: true,
   endpoints: (builder) => ({
     // Get suppliers for a spare
     getSuppliersForSpare: builder.query<

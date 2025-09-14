@@ -100,6 +100,7 @@ export interface CompatibilityFilters {
 }
 
 export const compatibilityApi = baseApi.injectEndpoints({
+  overrideExisting: true,
   endpoints: (builder) => ({
     // Get compatibility records for a spare
     getCompatibilityRecords: builder.query<

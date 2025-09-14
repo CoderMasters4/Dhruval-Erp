@@ -100,6 +100,7 @@ export interface CustomerSalesReport {
 }
 
 export const salesAnalyticsApi = baseApi.injectEndpoints({
+  overrideExisting: true,
   endpoints: (builder) => ({
     // Get customer sales analytics dashboard
     getCustomerSalesAnalytics: builder.query<

@@ -108,7 +108,7 @@ export interface DownloadUrlResponse {
 }
 
 export const enhancedDispatchApi = baseApi.injectEndpoints({
-  overrideExisting:true,
+  overrideExisting: true,
   endpoints: (builder) => ({
     getDispatches: builder.query<Dispatch[], { status?: string; priority?: string; companyId?: string; assignedTo?: string; search?: string }>({
       query: (params) => ({

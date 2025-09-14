@@ -66,6 +66,7 @@ export interface DownloadUrlResponse {
 }
 
 export const dispatchApi = baseApi.injectEndpoints({
+  overrideExisting: true,
   endpoints: (builder) => ({
     // Get all dispatches
     getDispatches: builder.query<{ data: DispatchResponse[]; total: number }, any>({

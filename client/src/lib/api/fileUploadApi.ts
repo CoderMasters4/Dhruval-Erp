@@ -26,6 +26,7 @@ export interface FileUploadProgress {
 }
 
 export const fileUploadApi = baseApi.injectEndpoints({
+  overrideExisting: true,
   endpoints: (builder) => ({
     // Get presigned URL for upload
     getUploadUrl: builder.mutation<UploadUrlResponse, FileUploadRequest>({

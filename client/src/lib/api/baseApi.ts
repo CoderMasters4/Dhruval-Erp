@@ -167,9 +167,9 @@ export const baseApi = createApi({
     'StockMovement',
     'Warehouse',
     'WarehouseStats',
-    'Batch',
-    'ProductionOrder',
-    'CustomerOrder',
+      'Batch',
+      'ProductionOrder',
+      'CustomerOrder',
     'PurchaseOrder',
     'PurchaseReport',
     'Order',
@@ -262,10 +262,169 @@ export const baseApi = createApi({
     'Document',
     'EnhancedOrder',
     'EnhancedOrderStats',
-    'SalesDashboard'
+    'SalesDashboard',
+    "ProductionFlow",
+    "GreyFabricInward",
+    "GreyFabricInwardAnalytics",
+    "PreProcessingBatch",
+    "PreProcessingAnalytics"
 
   ],
-  endpoints: () => ({}),
+  endpoints: (builder) => ({
+    // =============================================
+    // PRODUCTION ORDER ENDPOINTS
+    // =============================================
+
+    // Get all production orders
+    getProductionOrders: builder.query<{
+      success: boolean;
+      message: string;
+      data: Array<{
+        _id: string;
+        productionOrderNumber: string;
+        customerName: string;
+        product: {
+          productType: string;
+          design: string;
+          color: string;
+          gsm: number;
+        };
+        orderQuantity: number;
+        completedQuantity: number;
+        status: string;
+        productionStages: Array<{
+          stageId: string;
+          stageNumber: number;
+          stageName: string;
+          processType: string;
+          status: string;
+          timing: {
+            plannedStartTime?: string;
+            actualStartTime?: string;
+            plannedEndTime?: string;
+            actualEndTime?: string;
+            plannedDuration?: number;
+            actualDuration?: number;
+          };
+          progress: number;
+          output: {
+            producedQuantity?: number;
+            defectQuantity?: number;
+            outputImages: string[];
+          };
+          qualityControl: {
+            finalQuality: {
+              qualityGrade?: string;
+              qualityNotes?: string;
+            };
+          };
+          notes?: string;
+        }>;
+        schedule: {
+          plannedStartDate: string;
+          plannedEndDate: string;
+          actualStartDate?: string;
+          actualEndDate?: string;
+        };
+      }>;
+    }, {
+      status?: string;
+      page?: number;
+      limit?: number;
+      search?: string;
+    }>({
+      query: (params) => ({
+        url: '/production-orders',
+        params,
+      }),
+      providesTags: ['ProductionOrder'],
+    }),
+
+    // Get single production order
+    getProductionOrder: builder.query<{
+      success: boolean;
+      message: string;
+      data: any;
+    }, string>({
+      query: (id) => `/production-orders/${id}`,
+      providesTags: (result, error, id) => [
+        { type: 'ProductionOrder', id },
+      ],
+    }),
+
+    // Create production order
+    createProductionOrder: builder.mutation<{
+      success: boolean;
+      message: string;
+      data: any;
+    }, any>({
+      query: (data) => ({
+        url: '/production-orders',
+        method: 'POST',
+        body: data,
+      }),
+      invalidatesTags: ['ProductionOrder'],
+    }),
+
+    // Update production order
+    updateProductionOrder: builder.mutation<{
+      success: boolean;
+      message: string;
+      data: any;
+    }, {
+      id: string;
+      data: any;
+    }>({
+      query: ({ id, data }) => ({
+        url: `/production-orders/${id}`,
+        method: 'PUT',
+        body: data,
+      }),
+      invalidatesTags: ['ProductionOrder'],
+    }),
+
+    // Delete production order
+    deleteProductionOrder: builder.mutation<{
+      success: boolean;
+      message: string;
+    }, string>({
+      query: (id) => ({
+        url: `/production-orders/${id}`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: ['ProductionOrder'],
+    }),
+
+    // Get all companies
+    getCompanies: builder.query<{
+      success: boolean;
+      data: Array<{
+        _id: string;
+        companyName: string;
+        companyCode: string;
+        email?: string;
+        phone?: string;
+        website?: string;
+        address?: {
+          street?: string;
+          city?: string;
+          state?: string;
+          pincode?: string;
+          country?: string;
+        };
+        isActive: boolean;
+      }>;
+    }, void>({
+      query: () => ({
+        url: '/companies',
+      }),
+      providesTags: ['Company'],
+    }),
+  }),
 })
+
+export const {
+  useGetCompaniesQuery,
+} = baseApi;
 
 export default baseApi
