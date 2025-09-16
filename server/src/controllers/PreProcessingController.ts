@@ -16,7 +16,6 @@ export class PreProcessingController {
       const batches = await PreProcessing.find(filter)
         .populate('productionOrderId', 'orderNumber customerName')
         .populate('greyFabricInwardId', 'grnNumber')
-        .populate('machineAssignment.machineId', 'name type')
         .populate('workerAssignment.supervisorId', 'name')
         .sort({ createdAt: -1 })
         .limit(Number(limit) * 1)
@@ -56,7 +55,6 @@ export class PreProcessingController {
       const batch = await PreProcessing.findById(id)
         .populate('productionOrderId', 'orderNumber customerName')
         .populate('greyFabricInwardId', 'grnNumber')
-        .populate('machineAssignment.machineId', 'name type')
         .populate('workerAssignment.supervisorId', 'name')
         .populate('workerAssignment.workers.workerId', 'name');
 
@@ -88,8 +86,12 @@ export class PreProcessingController {
   // Create new pre-processing batch
   static async createPreProcessingBatch(req: Request, res: Response) {
     try {
+      // Clean up empty string ObjectIds and generate batch number
+      const cleanedData = PreProcessingController.cleanBatchData(req.body);
+      
       const batchData = {
-        ...req.body,
+        ...cleanedData,
+        batchNumber: await PreProcessingController.generateBatchNumber(),
         createdBy: req.user?.id,
         createdByName: req.user?.name
       };
@@ -203,10 +205,10 @@ export class PreProcessingController {
         productionData: {
           batchNumber: batch.batchNumber,
           productionOrderNumber: batch.productionOrderNumber,
-          fabricType: batch.inputMaterial?.fabricType,
-          fabricColor: batch.inputMaterial?.color,
-          quantity: batch.inputMaterial?.quantity,
-          unit: batch.inputMaterial?.unit,
+          fabricType: batch.inputMaterials?.[0]?.fabricType || 'Mixed',
+          fabricColor: batch.inputMaterials?.[0]?.color || 'Mixed',
+          quantity: batch.inputMaterials?.reduce((total, material) => total + material.quantity, 0) || 0,
+          unit: batch.inputMaterials?.[0]?.unit || 'meters',
           machineName: batch.machineAssignment?.machineName,
           temperature: batch.processParameters?.temperature?.actual,
           efficiency: batch.machineAssignment?.efficiency
@@ -391,5 +393,132 @@ export class PreProcessingController {
         message: 'Failed to retrieve pre-processing analytics'
       });
     }
+  }
+
+  // Helper method to clean batch data
+  static cleanBatchData(data: any): any {
+    const cleaned = { ...data };
+
+    // Helper function to check if a value is a valid ObjectId
+    const isValidObjectId = (value: any): boolean => {
+      if (!value || value === '') return false;
+      if (typeof value !== 'string') return false;
+      return /^[0-9a-fA-F]{24}$/.test(value);
+    };
+
+    // Remove empty string ObjectIds or invalid ObjectIds
+    if (!isValidObjectId(cleaned.productionOrderId)) {
+      delete cleaned.productionOrderId;
+    }
+    if (!isValidObjectId(cleaned.greyFabricInwardId)) {
+      delete cleaned.greyFabricInwardId;
+    }
+
+    // Clean nested ObjectIds - if invalid, remove the ObjectId field or set to null
+    if (cleaned.machineAssignment?.machineId !== undefined && !isValidObjectId(cleaned.machineAssignment.machineId)) {
+      cleaned.machineAssignment.machineId = null;
+    }
+
+    if (cleaned.workerAssignment?.supervisorId !== undefined && !isValidObjectId(cleaned.workerAssignment.supervisorId)) {
+      cleaned.workerAssignment.supervisorId = null;
+    }
+
+    // Clean quality control ObjectIds
+    if (cleaned.qualityControl?.preProcessCheck?.checkedBy !== undefined && !isValidObjectId(cleaned.qualityControl.preProcessCheck.checkedBy)) {
+      cleaned.qualityControl.preProcessCheck.checkedBy = null;
+    }
+    if (cleaned.qualityControl?.inProcessCheck?.checkedBy !== undefined && !isValidObjectId(cleaned.qualityControl.inProcessCheck.checkedBy)) {
+      cleaned.qualityControl.inProcessCheck.checkedBy = null;
+    }
+    if (cleaned.qualityControl?.postProcessCheck?.checkedBy !== undefined && !isValidObjectId(cleaned.qualityControl.postProcessCheck.checkedBy)) {
+      cleaned.qualityControl.postProcessCheck.checkedBy = null;
+    }
+
+    // Clean output material location ObjectId
+    if (cleaned.outputMaterial?.location?.warehouseId !== undefined && !isValidObjectId(cleaned.outputMaterial.location.warehouseId)) {
+      cleaned.outputMaterial.location.warehouseId = null;
+    }
+
+    // Clean chemical recipe units - convert to valid enum values
+    if (cleaned.chemicalRecipe?.chemicals) {
+      cleaned.chemicalRecipe.chemicals = cleaned.chemicalRecipe.chemicals.map((chemical: any) => {
+        const validUnits = ['kg', 'liters', 'grams', 'ml'];
+        let unit = chemical.unit;
+        
+        // Convert common units to valid enum values
+        if (unit === 'meters' || unit === 'pieces' || unit === 'boxes' || unit === 'units') {
+          unit = 'kg'; // Default to kg for non-liquid items
+        } else if (unit === 'liters' || unit === 'l') {
+          unit = 'liters';
+        } else if (unit === 'grams' || unit === 'g') {
+          unit = 'grams';
+        } else if (unit === 'ml' || unit === 'milliliters') {
+          unit = 'ml';
+        } else if (!validUnits.includes(unit)) {
+          unit = 'kg'; // Default fallback
+        }
+        
+        return {
+          ...chemical,
+          unit: unit
+        };
+      });
+    }
+
+    // Set default values for required fields that might be missing
+    cleaned.status = cleaned.status || 'pending';
+    cleaned.progress = cleaned.progress || 0;
+    
+    // Initialize arrays if they don't exist
+    cleaned.images = cleaned.images || [];
+    cleaned.documents = cleaned.documents || [];
+    cleaned.tags = cleaned.tags || [];
+    cleaned.statusChangeLog = cleaned.statusChangeLog || [];
+
+    // Initialize waste management if not provided
+    if (!cleaned.wasteManagement) {
+      cleaned.wasteManagement = {
+        wasteGenerated: [],
+        totalWasteCost: 0,
+        environmentalCompliance: true
+      };
+    }
+
+    // Initialize costs if not provided
+    if (!cleaned.costs) {
+      cleaned.costs = {
+        chemicalCost: 0,
+        laborCost: 0,
+        machineCost: 0,
+        utilityCost: 0,
+        wasteDisposalCost: 0,
+        totalCost: 0,
+        costPerUnit: 0
+      };
+    }
+
+    return cleaned;
+  }
+
+  // Helper method to generate batch number
+  static async generateBatchNumber(): Promise<string> {
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const day = String(today.getDate()).padStart(2, '0');
+    
+    // Count existing batches for today
+    const startOfDay = new Date(year, today.getMonth(), today.getDate());
+    const endOfDay = new Date(year, today.getMonth(), today.getDate() + 1);
+    
+    const count = await PreProcessing.countDocuments({
+      createdAt: {
+        $gte: startOfDay,
+        $lt: endOfDay
+      }
+    });
+    
+    const sequence = String(count + 1).padStart(3, '0');
+    return `PP-${year}${month}${day}-${sequence}`;
   }
 }

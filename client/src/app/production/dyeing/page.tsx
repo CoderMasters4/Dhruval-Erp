@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/badge';
@@ -8,315 +9,343 @@ import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { 
-  Palette, 
+  Settings, 
   Play, 
   Pause, 
   CheckCircle, 
   Clock, 
   AlertCircle,
-  Eye,
-  Settings,
   BarChart3,
   Factory,
   Package,
-  Truck
+  Droplets,
+  RefreshCw,
+  Activity,
+  Plus,
+  Eye,
+  ExternalLink,
+  Zap
 } from 'lucide-react';
+import { toast } from 'react-hot-toast';
 
 export default function DyeingPage() {
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState('overview');
 
-  // Mock data - replace with actual API calls
-  const dyeingProcesses = [
+  // Mock data for demonstration
+  const batches = [
     {
-      id: '1',
-      batchNumber: 'DYE-001',
-      productionOrderNumber: 'PO-2024-001',
-      customerName: 'ABC Textiles',
-      dyeingType: 'reactive',
-      status: 'in_progress',
-      progress: 65,
-      startTime: '2024-01-15T09:00:00Z',
-      expectedEndTime: '2024-01-15T18:00:00Z',
-      temperature: { planned: 60, actual: 58 },
-      efficiency: 85
+      _id: 'dye-001',
+      batchNumber: 'DY-20250916-001',
+      processName: 'Cotton Reactive Dyeing',
+      status: 'pending',
+      progress: 0,
+      processType: 'dyeing',
+      createdAt: new Date().toISOString()
     },
     {
-      id: '2',
-      batchNumber: 'DYE-002',
-      productionOrderNumber: 'PO-2024-002',
-      customerName: 'XYZ Fabrics',
-      dyeingType: 'disperse',
+      _id: 'dye-002',
+      batchNumber: 'DY-20250916-002',
+      processName: 'Polyester Disperse Dyeing',
+      status: 'in_progress',
+      progress: 45,
+      processType: 'dyeing',
+      createdAt: new Date().toISOString()
+    },
+    {
+      _id: 'dye-003',
+      batchNumber: 'DY-20250916-003',
+      processName: 'Cotton Vat Dyeing',
       status: 'completed',
       progress: 100,
-      startTime: '2024-01-14T08:00:00Z',
-      endTime: '2024-01-14T16:30:00Z',
-      temperature: { planned: 130, actual: 128 },
-      efficiency: 92
+      processType: 'dyeing',
+      createdAt: new Date().toISOString()
     }
   ];
 
+  const statusOptions = [
+    { value: 'pending', label: 'Pending', color: 'bg-yellow-100 text-yellow-800' },
+    { value: 'in_progress', label: 'In Progress', color: 'bg-blue-100 text-blue-800' },
+    { value: 'completed', label: 'Completed', color: 'bg-green-100 text-green-800' },
+    { value: 'on_hold', label: 'On Hold', color: 'bg-orange-100 text-orange-800' },
+    { value: 'cancelled', label: 'Cancelled', color: 'bg-red-100 text-red-800' },
+    { value: 'quality_hold', label: 'Quality Hold', color: 'bg-purple-100 text-purple-800' }
+  ];
+
   const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'completed': return 'bg-green-100 text-green-800';
-      case 'in_progress': return 'bg-blue-100 text-blue-800';
-      case 'pending': return 'bg-gray-100 text-gray-800';
-      case 'on_hold': return 'bg-yellow-100 text-yellow-800';
-      case 'rejected': return 'bg-red-100 text-red-800';
+    return statusOptions.find(s => s.value === status)?.color || 'bg-gray-100 text-gray-800';
+  };
+
+  const getStatusText = (status: string) => {
+    return statusOptions.find(s => s.value === status)?.label || status;
+  };
+
+  const getProcessTypeColor = (type: string) => {
+    switch (type) {
+      case 'dyeing': return 'bg-purple-100 text-purple-800';
       default: return 'bg-gray-100 text-gray-800';
     }
   };
 
-  const getStatusText = (status: string) => {
-    switch (status) {
-      case 'completed': return 'Completed';
-      case 'in_progress': return 'In Progress';
-      case 'pending': return 'Pending';
-      case 'on_hold': return 'On Hold';
-      case 'rejected': return 'Rejected';
-      default: return 'Unknown';
-    }
+  const handleViewDetails = (batch: any) => {
+    router.push(`/production/dyeing/${batch._id}`);
   };
 
   return (
     <AppLayout>
       <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Dyeing Process</h1>
-          <p className="text-gray-600">Manage and monitor dyeing operations</p>
-        </div>
-        <Button className="flex items-center gap-2">
-          <Palette className="h-4 w-4" />
-          New Dyeing Process
-        </Button>
-      </div>
-
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center">
-              <div className="p-2 bg-blue-100 rounded-lg">
-                <Factory className="h-6 w-6 text-blue-600" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Total Processes</p>
-                <p className="text-2xl font-bold text-gray-900">24</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center">
-              <div className="p-2 bg-green-100 rounded-lg">
-                <CheckCircle className="h-6 w-6 text-green-600" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Completed</p>
-                <p className="text-2xl font-bold text-gray-900">18</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center">
-              <div className="p-2 bg-yellow-100 rounded-lg">
-                <Clock className="h-6 w-6 text-yellow-600" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">In Progress</p>
-                <p className="text-2xl font-bold text-gray-900">4</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center">
-              <div className="p-2 bg-purple-100 rounded-lg">
-                <BarChart3 className="h-6 w-6 text-purple-600" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Avg Efficiency</p>
-                <p className="text-2xl font-bold text-gray-900">88%</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Main Content */}
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="processes">Processes</TabsTrigger>
-          <TabsTrigger value="analytics">Analytics</TabsTrigger>
-          <TabsTrigger value="settings">Settings</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="overview" className="space-y-6">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Recent Processes */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Recent Dyeing Processes</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {dyeingProcesses.map((process) => (
-                    <div key={process.id} className="flex items-center justify-between p-4 border rounded-lg">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-2">
-                          <h3 className="font-semibold">{process.batchNumber}</h3>
-                          <Badge className={getStatusColor(process.status)}>
-                            {getStatusText(process.status)}
-                          </Badge>
-                        </div>
-                        <p className="text-sm text-gray-600">{process.productionOrderNumber} - {process.customerName}</p>
-                        <p className="text-sm text-gray-500">Type: {process.dyeingType}</p>
-                        <div className="mt-2">
-                          <div className="flex items-center justify-between text-sm mb-1">
-                            <span>Progress</span>
-                            <span>{process.progress}%</span>
-                          </div>
-                          <Progress value={process.progress} className="h-2" />
-                        </div>
-                      </div>
-                      <div className="flex gap-2">
-                        <Button variant="outline" size="sm">
-                          <Eye className="h-4 w-4" />
-                        </Button>
-                        <Button variant="outline" size="sm">
-                          <Settings className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Process Status */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Process Status</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium">Active Processes</span>
-                    <span className="text-2xl font-bold text-blue-600">4</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium">Completed Today</span>
-                    <span className="text-2xl font-bold text-green-600">3</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium">Average Cycle Time</span>
-                    <span className="text-2xl font-bold text-purple-600">8.5h</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium">Quality Pass Rate</span>
-                    <span className="text-2xl font-bold text-green-600">94%</span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">Dyeing Process</h1>
+            <p className="text-gray-600">Manage dyeing batches and processes</p>
           </div>
-        </TabsContent>
+          <Button
+            onClick={() => toast.success('Create new dyeing batch')}
+            className="flex items-center gap-2"
+          >
+            <Plus className="h-4 w-4" />
+            Create New Batch
+          </Button>
+        </div>
 
-        <TabsContent value="processes">
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
           <Card>
-            <CardHeader>
-              <CardTitle>All Dyeing Processes</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {dyeingProcesses.map((process) => (
-                  <div key={process.id} className="border rounded-lg p-6">
-                    <div className="flex items-center justify-between mb-4">
-                      <div>
-                        <h3 className="text-lg font-semibold">{process.batchNumber}</h3>
-                        <p className="text-gray-600">{process.productionOrderNumber} - {process.customerName}</p>
-                      </div>
-                      <Badge className={getStatusColor(process.status)}>
-                        {getStatusText(process.status)}
-                      </Badge>
-                    </div>
-                    
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                      <div>
-                        <p className="text-sm text-gray-500">Dyeing Type</p>
-                        <p className="font-medium">{process.dyeingType}</p>
-                      </div>
-                      <div>
-                        <p className="text-sm text-gray-500">Temperature</p>
-                        <p className="font-medium">{process.temperature.actual}°C / {process.temperature.planned}°C</p>
-                      </div>
-                      <div>
-                        <p className="text-sm text-gray-500">Efficiency</p>
-                        <p className="font-medium">{process.efficiency}%</p>
-                      </div>
-                    </div>
+            <CardContent className="pt-6">
+              <div className="flex items-center">
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-gray-600">Total Batches</p>
+                  <p className="text-2xl font-bold text-gray-900">{batches.length}</p>
+                </div>
+                <div className="p-3 bg-blue-100 rounded-full">
+                  <Droplets className="h-6 w-6 text-blue-600" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
 
-                    <div className="flex items-center justify-between">
-                      <div className="flex-1 mr-4">
-                        <div className="flex items-center justify-between text-sm mb-1">
-                          <span>Progress</span>
-                          <span>{process.progress}%</span>
+          <Card>
+            <CardContent className="pt-6">
+              <div className="flex items-center">
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-gray-600">In Progress</p>
+                  <p className="text-2xl font-bold text-blue-600">
+                    {batches.filter(b => b.status === 'in_progress').length}
+                  </p>
+                </div>
+                <div className="p-3 bg-blue-100 rounded-full">
+                  <Play className="h-6 w-6 text-blue-600" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="pt-6">
+              <div className="flex items-center">
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-gray-600">Completed</p>
+                  <p className="text-2xl font-bold text-green-600">
+                    {batches.filter(b => b.status === 'completed').length}
+                  </p>
+                </div>
+                <div className="p-3 bg-green-100 rounded-full">
+                  <CheckCircle className="h-6 w-6 text-green-600" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="pt-6">
+              <div className="flex items-center">
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-gray-600">On Hold</p>
+                  <p className="text-2xl font-bold text-orange-600">
+                    {batches.filter(b => b.status === 'on_hold').length}
+                  </p>
+                </div>
+                <div className="p-3 bg-orange-100 rounded-full">
+                  <Pause className="h-6 w-6 text-orange-600" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Main Content Tabs */}
+        <Tabs value={activeTab} onValueChange={setActiveTab}>
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="overview">Overview</TabsTrigger>
+            <TabsTrigger value="batches">Batches</TabsTrigger>
+            <TabsTrigger value="analytics">Analytics</TabsTrigger>
+          </TabsList>
+
+          {/* Overview Tab */}
+          <TabsContent value="overview" className="space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Recent Activity */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Activity className="h-5 w-5" />
+                    Recent Activity
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {batches.slice(0, 3).map((batch) => (
+                      <div key={batch._id} className="flex items-center gap-3 p-3 border rounded-lg">
+                        <div className="p-2 bg-purple-100 rounded-full">
+                          <Zap className="h-4 w-4 text-purple-600" />
                         </div>
-                        <Progress value={process.progress} className="h-2" />
+                        <div className="flex-1">
+                          <p className="font-medium text-sm">{batch.batchNumber}</p>
+                          <p className="text-xs text-gray-500">{batch.processName}</p>
+                        </div>
+                        <Badge className={getStatusColor(batch.status)}>
+                          {getStatusText(batch.status)}
+                        </Badge>
                       </div>
-                      <div className="flex gap-2">
-                        <Button variant="outline" size="sm">
-                          <Eye className="h-4 w-4" />
-                        </Button>
-                        <Button variant="outline" size="sm">
-                          <Settings className="h-4 w-4" />
-                        </Button>
-                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Process Overview */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <BarChart3 className="h-5 w-5" />
+                    Process Overview
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-gray-600">Pending Batches</span>
+                      <span className="font-bold text-yellow-600">
+                        {batches.filter(b => b.status === 'pending').length}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-gray-600">Active Batches</span>
+                      <span className="font-bold text-blue-600">
+                        {batches.filter(b => b.status === 'in_progress').length}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-gray-600">Completed Today</span>
+                      <span className="font-bold text-green-600">
+                        {batches.filter(b => b.status === 'completed').length}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-gray-600">Quality Issues</span>
+                      <span className="font-bold text-red-600">
+                        {batches.filter(b => b.status === 'quality_hold').length}
+                      </span>
                     </div>
                   </div>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+
+          {/* Batches Tab */}
+          <TabsContent value="batches" className="space-y-6">
+            <div className="flex items-center justify-between">
+              <h2 className="text-xl font-semibold">Dyeing Batches</h2>
+              <Button
+                onClick={() => toast.success('Create new batch')}
+                className="flex items-center gap-2"
+              >
+                <Plus className="h-4 w-4" />
+                Create Batch
+              </Button>
+            </div>
+
+            {batches.length > 0 ? (
+              <div className="space-y-4">
+                {batches.map((batch) => (
+                  <Card key={batch._id}>
+                    <CardContent className="pt-6">
+                      <div className="flex items-center justify-between">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-2">
+                            <h3 className="font-semibold">{batch.batchNumber}</h3>
+                            <Badge className={getStatusColor(batch.status)}>
+                              {getStatusText(batch.status)}
+                            </Badge>
+                            <Badge className={getProcessTypeColor(batch.processType)}>
+                              {batch.processType}
+                            </Badge>
+                          </div>
+                          <p className="text-gray-600 mb-2">{batch.processName}</p>
+                          <div className="flex items-center justify-between text-sm text-gray-500">
+                            <span>Created: {new Date(batch.createdAt).toLocaleDateString()}</span>
+                            <span>Progress: {batch.progress}%</span>
+                          </div>
+                          <div className="mt-2">
+                            <Progress value={batch.progress} className="h-2" />
+                          </div>
+                        </div>
+                        <div className="flex gap-2 ml-4">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleViewDetails(batch)}
+                            className="flex items-center gap-1"
+                          >
+                            <ExternalLink className="h-3 w-3" />
+                            View Details
+                          </Button>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
                 ))}
               </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
+            ) : (
+              <Card>
+                <CardContent className="pt-6">
+                  <div className="text-center py-8">
+                    <Droplets className="h-12 w-12 mx-auto text-gray-400 mb-4" />
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">No Dyeing Batches</h3>
+                    <p className="text-gray-500 mb-4">Get started by creating your first dyeing batch</p>
+                    <Button
+                      onClick={() => toast.success('Create new batch')}
+                      className="flex items-center gap-2"
+                    >
+                      <Plus className="h-4 w-4" />
+                      Create First Batch
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+          </TabsContent>
 
-        <TabsContent value="analytics">
-          <Card>
-            <CardHeader>
-              <CardTitle>Dyeing Analytics</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-center py-8">
-                <BarChart3 className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-500">Analytics charts will be implemented here</p>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="settings">
-          <Card>
-            <CardHeader>
-              <CardTitle>Dyeing Settings</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-center py-8">
-                <Settings className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-500">Settings configuration will be implemented here</p>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+          {/* Analytics Tab */}
+          <TabsContent value="analytics" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <BarChart3 className="h-5 w-5" />
+                  Dyeing Analytics
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-center py-8">
+                  <BarChart3 className="h-12 w-12 mx-auto text-gray-400 mb-4" />
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">Analytics Coming Soon</h3>
+                  <p className="text-gray-500">Detailed analytics and reports will be available here</p>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
       </div>
     </AppLayout>
   );

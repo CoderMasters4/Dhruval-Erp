@@ -61,7 +61,7 @@ const validateBatchCreation = [
   body('processType').isIn(['desizing', 'bleaching', 'scouring', 'mercerizing', 'combined'])
     .withMessage('Invalid process type'),
   body('processName').notEmpty().withMessage('Process name is required'),
-  body('inputMaterial').isObject().withMessage('Input material is required'),
+  body('inputMaterials').isArray().withMessage('Input materials array is required'),
   body('chemicalRecipe').isObject().withMessage('Chemical recipe is required'),
   body('processParameters').isObject().withMessage('Process parameters are required'),
   body('machineAssignment').isObject().withMessage('Machine assignment is required'),

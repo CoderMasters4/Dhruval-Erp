@@ -1,0 +1,211 @@
+"userId": "68aed39044f2955162f473eb",
+  "username": "superadmin",
+  "companyId": "68aed30c8d1ce6852fdc5e07",
+  "role": "super_admin",
+  "ip": "::1",
+  "userAgent": "Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Mobile Safari/537.36"
+}
+2025-09-15 09:02:36:236 error: Error creating pre-processing batch: PreProcessing validation failed: workerAssignment.supervisorId: Cast to ObjectId failed for value "" (type string) at path "workerAssignment.supervisorId" because of "BSONError", qualityControl.preProcessCheck.checkedBy: Cast to ObjectId failed for value "" (type string) at path "qualityControl.preProcessCheck.checkedBy" because of "BSONError", qualityControl.inProcessCheck.checkedBy: Cast to ObjectId failed for value "" (type string) at path "qualityControl.inProcessCheck.checkedBy" because of "BSONError", qualityControl.postProcessCheck.checkedBy: Cast to ObjectId failed for value "" (type string) at path "qualityControl.postProcessCheck.checkedBy" because of "BSONError", outputMaterial.location.warehouseId: Cast to ObjectId failed for value "" (type string) at path "outputMaterial.location.warehouseId" because of "BSONError" 
+ValidationError: PreProcessing validation failed: workerAssignment.supervisorId: Cast to ObjectId failed for value "" (type string) at path "workerAssignment.supervisorId" because of "BSONError", qualityControl.preProcessCheck.checkedBy: Cast to ObjectId failed for value "" (type string) at path "qualityControl.preProcessCheck.checkedBy" because of "BSONError", qualityControl.inProcessCheck.checkedBy: Cast to ObjectId failed for value "" (type string) at path "qualityControl.inProcessCheck.checkedBy" because of "BSONError", qualityControl.postProcessCheck.checkedBy: Cast to ObjectId failed for value "" (type string) at path "qualityControl.postProcessCheck.checkedBy" because of "BSONError", outputMaterial.location.warehouseId: Cast to ObjectId failed for value "" (type string) at path "outputMaterial.location.warehouseId" because of "BSONError"
+    at model.Document.invalidate (/Users/rim/Documents/Dhruval-Erp/server/node_modules/.pnpm/mongoose@8.16.4/node_modules/mongoose/lib/document.js:3354:32)
+    at model.$set (/Users/rim/Documents/Dhruval-Erp/server/node_modules/.pnpm/mongoose@8.16.4/node_modules/mongoose/lib/document.js:1480:12)
+    at model.$set (/Users/rim/Documents/Dhruval-Erp/server/node_modules/.pnpm/mongoose@8.16.4/node_modules/mongoose/lib/document.js:1227:14)
+    at model.$set (/Users/rim/Documents/Dhruval-Erp/server/node_modules/.pnpm/mongoose@8.16.4/node_modules/mongoose/lib/document.js:1117:14)
+    at model.Document (/Users/rim/Documents/Dhruval-Erp/server/node_modules/.pnpm/mongoose@8.16.4/node_modules/mongoose/lib/document.js:178:12)
+    at model.Model (/Users/rim/Documents/Dhruval-Erp/server/node_modules/.pnpm/mongoose@8.16.4/node_modules/mongoose/lib/model.js:127:12)
+    at new model (/Users/rim/Documents/Dhruval-Erp/server/node_modules/.pnpm/mongoose@8.16.4/node_modules/mongoose/lib/model.js:4837:15)
+    at createPreProcessingBatch (/Users/rim/Documents/Dhruval-Erp/server/src/controllers/PreProcessingController.ts:99:21)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5) 
+{
+  "errors": {
+    "workerAssignment.supervisorId": {
+      "stringValue": "\"\"",
+      "valueType": "string",
+      "kind": "ObjectId",
+      "value": "",
+      "path": "workerAssignment.supervisorId",
+      "reason": {},
+      "name": "CastError",
+      "message": "Cast to ObjectId failed for value \"\" (type string) at path \"workerAssignment.supervisorId\" because of \"BSONError\""
+    },
+    "qualityControl.preProcessCheck.checkedBy": {
+      "stringValue": "\"\"",
+      "valueType": "string",
+      "kind": "ObjectId",
+      "value": "",
+      "path": "qualityControl.preProcessCheck.checkedBy",
+      "reason": {},
+      "name": "CastError",
+      "message": "Cast to ObjectId failed for value \"\" (type string) at path \"qualityControl.preProcessCheck.checkedBy\" because of \"BSONError\""
+    },
+    "qualityControl.inProcessCheck.checkedBy": {
+      "stringValue": "\"\"",
+      "valueType": "string",
+      "kind": "ObjectId",
+      "value": "",
+      "path": "qualityControl.inProcessCheck.checkedBy",
+      "reason": {},
+      "name": "CastError",
+      "message": "Cast to ObjectId failed for value \"\" (type string) at path \"qualityControl.inProcessCheck.checkedBy\" because of \"BSONError\""
+    },
+    "qualityControl.postProcessCheck.checkedBy": {
+      "stringValue": "\"\"",
+      "valueType": "string",
+      "kind": "ObjectId",
+      "value": "",
+      "path": "qualityControl.postProcessCheck.checkedBy",
+      "reason": {},
+      "name": "CastError",
+      "message": "Cast to ObjectId failed for value \"\" (type string) at path \"qualityControl.postProcessCheck.checkedBy\" because of \"BSONError\""
+    },
+    "outputMaterial.location.warehouseId": {
+      "stringValue": "\"\"",
+      "valueType": "string",
+      "kind": "ObjectId",
+      "value": "",
+      "path": "outputMaterial.location.warehouseId",
+      "reason": {},
+      "name": "CastError",
+      "message": "Cast to ObjectId failed for value \"\" (type string) at path \"outputMaterial.location.warehouseId\" because of \"BSONError\""
+    }
+  },
+  "_message": "PreProcessing validation failed"
+}
+2025-09-15 09:02:36:236 info: Outgoing response  
+{
+  "requestId": "req_1757907155632_pl97jwmk5",
+  "method": "POST",
+  "path": "/",
+  "statusCode": 500,
+  "duration": 703
+}
+Request received: {
+  method: 'GET',
+  path: '/api/v1/pre-processing',
+  cookies: {
+    accessToken: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2OGFlZDM5MDQ0ZjI5NTUxNjJmNDczZWIiLCJ1c2VybmFtZSI6InN1cGVyYWRtaW4iLCJlbWFpbCI6InN1cGVyYWRtaW5AdGVzdGNvbXBhbnkuY29tIiwiaXNTdXBlckFkbWluIjp0cnVlLCJjb21wYW55SWQiOiI2OGFlZDMwYzhkMWNlNjg1MmZkYzVlMDciLCJyb2xlIjoic3VwZXJfYWRtaW4iLCJpYXQiOjE3NTc4MTk5OTgsImV4cCI6MTc1OTExNTk5OCwiYXVkIjoiZmFjdG9yeS1lcnAtdXNlcnMiLCJpc3MiOiJmYWN0b3J5LWVycCJ9.QWF3P_Ih6q7KnrJePqH7AYnp2GeHkw5qnyn67OUE8bk',
+    refreshToken: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2OGFlZDM5MDQ0ZjI5NTUxNjJmNDczZWIiLCJ0b2tlblZlcnNpb24iOjEsImlhdCI6MTc1NzgxOTk5OCwiZXhwIjoxNzYwNDExOTk4LCJhdWQiOiJmYWN0b3J5LWVycC11c2VycyIsImlzcyI6ImZhY3RvcnktZXJwIn0.ZLxySg7Ah_bYnrGLYRoJC3K0mt7T6KPwMh4-H9om0bs',
+    __next_hmr_refresh_hash__: '67'
+  },
+  hasCookies: true,
+  cookieCount: 3,
+  headers: {
+    'user-agent': 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Mobile Safari/537.36',
+    origin: 'http://localhost:3000',
+    referer: 'http://localhost:3000/',
+    'content-type': 'application/json',
+    authorization: 'present'
+  },
+  body: []
+}
+CORS: Allowing request from origin: http://localhost:3000
+2025-09-15 09:02:36:236 info: Incoming request  
+{
+  "requestId": "req_1757907156347_x2pxlnm1d",
+  "method": "GET",
+  "path": "/api/v1/pre-processing",
+  "ip": "::1",
+  "userAgent": "Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Mobile Safari/537.36",
+  "contentType": "application/json",
+  "referer": "http://localhost:3000/",
+  "companyId": "68aed30c8d1ce6852fdc5e07"
+}
+Authentication middleware: Request received: {
+  path: '/pre-processing',
+  method: 'GET',
+  hasAuthHeader: true,
+  authHeaderValue: 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2OGFlZDM5MDQ0ZjI5NTUxNjJmNDczZWIiLCJ1c2VybmFtZSI6InN1cGVyYWRtaW4iLCJlbWFpbCI6InN1cGVyYWRtaW5AdGVzdGNvbXBhbnkuY29tIiwiaXNTdXBlckFkbWluIjp0cnVlLCJjb21wYW55SWQiOiI2OGFlZDMwYzhkMWNlNjg1MmZkYzVlMDciLCJyb2xlIjoic3VwZXJfYWRtaW4iLCJpYXQiOjE3NTc4MTk5OTgsImV4cCI6MTc1OTExNTk5OCwiYXVkIjoiZmFjdG9yeS1lcnAtdXNlcnMiLCJpc3MiOiJmYWN0b3J5LWVycCJ9.QWF3P_Ih6q7KnrJePqH7AYnp2GeHkw5qnyn67OUE8bk',
+  hasCookies: true,
+  cookieKeys: [ 'accessToken', 'refreshToken', '__next_hmr_refresh_hash__' ],
+  userAgent: 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Mobile Safari/537.36',
+  origin: 'http://localhost:3000'
+}
+Authentication middleware: Token found in Authorization header, length: 425
+Authentication middleware: Token found, length: 425
+Authentication middleware: Token verified successfully for user: 68aed39044f2955162f473eb
+User found: superadmin isSuperAdmin: true
+Authentication middleware: User attached to request: {
+  userId: '68aed39044f2955162f473eb',
+  companyId: '68aed30c8d1ce6852fdc5e07',
+  username: 'superadmin',
+  isSuperAdmin: true
+}
+2025-09-15 09:02:36:236 info: Company access validation  
+{
+  "userId": "68aed39044f2955162f473eb",
+  "username": "superadmin",
+  "isSuperAdmin": true,
+  "targetCompanyId": "68aed30c8d1ce6852fdc5e07",
+  "userCompanyAccess": 3
+}
+2025-09-15 09:02:36:236 info: Super admin company access granted  
+{
+  "userId": "68aed39044f2955162f473eb",
+  "companyId": "68aed30c8d1ce6852fdc5e07",
+  "companyName": "Dhruval Exim Pvt. Ltd."
+}
+2025-09-15 09:02:36:236 info: User authenticated  
+{
+  "userId": "68aed39044f2955162f473eb",
+  "username": "superadmin",
+  "companyId": "68aed30c8d1ce6852fdc5e07",
+  "role": "super_admin",
+  "ip": "::1",
+  "userAgent": "Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Mobile Safari/537.36"
+}
+Authentication middleware: Request received: {
+  path: '/',
+  method: 'GET',
+  hasAuthHeader: true,
+  authHeaderValue: 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2OGFlZDM5MDQ0ZjI5NTUxNjJmNDczZWIiLCJ1c2VybmFtZSI6InN1cGVyYWRtaW4iLCJlbWFpbCI6InN1cGVyYWRtaW5AdGVzdGNvbXBhbnkuY29tIiwiaXNTdXBlckFkbWluIjp0cnVlLCJjb21wYW55SWQiOiI2OGFlZDMwYzhkMWNlNjg1MmZkYzVlMDciLCJyb2xlIjoic3VwZXJfYWRtaW4iLCJpYXQiOjE3NTc4MTk5OTgsImV4cCI6MTc1OTExNTk5OCwiYXVkIjoiZmFjdG9yeS1lcnAtdXNlcnMiLCJpc3MiOiJmYWN0b3J5LWVycCJ9.QWF3P_Ih6q7KnrJePqH7AYnp2GeHkw5qnyn67OUE8bk',
+  hasCookies: true,
+  cookieKeys: [ 'accessToken', 'refreshToken', '__next_hmr_refresh_hash__' ],
+  userAgent: 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Mobile Safari/537.36',
+  origin: 'http://localhost:3000'
+}
+Authentication middleware: Token found in Authorization header, length: 425
+Authentication middleware: Token found, length: 425
+Authentication middleware: Token verified successfully for user: 68aed39044f2955162f473eb
+User found: superadmin isSuperAdmin: true
+Authentication middleware: User attached to request: {
+  userId: '68aed39044f2955162f473eb',
+  companyId: '68aed30c8d1ce6852fdc5e07',
+  username: 'superadmin',
+  isSuperAdmin: true
+}
+2025-09-15 09:02:36:236 info: Company access validation  
+{
+  "userId": "68aed39044f2955162f473eb",
+  "username": "superadmin",
+  "isSuperAdmin": true,
+  "targetCompanyId": "68aed30c8d1ce6852fdc5e07",
+  "userCompanyAccess": 3
+}
+2025-09-15 09:02:36:236 info: Super admin company access granted  
+{
+  "userId": "68aed39044f2955162f473eb",
+  "companyId": "68aed30c8d1ce6852fdc5e07",
+  "companyName": "Dhruval Exim Pvt. Ltd."
+}
+2025-09-15 09:02:36:236 info: User authenticated  
+{
+  "userId": "68aed39044f2955162f473eb",
+  "username": "superadmin",
+  "companyId": "68aed30c8d1ce6852fdc5e07",
+  "role": "super_admin",
+  "ip": "::1",
+  "userAgent": "Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Mobile Safari/537.36"
+}
+2025-09-15 09:02:37:237 info: Pre-processing batches retrieved successfully  
+{
+  "count": 1,
+  "filter": {}
+}
+2025-09-15 09:02:37:237 info: Outgoing response  
+{
+  "requestId": "req_1757907156347_x2pxlnm1d",
+  "method": "GET",
+  "path": "/",
+  "statusCode": 200,
+  "duration": 688
+}

@@ -13,9 +13,8 @@ export interface IPreProcessing extends AuditableDocument {
   processName: string;
   processDescription?: string;
   
-  // Input Material
-  inputMaterial: {
-    fabricId: mongoose.Types.ObjectId;
+  // Input Materials (Multiple fabrics can be processed together)
+  inputMaterials: Array<{
     fabricType: string;
     fabricGrade: string;
     gsm: number;
@@ -24,7 +23,8 @@ export interface IPreProcessing extends AuditableDocument {
     quantity: number;
     unit: 'meters' | 'yards' | 'pieces';
     weight: number;
-  };
+    inventoryItemId?: mongoose.Types.ObjectId; // Reference to inventory item
+  }>;
   
   // Chemical Recipe
   chemicalRecipe: {
@@ -75,11 +75,11 @@ export interface IPreProcessing extends AuditableDocument {
   
   // Machine Assignment
   machineAssignment: {
-    machineId: mongoose.Types.ObjectId;
-    machineName: string;
-    machineType: string;
-    capacity: number;
-    efficiency: number;
+    machineId?: string; // Changed from ObjectId to string since no Machine model exists
+    machineName?: string;
+    machineType?: string;
+    capacity?: number;
+    efficiency?: number;
   };
   
   // Worker Assignment
@@ -91,8 +91,8 @@ export interface IPreProcessing extends AuditableDocument {
       shift: 'morning' | 'evening' | 'night';
       hoursWorked: number;
     }>;
-    supervisorId: mongoose.Types.ObjectId;
-    supervisorName: string;
+    supervisorId?: mongoose.Types.ObjectId;
+    supervisorName?: string;
   };
   
   // Process Timing
@@ -115,8 +115,8 @@ export interface IPreProcessing extends AuditableDocument {
       fabricCondition: 'good' | 'fair' | 'poor';
       defects: string[];
       notes: string;
-      checkedBy: mongoose.Types.ObjectId;
-      checkedByName: string;
+      checkedBy?: mongoose.Types.ObjectId;
+      checkedByName?: string;
       checkDate: Date;
     };
     inProcessCheck: {
@@ -125,8 +125,8 @@ export interface IPreProcessing extends AuditableDocument {
       color: string;
       consistency: 'good' | 'fair' | 'poor';
       notes: string;
-      checkedBy: mongoose.Types.ObjectId;
-      checkedByName: string;
+      checkedBy?: mongoose.Types.ObjectId;
+      checkedByName?: string;
       checkTime: Date;
     };
     postProcessCheck: {
@@ -137,8 +137,8 @@ export interface IPreProcessing extends AuditableDocument {
       defects: string[];
       qualityGrade: 'A' | 'B' | 'C' | 'D';
       notes: string;
-      checkedBy: mongoose.Types.ObjectId;
-      checkedByName: string;
+      checkedBy?: mongoose.Types.ObjectId;
+      checkedByName?: string;
       checkDate: Date;
     };
   };
@@ -154,8 +154,8 @@ export interface IPreProcessing extends AuditableDocument {
     quality: 'A' | 'B' | 'C' | 'D';
     defects: string[];
     location: {
-      warehouseId: mongoose.Types.ObjectId;
-      warehouseName: string;
+      warehouseId?: mongoose.Types.ObjectId;
+      warehouseName?: string;
       rackNumber?: string;
       shelfNumber?: string;
     };
@@ -246,57 +246,55 @@ const PreProcessingSchema = new Schema<IPreProcessing>({
   processName: { type: String, required: true },
   processDescription: { type: String },
   
-  // Input Material
-  inputMaterial: {
-    fabricId: { 
-      type: Schema.Types.ObjectId, 
-      ref: 'InventoryItem', 
-      required: true 
-    },
+  // Input Materials (Multiple fabrics can be processed together)
+  inputMaterials: [{
     fabricType: { type: String, required: true },
-    fabricGrade: { type: String, required: true },
-    gsm: { type: Number, required: true, min: 0 },
-    width: { type: Number, required: true, min: 0 },
-    color: { type: String, required: true },
+    fabricGrade: { type: String },
+    gsm: { type: Number, min: 0 },
+    width: { type: Number, min: 0 },
+    color: { type: String },
     quantity: { type: Number, required: true, min: 0 },
     unit: { 
       type: String, 
-      enum: ['meters', 'yards', 'pieces'], 
-      required: true 
+      enum: ['meters', 'yards', 'pieces'],
+      required: true
     },
-    weight: { type: Number, required: true, min: 0 }
-  },
+    weight: { type: Number, min: 0 },
+    inventoryItemId: { 
+      type: Schema.Types.ObjectId, 
+      ref: 'InventoryItem',
+      default: null
+    }
+  }],
   
   // Chemical Recipe
   chemicalRecipe: {
-    recipeName: { type: String, required: true },
-    recipeVersion: { type: String, required: true },
+    recipeName: { type: String },
+    recipeVersion: { type: String },
     chemicals: [{
       chemicalId: { 
         type: Schema.Types.ObjectId, 
-        ref: 'InventoryItem', 
-        required: true 
+        ref: 'InventoryItem'
       },
-      chemicalName: { type: String, required: true },
-      quantity: { type: Number, required: true, min: 0 },
+      chemicalName: { type: String },
+      quantity: { type: Number, min: 0 },
       unit: { 
         type: String, 
-        enum: ['kg', 'liters', 'grams', 'ml'], 
-        required: true 
+        enum: ['kg', 'liters', 'grams', 'ml']
       },
-      concentration: { type: Number, required: true, min: 0 },
-      temperature: { type: Number, required: true },
-      ph: { type: Number, required: true, min: 0, max: 14 }
+      concentration: { type: Number, min: 0 },
+      temperature: { type: Number },
+      ph: { type: Number, min: 0, max: 14 }
     }],
-    totalRecipeCost: { type: Number, required: true, min: 0 }
+    totalRecipeCost: { type: Number, min: 0 }
   },
   
   // Process Parameters
   processParameters: {
     temperature: {
-      min: { type: Number, required: true },
-      max: { type: Number, required: true },
-      actual: { type: Number, required: true },
+      min: { type: Number },
+      max: { type: Number },
+      actual: { type: Number },
       unit: { 
         type: String, 
         enum: ['celsius', 'fahrenheit'], 
@@ -304,9 +302,9 @@ const PreProcessingSchema = new Schema<IPreProcessing>({
       }
     },
     pressure: {
-      min: { type: Number, required: true },
-      max: { type: Number, required: true },
-      actual: { type: Number, required: true },
+      min: { type: Number },
+      max: { type: Number },
+      actual: { type: Number },
       unit: { 
         type: String, 
         enum: ['bar', 'psi'], 
@@ -314,12 +312,12 @@ const PreProcessingSchema = new Schema<IPreProcessing>({
       }
     },
     ph: {
-      min: { type: Number, required: true, min: 0, max: 14 },
-      max: { type: Number, required: true, min: 0, max: 14 },
-      actual: { type: Number, required: true, min: 0, max: 14 }
+      min: { type: Number, min: 0, max: 14 },
+      max: { type: Number, min: 0, max: 14 },
+      actual: { type: Number, min: 0, max: 14 }
     },
     time: {
-      planned: { type: Number, required: true, min: 0 },
+      planned: { type: Number, min: 0 },
       actual: { type: Number, min: 0 },
       unit: { 
         type: String, 
@@ -328,7 +326,7 @@ const PreProcessingSchema = new Schema<IPreProcessing>({
       }
     },
     speed: {
-      planned: { type: Number, required: true, min: 0 },
+      planned: { type: Number, min: 0 },
       actual: { type: Number, min: 0 },
       unit: { 
         type: String, 
@@ -341,14 +339,13 @@ const PreProcessingSchema = new Schema<IPreProcessing>({
   // Machine Assignment
   machineAssignment: {
     machineId: { 
-      type: Schema.Types.ObjectId, 
-      ref: 'Machine', 
-      required: true 
+      type: String,
+      default: null
     },
-    machineName: { type: String, required: true },
-    machineType: { type: String, required: true },
-    capacity: { type: Number, required: true, min: 0 },
-    efficiency: { type: Number, required: true, min: 0, max: 100 }
+    machineName: { type: String },
+    machineType: { type: String },
+    capacity: { type: Number, min: 0 },
+    efficiency: { type: Number, min: 0, max: 100 }
   },
   
   // Worker Assignment
@@ -356,37 +353,38 @@ const PreProcessingSchema = new Schema<IPreProcessing>({
     workers: [{
       workerId: { 
         type: Schema.Types.ObjectId, 
-        ref: 'User', 
-        required: true 
+        ref: 'User'
       },
-      workerName: { type: String, required: true },
+      workerName: { type: String },
       role: { 
         type: String, 
-        enum: ['operator', 'supervisor', 'helper'], 
-        required: true 
+        enum: ['operator', 'supervisor', 'helper']
       },
       shift: { 
         type: String, 
-        enum: ['morning', 'evening', 'night'], 
-        required: true 
+        enum: ['morning', 'evening', 'night']
       },
-      hoursWorked: { type: Number, required: true, min: 0 }
+      hoursWorked: { type: Number, min: 0 }
     }],
     supervisorId: { 
       type: Schema.Types.ObjectId, 
-      ref: 'User', 
-      required: true 
+      ref: 'User',
+      default: null,
+      set: (value: any) => {
+        if (!value || value === '') return null;
+        return value;
+      }
     },
-    supervisorName: { type: String, required: true }
+    supervisorName: { type: String }
   },
   
   // Process Timing
   timing: {
-    plannedStartTime: { type: Date, required: true },
+    plannedStartTime: { type: Date },
     actualStartTime: { type: Date },
-    plannedEndTime: { type: Date, required: true },
+    plannedEndTime: { type: Date },
     actualEndTime: { type: Date },
-    plannedDuration: { type: Number, required: true, min: 0 },
+    plannedDuration: { type: Number, min: 0 },
     actualDuration: { type: Number, min: 0 },
     setupTime: { type: Number, default: 0, min: 0 },
     cleaningTime: { type: Number, default: 0, min: 0 },
@@ -399,88 +397,98 @@ const PreProcessingSchema = new Schema<IPreProcessing>({
     preProcessCheck: {
       fabricCondition: { 
         type: String, 
-        enum: ['good', 'fair', 'poor'], 
-        required: true 
+        enum: ['good', 'fair', 'poor']
       },
       defects: [String],
       notes: { type: String },
       checkedBy: { 
         type: Schema.Types.ObjectId, 
-        ref: 'User', 
-        required: true 
+        ref: 'User',
+        default: null,
+        set: (value: any) => {
+          if (!value || value === '') return null;
+          return value;
+        }
       },
-      checkedByName: { type: String, required: true },
-      checkDate: { type: Date, required: true }
+      checkedByName: { type: String },
+      checkDate: { type: Date }
     },
     inProcessCheck: {
-      temperature: { type: Number, required: true },
-      ph: { type: Number, required: true, min: 0, max: 14 },
-      color: { type: String, required: true },
+      temperature: { type: Number },
+      ph: { type: Number, min: 0, max: 14 },
+      color: { type: String },
       consistency: { 
         type: String, 
-        enum: ['good', 'fair', 'poor'], 
-        required: true 
+        enum: ['good', 'fair', 'poor']
       },
       notes: { type: String },
       checkedBy: { 
         type: Schema.Types.ObjectId, 
-        ref: 'User', 
-        required: true 
+        ref: 'User',
+        default: null,
+        set: (value: any) => {
+          if (!value || value === '') return null;
+          return value;
+        }
       },
-      checkedByName: { type: String, required: true },
-      checkTime: { type: Date, required: true }
+      checkedByName: { type: String },
+      checkTime: { type: Date }
     },
     postProcessCheck: {
-      whiteness: { type: Number, required: true, min: 0, max: 100 },
+      whiteness: { type: Number, min: 0, max: 100 },
       absorbency: { 
         type: String, 
-        enum: ['excellent', 'good', 'fair', 'poor'], 
-        required: true 
+        enum: ['excellent', 'good', 'fair', 'poor']
       },
-      strength: { type: Number, required: true, min: 0 },
-      shrinkage: { type: Number, required: true, min: 0, max: 100 },
+      strength: { type: Number, min: 0 },
+      shrinkage: { type: Number, min: 0, max: 100 },
       defects: [String],
       qualityGrade: { 
         type: String, 
-        enum: ['A', 'B', 'C', 'D'], 
-        required: true 
+        enum: ['A', 'B', 'C', 'D']
       },
       notes: { type: String },
       checkedBy: { 
         type: Schema.Types.ObjectId, 
-        ref: 'User', 
-        required: true 
+        ref: 'User',
+        default: null,
+        set: (value: any) => {
+          if (!value || value === '') return null;
+          return value;
+        }
       },
-      checkedByName: { type: String, required: true },
-      checkDate: { type: Date, required: true }
+      checkedByName: { type: String },
+      checkDate: { type: Date }
     }
   },
   
   // Output Material
   outputMaterial: {
-    quantity: { type: Number, required: true, min: 0 },
+    quantity: { type: Number, min: 0 },
     unit: { 
       type: String, 
-      enum: ['meters', 'yards', 'pieces'], 
-      required: true 
+      enum: ['meters', 'yards', 'pieces']
     },
-    weight: { type: Number, required: true, min: 0 },
-    gsm: { type: Number, required: true, min: 0 },
-    width: { type: Number, required: true, min: 0 },
-    color: { type: String, required: true },
+    weight: { type: Number, min: 0 },
+    gsm: { type: Number, min: 0 },
+    width: { type: Number, min: 0 },
+    color: { type: String },
     quality: { 
       type: String, 
-      enum: ['A', 'B', 'C', 'D'], 
-      required: true 
+      enum: ['A', 'B', 'C', 'D']
     },
     defects: [String],
     location: {
       warehouseId: { 
         type: Schema.Types.ObjectId, 
-        ref: 'Warehouse', 
-        required: true 
+        ref: 'Warehouse',
+        default: null,
+        set: (value: any) => {
+          if (!value || value === '') return null;
+          return value;
+        }
       },
-      warehouseName: { type: String, required: true },
+      warehouseName: { type: String },
       rackNumber: { type: String },
       shelfNumber: { type: String }
     }

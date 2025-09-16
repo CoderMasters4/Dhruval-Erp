@@ -10,8 +10,7 @@ export interface PreProcessingBatch {
   processType: 'desizing' | 'bleaching' | 'scouring' | 'mercerizing' | 'combined';
   processName: string;
   processDescription?: string;
-  inputMaterial: {
-    fabricId: string;
+  inputMaterials: Array<{
     fabricType: string;
     fabricGrade: string;
     gsm: number;
@@ -20,7 +19,8 @@ export interface PreProcessingBatch {
     quantity: number;
     unit: 'meters' | 'yards' | 'pieces';
     weight: number;
-  };
+    inventoryItemId?: string;
+  }>;
   chemicalRecipe: {
     recipeName: string;
     recipeVersion: string;
@@ -212,7 +212,7 @@ export interface CreatePreProcessingBatchRequest {
   processType: 'desizing' | 'bleaching' | 'scouring' | 'mercerizing' | 'combined';
   processName: string;
   processDescription?: string;
-  inputMaterial: PreProcessingBatch['inputMaterial'];
+  inputMaterials: PreProcessingBatch['inputMaterials'];
   chemicalRecipe: PreProcessingBatch['chemicalRecipe'];
   processParameters: PreProcessingBatch['processParameters'];
   machineAssignment: PreProcessingBatch['machineAssignment'];
@@ -233,6 +233,7 @@ export interface UpdatePreProcessingStatusRequest {
   status: 'pending' | 'in_progress' | 'completed' | 'on_hold' | 'cancelled' | 'quality_hold';
   notes?: string;
   changeReason?: string;
+  processData?: any;
 }
 
 export interface PreProcessingQueryParams {

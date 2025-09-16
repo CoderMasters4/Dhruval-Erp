@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/badge';
@@ -21,6 +22,7 @@ import {
   CreatePreProcessingBatchRequest
 } from '@/lib/api/preProcessingApi';
 import { useGetCompaniesQuery } from '@/lib/api/greyFabricInwardApi';
+import { useGetInventoryItemsQuery, InventoryItem } from '@/lib/api/inventoryApi';
 import { 
   Settings, 
   Play, 
@@ -28,7 +30,6 @@ import {
   CheckCircle, 
   Clock, 
   AlertCircle,
-  Eye,
   BarChart3,
   Factory,
   Package,
@@ -36,33 +37,33 @@ import {
   Droplets,
   RefreshCw,
   Activity,
-  Plus
+  Plus,
+  Eye,
+  ExternalLink
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 
 export default function PreProcessingPage() {
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState('overview');
   const [updatingStatus, setUpdatingStatus] = useState<string | null>(null);
   const [showCreateForm, setShowCreateForm] = useState(false);
-  const [formData, setFormData] = useState<{
-    companyId?: string;
-    productionOrderId?: string;
-    productionOrderNumber?: string;
-    greyFabricInwardId?: string;
-    grnNumber?: string;
-    processType?: string;
-    processName?: string;
-    processDescription?: string;
-    'inputMaterial.fabricType'?: string;
-    'inputMaterial.fabricGrade'?: string;
-    'inputMaterial.gsm'?: string;
-    'inputMaterial.width'?: string;
-    'inputMaterial.quantity'?: string;
-    'inputMaterial.unit'?: string;
-    'timing.plannedStartTime'?: string;
-    'timing.plannedEndTime'?: string;
-    notes?: string;
-  }>({});
+  const [selectedBatch, setSelectedBatch] = useState<any>(null);
+  const [showDetailsModal, setShowDetailsModal] = useState(false);
+  const [formData, setFormData] = useState<any>({});
+  const [selectedInventoryItems, setSelectedInventoryItems] = useState<Array<{
+    item: InventoryItem;
+    quantity: number;
+    unit: string;
+  }>>([]);
+  const [selectedFabricMaterials, setSelectedFabricMaterials] = useState<Array<{
+    item: InventoryItem;
+    quantity: number;
+    unit: 'meters' | 'yards' | 'pieces';
+  }>>([]);
+  const [inventorySearchTerm, setInventorySearchTerm] = useState('');
+  const [rawMaterialsForSelectedFabric, setRawMaterialsForSelectedFabric] = useState<InventoryItem[]>([]);
+  const [isLoadingRawMaterials, setIsLoadingRawMaterials] = useState(false);
 
   // Use RTK Query hooks
   const { 
@@ -75,14 +76,117 @@ export default function PreProcessingPage() {
   const [updateStatus] = useUpdatePreProcessingStatusMutation();
   const [createBatch, { isLoading: creating }] = useCreatePreProcessingBatchMutation();
   const { data: companies = [] } = useGetCompaniesQuery();
+  const { data: inventoryResponse, isLoading: inventoryLoading } = useGetInventoryItemsQuery({ 
+    limit: 100, 
+    companyId: formData.companyId || undefined,
+    search: inventorySearchTerm || undefined
+  });
+  
+  const inventoryItems = inventoryResponse?.data?.data || [];
 
   const batches = batchesResponse?.data || [];
+
+  // Auto-fetch fabric materials when company is selected
+  useEffect(() => {
+    if (formData.companyId && inventoryItems.length > 0) {
+      console.log('Total inventory items for company:', inventoryItems.length);
+      console.log('Sample inventory items:', inventoryItems.slice(0, 3));
+      
+      // Filter fabric materials for the selected company - more flexible filtering
+      const fabricItems = inventoryItems.filter(item => {
+        const categoryMatch = item.category?.primary?.toLowerCase().includes('fabric');
+        const nameMatch = item.itemName?.toLowerCase().includes('fabric');
+        const typeMatch = item.productType?.toLowerCase().includes('fabric');
+        
+        // Also check for common fabric-related terms
+        const cottonMatch = item.itemName?.toLowerCase().includes('cotton') || 
+                          item.productType?.toLowerCase().includes('cotton') ||
+                          item.category?.primary?.toLowerCase().includes('cotton');
+        const polyesterMatch = item.itemName?.toLowerCase().includes('polyester') || 
+                             item.productType?.toLowerCase().includes('polyester') ||
+                             item.category?.primary?.toLowerCase().includes('polyester');
+        const linenMatch = item.itemName?.toLowerCase().includes('linen') || 
+                          item.productType?.toLowerCase().includes('linen') ||
+                          item.category?.primary?.toLowerCase().includes('linen');
+        const silkMatch = item.itemName?.toLowerCase().includes('silk') || 
+                         item.productType?.toLowerCase().includes('silk') ||
+                         item.category?.primary?.toLowerCase().includes('silk');
+        
+        return categoryMatch || nameMatch || typeMatch || cottonMatch || polyesterMatch || linenMatch || silkMatch;
+      });
+      
+      console.log('Available fabric materials for company:', fabricItems);
+      console.log('Fabric items count:', fabricItems.length);
+    }
+  }, [formData.companyId, inventoryItems]);
+
+  // Function to fetch raw materials based on selected fabric
+  const fetchRawMaterialsForFabric = async (fabricItem: InventoryItem) => {
+    setIsLoadingRawMaterials(true);
+    try {
+      // Filter raw materials that are commonly used with the selected fabric
+      const rawMaterials = inventoryItems.filter(item => {
+        // Exclude fabric items
+        const isNotFabric = !item.category?.primary?.toLowerCase().includes('fabric') && 
+                           !item.itemName?.toLowerCase().includes('fabric') &&
+                           !item.productType?.toLowerCase().includes('fabric');
+        
+        // Include chemicals, dyes, auxiliaries, and other raw materials
+        const isRawMaterial = item.category?.primary?.toLowerCase().includes('chemical') ||
+                              item.category?.primary?.toLowerCase().includes('dye') ||
+                              item.category?.primary?.toLowerCase().includes('auxiliary') ||
+                              item.category?.primary?.toLowerCase().includes('raw') ||
+                              item.itemName?.toLowerCase().includes('chemical') ||
+                              item.itemName?.toLowerCase().includes('dye') ||
+                              item.itemName?.toLowerCase().includes('auxiliary') ||
+                              item.productType?.toLowerCase().includes('chemical') ||
+                              item.productType?.toLowerCase().includes('dye');
+        
+        return isNotFabric && (isRawMaterial || item.category?.primary?.toLowerCase().includes('material'));
+      });
+      
+      setRawMaterialsForSelectedFabric(rawMaterials);
+      console.log('Raw materials for fabric:', fabricItem.itemName, rawMaterials);
+    } catch (error) {
+      console.error('Error fetching raw materials:', error);
+      toast.error('Failed to fetch raw materials');
+    } finally {
+      setIsLoadingRawMaterials(false);
+    }
+  };
+
+  // Auto-fetch raw materials when fabric is selected
+  useEffect(() => {
+    if (selectedFabricMaterials.length > 0 && formData.companyId) {
+      // Fetch raw materials for the most recently selected fabric
+      const latestFabric = selectedFabricMaterials[selectedFabricMaterials.length - 1];
+      fetchRawMaterialsForFabric(latestFabric.item);
+    } else {
+      setRawMaterialsForSelectedFabric([]);
+    }
+  }, [selectedFabricMaterials, formData.companyId]);
 
   // Form submission handler
   const handleCreateBatch = async () => {
     try {
+      // Validate required basic fields
       if (!formData.processType || !formData.processName || !formData.companyId) {
         toast.error('Please fill in all required fields');
+        return;
+      }
+
+      // Validate required Input Material fields (multiple fabric materials)
+      if (selectedFabricMaterials.length === 0) {
+        toast.error('Please select at least one fabric material from inventory');
+        return;
+      }
+
+      const invalidFabric = selectedFabricMaterials.find(fabric => 
+        fabric.quantity <= 0 || !fabric.unit
+      );
+
+      if (invalidFabric) {
+        toast.error('Please enter valid quantity and unit for all selected fabric materials');
         return;
       }
 
@@ -95,61 +199,71 @@ export default function PreProcessingPage() {
         processType: (formData.processType as 'desizing' | 'bleaching' | 'scouring' | 'mercerizing' | 'combined') || 'desizing',
         processName: formData.processName || '',
         processDescription: formData.processDescription || '',
-        inputMaterial: {
-          fabricId: formData.greyFabricInwardId || '',
-          fabricType: formData['inputMaterial.fabricType'] || '',
-          fabricGrade: formData['inputMaterial.fabricGrade'] || '',
-          gsm: Number(formData['inputMaterial.gsm']) || 0,
-          width: Number(formData['inputMaterial.width']) || 0,
-          color: 'Grey', // Default color for pre-processing
-          quantity: Number(formData['inputMaterial.quantity']) || 0,
-          unit: (formData['inputMaterial.unit'] as 'meters' | 'yards' | 'pieces') || 'meters',
-          weight: Number(formData['inputMaterial.quantity']) * 0.5 || 0, // Estimate weight
-        },
+        inputMaterials: selectedFabricMaterials.map(fabric => ({
+          fabricType: fabric.item.itemName,
+          fabricGrade: fabric.item.quality?.qualityGrade || 'Grade A',
+          gsm: fabric.item.specifications?.gsm || 0,
+          width: fabric.item.specifications?.width || 0,
+          color: fabric.item.specifications?.color || 'Grey',
+          quantity: fabric.quantity,
+          unit: fabric.unit,
+          weight: fabric.item.specifications?.weight || 0,
+          inventoryItemId: fabric.item._id,
+        })) as any,
         chemicalRecipe: {
           recipeName: `${formData.processType} Recipe`,
           recipeVersion: '1.0',
-          chemicals: [],
-          totalRecipeCost: 0,
+          chemicals: selectedInventoryItems.map(selected => ({
+            chemicalId: selected.item._id,
+            chemicalName: selected.item.itemName,
+            quantity: selected.quantity,
+            unit: selected.unit as 'kg' | 'liters' | 'grams' | 'ml',
+            concentration: 0,
+            temperature: 0,
+            ph: 0
+          })),
+          totalRecipeCost: selectedInventoryItems.reduce((total, selected) => 
+            total + (selected.item.pricing.costPrice * selected.quantity), 0
+          ),
         },
         processParameters: {
           temperature: {
-            min: 80,
-            max: 120,
-            actual: 100,
-            unit: 'celsius',
+            min: Number(formData['processParameters.temperature.min']) || 0,
+            max: Number(formData['processParameters.temperature.max']) || 0,
+            actual: Number(formData['processParameters.temperature.actual']) || 0,
+            unit: formData['processParameters.temperature.unit'] || 'celsius',
           },
           pressure: {
-            min: 1,
-            max: 3,
-            actual: 2,
-            unit: 'bar',
+            min: Number(formData['processParameters.pressure.min']) || 0,
+            max: Number(formData['processParameters.pressure.max']) || 0,
+            actual: Number(formData['processParameters.pressure.actual']) || 0,
+            unit: formData['processParameters.pressure.unit'] || 'bar',
           },
           ph: {
-            min: 6,
-            max: 8,
-            actual: 7,
+            min: Number(formData['processParameters.ph.min']) || 0,
+            max: Number(formData['processParameters.ph.max']) || 0,
+            actual: Number(formData['processParameters.ph.actual']) || 0,
           },
           time: {
-            planned: 120,
-            unit: 'minutes',
+            planned: Number(formData['processParameters.time.planned']) || 0,
+            unit: formData['processParameters.time.unit'] || 'minutes',
           },
           speed: {
-            planned: 50,
-            unit: 'm/min',
+            planned: Number(formData['processParameters.speed.planned']) || 0,
+            unit: formData['processParameters.speed.unit'] || 'm/min',
           },
         },
         machineAssignment: {
-          machineId: 'MACH-001',
-          machineName: 'Pre-Processing Machine 1',
-          machineType: 'Pre-Processing',
-          capacity: 1000,
-          efficiency: 85,
+          machineId: formData['machineAssignment.machineId'] || '',
+          machineName: formData['machineAssignment.machineName'] || '',
+          machineType: formData['machineAssignment.machineType'] || '',
+          capacity: Number(formData['machineAssignment.capacity']) || 0,
+          efficiency: Number(formData['machineAssignment.efficiency']) || 0,
         },
         workerAssignment: {
           workers: [],
-          supervisorId: 'SUP-001',
-          supervisorName: 'Supervisor Name',
+          supervisorId: formData['workerAssignment.supervisorId'] || '',
+          supervisorName: formData['workerAssignment.supervisorName'] || '',
         },
         timing: {
           plannedStartTime: formData['timing.plannedStartTime'] ? new Date(formData['timing.plannedStartTime']).toISOString() : new Date().toISOString(),
@@ -161,48 +275,48 @@ export default function PreProcessingPage() {
         },
         qualityControl: {
           preProcessCheck: {
-            fabricCondition: 'good',
+            fabricCondition: formData['qualityControl.preProcessCheck.fabricCondition'] || 'good',
             defects: [],
-            notes: '',
-            checkedBy: 'QC-001',
-            checkedByName: 'Quality Checker',
+            notes: formData['qualityControl.preProcessCheck.notes'] || '',
+            checkedBy: formData['qualityControl.preProcessCheck.checkedBy'] || '',
+            checkedByName: formData['qualityControl.preProcessCheck.checkedByName'] || '',
             checkDate: new Date().toISOString(),
           },
           inProcessCheck: {
-            temperature: 100,
-            ph: 7,
-            color: 'White',
-            consistency: 'good',
-            notes: '',
-            checkedBy: 'QC-001',
-            checkedByName: 'Quality Checker',
+            temperature: Number(formData['qualityControl.inProcessCheck.temperature']) || 0,
+            ph: Number(formData['qualityControl.inProcessCheck.ph']) || 0,
+            color: formData['qualityControl.inProcessCheck.color'] || '',
+            consistency: formData['qualityControl.inProcessCheck.consistency'] || 'good',
+            notes: formData['qualityControl.inProcessCheck.notes'] || '',
+            checkedBy: formData['qualityControl.inProcessCheck.checkedBy'] || '',
+            checkedByName: formData['qualityControl.inProcessCheck.checkedByName'] || '',
             checkTime: new Date().toISOString(),
           },
           postProcessCheck: {
-            whiteness: 95,
-            absorbency: 'good',
-            strength: 100,
-            shrinkage: 2,
+            whiteness: Number(formData['qualityControl.postProcessCheck.whiteness']) || 0,
+            absorbency: formData['qualityControl.postProcessCheck.absorbency'] || 'good',
+            strength: Number(formData['qualityControl.postProcessCheck.strength']) || 0,
+            shrinkage: Number(formData['qualityControl.postProcessCheck.shrinkage']) || 0,
             defects: [],
-            qualityGrade: 'A',
-            notes: '',
-            checkedBy: 'QC-001',
-            checkedByName: 'Quality Checker',
+            qualityGrade: formData['qualityControl.postProcessCheck.qualityGrade'] || 'A',
+            notes: formData['qualityControl.postProcessCheck.notes'] || '',
+            checkedBy: formData['qualityControl.postProcessCheck.checkedBy'] || '',
+            checkedByName: formData['qualityControl.postProcessCheck.checkedByName'] || '',
             checkDate: new Date().toISOString(),
           },
         },
         outputMaterial: {
-          quantity: Number(formData['inputMaterial.quantity']) || 0,
-          unit: (formData['inputMaterial.unit'] as 'meters' | 'yards' | 'pieces') || 'meters',
-          weight: Number(formData['inputMaterial.quantity']) * 0.5 || 0,
-          gsm: Number(formData['inputMaterial.gsm']) || 0,
-          width: Number(formData['inputMaterial.width']) || 0,
+          quantity: selectedFabricMaterials.reduce((total, fabric) => total + fabric.quantity, 0),
+          unit: selectedFabricMaterials[0]?.unit || 'meters',
+          weight: selectedFabricMaterials.reduce((total, fabric) => total + (fabric.quantity * (fabric.item.specifications?.weight || 0)), 0),
+          gsm: selectedFabricMaterials.length > 0 ? selectedFabricMaterials[0].item.specifications?.gsm || 0 : 0,
+          width: selectedFabricMaterials.length > 0 ? selectedFabricMaterials[0].item.specifications?.width || 0 : 0,
           color: 'White',
           quality: 'A',
           defects: [],
           location: {
-            warehouseId: 'WH-001',
-            warehouseName: 'Main Warehouse',
+            warehouseId: formData['outputMaterial.location.warehouseId'] || '',
+            warehouseName: formData['outputMaterial.location.warehouseName'] || '',
           },
         },
         wasteManagement: {
@@ -211,12 +325,16 @@ export default function PreProcessingPage() {
           environmentalCompliance: true,
         },
         costs: {
-          chemicalCost: 0,
+          chemicalCost: selectedInventoryItems.reduce((total, selected) => 
+            total + (selected.item.pricing.costPrice * selected.quantity), 0
+          ),
           laborCost: 0,
           machineCost: 0,
           utilityCost: 0,
           wasteDisposalCost: 0,
-          totalCost: 0,
+          totalCost: selectedInventoryItems.reduce((total, selected) => 
+            total + (selected.item.pricing.costPrice * selected.quantity), 0
+          ),
           costPerUnit: 0,
         },
         notes: formData.notes || '',
@@ -353,6 +471,164 @@ export default function PreProcessingPage() {
       ]
     },
     {
+      name: 'inputMaterial.color',
+      label: 'Fabric Color',
+      type: 'text' as const,
+      required: false,
+      placeholder: 'e.g., Grey, White, Blue'
+    },
+    {
+      name: 'inputMaterial.weight',
+      label: 'Weight (kg)',
+      type: 'number' as const,
+      required: false,
+      placeholder: 'Enter weight in kg'
+    },
+    // Process Parameters Section
+    {
+      name: 'processParameters.temperature.min',
+      label: 'Temperature Min (°C)',
+      type: 'number' as const,
+      required: false,
+      placeholder: 'Minimum temperature'
+    },
+    {
+      name: 'processParameters.temperature.max',
+      label: 'Temperature Max (°C)',
+      type: 'number' as const,
+      required: false,
+      placeholder: 'Maximum temperature'
+    },
+    {
+      name: 'processParameters.temperature.actual',
+      label: 'Temperature Actual (°C)',
+      type: 'number' as const,
+      required: false,
+      placeholder: 'Actual temperature'
+    },
+    {
+      name: 'processParameters.pressure.min',
+      label: 'Pressure Min (bar)',
+      type: 'number' as const,
+      required: false,
+      placeholder: 'Minimum pressure'
+    },
+    {
+      name: 'processParameters.pressure.max',
+      label: 'Pressure Max (bar)',
+      type: 'number' as const,
+      required: false,
+      placeholder: 'Maximum pressure'
+    },
+    {
+      name: 'processParameters.pressure.actual',
+      label: 'Pressure Actual (bar)',
+      type: 'number' as const,
+      required: false,
+      placeholder: 'Actual pressure'
+    },
+    {
+      name: 'processParameters.ph.min',
+      label: 'pH Min',
+      type: 'number' as const,
+      required: false,
+      placeholder: 'Minimum pH'
+    },
+    {
+      name: 'processParameters.ph.max',
+      label: 'pH Max',
+      type: 'number' as const,
+      required: false,
+      placeholder: 'Maximum pH'
+    },
+    {
+      name: 'processParameters.ph.actual',
+      label: 'pH Actual',
+      type: 'number' as const,
+      required: false,
+      placeholder: 'Actual pH'
+    },
+    {
+      name: 'processParameters.time.planned',
+      label: 'Planned Time (minutes)',
+      type: 'number' as const,
+      required: false,
+      placeholder: 'Planned processing time'
+    },
+    {
+      name: 'processParameters.speed.planned',
+      label: 'Planned Speed (m/min)',
+      type: 'number' as const,
+      required: false,
+      placeholder: 'Planned processing speed'
+    },
+    // Machine Assignment Section
+    {
+      name: 'machineAssignment.machineId',
+      label: 'Machine ID',
+      type: 'text' as const,
+      required: false,
+      placeholder: 'Enter machine ID'
+    },
+    {
+      name: 'machineAssignment.machineName',
+      label: 'Machine Name',
+      type: 'text' as const,
+      required: false,
+      placeholder: 'Enter machine name'
+    },
+    {
+      name: 'machineAssignment.machineType',
+      label: 'Machine Type',
+      type: 'text' as const,
+      required: false,
+      placeholder: 'Enter machine type'
+    },
+    {
+      name: 'machineAssignment.capacity',
+      label: 'Machine Capacity',
+      type: 'number' as const,
+      required: false,
+      placeholder: 'Enter machine capacity'
+    },
+    {
+      name: 'machineAssignment.efficiency',
+      label: 'Machine Efficiency (%)',
+      type: 'number' as const,
+      required: false,
+      placeholder: 'Enter efficiency percentage'
+    },
+    // Worker Assignment Section
+    {
+      name: 'workerAssignment.supervisorId',
+      label: 'Supervisor ID',
+      type: 'text' as const,
+      required: false,
+      placeholder: 'Enter supervisor ID'
+    },
+    {
+      name: 'workerAssignment.supervisorName',
+      label: 'Supervisor Name',
+      type: 'text' as const,
+      required: false,
+      placeholder: 'Enter supervisor name'
+    },
+    // Output Material Section
+    {
+      name: 'outputMaterial.location.warehouseId',
+      label: 'Warehouse ID',
+      type: 'text' as const,
+      required: false,
+      placeholder: 'Enter warehouse ID'
+    },
+    {
+      name: 'outputMaterial.location.warehouseName',
+      label: 'Warehouse Name',
+      type: 'text' as const,
+      required: false,
+      placeholder: 'Enter warehouse name'
+    },
+    {
       name: 'timing.plannedStartTime',
       label: 'Planned Start Time',
       type: 'datetime-local' as const,
@@ -375,6 +651,33 @@ export default function PreProcessingPage() {
       rows: 3
     }
   ];
+
+  const handleViewDetails = (batch: any) => {
+    router.push(`/production/pre-processing/${batch._id}`);
+  };
+
+  const handleAddInventoryItem = (item: InventoryItem) => {
+    const existingItem = selectedInventoryItems.find(selected => selected.item._id === item._id);
+    if (!existingItem) {
+      setSelectedInventoryItems([...selectedInventoryItems, {
+        item,
+        quantity: 1,
+        unit: item.stock.unit
+      }]);
+    }
+  };
+
+  const handleRemoveInventoryItem = (itemId: string) => {
+    setSelectedInventoryItems(selectedInventoryItems.filter(selected => selected.item._id !== itemId));
+  };
+
+  const handleUpdateInventoryQuantity = (itemId: string, quantity: number) => {
+    setSelectedInventoryItems(selectedInventoryItems.map(selected => 
+      selected.item._id === itemId 
+        ? { ...selected, quantity: Math.max(0, quantity) }
+        : selected
+    ));
+  };
 
   const handleStatusToggle = async (batchId: string, currentStatus: string) => {
     try {
@@ -718,6 +1021,15 @@ export default function PreProcessingPage() {
                             )}
                       </div>
                       <div className="flex gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleViewDetails(batch)}
+                          className="flex items-center gap-1"
+                        >
+                          <ExternalLink className="h-3 w-3" />
+                          View Details
+                        </Button>
                         <Badge className={getStatusColor(batch.status)}>
                           {getStatusText(batch.status)}
                         </Badge>
@@ -831,20 +1143,938 @@ export default function PreProcessingPage() {
       </Tabs>
 
       {/* Create New Batch Modal */}
-      <CrudModal
-        isOpen={showCreateForm}
-        onClose={() => {
-          setShowCreateForm(false);
-          setFormData({});
-        }}
-        title="Create New Pre-Processing Batch"
-        fields={formFields}
-        formData={formData}
-        onFormDataChange={setFormData}
-        onSubmit={handleCreateBatch}
-        isLoading={creating}
-        submitText="Create Batch"
-      />
+      {showCreateForm && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-2xl font-bold">Create New Pre-Processing Batch</h2>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setShowCreateForm(false);
+                    setFormData({});
+                    setSelectedInventoryItems([]);
+                    setInventorySearchTerm('');
+                  }}
+                >
+                  Close
+                </Button>
+              </div>
+
+              <form onSubmit={(e) => { e.preventDefault(); handleCreateBatch(); }} className="space-y-6">
+                {/* Basic Form Fields */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold text-gray-800 border-b pb-2">Basic Information</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {formFields.slice(0, 8).map((field) => (
+                    <div key={field.name}>
+                      <Label className="text-sm font-medium text-gray-700 mb-2 block">
+                        {field.label} {field.required && <span className="text-red-500">*</span>}
+                      </Label>
+                      {field.type === 'select' ? (
+                        <Select
+                          value={formData[field.name] || ''}
+                          onValueChange={(value) => setFormData({...formData, [field.name]: value})}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder={field.placeholder} />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {field.options?.map((option) => (
+                              <SelectItem key={option.value} value={option.value}>
+                                {option.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      ) : field.type === 'textarea' ? (
+                        <Textarea
+                          value={formData[field.name] || ''}
+                          onChange={(e) => setFormData({...formData, [field.name]: e.target.value})}
+                          placeholder={field.placeholder}
+                          rows={field.rows || 3}
+                        />
+                      ) : field.type === 'datetime-local' ? (
+                        <input
+                          type="datetime-local"
+                          value={formData[field.name] || ''}
+                          onChange={(e) => setFormData({...formData, [field.name]: e.target.value})}
+                          className="w-full px-3 py-2 border rounded-md"
+                          required={field.required}
+                        />
+                      ) : (
+                        <input
+                          type={field.type}
+                          value={formData[field.name] || ''}
+                          onChange={(e) => setFormData({...formData, [field.name]: e.target.value})}
+                          placeholder={field.placeholder}
+                          className="w-full px-3 py-2 border rounded-md"
+                          required={field.required}
+                        />
+                      )}
+                    </div>
+                  ))}
+                  </div>
+                </div>
+
+                {/* Input Material Section - Fabric Selection */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold text-gray-800 border-b pb-2">
+                    🧵 Fabric Material Selection <span className="text-red-500 text-sm">* Required</span>
+                  </h3>
+                  <p className="text-sm text-gray-600 mb-4">
+                    Select the fabric material that will be processed (e.g., Cotton, Polyester, Linen)
+                  </p>
+                  
+                  {/* Company Selection Status */}
+                  {!formData.companyId ? (
+                    <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-md">
+                      <p className="text-sm text-yellow-800">
+                        ⚠️ Please select a company first to view available fabric materials
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-md">
+                      <div className="flex items-center justify-between">
+                        <p className="text-sm text-green-800">
+                          ✅ Company selected - {(() => {
+                            const fabricItems = inventoryItems.filter(item => {
+                              const categoryMatch = item.category?.primary?.toLowerCase().includes('fabric');
+                              const nameMatch = item.itemName?.toLowerCase().includes('fabric');
+                              const typeMatch = item.productType?.toLowerCase().includes('fabric');
+                              
+                              // Also check for common fabric-related terms
+                              const cottonMatch = item.itemName?.toLowerCase().includes('cotton') || 
+                                                item.productType?.toLowerCase().includes('cotton') ||
+                                                item.category?.primary?.toLowerCase().includes('cotton');
+                              const polyesterMatch = item.itemName?.toLowerCase().includes('polyester') || 
+                                                   item.productType?.toLowerCase().includes('polyester') ||
+                                                   item.category?.primary?.toLowerCase().includes('polyester');
+                              const linenMatch = item.itemName?.toLowerCase().includes('linen') || 
+                                                item.productType?.toLowerCase().includes('linen') ||
+                                                item.category?.primary?.toLowerCase().includes('linen');
+                              const silkMatch = item.itemName?.toLowerCase().includes('silk') || 
+                                               item.productType?.toLowerCase().includes('silk') ||
+                                               item.category?.primary?.toLowerCase().includes('silk');
+                              
+                              return categoryMatch || nameMatch || typeMatch || cottonMatch || polyesterMatch || linenMatch || silkMatch;
+                            });
+                            
+                            if (fabricItems.length > 0) {
+                              return `${fabricItems.length} fabric materials available`;
+                            } else {
+                              return `${inventoryItems.length} total materials available (showing all items)`;
+                            }
+                          })()}
+                        </p>
+                        {selectedFabricMaterials.length > 0 && (
+                          <div className="flex items-center gap-2 text-xs text-green-700">
+                            {isLoadingRawMaterials ? (
+                              <>
+                                <RefreshCw className="h-3 w-3 animate-spin" />
+                                Fetching raw materials...
+                              </>
+                            ) : (
+                              <>
+                                <Package className="h-3 w-3" />
+                                {rawMaterialsForSelectedFabric.length} raw materials available
+                              </>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Multiple Fabric Material Selection */}
+                  {formData.companyId && (
+                    <div className="space-y-4">
+                      {/* Debug Information */}
+                      {inventoryItems.length > 0 && (
+                        <div className="text-xs text-gray-500 mb-2">
+                          Debug: Found {inventoryItems.length} total inventory items for this company
+                        </div>
+                      )}
+                      
+                      {/* Add Fabric Material */}
+                      <div className="border rounded-lg p-4 bg-gray-50">
+                        <h4 className="font-medium text-gray-800 mb-3">Add Fabric Material</h4>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                          <div>
+                            <Label className="text-sm font-medium text-gray-700 mb-2 block">
+                              Select Fabric <span className="text-red-500">*</span>
+                            </Label>
+                            <Select
+                              value=""
+                              onValueChange={(value) => {
+                                const selectedItem = inventoryItems.find(item => item._id === value);
+                                if (selectedItem && !selectedFabricMaterials.find(f => f.item._id === value)) {
+                                  const newFabricMaterial = {
+                                    item: selectedItem,
+                                    quantity: 0,
+                                    unit: 'meters' as 'meters' | 'yards' | 'pieces'
+                                  };
+                                  setSelectedFabricMaterials([...selectedFabricMaterials, newFabricMaterial]);
+                                  // Immediately fetch raw materials for this fabric
+                                  fetchRawMaterialsForFabric(selectedItem);
+                                }
+                              }}
+                            >
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select fabric material" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {(() => {
+                                  const fabricItems = inventoryItems.filter(item => {
+                                    const categoryMatch = item.category?.primary?.toLowerCase().includes('fabric');
+                                    const nameMatch = item.itemName?.toLowerCase().includes('fabric');
+                                    const typeMatch = item.productType?.toLowerCase().includes('fabric');
+                                    
+                                    // Also check for common fabric-related terms
+                                    const cottonMatch = item.itemName?.toLowerCase().includes('cotton') || 
+                                                      item.productType?.toLowerCase().includes('cotton') ||
+                                                      item.category?.primary?.toLowerCase().includes('cotton');
+                                    const polyesterMatch = item.itemName?.toLowerCase().includes('polyester') || 
+                                                         item.productType?.toLowerCase().includes('polyester') ||
+                                                         item.category?.primary?.toLowerCase().includes('polyester');
+                                    const linenMatch = item.itemName?.toLowerCase().includes('linen') || 
+                                                      item.productType?.toLowerCase().includes('linen') ||
+                                                      item.category?.primary?.toLowerCase().includes('linen');
+                                    const silkMatch = item.itemName?.toLowerCase().includes('silk') || 
+                                                     item.productType?.toLowerCase().includes('silk') ||
+                                                     item.category?.primary?.toLowerCase().includes('silk');
+                                    
+                                    return categoryMatch || nameMatch || typeMatch || cottonMatch || polyesterMatch || linenMatch || silkMatch;
+                                  });
+                                  
+                                  // If no fabric items found, show all items as fallback
+                                  const itemsToShow = fabricItems.length > 0 ? fabricItems : inventoryItems;
+                                  
+                                  return itemsToShow
+                                    .filter(item => !selectedFabricMaterials.find(f => f.item._id === item._id))
+                                    .map((item) => (
+                                      <SelectItem key={item._id} value={item._id}>
+                                        {item.itemName} - {item.quality?.qualityGrade || 'N/A'} ({item.specifications?.gsm || 'N/A'} GSM)
+                                        {fabricItems.length === 0 && ' (All Items)'}
+                                      </SelectItem>
+                                    ));
+                                })()}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div>
+                            <Label className="text-sm font-medium text-gray-700 mb-2 block">
+                              Quantity <span className="text-red-500">*</span>
+                            </Label>
+                            <input
+                              type="number"
+                              placeholder="Enter quantity"
+                              className="w-full px-3 py-2 border rounded-md"
+                              onChange={(e) => {
+                                const quantity = Number(e.target.value);
+                                if (quantity > 0 && selectedFabricMaterials.length > 0) {
+                                  const updated = [...selectedFabricMaterials];
+                                  updated[updated.length - 1].quantity = quantity;
+                                  setSelectedFabricMaterials(updated);
+                                }
+                              }}
+                            />
+                          </div>
+                          <div>
+                            <Label className="text-sm font-medium text-gray-700 mb-2 block">
+                              Unit <span className="text-red-500">*</span>
+                            </Label>
+                            <Select
+                              value=""
+                              onValueChange={(value) => {
+                                if (selectedFabricMaterials.length > 0) {
+                                  const updated = [...selectedFabricMaterials];
+                                  updated[updated.length - 1].unit = value as 'meters' | 'yards' | 'pieces';
+                                  setSelectedFabricMaterials(updated);
+                                }
+                              }}
+                            >
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select unit" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="meters">Meters</SelectItem>
+                                <SelectItem value="yards">Yards</SelectItem>
+                                <SelectItem value="pieces">Pieces</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Selected Fabric Materials List */}
+                      {selectedFabricMaterials.length > 0 && (
+                        <div className="space-y-3">
+                          <h4 className="font-medium text-gray-800">Selected Fabric Materials:</h4>
+                          {selectedFabricMaterials.map((fabric, index) => (
+                            <div key={fabric.item._id} className="p-4 bg-blue-50 border border-blue-200 rounded-md">
+                              <div className="flex justify-between items-start">
+                                <div className="flex-1">
+                                  <div className="grid grid-cols-2 gap-2 text-sm text-blue-800 mb-2">
+                                    <div><strong>Fabric:</strong> {fabric.item.itemName}</div>
+                                    <div><strong>Grade:</strong> {fabric.item.quality?.qualityGrade || 'N/A'}</div>
+                                    <div><strong>GSM:</strong> {fabric.item.specifications?.gsm || 'N/A'}</div>
+                                    <div><strong>Width:</strong> {fabric.item.specifications?.width || 'N/A'} inches</div>
+                                    <div><strong>Color:</strong> {fabric.item.specifications?.color || 'N/A'}</div>
+                                    <div><strong>Weight:</strong> {fabric.item.specifications?.weight || 'N/A'} kg</div>
+                                  </div>
+                                  <div className="flex gap-4 items-center">
+                                    <div>
+                                      <Label className="text-xs text-blue-700">Quantity:</Label>
+                                      <input
+                                        type="number"
+                                        value={fabric.quantity}
+                                        onChange={(e) => {
+                                          const updated = [...selectedFabricMaterials];
+                                          updated[index].quantity = Number(e.target.value);
+                                          setSelectedFabricMaterials(updated);
+                                        }}
+                                        className="w-20 px-2 py-1 border rounded text-sm"
+                                        min="0"
+                                      />
+                                    </div>
+                                    <div>
+                                      <Label className="text-xs text-blue-700">Unit:</Label>
+                                      <Select
+                                        value={fabric.unit}
+                                        onValueChange={(value) => {
+                                          const updated = [...selectedFabricMaterials];
+                                          updated[index].unit = value as 'meters' | 'yards' | 'pieces';
+                                          setSelectedFabricMaterials(updated);
+                                        }}
+                                      >
+                                        <SelectTrigger className="w-24 h-8">
+                                          <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                          <SelectItem value="meters">Meters</SelectItem>
+                                          <SelectItem value="yards">Yards</SelectItem>
+                                          <SelectItem value="pieces">Pieces</SelectItem>
+                                        </SelectContent>
+                                      </Select>
+                                    </div>
+                                  </div>
+                                </div>
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => {
+                                    const updated = selectedFabricMaterials.filter((_, i) => i !== index);
+                                    setSelectedFabricMaterials(updated);
+                                  }}
+                                  className="text-red-600 hover:text-red-700"
+                                >
+                                  Remove
+                                </Button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                {/* Chemical & Raw Materials Selection Section */}
+                <div className="border rounded-lg p-4">
+                  <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                    <Droplets className="h-5 w-5" />
+                    🧪 Chemical & Raw Materials Selection
+                  </h3>
+                  <p className="text-sm text-gray-600 mb-4">
+                    Select chemicals and raw materials needed for the process (e.g., Dyes, Chemicals, Auxiliaries)
+                  </p>
+
+                  {/* Recommended Raw Materials for Selected Fabric */}
+                  {selectedFabricMaterials.length > 0 && (
+                    <div className="mb-6 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg">
+                      <div className="flex items-center justify-between mb-3">
+                        <h4 className="font-semibold text-blue-800 flex items-center gap-2">
+                          <Package className="h-4 w-4" />
+                          Recommended Raw Materials for Selected Fabric
+                        </h4>
+                        {isLoadingRawMaterials && (
+                          <div className="flex items-center gap-2 text-sm text-blue-600">
+                            <RefreshCw className="h-4 w-4 animate-spin" />
+                            Loading...
+                          </div>
+                        )}
+                      </div>
+                      
+                      {rawMaterialsForSelectedFabric.length > 0 ? (
+                        <div className="space-y-2">
+                          <p className="text-sm text-blue-700 mb-3">
+                            Based on your selected fabric, here are the recommended raw materials:
+                          </p>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            {rawMaterialsForSelectedFabric.slice(0, 6).map((item) => (
+                              <div key={item._id} className="p-3 bg-white border border-blue-100 rounded-md hover:shadow-sm transition-shadow">
+                                <div className="flex items-center justify-between">
+                                  <div className="flex-1">
+                                    <div className="font-medium text-sm text-gray-900">{item.itemName}</div>
+                                    <div className="text-xs text-gray-500 mt-1">
+                                      <span className="font-medium">Stock:</span> {item.stock.availableStock} {item.stock.unit} • 
+                                      <span className="font-medium ml-1">Cost:</span> ₹{item.pricing.costPrice}
+                                    </div>
+                                    {item.category && (
+                                      <div className="text-xs text-blue-600 mt-1">
+                                        {item.category.primary}
+                                      </div>
+                                    )}
+                                  </div>
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => handleAddInventoryItem(item)}
+                                    disabled={selectedInventoryItems.some(selected => selected.item._id === item._id) || item.stock.availableStock <= 0}
+                                    className="min-w-16 text-blue-600 border-blue-200 hover:bg-blue-50"
+                                  >
+                                    <Plus className="h-3 w-3 mr-1" />
+                                    Add
+                                  </Button>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                          {rawMaterialsForSelectedFabric.length > 6 && (
+                            <p className="text-xs text-blue-600 mt-2">
+                              + {rawMaterialsForSelectedFabric.length - 6} more materials available below
+                            </p>
+                          )}
+                        </div>
+                      ) : !isLoadingRawMaterials && (
+                        <div className="text-center py-4">
+                          <Package className="h-8 w-8 mx-auto text-blue-400 mb-2" />
+                          <p className="text-sm text-blue-600">
+                            No specific raw materials found for the selected fabric. Browse all available materials below.
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  
+                  {/* Company Selection Warning */}
+                  {!formData.companyId && (
+                    <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-md">
+                      <p className="text-sm text-yellow-800">
+                        ⚠️ Please select a company first to view available chemicals and raw materials
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Search and Filter */}
+                  {formData.companyId && (
+                    <div className="mb-4">
+                      <Label className="text-sm font-medium text-gray-700 mb-2 block">
+                        Search Raw Materials
+                      </Label>
+                      <div className="flex gap-2">
+                        <input
+                          type="text"
+                          placeholder="Search chemicals, dyes, auxiliaries..."
+                          value={inventorySearchTerm}
+                          onChange={(e) => setInventorySearchTerm(e.target.value)}
+                          className="flex-1 px-3 py-2 border rounded-md text-sm"
+                        />
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => setInventorySearchTerm('')}
+                          size="sm"
+                        >
+                          Clear
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Available Inventory Items */}
+                  {formData.companyId && (
+                    <div className="mb-4">
+                      <Label className="text-sm font-medium text-gray-700 mb-2 block">
+                        Available Raw Materials ({inventoryItems.length} items)
+                      </Label>
+                      {inventoryLoading ? (
+                        <div className="text-center py-4">
+                          <p className="text-sm text-gray-500">Loading inventory items...</p>
+                        </div>
+                      ) : (
+                        <div className="max-h-60 overflow-y-auto border rounded-md p-2 space-y-2">
+                          {inventoryItems.length > 0 ? (
+                            inventoryItems.map((item) => (
+                              <div key={item._id} className="flex items-center justify-between p-3 border rounded hover:bg-gray-50 transition-colors">
+                                <div className="flex-1">
+                                  <div className="font-medium text-sm text-gray-900">{item.itemName}</div>
+                                  <div className="text-xs text-gray-500 mt-1">
+                                    <span className="font-medium">Code:</span> {item.itemCode} • 
+                                    <span className="font-medium ml-1">Stock:</span> {item.stock.availableStock} {item.stock.unit} • 
+                                    <span className="font-medium ml-1">Cost:</span> ₹{item.pricing.costPrice} per {item.stock.unit}
+                                  </div>
+                                  {item.category && (
+                                    <div className="text-xs text-blue-600 mt-1">
+                                      Category: {item.category.primary}
+                                    </div>
+                                  )}
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <div className="text-right">
+                                    <div className="text-xs text-gray-500">Available</div>
+                                    <div className="text-sm font-medium">{item.stock.availableStock} {item.stock.unit}</div>
+                                  </div>
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => handleAddInventoryItem(item)}
+                                    disabled={selectedInventoryItems.some(selected => selected.item._id === item._id) || item.stock.availableStock <= 0}
+                                    className="min-w-16"
+                                  >
+                                    <Plus className="h-3 w-3 mr-1" />
+                                    Add
+                                  </Button>
+                                </div>
+                              </div>
+                            ))
+                          ) : (
+                            <div className="text-center py-8">
+                              <Package className="h-8 w-8 mx-auto text-gray-400 mb-2" />
+                              <p className="text-sm text-gray-500">
+                                {inventorySearchTerm ? 'No items found matching your search' : 'No raw materials found in inventory'}
+                              </p>
+                              {inventorySearchTerm && (
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => setInventorySearchTerm('')}
+                                  className="mt-2"
+                                >
+                                  Clear Search
+                                </Button>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Selected Inventory Items */}
+                  {selectedInventoryItems.length > 0 && (
+                    <div>
+                      <div className="flex items-center justify-between mb-3">
+                        <Label className="text-sm font-medium text-gray-700">
+                          Selected Raw Materials ({selectedInventoryItems.length} items)
+                        </Label>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setSelectedInventoryItems([])}
+                          className="text-red-600 hover:text-red-700"
+                        >
+                          Clear All
+                        </Button>
+                      </div>
+                      <div className="space-y-3">
+                        {selectedInventoryItems.map((selected) => (
+                          <div key={selected.item._id} className="p-4 border rounded-lg bg-blue-50 border-blue-200">
+                            <div className="flex items-start justify-between">
+                              <div className="flex-1">
+                                <div className="font-medium text-sm text-gray-900">{selected.item.itemName}</div>
+                                <div className="text-xs text-gray-500 mt-1">
+                                  <span className="font-medium">Code:</span> {selected.item.itemCode} • 
+                                  <span className="font-medium ml-1">Available:</span> {selected.item.stock.availableStock} {selected.item.stock.unit} • 
+                                  <span className="font-medium ml-1">Unit Cost:</span> ₹{selected.item.pricing.costPrice}
+                                </div>
+                                {selected.item.category && (
+                                  <div className="text-xs text-blue-600 mt-1">
+                                    Category: {selected.item.category.primary}
+                                  </div>
+                                )}
+                              </div>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleRemoveInventoryItem(selected.item._id)}
+                                className="text-red-600 hover:text-red-700 ml-2"
+                              >
+                                Remove
+                              </Button>
+                            </div>
+                            
+                            {/* Quantity and Cost Section */}
+                            <div className="mt-3 flex items-center justify-between">
+                              <div className="flex items-center gap-3">
+                                <Label className="text-sm font-medium text-gray-700">Production Quantity:</Label>
+                                <div className="flex items-center gap-2">
+                                  <input
+                                    type="number"
+                                    min="0.01"
+                                    max={selected.item.stock.availableStock}
+                                    step="0.01"
+                                    value={selected.quantity}
+                                    onChange={(e) => handleUpdateInventoryQuantity(selected.item._id, Number(e.target.value))}
+                                    className="w-20 px-2 py-1 text-sm border rounded-md text-center"
+                                    placeholder="0.00"
+                                  />
+                                  <span className="text-sm text-gray-600 font-medium">{selected.unit}</span>
+                                </div>
+                              </div>
+                              <div className="text-right">
+                                <div className="text-xs text-gray-500">Total Cost</div>
+                                <div className="text-sm font-bold text-green-600">
+                                  ₹{(selected.item.pricing.costPrice * selected.quantity).toFixed(2)}
+                                </div>
+                              </div>
+                            </div>
+                            
+                            {/* Stock Warning */}
+                            {selected.quantity > selected.item.stock.availableStock && (
+                              <div className="mt-2 p-2 bg-red-50 border border-red-200 rounded text-xs text-red-700">
+                                ⚠️ Quantity exceeds available stock ({selected.item.stock.availableStock} {selected.unit})
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                      
+                      {/* Summary Section */}
+                      <div className="mt-4 p-4 bg-gray-50 rounded-lg border">
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <div className="text-sm font-medium text-gray-700">Total Items Selected</div>
+                            <div className="text-lg font-bold text-blue-600">{selectedInventoryItems.length}</div>
+                          </div>
+                          <div>
+                            <div className="text-sm font-medium text-gray-700">Total Raw Material Cost</div>
+                            <div className="text-lg font-bold text-green-600">
+                              ₹{selectedInventoryItems.reduce((total, selected) => 
+                                total + (selected.item.pricing.costPrice * selected.quantity), 0
+                              ).toFixed(2)}
+                            </div>
+                          </div>
+                        </div>
+                        
+                        {/* Production Summary */}
+                        <div className="mt-3 pt-3 border-t">
+                          <div className="text-sm font-medium text-gray-700 mb-2">Production Summary:</div>
+                          <div className="space-y-1 text-xs text-gray-600">
+                            {selectedInventoryItems.map((selected) => (
+                              <div key={selected.item._id} className="flex justify-between">
+                                <span>{selected.item.itemName}:</span>
+                                <span>{selected.quantity} {selected.unit}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Submit Button */}
+                <div className="flex justify-end gap-3">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => {
+                      setShowCreateForm(false);
+                      setFormData({});
+                      setSelectedInventoryItems([]);
+                      setInventorySearchTerm('');
+                    }}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    type="submit"
+                    disabled={creating}
+                    className="bg-blue-600 hover:bg-blue-700"
+                  >
+                    {creating ? 'Creating...' : 'Create Batch'}
+                  </Button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Batch Details Modal */}
+      {selectedBatch && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-6xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-2xl font-bold">Batch Details: {selectedBatch.batchNumber}</h2>
+                <Button
+                  variant="outline"
+                  onClick={() => setShowDetailsModal(false)}
+                >
+                  Close
+                </Button>
+              </div>
+
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Basic Information */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Package className="h-5 w-5" />
+                      Basic Information
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="text-sm font-medium text-gray-500">Batch Number</label>
+                        <p className="text-sm">{selectedBatch.batchNumber}</p>
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-gray-500">Process Type</label>
+                        <p className="text-sm">{selectedBatch.processType}</p>
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-gray-500">Process Name</label>
+                        <p className="text-sm">{selectedBatch.processName}</p>
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-gray-500">Status</label>
+                        <Badge className={getStatusColor(selectedBatch.status)}>
+                          {getStatusText(selectedBatch.status)}
+                        </Badge>
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-gray-500">Progress</label>
+                        <p className="text-sm">{selectedBatch.progress}%</p>
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-gray-500">Created At</label>
+                        <p className="text-sm">{new Date(selectedBatch.createdAt).toLocaleString()}</p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Input Material */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Package className="h-5 w-5" />
+                      Input Material
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    {selectedBatch.inputMaterial && (
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <label className="text-sm font-medium text-gray-500">Fabric Type</label>
+                          <p className="text-sm">{selectedBatch.inputMaterial.fabricType || 'N/A'}</p>
+                        </div>
+                        <div>
+                          <label className="text-sm font-medium text-gray-500">Fabric Grade</label>
+                          <p className="text-sm">{selectedBatch.inputMaterial.fabricGrade || 'N/A'}</p>
+                        </div>
+                        <div>
+                          <label className="text-sm font-medium text-gray-500">GSM</label>
+                          <p className="text-sm">{selectedBatch.inputMaterial.gsm || 'N/A'}</p>
+                        </div>
+                        <div>
+                          <label className="text-sm font-medium text-gray-500">Width</label>
+                          <p className="text-sm">{selectedBatch.inputMaterial.width || 'N/A'}</p>
+                        </div>
+                        <div>
+                          <label className="text-sm font-medium text-gray-500">Color</label>
+                          <p className="text-sm">{selectedBatch.inputMaterial.color || 'N/A'}</p>
+                        </div>
+                        <div>
+                          <label className="text-sm font-medium text-gray-500">Quantity</label>
+                          <p className="text-sm">{selectedBatch.inputMaterial.quantity || 'N/A'} {selectedBatch.inputMaterial.unit || ''}</p>
+                        </div>
+                        <div>
+                          <label className="text-sm font-medium text-gray-500">Weight</label>
+                          <p className="text-sm">{selectedBatch.inputMaterial.weight || 'N/A'} kg</p>
+                        </div>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+
+                {/* Process Parameters */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Activity className="h-5 w-5" />
+                      Process Parameters
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    {selectedBatch.processParameters && (
+                      <div className="space-y-4">
+                        <div>
+                          <label className="text-sm font-medium text-gray-500">Temperature</label>
+                          <p className="text-sm">
+                            {selectedBatch.processParameters.temperature?.min || 'N/A'}°C - {selectedBatch.processParameters.temperature?.max || 'N/A'}°C
+                            {selectedBatch.processParameters.temperature?.actual && ` (Actual: ${selectedBatch.processParameters.temperature.actual}°C)`}
+                          </p>
+                        </div>
+                        <div>
+                          <label className="text-sm font-medium text-gray-500">Pressure</label>
+                          <p className="text-sm">
+                            {selectedBatch.processParameters.pressure?.min || 'N/A'} - {selectedBatch.processParameters.pressure?.max || 'N/A'} bar
+                            {selectedBatch.processParameters.pressure?.actual && ` (Actual: ${selectedBatch.processParameters.pressure.actual} bar)`}
+                          </p>
+                        </div>
+                        <div>
+                          <label className="text-sm font-medium text-gray-500">pH</label>
+                          <p className="text-sm">
+                            {selectedBatch.processParameters.ph?.min || 'N/A'} - {selectedBatch.processParameters.ph?.max || 'N/A'}
+                            {selectedBatch.processParameters.ph?.actual && ` (Actual: ${selectedBatch.processParameters.ph.actual})`}
+                          </p>
+                        </div>
+                        <div>
+                          <label className="text-sm font-medium text-gray-500">Time</label>
+                          <p className="text-sm">{selectedBatch.processParameters.time?.planned || 'N/A'} {selectedBatch.processParameters.time?.unit || 'minutes'}</p>
+                        </div>
+                        <div>
+                          <label className="text-sm font-medium text-gray-500">Speed</label>
+                          <p className="text-sm">{selectedBatch.processParameters.speed?.planned || 'N/A'} {selectedBatch.processParameters.speed?.unit || 'm/min'}</p>
+                        </div>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+
+                {/* Chemical Recipe */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Droplets className="h-5 w-5" />
+                      Chemical Recipe
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    {selectedBatch.chemicalRecipe && (
+                      <div className="space-y-4">
+                        <div>
+                          <label className="text-sm font-medium text-gray-500">Recipe Name</label>
+                          <p className="text-sm">{selectedBatch.chemicalRecipe.recipeName || 'N/A'}</p>
+                        </div>
+                        <div>
+                          <label className="text-sm font-medium text-gray-500">Recipe Version</label>
+                          <p className="text-sm">{selectedBatch.chemicalRecipe.recipeVersion || 'N/A'}</p>
+                        </div>
+                        <div>
+                          <label className="text-sm font-medium text-gray-500">Total Recipe Cost</label>
+                          <p className="text-sm">₹{selectedBatch.chemicalRecipe.totalRecipeCost || '0'}</p>
+                        </div>
+                        {selectedBatch.chemicalRecipe.chemicals && selectedBatch.chemicalRecipe.chemicals.length > 0 && (
+                          <div>
+                            <label className="text-sm font-medium text-gray-500">Chemicals Used</label>
+                            <div className="space-y-2 mt-2">
+                              {selectedBatch.chemicalRecipe.chemicals.map((chemical: any, index: number) => (
+                                <div key={index} className="p-2 border rounded bg-gray-50">
+                                  <div className="font-medium text-sm">{chemical.chemicalName}</div>
+                                  <div className="text-xs text-gray-500">
+                                    Quantity: {chemical.quantity} {chemical.unit}
+                                  </div>
+                                  {chemical.concentration > 0 && (
+                                    <div className="text-xs text-gray-500">
+                                      Concentration: {chemical.concentration}%
+                                    </div>
+                                  )}
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+
+                {/* Machine Assignment */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Truck className="h-5 w-5" />
+                      Machine Assignment
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    {selectedBatch.machineAssignment && (
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <label className="text-sm font-medium text-gray-500">Machine ID</label>
+                          <p className="text-sm">{selectedBatch.machineAssignment.machineId || 'N/A'}</p>
+                        </div>
+                        <div>
+                          <label className="text-sm font-medium text-gray-500">Machine Name</label>
+                          <p className="text-sm">{selectedBatch.machineAssignment.machineName || 'N/A'}</p>
+                        </div>
+                        <div>
+                          <label className="text-sm font-medium text-gray-500">Machine Type</label>
+                          <p className="text-sm">{selectedBatch.machineAssignment.machineType || 'N/A'}</p>
+                        </div>
+                        <div>
+                          <label className="text-sm font-medium text-gray-500">Capacity</label>
+                          <p className="text-sm">{selectedBatch.machineAssignment.capacity || 'N/A'}</p>
+                        </div>
+                        <div>
+                          <label className="text-sm font-medium text-gray-500">Efficiency</label>
+                          <p className="text-sm">{selectedBatch.machineAssignment.efficiency || 'N/A'}%</p>
+                        </div>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+
+                {/* Status Change History */}
+                <Card className="lg:col-span-2">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Activity className="h-5 w-5" />
+                      Status Change History
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {selectedBatch.statusChangeLog && selectedBatch.statusChangeLog.length > 0 ? (
+                      <div className="space-y-4">
+                        {selectedBatch.statusChangeLog.map((log: any, index: number) => (
+                          <div key={index} className="border-l-4 border-blue-500 pl-4 py-2">
+                            <div className="flex items-center justify-between">
+                              <div>
+                                <p className="font-medium">
+                                  Status changed from <span className="text-red-600">{log.fromStatus}</span> to <span className="text-green-600">{log.toStatus}</span>
+                                </p>
+                                <p className="text-sm text-gray-600">{log.changeReason}</p>
+                                {log.notes && <p className="text-sm text-gray-500 mt-1">{log.notes}</p>}
+                              </div>
+                              <div className="text-right">
+                                <p className="text-sm font-medium">{log.changedByName}</p>
+                                <p className="text-xs text-gray-500">{new Date(log.changeDate).toLocaleString()}</p>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-gray-500">No status change history available</p>
+                    )}
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
       </div>
     </AppLayout>
   );
