@@ -156,8 +156,8 @@ VehicleSchema.pre('save', function(next) {
   next();
 });
 
-// Pre-update middleware for findByIdAndUpdate
-VehicleSchema.pre(['findOneAndUpdate', 'findByIdAndUpdate'], function(next) {
+// Pre-update middleware for findOneAndUpdate
+VehicleSchema.pre('findOneAndUpdate', function(next) {
   const update = this.getUpdate() as any;
   
   // Sync currentStatus with status if status is being updated
