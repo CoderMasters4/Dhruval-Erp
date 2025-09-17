@@ -462,12 +462,12 @@ const navigationItems: NavigationItem[] = [
     permission: 'view:SecurityLog',
     children: [
      
-      {
-        name: 'Visitor Management',
-        href: '/visitors',
-        icon: UserPlus,
-        permission: 'view:Visitor'
-      },
+      // {
+      //   name: 'Visitor Management',
+      //   href: '/visitors',
+      //   icon: UserPlus,
+      //   permission: 'view:Visitor'
+      // },
       {
         name: 'Vehicle Management',
         href: '/vehicles',

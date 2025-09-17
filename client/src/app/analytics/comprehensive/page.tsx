@@ -87,15 +87,33 @@ export default function ComprehensiveAnalyticsPage() {
   const [templateName, setTemplateName] = useState('')
   const [templateDescription, setTemplateDescription] = useState('')
 
+  // Helper function to clean parameters
+  const cleanParams = (params: any) => {
+    const cleaned: any = {}
+    Object.keys(params).forEach(key => {
+      const value = params[key]
+      if (value !== undefined && value !== null && value !== '') {
+        if (Array.isArray(value) && value.length > 0) {
+          cleaned[key] = value
+        } else if (!Array.isArray(value)) {
+          cleaned[key] = value
+        }
+      }
+    })
+    return cleaned
+  }
+
   // API queries
-  const { data: analyticsData, isLoading: dashboardLoading, error: dashboardError } = useGetAnalyticsDashboardQuery({
-    timeRange,
-    companyId: user?.companyId,
-    startDate: customFilters.startDate || undefined,
-    endDate: customFilters.endDate || undefined,
-    departments: customFilters.departments.length > 0 ? customFilters.departments : undefined,
-    metrics: customFilters.metrics.length > 0 ? customFilters.metrics : undefined,
-  })
+  const { data: analyticsData, isLoading: dashboardLoading, error: dashboardError } = useGetAnalyticsDashboardQuery(
+    cleanParams({
+      timeRange,
+      companyId: user?.companyId,
+      startDate: customFilters.startDate,
+      endDate: customFilters.endDate,
+      departments: customFilters.departments,
+      metrics: customFilters.metrics,
+    })
+  )
 
   const { data: kpiResponse, isLoading: kpiLoading } = useGetKPIDataQuery({
     timeRange,

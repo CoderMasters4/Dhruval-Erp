@@ -364,6 +364,60 @@ export const analyticsApi = baseApi.injectEndpoints({
       providesTags: ['Analytics'],
     }),
 
+    // Get dispatched reports
+    getDispatchedReports: builder.query<
+      { success: boolean; data: any },
+      { 
+        startDate?: string
+        endDate?: string
+        companyId?: string
+        includeDetails?: boolean
+      }
+    >({
+      query: (params = {}) => ({
+        url: '/analytics/reports/dispatched',
+        method: 'GET',
+        params,
+      }),
+      providesTags: ['Analytics'],
+    }),
+
+    // Get return reports
+    getReturnReports: builder.query<
+      { success: boolean; data: any },
+      { 
+        startDate?: string
+        endDate?: string
+        companyId?: string
+        includeDetails?: boolean
+      }
+    >({
+      query: (params = {}) => ({
+        url: '/analytics/reports/return',
+        method: 'GET',
+        params,
+      }),
+      providesTags: ['Analytics'],
+    }),
+
+    // Get completed reports
+    getCompletedReports: builder.query<
+      { success: boolean; data: any },
+      { 
+        startDate?: string
+        endDate?: string
+        companyId?: string
+        includeDetails?: boolean
+      }
+    >({
+      query: (params = {}) => ({
+        url: '/analytics/reports/completed',
+        method: 'GET',
+        params,
+      }),
+      providesTags: ['Analytics'],
+    }),
+
     // Export analytics report
     exportAnalyticsReport: builder.mutation<
       { success: boolean; data: { downloadUrl: string }; message: string },
@@ -408,5 +462,8 @@ export const {
   useGetReportTemplatesQuery,
   useSaveReportTemplateMutation,
   useGetRealTimeAnalyticsQuery,
+  useGetDispatchedReportsQuery,
+  useGetReturnReportsQuery,
+  useGetCompletedReportsQuery,
   useExportAnalyticsReportMutation,
 } = analyticsApi

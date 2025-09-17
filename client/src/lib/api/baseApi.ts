@@ -2,7 +2,7 @@ import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react'
 import type { RootState } from '../store'
 
 const baseQuery = fetchBaseQuery({
-  baseUrl: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api/v1',
+  baseUrl: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api/v1',
   credentials: 'include', // This ensures cookies are sent with requests
   prepareHeaders: (headers, { getState }) => {
     const state = getState() as RootState
@@ -78,7 +78,7 @@ const baseQuery = fetchBaseQuery({
 
 // Create a separate base query for refresh endpoint that doesn't send Authorization header
 const baseQueryWithoutAuth = fetchBaseQuery({
-  baseUrl: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api/v1',
+  baseUrl: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api/v1',
   credentials: 'include', // Still include cookies for refresh token
   prepareHeaders: (headers) => {
     // For refresh endpoint, do NOT send Authorization header or company ID, rely only on HTTP-only cookie

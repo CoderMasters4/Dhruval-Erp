@@ -189,8 +189,10 @@ class DatabaseManager {
     try {
       logger.info('Setting up database indexes...');
 
-      // Temporarily skip model imports to identify hanging issue
-      logger.info('⚠️ Skipping model imports temporarily to debug server hanging issue');
+      // Import models to ensure they are registered with Mongoose
+      logger.info('📦 Importing models...');
+      await import('@/models');
+      logger.info('✅ Models imported successfully');
 
       // Skip manual index creation to avoid duplicates - schema indexes are sufficient
       logger.info('✅ Database indexes setup completed successfully (using schema-defined indexes only)');

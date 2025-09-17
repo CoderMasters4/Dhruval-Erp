@@ -41,16 +41,24 @@ interface StockMovement {
   _id: string
   movementNumber: string
   movementType: 'inward' | 'outward' | 'transfer' | 'adjustment' | 'adjustment_note'
-  itemName: string
+  itemId?: string | { 
+    _id: string
+    itemName: string
+    itemCode: string
+    category?: { primary?: string; secondary?: string; tertiary?: string }
+    stock?: { unit: string }
+    pricing?: { costPrice: number; sellingPrice: number }
+  }
+  itemName?: string
   companyItemCode?: string
   itemCode?: string
   quantity: number
   stock?: { unit: string }
   unit?: string
-  fromLocation?: string | { warehouseName: string }
-  toLocation?: string | { warehouseName: string }
+  fromLocation?: string | { warehouseName: string; isExternal?: boolean }
+  toLocation?: string | { warehouseName: string; isExternal?: boolean }
   performedBy?: string
-  createdBy?: string
+  createdBy?: string | { personalInfo: { firstName?: string; lastName?: string }; username?: string; _id: string }
   status?: 'completed' | 'pending' | 'cancelled'
   timestamp?: string
   movementDate?: string
@@ -516,13 +524,20 @@ export default function InventoryMovementsPage() {
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div>
-                            <div className="text-sm font-medium text-gray-900">{movement.itemName}</div>
-                            <div className="text-sm text-gray-500">{movement.companyItemCode || movement.itemCode || 'N/A'}</div>
+                            <div className="text-sm font-medium text-gray-900">
+                              {movement.itemId?.itemName || movement.itemName || 'Unknown Item'}
+                            </div>
+                            <div className="text-sm text-gray-500">
+                              {movement.itemId?.itemCode || movement.companyItemCode || movement.itemCode || 'N/A'}
+                            </div>
+                            <div className="text-xs text-gray-400 capitalize">
+                              {movement.itemId?.category?.primary || 'N/A'}
+                            </div>
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className={clsx("text-sm font-bold", getQuantityColor(movement.movementType, movement.quantity))}>
-                            {movement.movementType === 'outward' ? '-' : movement.quantity > 0 ? '+' : ''}{Math.abs(movement.quantity)} {movement.stock?.unit || movement.unit || 'PCS'}
+                            {movement.movementType === 'outward' ? '-' : movement.quantity > 0 ? '+' : ''}{Math.abs(movement.quantity)} {movement.itemId?.stock?.unit || movement.stock?.unit || movement.unit || 'PCS'}
                           </div>
                         </td>
                         <td className="px-6 py-4">
@@ -553,7 +568,10 @@ export default function InventoryMovementsPage() {
                           <div className="flex items-center space-x-2">
                             <User className="h-4 w-4 text-gray-400" />
                             <span className="text-sm text-gray-900">
-                              {movement.performedBy || movement.createdBy || 'System'}
+                              {movement.performedBy || 
+                               (typeof movement.createdBy === 'object' && movement.createdBy?.personalInfo 
+                                 ? `${movement.createdBy.personalInfo.firstName || ''} ${movement.createdBy.personalInfo.lastName || ''}`.trim() || movement.createdBy.username
+                                 : movement.createdBy) || 'System'}
                             </span>
                           </div>
                         </td>

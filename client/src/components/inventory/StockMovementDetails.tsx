@@ -82,7 +82,7 @@ export function StockMovementDetails({
     }
   }
 
-  const getStatusBadge = (status: string) => {
+  const getStatusBadge = (status?: string) => {
     const baseClasses = "px-3 py-1 text-sm font-medium rounded-full flex items-center space-x-2"
     switch (status) {
       case 'completed':
@@ -98,7 +98,7 @@ export function StockMovementDetails({
     }
   }
 
-  const getStatusIcon = (status: string) => {
+  const getStatusIcon = (status?: string) => {
     switch (status) {
       case 'completed':
         return <CheckCircle className="w-4 h-4 text-green-600" />
@@ -186,7 +186,7 @@ export function StockMovementDetails({
                 </div>
                 <div className={getMovementBadge(movement.movementType)}>
                   {getMovementIcon(movement.movementType)}
-                  <span className="capitalize">{movement.movementType}</span>
+                  <span className="capitalize">{movement.movementType || 'Unknown'}</span>
                 </div>
               </div>
               
@@ -202,7 +202,7 @@ export function StockMovementDetails({
               <div className="text-center">
                 <div className={getStatusBadge(movement.status)}>
                   {getStatusIcon(movement.status)}
-                  <span className="capitalize">{movement.status.replace('_', ' ')}</span>
+                  <span className="capitalize">{movement.status?.replace('_', ' ') || 'Unknown'}</span>
                 </div>
                 {movement.priority && (
                   <div className="mt-2">
@@ -224,20 +224,40 @@ export function StockMovementDetails({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <label className="block text-sm font-medium text-gray-600 mb-1">Item Name</label>
-                <p className="text-gray-900 font-medium">{movement.itemName || 'N/A'}</p>
+                <p className="text-gray-900 font-medium">
+                  {movement.itemId?.itemName || movement.itemName || 'N/A'}
+                </p>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-600 mb-1">Item Code</label>
-                <p className="text-gray-900 font-medium">{movement.companyItemCode || movement.itemCode || 'N/A'}</p>
+                <p className="text-gray-900 font-medium">
+                  {movement.itemId?.itemCode || movement.companyItemCode || movement.itemCode || 'N/A'}
+                </p>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-600 mb-1">Category</label>
-                <p className="text-gray-900">{movement.category?.primary || 'N/A'}</p>
+                <p className="text-gray-900">
+                  {movement.itemId?.category?.primary || movement.category?.primary || 'N/A'}
+                </p>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-600 mb-1">Unit</label>
-                <p className="text-gray-900">{movement.stock?.unit || movement.unit || 'PCS'}</p>
+                <p className="text-gray-900">
+                  {movement.itemId?.stock?.unit || movement.stock?.unit || movement.unit || 'PCS'}
+                </p>
               </div>
+              {movement.itemId?.pricing && (
+                <>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-600 mb-1">Cost Price</label>
+                    <p className="text-gray-900">₹{movement.itemId.pricing.costPrice || 0}</p>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-600 mb-1">Selling Price</label>
+                    <p className="text-gray-900">₹{movement.itemId.pricing.sellingPrice || 0}</p>
+                  </div>
+                </>
+              )}
             </div>
           </div>
 
@@ -252,14 +272,24 @@ export function StockMovementDetails({
                 <label className="block text-sm font-medium text-gray-600 mb-1">From Location</label>
                 <div className="flex items-center space-x-2">
                   <MapPin className="w-4 h-4 text-gray-400" />
-                  <p className="text-gray-900 font-medium">{movement.fromLocation}</p>
+                  <p className="text-gray-900 font-medium">
+                    {typeof movement.fromLocation === 'string' 
+                      ? movement.fromLocation 
+                      : movement.fromLocation?.warehouseName || 'N/A'
+                    }
+                  </p>
                 </div>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-600 mb-1">To Location</label>
                 <div className="flex items-center space-x-2">
                   <MapPin className="w-4 h-4 text-gray-400" />
-                  <p className="text-gray-900 font-medium">{movement.toLocation}</p>
+                  <p className="text-gray-900 font-medium">
+                    {typeof movement.toLocation === 'string' 
+                      ? movement.toLocation 
+                      : movement.toLocation?.warehouseName || 'N/A'
+                    }
+                  </p>
                 </div>
               </div>
               <div>
@@ -327,7 +357,7 @@ export function StockMovementDetails({
                       <label className="block text-sm font-medium text-gray-600 mb-1">Approval Status</label>
                       <div className={getStatusBadge(movement.approval.status)}>
                         {getStatusIcon(movement.approval.status)}
-                        <span className="capitalize">{movement.approval.status}</span>
+                        <span className="capitalize">{movement.approval.status?.replace('_', ' ') || 'Unknown'}</span>
                       </div>
                     </div>
                     {movement.approval.approvedBy && (
@@ -367,7 +397,11 @@ export function StockMovementDetails({
                 <label className="block text-sm font-medium text-gray-600 mb-1">Created By</label>
                 <div className="flex items-center space-x-2">
                   <User className="w-4 h-4 text-gray-400" />
-                  <p className="text-gray-900">{movement.createdBy || 'System'}</p>
+                  <p className="text-gray-900">
+                    {typeof movement.createdBy === 'object' && movement.createdBy?.personalInfo 
+                      ? `${movement.createdBy.personalInfo.firstName || ''} ${movement.createdBy.personalInfo.lastName || ''}`.trim() || movement.createdBy.username
+                      : movement.createdBy || 'System'}
+                  </p>
                 </div>
               </div>
               <div>

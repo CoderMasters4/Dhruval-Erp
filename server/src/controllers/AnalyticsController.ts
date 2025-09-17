@@ -38,9 +38,35 @@ export class AnalyticsController {
         endDate 
       } = req.query;
 
+      console.log('=== ANALYTICS DASHBOARD REQUEST ===');
+      console.log('CompanyId:', companyId);
+      console.log('Query params:', { timeRange, departments, metrics, startDate, endDate });
+
       if (!companyId) {
         this.sendError(res, new Error('Company ID is required'), 'Company ID is required', 400);
         return;
+      }
+
+      // Validate and parse dates
+      let parsedStartDate: Date | undefined;
+      let parsedEndDate: Date | undefined;
+
+      if (typeof startDate === 'string' && startDate.trim() !== '') {
+        parsedStartDate = new Date(startDate);
+        if (isNaN(parsedStartDate.getTime())) {
+          console.log('Invalid start date:', startDate);
+          this.sendError(res, new Error('Invalid start date format'), 'Invalid start date format', 400);
+          return;
+        }
+      }
+
+      if (typeof endDate === 'string' && endDate.trim() !== '') {
+        parsedEndDate = new Date(endDate);
+        if (isNaN(parsedEndDate.getTime())) {
+          console.log('Invalid end date:', endDate);
+          this.sendError(res, new Error('Invalid end date format'), 'Invalid end date format', 400);
+          return;
+        }
       }
 
       const params = {
@@ -56,19 +82,26 @@ export class AnalyticsController {
               ? (metrics as string[])
               : [metrics.toString()])
           : undefined,
-        startDate:
-          typeof startDate === 'string' && startDate.trim() !== ''
-            ? new Date(startDate)
-            : undefined,
-        endDate:
-          typeof endDate === 'string' && endDate.trim() !== ''
-            ? new Date(endDate)
-            : undefined,
+        startDate: parsedStartDate,
+        endDate: parsedEndDate,
       };
 
+      console.log('Processed params:', params);
+
       const dashboardData = await this.analyticsService.getAnalyticsDashboard(params);
+      
+      console.log('Dashboard data result:', {
+        kpiData: dashboardData.kpiData,
+        revenueDataTotal: dashboardData.revenueData?.total,
+        revenueBreakdownLength: dashboardData.revenueData?.breakdown?.length,
+        departmentDataLength: dashboardData.departmentData?.length,
+        inventoryDistributionLength: dashboardData.inventoryDistribution?.length
+      });
+
       this.sendSuccess(res, dashboardData, 'Analytics dashboard data retrieved successfully');
     } catch (error) {
+      console.error('=== ANALYTICS DASHBOARD ERROR ===');
+      console.error('Error details:', error);
       this.sendError(res, error, 'Failed to get analytics dashboard data');
     }
   }
@@ -91,12 +124,32 @@ export class AnalyticsController {
         return;
       }
 
+      // Validate and parse dates
+      let parsedStartDate: Date | undefined;
+      let parsedEndDate: Date | undefined;
+
+      if (startDate && startDate.toString().trim() !== '') {
+        parsedStartDate = new Date(startDate as string);
+        if (isNaN(parsedStartDate.getTime())) {
+          this.sendError(res, new Error('Invalid start date format'), 'Invalid start date format', 400);
+          return;
+        }
+      }
+
+      if (endDate && endDate.toString().trim() !== '') {
+        parsedEndDate = new Date(endDate as string);
+        if (isNaN(parsedEndDate.getTime())) {
+          this.sendError(res, new Error('Invalid end date format'), 'Invalid end date format', 400);
+          return;
+        }
+      }
+
       const params = {
         companyId: companyId.toString(),
         timeRange: timeRange as string,
         comparisonPeriod: comparisonPeriod as string,
-        startDate: startDate && startDate.toString().trim() !== '' ? new Date(startDate as string) : undefined,
-        endDate: endDate && endDate.toString().trim() !== '' ? new Date(endDate as string) : undefined,
+        startDate: parsedStartDate,
+        endDate: parsedEndDate,
       };
 
       const kpiData = await this.analyticsService.getKPIData(params);
@@ -124,9 +177,19 @@ export class AnalyticsController {
         return;
       }
 
+      // Validate and parse date
+      let parsedDate = new Date();
+      if (typeof date === 'string' && date.trim() !== '') {
+        parsedDate = new Date(date);
+        if (isNaN(parsedDate.getTime())) {
+          this.sendError(res, new Error('Invalid date format'), 'Invalid date format', 400);
+          return;
+        }
+      }
+
       const params = {
         companyId: companyId.toString(),
-        date: typeof date === 'string' && date.trim() !== '' ? new Date(date) : new Date(),
+        date: parsedDate,
         departments: departments ? (Array.isArray(departments) ? departments as string[] : [departments as string]) : undefined,
         metrics: metrics ? (Array.isArray(metrics) ? metrics as string[] : [metrics as string]) : undefined,
         includeDetails: includeDetails === 'true',
@@ -158,10 +221,30 @@ export class AnalyticsController {
         return;
       }
 
+      // Validate and parse dates
+      let parsedWeekStart: Date | undefined;
+      let parsedWeekEnd: Date | undefined;
+
+      if (typeof weekStart === 'string' && weekStart.trim() !== '') {
+        parsedWeekStart = new Date(weekStart);
+        if (isNaN(parsedWeekStart.getTime())) {
+          this.sendError(res, new Error('Invalid week start date format'), 'Invalid week start date format', 400);
+          return;
+        }
+      }
+
+      if (typeof weekEnd === 'string' && weekEnd.trim() !== '') {
+        parsedWeekEnd = new Date(weekEnd);
+        if (isNaN(parsedWeekEnd.getTime())) {
+          this.sendError(res, new Error('Invalid week end date format'), 'Invalid week end date format', 400);
+          return;
+        }
+      }
+
       const params = {
         companyId: companyId.toString(),
-        weekStart: typeof weekStart === 'string' && weekStart.trim() !== '' ? new Date(weekStart) : undefined,
-        weekEnd: typeof weekEnd === 'string' && weekEnd.trim() !== '' ? new Date(weekEnd) : undefined,
+        weekStart: parsedWeekStart,
+        weekEnd: parsedWeekEnd,
         departments: departments ? (Array.isArray(departments) ? departments as string[] : [departments as string]) : undefined,
         metrics: metrics ? (Array.isArray(metrics) ? metrics as string[] : [metrics as string]) : undefined,
         includeDetails: includeDetails === 'true',
@@ -239,10 +322,24 @@ export class AnalyticsController {
         return;
       }
 
+      // Validate and parse dates
+      const parsedStartDate = new Date(startDate as string);
+      const parsedEndDate = new Date(endDate as string);
+
+      if (isNaN(parsedStartDate.getTime())) {
+        this.sendError(res, new Error('Invalid start date format'), 'Invalid start date format', 400);
+        return;
+      }
+
+      if (isNaN(parsedEndDate.getTime())) {
+        this.sendError(res, new Error('Invalid end date format'), 'Invalid end date format', 400);
+        return;
+      }
+
       const params = {
         companyId: companyId.toString(),
-        startDate: new Date(startDate as string),
-        endDate: new Date(endDate as string),
+        startDate: parsedStartDate,
+        endDate: parsedEndDate,
         departments: departments ? (Array.isArray(departments) ? departments as string[] : [departments as string]) : undefined,
         products: products ? (Array.isArray(products) ? products as string[] : [products as string]) : undefined,
         statuses: statuses ? (Array.isArray(statuses) ? statuses as string[] : [statuses as string]) : undefined,
@@ -409,6 +506,159 @@ export class AnalyticsController {
       this.sendSuccess(res, realTimeData, 'Real-time analytics retrieved successfully');
     } catch (error) {
       this.sendError(res, error, 'Failed to get real-time analytics');
+    }
+  }
+
+  /**
+   * Get dispatched reports
+   */
+  async getDispatchedReports(req: Request, res: Response): Promise<void> {
+    try {
+      const companyId = req.user?.companyId;
+      const { 
+        startDate,
+        endDate,
+        includeDetails = 'false'
+      } = req.query;
+
+      if (!companyId) {
+        this.sendError(res, new Error('Company ID is required'), 'Company ID is required', 400);
+        return;
+      }
+
+      // Validate and parse dates
+      let parsedStartDate: Date | undefined;
+      let parsedEndDate: Date | undefined;
+
+      if (startDate && startDate.toString().trim() !== '') {
+        parsedStartDate = new Date(startDate as string);
+        if (isNaN(parsedStartDate.getTime())) {
+          this.sendError(res, new Error('Invalid start date format'), 'Invalid start date format', 400);
+          return;
+        }
+      }
+
+      if (endDate && endDate.toString().trim() !== '') {
+        parsedEndDate = new Date(endDate as string);
+        if (isNaN(parsedEndDate.getTime())) {
+          this.sendError(res, new Error('Invalid end date format'), 'Invalid end date format', 400);
+          return;
+        }
+      }
+
+      const params = {
+        companyId: companyId.toString(),
+        startDate: parsedStartDate,
+        endDate: parsedEndDate,
+        includeDetails: includeDetails === 'true',
+      };
+
+      const dispatchedReports = await this.analyticsService.getDispatchedReports(params);
+      this.sendSuccess(res, dispatchedReports, 'Dispatched reports retrieved successfully');
+    } catch (error) {
+      this.sendError(res, error, 'Failed to get dispatched reports');
+    }
+  }
+
+  /**
+   * Get return reports
+   */
+  async getReturnReports(req: Request, res: Response): Promise<void> {
+    try {
+      const companyId = req.user?.companyId;
+      const { 
+        startDate,
+        endDate,
+        includeDetails = 'false'
+      } = req.query;
+
+      if (!companyId) {
+        this.sendError(res, new Error('Company ID is required'), 'Company ID is required', 400);
+        return;
+      }
+
+      // Validate and parse dates
+      let parsedStartDate: Date | undefined;
+      let parsedEndDate: Date | undefined;
+
+      if (startDate && startDate.toString().trim() !== '') {
+        parsedStartDate = new Date(startDate as string);
+        if (isNaN(parsedStartDate.getTime())) {
+          this.sendError(res, new Error('Invalid start date format'), 'Invalid start date format', 400);
+          return;
+        }
+      }
+
+      if (endDate && endDate.toString().trim() !== '') {
+        parsedEndDate = new Date(endDate as string);
+        if (isNaN(parsedEndDate.getTime())) {
+          this.sendError(res, new Error('Invalid end date format'), 'Invalid end date format', 400);
+          return;
+        }
+      }
+
+      const params = {
+        companyId: companyId.toString(),
+        startDate: parsedStartDate,
+        endDate: parsedEndDate,
+        includeDetails: includeDetails === 'true',
+      };
+
+      const returnReports = await this.analyticsService.getReturnReports(params);
+      this.sendSuccess(res, returnReports, 'Return reports retrieved successfully');
+    } catch (error) {
+      this.sendError(res, error, 'Failed to get return reports');
+    }
+  }
+
+  /**
+   * Get completed reports
+   */
+  async getCompletedReports(req: Request, res: Response): Promise<void> {
+    try {
+      const companyId = req.user?.companyId;
+      const { 
+        startDate,
+        endDate,
+        includeDetails = 'false'
+      } = req.query;
+
+      if (!companyId) {
+        this.sendError(res, new Error('Company ID is required'), 'Company ID is required', 400);
+        return;
+      }
+
+      // Validate and parse dates
+      let parsedStartDate: Date | undefined;
+      let parsedEndDate: Date | undefined;
+
+      if (startDate && startDate.toString().trim() !== '') {
+        parsedStartDate = new Date(startDate as string);
+        if (isNaN(parsedStartDate.getTime())) {
+          this.sendError(res, new Error('Invalid start date format'), 'Invalid start date format', 400);
+          return;
+        }
+      }
+
+      if (endDate && endDate.toString().trim() !== '') {
+        parsedEndDate = new Date(endDate as string);
+        if (isNaN(parsedEndDate.getTime())) {
+          this.sendError(res, new Error('Invalid end date format'), 'Invalid end date format', 400);
+          return;
+        }
+      }
+
+      const params = {
+        companyId: companyId.toString(),
+        startDate: parsedStartDate,
+        endDate: parsedEndDate,
+        includeDetails: includeDetails === 'true',
+      };
+
+      const completedReports = await this.analyticsService.getCompletedReports(params);
+      this.sendSuccess(res, completedReports, 'Completed reports retrieved successfully');
+    } catch (error) {
+      this.sendError(res, error, 'Failed to get completed reports');
     }
   }
 }
