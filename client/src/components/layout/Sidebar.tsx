@@ -299,13 +299,13 @@ const navigationItems: NavigationItem[] = [
   // Production Management
   {
     name: 'Production',
-    href: '/production-flow',
+    href: '/production',
     icon: Factory,
     permission: 'view:ProductionOrder',
     children: [
       {
         name: 'Production Flow',
-        href: '/production-flow',
+        href: '/production',
         icon: TrendingUp,
         permission: 'view:ProductionOrder',
         roles: ['admin', 'manager', 'production']

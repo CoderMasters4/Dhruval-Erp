@@ -39,9 +39,18 @@ import {
   Activity,
   Plus,
   Eye,
-  ExternalLink
+  ExternalLink,
+  Edit3,
+  ArrowRight
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
+import { 
+  useInitializeFlowMutation,
+  useStartStageMutation,
+  useCompleteStageMutation,
+  useHoldStageMutation,
+  useResumeStageMutation
+} from '@/lib/api/productionFlowApi';
 
 export default function PreProcessingPage() {
   const router = useRouter();
@@ -50,6 +59,13 @@ export default function PreProcessingPage() {
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [selectedBatch, setSelectedBatch] = useState<any>(null);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
+  
+  // Stage update modal state
+  const [isStageUpdateModalOpen, setIsStageUpdateModalOpen] = useState(false);
+  const [selectedBatchForStageUpdate, setSelectedBatchForStageUpdate] = useState<any>(null);
+  const [newStageNumber, setNewStageNumber] = useState<number>(2);
+  const [stageUpdateNotes, setStageUpdateNotes] = useState('');
+  const [updatingStage, setUpdatingStage] = useState(false);
   const [formData, setFormData] = useState<any>({});
   const [selectedInventoryItems, setSelectedInventoryItems] = useState<Array<{
     item: InventoryItem;
@@ -75,6 +91,11 @@ export default function PreProcessingPage() {
   
   const [updateStatus] = useUpdatePreProcessingStatusMutation();
   const [createBatch, { isLoading: creating }] = useCreatePreProcessingBatchMutation();
+  const [initializeFlow] = useInitializeFlowMutation();
+  const [startStage] = useStartStageMutation();
+  const [completeStage] = useCompleteStageMutation();
+  const [holdStage] = useHoldStageMutation();
+  const [resumeStage] = useResumeStageMutation();
   const { data: companies = [] } = useGetCompaniesQuery();
   const { data: inventoryResponse, isLoading: inventoryLoading } = useGetInventoryItemsQuery({ 
     limit: 100, 
@@ -344,6 +365,21 @@ export default function PreProcessingPage() {
       
       if (response.data?.success) {
         toast.success('Pre-processing batch created successfully!');
+        // Auto-initialize production flow and start Pre-Processing stage (2) if production order is provided
+        if (formData.productionOrderId) {
+          try {
+            await initializeFlow(formData.productionOrderId).unwrap().catch(() => {});
+            await startStage({ 
+              productionOrderId: formData.productionOrderId,
+              stageNumber: 2,
+              data: {}
+            }).unwrap();
+            toast.success('Production flow updated: Pre-Processing started');
+          } catch (e) {
+            console.error('Flow update failed', e);
+            toast.error('Could not update production flow');
+          }
+        }
         setShowCreateForm(false);
         setFormData({});
         refetch();
@@ -713,12 +749,117 @@ export default function PreProcessingPage() {
 
       if (response.data?.success) {
         toast.success(`Status updated to ${getStatusText(nextStatus)}`);
+
+        // Mirror status to Production Flow stage 2 if production order exists
+        const updatedBatch = batches.find(b => b._id === batchId);
+        const orderId = (updatedBatch as any)?.productionOrderId;
+        if (orderId) {
+          try {
+            if (nextStatus === 'in_progress') {
+              await resumeStage({ productionOrderId: orderId as any, stageNumber: 2, data: {} }).unwrap().catch(async () => {
+                await startStage({ productionOrderId: orderId as any, stageNumber: 2, data: {} }).unwrap();
+              });
+            } else if (nextStatus === 'completed') {
+              await completeStage({ productionOrderId: orderId as any, stageNumber: 2, data: {} }).unwrap();
+            } else if (nextStatus === 'on_hold' || nextStatus === 'quality_hold') {
+              await holdStage({ productionOrderId: orderId as any, stageNumber: 2, data: { reason: nextStatus } }).unwrap();
+            }
+          } catch (e) {
+            console.error('Failed to sync production flow stage', e);
+            toast.error('Failed to sync production flow');
+          }
+        }
       }
     } catch (error) {
       console.error('Error updating status:', error);
       toast.error('Failed to update status');
     } finally {
       setUpdatingStatus(null);
+    }
+  };
+
+  // Handle opening stage update modal
+  const handleOpenStageUpdateModal = (batch: any) => {
+    setSelectedBatchForStageUpdate(batch);
+    setNewStageNumber(2); // Default to Pre-Processing stage (2)
+    setStageUpdateNotes('');
+    setIsStageUpdateModalOpen(true);
+  };
+
+  // Handle stage update
+  const handleStageUpdate = async () => {
+    if (!selectedBatchForStageUpdate) return;
+
+    try {
+      setUpdatingStage(true);
+      
+      // Try to get production order ID from different possible fields
+      const orderId = selectedBatchForStageUpdate.productionOrderId || 
+                     selectedBatchForStageUpdate.productionOrderNumber ||
+                     selectedBatchForStageUpdate.orderId;
+      
+      if (!orderId) {
+        toast.error('No production order found for this batch. Please ensure the batch is linked to a production order.');
+        console.log('Batch data:', selectedBatchForStageUpdate);
+        return;
+      }
+
+      // Get current user info for logging
+      const currentUser = localStorage.getItem('user');
+      const userInfo = currentUser ? JSON.parse(currentUser) : { name: 'Unknown User', _id: 'unknown' };
+
+      // Prepare stage action data with comprehensive logging
+      const stageActionData = {
+        notes: stageUpdateNotes || `Stage updated to ${newStageNumber} by ${userInfo.name}`,
+        completedBy: userInfo.name,
+        startedBy: userInfo.name,
+        actualQuantity: selectedBatchForStageUpdate.quantity || 0,
+        qualityNotes: `Stage transition logged by ${userInfo.name} at ${new Date().toISOString()}`,
+        reason: `Manual stage update from Pre-Processing to Stage ${newStageNumber}`
+      };
+
+      // Log the stage update action
+      console.log('Production Stage Update:', {
+        batchId: selectedBatchForStageUpdate._id,
+        batchNumber: selectedBatchForStageUpdate.batchNumber,
+        productionOrderId: orderId,
+        fromStage: 2, // Pre-Processing stage
+        toStage: newStageNumber,
+        updatedBy: userInfo.name,
+        userId: userInfo._id,
+        timestamp: new Date().toISOString(),
+        notes: stageUpdateNotes,
+        actionData: stageActionData
+      });
+
+      // Complete current stage (Pre-Processing - stage 2)
+      await completeStage({ 
+        productionOrderId: orderId, 
+        stageNumber: 2, 
+        data: stageActionData 
+      }).unwrap();
+
+      // Start new stage if it's not the last stage
+      if (newStageNumber <= 6) { // Max 6 stages based on production flow
+        await startStage({ 
+          productionOrderId: orderId, 
+          stageNumber: newStageNumber, 
+          data: stageActionData 
+        }).unwrap();
+      }
+
+      toast.success(`Production stage updated to Stage ${newStageNumber} successfully`);
+      
+      // Close modal and reset state
+      setIsStageUpdateModalOpen(false);
+      setSelectedBatchForStageUpdate(null);
+      setStageUpdateNotes('');
+
+    } catch (error: any) {
+      console.error('Stage update error:', error);
+      toast.error(error?.data?.message || 'Failed to update production stage');
+    } finally {
+      setUpdatingStage(false);
     }
   };
 
@@ -916,6 +1057,14 @@ export default function PreProcessingPage() {
                         <Button variant="outline" size="sm">
                           <Eye className="h-4 w-4" />
                         </Button>
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => handleOpenStageUpdateModal(batch)}
+                          disabled={updatingStage}
+                        >
+                          <Edit3 className="h-4 w-4" />
+                        </Button>
                         <Button variant="outline" size="sm">
                           <Settings className="h-4 w-4" />
                         </Button>
@@ -1030,6 +1179,16 @@ export default function PreProcessingPage() {
                           <ExternalLink className="h-3 w-3" />
                           View Details
                         </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleOpenStageUpdateModal(batch)}
+                          className="flex items-center gap-1"
+                          disabled={updatingStage}
+                        >
+                          <Edit3 className="h-3 w-3" />
+                          Update Stage
+                        </Button>
                         <Badge className={getStatusColor(batch.status)}>
                           {getStatusText(batch.status)}
                         </Badge>
@@ -1040,7 +1199,7 @@ export default function PreProcessingPage() {
                       </div>
                     </div>
                     
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
                       <div>
                         <p className="text-sm text-gray-500">Process Type</p>
                         <p className="font-medium">{batch.processType}</p>
@@ -1055,6 +1214,12 @@ export default function PreProcessingPage() {
                         <p className="text-sm text-gray-500">Efficiency</p>
                           <p className="font-medium">{batch.machineAssignment?.efficiency || 0}%</p>
                         </div>
+                      <div>
+                        <p className="text-sm text-gray-500">Production Stage</p>
+                        <Badge className="bg-blue-100 text-blue-800">
+                          Stage 2 - Pre-Processing
+                        </Badge>
+                      </div>
                     </div>
 
                     <div className="flex items-center justify-between">
@@ -1144,7 +1309,7 @@ export default function PreProcessingPage() {
 
       {/* Create New Batch Modal */}
       {showCreateForm && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9998] p-4">
           <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
             <div className="p-6">
               <div className="flex items-center justify-between mb-6">
@@ -1180,7 +1345,7 @@ export default function PreProcessingPage() {
                           <SelectTrigger>
                             <SelectValue placeholder={field.placeholder} />
                           </SelectTrigger>
-                          <SelectContent>
+                          <SelectContent className="z-[10001]">
                             {field.options?.map((option) => (
                               <SelectItem key={option.value} value={option.value}>
                                 {option.label}
@@ -1324,7 +1489,7 @@ export default function PreProcessingPage() {
                               <SelectTrigger>
                                 <SelectValue placeholder="Select fabric material" />
                               </SelectTrigger>
-                              <SelectContent>
+                              <SelectContent className="z-[10001]">
                                 {(() => {
                                   const fabricItems = inventoryItems.filter(item => {
                                     const categoryMatch = item.category?.primary?.toLowerCase().includes('fabric');
@@ -1398,7 +1563,7 @@ export default function PreProcessingPage() {
                               <SelectTrigger>
                                 <SelectValue placeholder="Select unit" />
                               </SelectTrigger>
-                              <SelectContent>
+                              <SelectContent className="z-[10001]">
                                 <SelectItem value="meters">Meters</SelectItem>
                                 <SelectItem value="yards">Yards</SelectItem>
                                 <SelectItem value="pieces">Pieces</SelectItem>
@@ -1452,7 +1617,7 @@ export default function PreProcessingPage() {
                                         <SelectTrigger className="w-24 h-8">
                                           <SelectValue />
                                         </SelectTrigger>
-                                        <SelectContent>
+                                        <SelectContent className="z-[10001]">
                                           <SelectItem value="meters">Meters</SelectItem>
                                           <SelectItem value="yards">Yards</SelectItem>
                                           <SelectItem value="pieces">Pieces</SelectItem>
@@ -1809,7 +1974,7 @@ export default function PreProcessingPage() {
 
       {/* Batch Details Modal */}
       {selectedBatch && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9998] p-4">
           <div className="bg-white rounded-lg max-w-6xl w-full max-h-[90vh] overflow-y-auto">
             <div className="p-6">
               <div className="flex items-center justify-between mb-6">
@@ -2070,6 +2235,142 @@ export default function PreProcessingPage() {
                     )}
                   </CardContent>
                 </Card>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Stage Update Modal */}
+      {isStageUpdateModalOpen && selectedBatchForStageUpdate && (
+        <div className="fixed inset-0 bg-white bg-opacity-95 backdrop-blur-md flex items-center justify-center z-[99999] p-4">
+          <div className="bg-white rounded-xl max-w-md w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-gray-200 relative">
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-xl font-bold text-gray-800">Update Production Stage</h2>
+                <Button
+                  variant="outline"
+                  onClick={() => setIsStageUpdateModalOpen(false)}
+                  disabled={updatingStage}
+                  className="hover:bg-gray-50"
+                >
+                  <span className="sr-only">Close</span>
+                  ✕
+                </Button>
+              </div>
+
+              <div className="space-y-4">
+                {/* Batch Info */}
+                <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
+                  <h3 className="font-semibold text-sm text-blue-800 mb-3 flex items-center gap-2">
+                    <Package className="h-4 w-4" />
+                    Batch Information
+                  </h3>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span className="font-medium text-gray-600">Batch:</span>
+                      <span className="text-gray-800">{selectedBatchForStageUpdate.batchNumber}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="font-medium text-gray-600">Order Number:</span>
+                      <span className="text-gray-800">{selectedBatchForStageUpdate.productionOrderNumber || 'N/A'}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="font-medium text-gray-600">Order ID:</span>
+                      <span className="text-gray-800">{selectedBatchForStageUpdate.productionOrderId || 'N/A'}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="font-medium text-gray-600">Status:</span>
+                      <Badge className={`${getStatusColor(selectedBatchForStageUpdate.status)}`}>
+                        {getStatusText(selectedBatchForStageUpdate.status)}
+                      </Badge>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Stage Selection */}
+                <div className="relative z-[100000]">
+                  <Label htmlFor="stage-select" className="text-sm font-medium text-gray-700 flex items-center gap-2 mb-2">
+                    <ArrowRight className="h-4 w-4" />
+                    Select Next Production Stage
+                  </Label>
+                  <Select value={newStageNumber.toString()} onValueChange={(value) => setNewStageNumber(parseInt(value))}>
+                    <SelectTrigger className="mt-1 border-gray-300 focus:border-blue-500 focus:ring-blue-500">
+                      <SelectValue placeholder="Select stage" />
+                    </SelectTrigger>
+                    <SelectContent className="z-[100001]">
+                      <SelectItem value="3" className="hover:bg-blue-50">
+                        <div className="flex flex-col">
+                          <span className="font-medium">Stage 3 - Dyeing/Printing</span>
+                          <span className="text-xs text-gray-500">Batch Process</span>
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="4" className="hover:bg-blue-50">
+                        <div className="flex flex-col">
+                          <span className="font-medium">Stage 4 - Finishing Process</span>
+                          <span className="text-xs text-gray-500">Stenter, Coating</span>
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="5" className="hover:bg-blue-50">
+                        <div className="flex flex-col">
+                          <span className="font-medium">Stage 5 - Quality Control</span>
+                          <span className="text-xs text-gray-500">Pass/Hold/Reject</span>
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="6" className="hover:bg-blue-50">
+                        <div className="flex flex-col">
+                          <span className="font-medium">Stage 6 - Cutting & Packing</span>
+                          <span className="text-xs text-gray-500">Labels & Cartons</span>
+                        </div>
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Notes */}
+                <div>
+                  <Label htmlFor="stage-notes" className="text-sm font-medium text-gray-700 flex items-center gap-2 mb-2">
+                    <Edit3 className="h-4 w-4" />
+                    Notes (Optional)
+                  </Label>
+                  <Textarea
+                    id="stage-notes"
+                    placeholder="Add any notes about this stage transition..."
+                    value={stageUpdateNotes}
+                    onChange={(e) => setStageUpdateNotes(e.target.value)}
+                    className="mt-1 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                    rows={3}
+                  />
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex gap-3 pt-6 border-t border-gray-200">
+                  <Button
+                    onClick={handleStageUpdate}
+                    disabled={updatingStage}
+                    className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
+                  >
+                    {updatingStage ? (
+                      <>
+                        <RefreshCw className="h-4 w-4 animate-spin mr-2" />
+                        Updating Stage...
+                      </>
+                    ) : (
+                      <>
+                        <ArrowRight className="h-4 w-4 mr-2" />
+                        Update Stage
+                      </>
+                    )}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => setIsStageUpdateModalOpen(false)}
+                    disabled={updatingStage}
+                    className="border-gray-300 hover:bg-gray-50"
+                  >
+                    Cancel
+                  </Button>
+                </div>
               </div>
             </div>
           </div>

@@ -42,6 +42,8 @@ import {
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import ComprehensiveStatusManagement from '@/components/production/ComprehensiveStatusManagement';
+import { useGetDyeingProcessQuery, useUpdateDyeingProcessMutation } from '@/lib/api/dyeingApi';
+import type { DyeingProcess } from '@/lib/api/dyeingApi';
 
 interface BatchDetails {
   _id: string;
@@ -87,10 +89,9 @@ export default function DyeingBatchDetailsPage() {
   const [activeTab, setActiveTab] = useState('overview');
   const [formData, setFormData] = useState<any>({});
 
-  // Mock data for now - replace with actual RTK Query when dyeing API is ready
-  const [batch, setBatch] = useState<BatchDetails | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+  const { data, isLoading, isError } = useGetDyeingProcessQuery(batchId, { skip: !batchId });
+  const [updateDyeing] = useUpdateDyeingProcessMutation();
+  const batch = data?.data as unknown as BatchDetails | undefined | null;
 
   // Status options
   const statusOptions = [
@@ -111,8 +112,7 @@ export default function DyeingBatchDetailsPage() {
 
   const handleStatusChange = async (newStatus: string, notes?: string, processData?: any) => {
     try {
-      // Mock status update - replace with actual RTK Query mutation
-      setBatch(prev => prev ? { ...prev, status: newStatus } : null);
+      await updateDyeing({ dyeingId: batch!._id, data: { status: newStatus as DyeingProcess['status'], notes } }).unwrap();
       toast.success(`Status updated to ${statusOptions.find(s => s.value === newStatus)?.label}`);
     } catch (error) {
       console.error('Error updating status:', error);
@@ -122,8 +122,7 @@ export default function DyeingBatchDetailsPage() {
 
   const handleSave = async () => {
     try {
-      // Mock batch update - replace with actual RTK Query mutation
-      setBatch(formData);
+      await updateDyeing({ dyeingId: batch!._id, data: formData }).unwrap();
       setEditing(false);
       toast.success('Batch updated successfully');
     } catch (error) {
@@ -148,37 +147,9 @@ export default function DyeingBatchDetailsPage() {
     }
   };
 
-  // Mock data for demonstration
-  useEffect(() => {
-    setBatch({
-      _id: batchId,
-      batchNumber: `DY-${new Date().toISOString().slice(0, 10).replace(/-/g, '')}-001`,
-      processType: 'dyeing',
-      processName: 'Cotton Dyeing Process',
-      processDescription: 'Reactive dyeing process for cotton fabric',
-      status: 'pending',
-      progress: 0,
-      inputMaterials: [],
-      chemicalRecipe: { recipeName: 'Reactive Dye Recipe', recipeVersion: '1.0', chemicals: [], totalRecipeCost: 0 },
-      processParameters: {},
-      machineAssignment: {},
-      workerAssignment: {},
-      timing: { plannedStartTime: new Date().toISOString(), plannedEndTime: new Date().toISOString(), plannedDuration: 120 },
-      qualityControl: {},
-      outputMaterial: {},
-      wasteManagement: {},
-      costs: {},
-      notes: '',
-      images: [],
-      documents: [],
-      tags: [],
-      statusChangeLog: [],
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    });
-  }, [batchId]);
+  
 
-  if (loading) {
+  if (isLoading) {
     return (
       <AppLayout>
         <div className="flex items-center justify-center min-h-screen">
@@ -191,7 +162,7 @@ export default function DyeingBatchDetailsPage() {
     );
   }
 
-  if (error) {
+  if (isError) {
     return (
       <AppLayout>
         <div className="flex items-center justify-center min-h-screen">

@@ -21,41 +21,46 @@ import {
   Package,
   Truck
 } from 'lucide-react';
+import { useGetProductionOrdersQuery } from '@/lib/api/productionApi';
+import { 
+  useStartStageMutation,
+  useCompleteStageMutation,
+  useHoldStageMutation,
+  useResumeStageMutation
+} from '@/lib/api/productionFlowApi';
 
 export default function PrintingPage() {
   const [activeTab, setActiveTab] = useState('overview');
+  const [startStage] = useStartStageMutation();
+  const [completeStage] = useCompleteStageMutation();
+  const [holdStage] = useHoldStageMutation();
+  const [resumeStage] = useResumeStageMutation();
 
-  // Mock data - replace with actual API calls
-  const printingProcesses = [
-    {
-      id: '1',
-      batchNumber: 'PRT-001',
-      productionOrderNumber: 'PO-2024-001',
-      customerName: 'ABC Textiles',
-      printingType: 'screen',
-      status: 'in_progress',
-      progress: 45,
-      startTime: '2024-01-15T10:00:00Z',
-      expectedEndTime: '2024-01-15T19:00:00Z',
-      design: 'Floral Pattern',
-      colors: ['Red', 'Blue', 'Green'],
-      efficiency: 78
-    },
-    {
-      id: '2',
-      batchNumber: 'PRT-002',
-      productionOrderNumber: 'PO-2024-002',
-      customerName: 'XYZ Fabrics',
-      printingType: 'digital',
-      status: 'completed',
-      progress: 100,
-      startTime: '2024-01-14T09:00:00Z',
-      endTime: '2024-01-14T15:30:00Z',
-      design: 'Geometric Pattern',
-      colors: ['Black', 'White'],
-      efficiency: 95
-    }
-  ];
+  const { data: ordersResp, isLoading, error, refetch } = useGetProductionOrdersQuery({ page: 1, limit: 50 });
+  const orders = ordersResp?.data || [];
+
+  // Derive printing processes from production orders (expects productionStages present on each order)
+  const printingProcesses = (orders as any[]).flatMap((order: any) => {
+    const stages: any[] = order?.productionStages || [];
+    const printingStage = stages.find((s) => s.processType === 'printing');
+    if (!printingStage) return [];
+    return [{
+      id: printingStage.stageId || `${order._id}-printing` ,
+      batchNumber: printingStage.batchNumber || printingStage.stageName || 'Printing',
+      productionOrderNumber: order.productionOrderNumber || order.orderNumber || order._id,
+      productionOrderId: order._id,
+      customerName: order.customerName || '',
+      printingType: printingStage.printingType || printingStage.stageName || 'printing',
+      status: printingStage.status,
+      progress: printingStage.progress || 0,
+      startTime: printingStage.timing?.actualStartTime || printingStage.timing?.plannedStartTime,
+      expectedEndTime: printingStage.timing?.plannedEndTime,
+      endTime: printingStage.timing?.actualEndTime,
+      design: printingStage.design || '',
+      colors: printingStage.colors || [],
+      efficiency: printingStage.efficiency || 0,
+    }];
+  });
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -78,6 +83,56 @@ export default function PrintingPage() {
       default: return 'Unknown';
     }
   };
+
+  const mirrorToProductionFlow = async (proc: any, nextStatus: string) => {
+    const orderId = proc?.productionOrderId;
+    if (!orderId) return;
+    try {
+      if (nextStatus === 'in_progress') {
+        await resumeStage({ productionOrderId: orderId, stageNumber: 4, data: {} }).unwrap().catch(async () => {
+          await startStage({ productionOrderId: orderId, stageNumber: 4, data: {} }).unwrap();
+        });
+      } else if (nextStatus === 'completed') {
+        await completeStage({ productionOrderId: orderId, stageNumber: 4, data: {} }).unwrap();
+      } else if (nextStatus === 'on_hold' || nextStatus === 'quality_hold') {
+        await holdStage({ productionOrderId: orderId, stageNumber: 4, data: { reason: nextStatus } }).unwrap();
+      }
+    } catch (e) {
+      console.error('Failed to sync printing stage', e);
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <AppLayout>
+        <div className="p-6">
+          <div className="flex items-center justify-center h-64 text-gray-600">
+            <div className="flex items-center gap-2">
+              <Clock className="h-5 w-5 animate-spin" /> Loading printing data...
+            </div>
+          </div>
+        </div>
+      </AppLayout>
+    );
+  }
+
+  if (error) {
+    return (
+      <AppLayout>
+        <div className="p-6">
+          <div className="flex items-center justify-center h-64 text-red-600">
+            <div className="text-center">
+              <AlertCircle className="h-8 w-8 mx-auto mb-3" />
+              Failed to load printing data
+              <div>
+                <Button onClick={() => refetch()} variant="outline" className="mt-3">Retry</Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </AppLayout>
+    );
+  }
 
   return (
     <AppLayout>
@@ -104,7 +159,7 @@ export default function PrintingPage() {
               </div>
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Total Processes</p>
-                <p className="text-2xl font-bold text-gray-900">18</p>
+                <p className="text-2xl font-bold text-gray-900">{printingProcesses.length}</p>
               </div>
             </div>
           </CardContent>
@@ -118,7 +173,7 @@ export default function PrintingPage() {
               </div>
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Completed</p>
-                <p className="text-2xl font-bold text-gray-900">14</p>
+                <p className="text-2xl font-bold text-gray-900">{printingProcesses.filter(p => p.status === 'completed').length}</p>
               </div>
             </div>
           </CardContent>
@@ -132,7 +187,7 @@ export default function PrintingPage() {
               </div>
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">In Progress</p>
-                <p className="text-2xl font-bold text-gray-900">3</p>
+                <p className="text-2xl font-bold text-gray-900">{printingProcesses.filter(p => p.status === 'in_progress').length}</p>
               </div>
             </div>
           </CardContent>
@@ -194,7 +249,7 @@ export default function PrintingPage() {
                         <Button variant="outline" size="sm">
                           <Eye className="h-4 w-4" />
                         </Button>
-                        <Button variant="outline" size="sm">
+                        <Button variant="outline" size="sm" onClick={() => mirrorToProductionFlow(process, process.status === 'pending' ? 'in_progress' : process.status === 'in_progress' ? 'completed' : 'pending')}>
                           <Settings className="h-4 w-4" />
                         </Button>
                       </div>
@@ -267,16 +322,18 @@ export default function PrintingPage() {
                       </div>
                     </div>
 
+                    {(process.colors && process.colors.length > 0) && (
                     <div className="mb-4">
                       <p className="text-sm text-gray-500 mb-2">Colors</p>
                       <div className="flex gap-2">
-                        {process.colors.map((color, index) => (
+                        {(process.colors || []).map((color: string, index: number) => (
                           <Badge key={index} variant="outline" className="text-xs">
                             {color}
                           </Badge>
                         ))}
                       </div>
                     </div>
+                    )}
 
                     <div className="flex items-center justify-between">
                       <div className="flex-1 mr-4">

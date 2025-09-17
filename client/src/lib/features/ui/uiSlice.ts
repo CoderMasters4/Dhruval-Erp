@@ -147,15 +147,9 @@ const uiSlice = createSlice({
             document.documentElement.classList.remove('dark')
           }
         } else {
-          // Check system preference
-          const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
-          state.theme = systemPrefersDark ? 'dark' : 'light'
-          // Apply the system preference to document
-          if (systemPrefersDark) {
-            document.documentElement.classList.add('dark')
-          } else {
-            document.documentElement.classList.remove('dark')
-          }
+          // Default to light theme when no saved preference exists
+          state.theme = 'light'
+          document.documentElement.classList.remove('dark')
         }
         
         // Initialize sidebar collapsed state

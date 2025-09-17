@@ -22,50 +22,21 @@ import {
   Truck,
   Tag
 } from 'lucide-react';
+import { useGetProductionOrdersQuery } from '@/lib/api/productionApi';
 
 export default function CuttingPackingPage() {
   const [activeTab, setActiveTab] = useState('overview');
-
-  // Mock data - replace with actual API calls
-  const cuttingPackingProcesses = [
-    {
-      id: '1',
-      batchNumber: 'CP-001',
-      productionOrderNumber: 'PO-2024-001',
-      customerName: 'ABC Textiles',
-      cuttingType: 'automatic',
-      packingType: 'carton',
-      status: 'in_progress',
-      progress: 60,
-      startTime: '2024-01-15T12:00:00Z',
-      expectedEndTime: '2024-01-15T21:00:00Z',
-      piecesPerCarton: 50,
-      totalCartons: 20,
-      efficiency: 88
-    },
-    {
-      id: '2',
-      batchNumber: 'CP-002',
-      productionOrderNumber: 'PO-2024-002',
-      customerName: 'XYZ Fabrics',
-      cuttingType: 'manual',
-      packingType: 'poly_bag',
-      status: 'completed',
-      progress: 100,
-      startTime: '2024-01-14T11:00:00Z',
-      endTime: '2024-01-14T19:30:00Z',
-      piecesPerCarton: 25,
-      totalCartons: 40,
-      efficiency: 92
-    }
-  ];
+  const { data, isLoading, isError } = useGetProductionOrdersQuery({ page: 1, limit: 20 });
+  const orders = data?.data ?? [];
 
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'completed': return 'bg-green-100 text-green-800';
       case 'in_progress': return 'bg-blue-100 text-blue-800';
+      case 'planned': return 'bg-gray-100 text-gray-800';
       case 'pending': return 'bg-gray-100 text-gray-800';
       case 'on_hold': return 'bg-yellow-100 text-yellow-800';
+      case 'cancelled': return 'bg-red-100 text-red-800';
       case 'rejected': return 'bg-red-100 text-red-800';
       default: return 'bg-gray-100 text-gray-800';
     }
@@ -75,8 +46,10 @@ export default function CuttingPackingPage() {
     switch (status) {
       case 'completed': return 'Completed';
       case 'in_progress': return 'In Progress';
+      case 'planned': return 'Planned';
       case 'pending': return 'Pending';
       case 'on_hold': return 'On Hold';
+      case 'cancelled': return 'Cancelled';
       case 'rejected': return 'Rejected';
       default: return 'Unknown';
     }
@@ -107,7 +80,7 @@ export default function CuttingPackingPage() {
               </div>
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Total Processes</p>
-                <p className="text-2xl font-bold text-gray-900">22</p>
+                <p className="text-2xl font-bold text-gray-900">{isLoading ? '—' : orders.length}</p>
               </div>
             </div>
           </CardContent>
@@ -121,7 +94,7 @@ export default function CuttingPackingPage() {
               </div>
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Completed</p>
-                <p className="text-2xl font-bold text-gray-900">18</p>
+                <p className="text-2xl font-bold text-gray-900">{isLoading ? '—' : orders.filter((o: any) => o.status === 'completed').length}</p>
               </div>
             </div>
           </CardContent>
@@ -135,7 +108,7 @@ export default function CuttingPackingPage() {
               </div>
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">In Progress</p>
-                <p className="text-2xl font-bold text-gray-900">3</p>
+                <p className="text-2xl font-bold text-gray-900">{isLoading ? '—' : orders.filter((o: any) => o.status === 'in_progress').length}</p>
               </div>
             </div>
           </CardContent>
@@ -149,7 +122,7 @@ export default function CuttingPackingPage() {
               </div>
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Avg Efficiency</p>
-                <p className="text-2xl font-bold text-gray-900">90%</p>
+                <p className="text-2xl font-bold text-gray-900">—</p>
               </div>
             </div>
           </CardContent>
@@ -174,23 +147,29 @@ export default function CuttingPackingPage() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {cuttingPackingProcesses.map((process) => (
-                    <div key={process.id} className="flex items-center justify-between p-4 border rounded-lg">
+                  {isError && (
+                    <div className="p-4 text-sm text-red-600 border border-red-200 rounded">Failed to load data.</div>
+                  )}
+                  {isLoading && (
+                    <div className="p-4 text-sm text-gray-500 border rounded">Loading...</div>
+                  )}
+                  {!isLoading && !isError && orders.map((order: any) => (
+                    <div key={order._id} className="flex items-center justify-between p-4 border rounded-lg">
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-2">
-                          <h3 className="font-semibold">{process.batchNumber}</h3>
-                          <Badge className={getStatusColor(process.status)}>
-                            {getStatusText(process.status)}
+                          <h3 className="font-semibold">{order.orderNumber}</h3>
+                          <Badge className={getStatusColor(order.status)}>
+                            {getStatusText(order.status)}
                           </Badge>
                         </div>
-                        <p className="text-sm text-gray-600">{process.productionOrderNumber} - {process.customerName}</p>
-                        <p className="text-sm text-gray-500">Cutting: {process.cuttingType} | Packing: {process.packingType}</p>
+                        <p className="text-sm text-gray-600">{order.productName}</p>
+                        <p className="text-sm text-gray-500">Planned: {order.plannedQuantity} | Produced: {order.producedQuantity}</p>
                         <div className="mt-2">
                           <div className="flex items-center justify-between text-sm mb-1">
                             <span>Progress</span>
-                            <span>{process.progress}%</span>
+                            <span>{Math.round(order.progressPercentage ?? (order.plannedQuantity ? (order.producedQuantity / order.plannedQuantity) * 100 : 0))}%</span>
                           </div>
-                          <Progress value={process.progress} className="h-2" />
+                          <Progress value={Math.round(order.progressPercentage ?? (order.plannedQuantity ? (order.producedQuantity / order.plannedQuantity) * 100 : 0))} className="h-2" />
                         </div>
                       </div>
                       <div className="flex gap-2">
@@ -243,41 +222,47 @@ export default function CuttingPackingPage() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {cuttingPackingProcesses.map((process) => (
-                  <div key={process.id} className="border rounded-lg p-6">
+                {isError && (
+                  <div className="p-4 text-sm text-red-600 border border-red-200 rounded">Failed to load data.</div>
+                )}
+                {isLoading && (
+                  <div className="p-4 text-sm text-gray-500 border rounded">Loading...</div>
+                )}
+                {!isLoading && !isError && orders.map((order: any) => (
+                  <div key={order._id} className="border rounded-lg p-6">
                     <div className="flex items-center justify-between mb-4">
                       <div>
-                        <h3 className="text-lg font-semibold">{process.batchNumber}</h3>
-                        <p className="text-gray-600">{process.productionOrderNumber} - {process.customerName}</p>
+                        <h3 className="text-lg font-semibold">{order.orderNumber}</h3>
+                        <p className="text-gray-600">{order.productName}</p>
                       </div>
-                      <Badge className={getStatusColor(process.status)}>
-                        {getStatusText(process.status)}
+                      <Badge className={getStatusColor(order.status)}>
+                        {getStatusText(order.status)}
                       </Badge>
                     </div>
                     
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
                       <div>
-                        <p className="text-sm text-gray-500">Cutting Type</p>
-                        <p className="font-medium">{process.cuttingType}</p>
+                        <p className="text-sm text-gray-500">Planned Qty</p>
+                        <p className="font-medium">{order.plannedQuantity}</p>
                       </div>
                       <div>
-                        <p className="text-sm text-gray-500">Packing Type</p>
-                        <p className="font-medium">{process.packingType}</p>
+                        <p className="text-sm text-gray-500">Produced Qty</p>
+                        <p className="font-medium">{order.producedQuantity}</p>
                       </div>
                       <div>
-                        <p className="text-sm text-gray-500">Pieces/Carton</p>
-                        <p className="font-medium">{process.piecesPerCarton}</p>
+                        <p className="text-sm text-gray-500">Remaining Qty</p>
+                        <p className="font-medium">{order.remainingQuantity}</p>
                       </div>
                       <div>
-                        <p className="text-sm text-gray-500">Efficiency</p>
-                        <p className="font-medium">{process.efficiency}%</p>
+                        <p className="text-sm text-gray-500">Priority</p>
+                        <p className="font-medium">{order.priority}</p>
                       </div>
                     </div>
 
                     <div className="mb-4">
                       <div className="flex items-center justify-between text-sm mb-2">
-                        <span>Total Cartons: {process.totalCartons}</span>
-                        <span>Total Pieces: {process.piecesPerCarton * process.totalCartons}</span>
+                        <span>Planned: {order.plannedQuantity}</span>
+                        <span>Produced: {order.producedQuantity}</span>
                       </div>
                     </div>
 
@@ -285,9 +270,9 @@ export default function CuttingPackingPage() {
                       <div className="flex-1 mr-4">
                         <div className="flex items-center justify-between text-sm mb-1">
                           <span>Progress</span>
-                          <span>{process.progress}%</span>
+                          <span>{Math.round(order.progressPercentage ?? (order.plannedQuantity ? (order.producedQuantity / order.plannedQuantity) * 100 : 0))}%</span>
                         </div>
-                        <Progress value={process.progress} className="h-2" />
+                        <Progress value={Math.round(order.progressPercentage ?? (order.plannedQuantity ? (order.producedQuantity / order.plannedQuantity) * 100 : 0))} className="h-2" />
                       </div>
                       <div className="flex gap-2">
                         <Button variant="outline" size="sm">

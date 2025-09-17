@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useSelector } from 'react-redux';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/badge';
@@ -27,41 +28,49 @@ import {
   Zap
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
+import {
+  useStartStageMutation,
+  useCompleteStageMutation,
+  useHoldStageMutation,
+  useResumeStageMutation
+} from '@/lib/api/productionFlowApi';
+import { useGetProductionOrdersQuery, ProductionOrder } from '@/lib/api/productionApi';
+import { selectCurrentCompany } from '@/lib/features/auth/authSlice';
 
 export default function DyeingPage() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState('overview');
+  const [startStage] = useStartStageMutation();
+  const [completeStage] = useCompleteStageMutation();
+  const [holdStage] = useHoldStageMutation();
+  const [resumeStage] = useResumeStageMutation();
+  const currentCompany = useSelector(selectCurrentCompany);
 
-  // Mock data for demonstration
-  const batches = [
-    {
-      _id: 'dye-001',
-      batchNumber: 'DY-20250916-001',
-      processName: 'Cotton Reactive Dyeing',
-      status: 'pending',
-      progress: 0,
-      processType: 'dyeing',
-      createdAt: new Date().toISOString()
-    },
-    {
-      _id: 'dye-002',
-      batchNumber: 'DY-20250916-002',
-      processName: 'Polyester Disperse Dyeing',
-      status: 'in_progress',
-      progress: 45,
-      processType: 'dyeing',
-      createdAt: new Date().toISOString()
-    },
-    {
-      _id: 'dye-003',
-      batchNumber: 'DY-20250916-003',
-      processName: 'Cotton Vat Dyeing',
-      status: 'completed',
-      progress: 100,
-      processType: 'dyeing',
-      createdAt: new Date().toISOString()
-    }
-  ];
+  const { data: ordersResp, isLoading, error, refetch } = useGetProductionOrdersQuery({
+    page: 1,
+    limit: 50,
+    companyId: currentCompany?._id,
+  });
+
+  const mapStatus = (status: ProductionOrder['status']) => {
+    if (status === 'planned') return 'pending';
+    if (status === 'in_progress') return 'in_progress';
+    if (status === 'completed') return 'completed';
+    if (status === 'on_hold') return 'on_hold';
+    if (status === 'cancelled') return 'cancelled';
+    return 'pending';
+  };
+
+  const batches = (ordersResp?.data || []).map((order) => ({
+    _id: order._id,
+    batchNumber: order.orderNumber,
+    processName: order.productName || 'Dyeing Job',
+    status: mapStatus(order.status) as 'pending' | 'in_progress' | 'completed' | 'on_hold' | 'cancelled',
+    progress: Math.round(order.progressPercentage || 0),
+    processType: 'dyeing',
+    createdAt: order.createdAt,
+    productionOrderId: order._id,
+  }));
 
   const statusOptions = [
     { value: 'pending', label: 'Pending', color: 'bg-yellow-100 text-yellow-800' },
@@ -89,6 +98,32 @@ export default function DyeingPage() {
 
   const handleViewDetails = (batch: any) => {
     router.push(`/production/dyeing/${batch._id}`);
+  };
+
+  const mirrorToProductionFlow = async (batch: any, nextStatus: string) => {
+    const orderId = batch?.productionOrderId;
+    if (!orderId) return; // Only mirror when tied to a production order
+    try {
+      if (nextStatus === 'in_progress') {
+        await resumeStage({ productionOrderId: orderId, stageNumber: 3, data: {} }).unwrap().catch(async () => {
+          await startStage({ productionOrderId: orderId, stageNumber: 3, data: {} }).unwrap();
+        });
+      } else if (nextStatus === 'completed') {
+        await completeStage({ productionOrderId: orderId, stageNumber: 3, data: {} }).unwrap();
+      } else if (nextStatus === 'on_hold' || nextStatus === 'quality_hold') {
+        await holdStage({ productionOrderId: orderId, stageNumber: 3, data: { reason: nextStatus } }).unwrap();
+      }
+    } catch (e) {
+      console.error('Failed to sync dyeing stage', e);
+      toast.error('Failed to sync production flow');
+    }
+  };
+
+  const handleQuickStatusChange = async (batch: any) => {
+    const nextStatus = batch.status === 'pending' ? 'in_progress' : batch.status === 'in_progress' ? 'completed' : 'pending';
+    await mirrorToProductionFlow(batch, nextStatus);
+    toast.success(`Dyeing set to ${nextStatus}`);
+    refetch();
   };
 
   return (
@@ -241,12 +276,7 @@ export default function DyeingPage() {
                         {batches.filter(b => b.status === 'completed').length}
                       </span>
                     </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm text-gray-600">Quality Issues</span>
-                      <span className="font-bold text-red-600">
-                        {batches.filter(b => b.status === 'quality_hold').length}
-                      </span>
-                    </div>
+                    {/* Quality hold not part of mapped statuses from orders */}
                   </div>
                 </CardContent>
               </Card>
@@ -266,7 +296,30 @@ export default function DyeingPage() {
               </Button>
             </div>
 
-            {batches.length > 0 ? (
+            {isLoading ? (
+              <Card>
+                <CardContent className="pt-6">
+                  <div className="flex items-center justify-center py-8 text-gray-500">
+                    <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                    Loading dyeing batches...
+                  </div>
+                </CardContent>
+              </Card>
+            ) : error ? (
+              <Card>
+                <CardContent className="pt-6">
+                  <div className="text-center py-8">
+                    <AlertCircle className="h-12 w-12 mx-auto text-red-500 mb-4" />
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">Failed to load batches</h3>
+                    <p className="text-gray-500 mb-4">Please try again</p>
+                    <Button onClick={() => refetch()} className="flex items-center gap-2">
+                      <RefreshCw className="h-4 w-4" />
+                      Retry
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ) : batches.length > 0 ? (
               <div className="space-y-4">
                 {batches.map((batch) => (
                   <Card key={batch._id}>
@@ -300,6 +353,9 @@ export default function DyeingPage() {
                           >
                             <ExternalLink className="h-3 w-3" />
                             View Details
+                          </Button>
+                          <Button variant="outline" size="sm" onClick={() => handleQuickStatusChange(batch)}>
+                            <Settings className="h-4 w-4" />
                           </Button>
                         </div>
                       </div>

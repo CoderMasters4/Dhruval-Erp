@@ -198,7 +198,7 @@ export default function BatchDetailsPage() {
               <Button onClick={() => refetch()} variant="outline">
                 Retry
               </Button>
-              <Button onClick={() => router.push('/production/pre-processing')}>
+              <Button onClick={() => router.push('/production')}>
                 Back to Pre-Processing
               </Button>
             </div>
@@ -215,7 +215,7 @@ export default function BatchDetailsPage() {
           <div className="text-center">
             <AlertCircle className="h-8 w-8 mx-auto mb-4 text-red-500" />
             <p className="text-gray-600">Batch not found</p>
-            <Button onClick={() => router.push('/production/pre-processing')} className="mt-4">
+            <Button onClick={() => router.push('/production')} className="mt-4">
               Back to Pre-Processing
             </Button>
           </div>
@@ -232,7 +232,7 @@ export default function BatchDetailsPage() {
           <div className="flex items-center gap-4">
             <Button
               variant="outline"
-              onClick={() => router.push('/production/pre-processing')}
+              onClick={() => router.push('/production')}
               className="flex items-center gap-2"
             >
               <ArrowLeft className="h-4 w-4" />

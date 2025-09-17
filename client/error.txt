@@ -1,63 +1,42 @@
-rim@MacBookPro client % pnpm error
+rajat@Rajats-MacBook-Pro erp % cd client 
+rajat@Rajats-MacBook-Pro client % pnpm error
 
-> client@0.1.0 error /Users/rim/Documents/Dhruval-Erp/client
+> client@0.1.0 error /Users/rajat/Downloads/projects/erp/client
 > npx tsc --noEmit --skipLibCheck
 
-src/app/production/enhanced/page.tsx:65:9 - error TS2451: Cannot redeclare block-scoped variable 'productionData'.
+npm warn Unknown env config "verify-deps-before-run". This will stop working in the next major version of npm.
+npm warn Unknown env config "_jsr-registry". This will stop working in the next major version of npm.
+.next/types/app/admin/companies/page.ts:2:24 - error TS2307: Cannot find module '../../../../../src/app/admin/companies/page.js' or its corresponding type declarations.
 
-65   const productionData = trackingData?.data || {}
-           ~~~~~~~~~~~~~~
+2 import * as entry from '../../../../../src/app/admin/companies/page.js'
+                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-src/app/production/enhanced/page.tsx:115:9 - error TS2451: Cannot redeclare block-scoped variable 'productionData'.
+.next/types/app/admin/companies/page.ts:5:29 - error TS2307: Cannot find module '../../../../../src/app/admin/companies/page.js' or its corresponding type declarations.
 
-115   const productionData = trackingData?.data || {}
-            ~~~~~~~~~~~~~~
+5 type TEntry = typeof import('../../../../../src/app/admin/companies/page.js')
+                              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-src/app/production/enhanced/page.tsx:247:37 - error TS2339: Property 'summary' does not exist on type '{}'.
+.next/types/app/admin/users/page.ts:2:24 - error TS2307: Cannot find module '../../../../../src/app/admin/users/page.js' or its corresponding type declarations.
 
-247                     {productionData.summary?.activeJobs || 0}
-                                        ~~~~~~~
+2 import * as entry from '../../../../../src/app/admin/users/page.js'
+                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-src/app/production/enhanced/page.tsx:261:37 - error TS2339: Property 'summary' does not exist on type '{}'.
+.next/types/app/admin/users/page.ts:5:29 - error TS2307: Cannot find module '../../../../../src/app/admin/users/page.js' or its corresponding type declarations.
 
-261                     {productionData.summary?.completedJobs || 0}
-                                        ~~~~~~~
+5 type TEntry = typeof import('../../../../../src/app/admin/users/page.js')
+                              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-src/app/production/enhanced/page.tsx:275:37 - error TS2339: Property 'summary' does not exist on type '{}'.
+src/app/production/dyeing/page.tsx:282:46 - error TS2367: This comparison appears to be unintentional because the types '"completed" | "pending" | "cancelled" | "in_progress" | "on_hold"' and '"quality_hold"' have no overlap.
 
-275                     {productionData.summary?.totalProduction || 0}
-                                        ~~~~~~~
-
-src/app/production/enhanced/page.tsx:289:37 - error TS2339: Property 'summary' does not exist on type '{}'.
-
-289                     {productionData.summary?.productionEfficiency?.toFixed(1) || 0}%
-                                        ~~~~~~~
-
-src/components/hospitality/modals/CustomerVisitFormModal.tsx:85:35 - error TS2551: Property 'visitOutcomeStatus' does not exist on type 'CustomerVisit'. Did you mean 'visitOutcome'?
-
-85         visitOutcomeStatus: visit.visitOutcomeStatus || 'pending',
-                                     ~~~~~~~~~~~~~~~~~~
-
-  src/lib/features/hospitality/hospitalityApi.ts:96:3
-    96   visitOutcome?: {
-         ~~~~~~~~~~~~
-    'visitOutcome' is declared here.
-
-src/components/hospitality/modals/CustomerVisitFormModal.tsx:86:34 - error TS2551: Property 'visitOutcomeNotes' does not exist on type 'CustomerVisit'. Did you mean 'visitOutcome'?
-
-86         visitOutcomeNotes: visit.visitOutcomeNotes || ''
-                                    ~~~~~~~~~~~~~~~~~
-
-  src/lib/features/hospitality/hospitalityApi.ts:96:3
-    96   visitOutcome?: {
-         ~~~~~~~~~~~~
-    'visitOutcome' is declared here.
+282                         {batches.filter(b => b.status === 'quality_hold').length}
+                                                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
-Found 8 errors in 2 files.
+Found 5 errors in 3 files.
 
 Errors  Files
-     6  src/app/production/enhanced/page.tsx:65
-     2  src/components/hospitality/modals/CustomerVisitFormModal.tsx:85
+     2  .next/types/app/admin/companies/page.ts:2
+     2  .next/types/app/admin/users/page.ts:2
+     1  src/app/production/dyeing/page.tsx:282
  ELIFECYCLE  Command failed with exit code 2.
-rim@MacBookPro client % 
+rajat@Rajats-MacBook-Pro client % 

@@ -267,7 +267,8 @@ export const baseApi = createApi({
     "GreyFabricInward",
     "GreyFabricInwardAnalytics",
     "PreProcessingBatch",
-    "PreProcessingAnalytics"
+    "PreProcessingAnalytics",
+    "Dyeing"
 
   ],
   endpoints: (builder) => ({
