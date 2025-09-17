@@ -51,6 +51,7 @@ export interface PurchaseOrderFormData {
   
   // Items
   items: Array<{
+    category?: 'raw_material' | 'finished_goods' | 'consumables' | 'services' | 'capital_goods' | 'maintenance' | 'spare_parts'
     itemId?: string
     itemCode: string
     itemName: string
@@ -326,7 +327,8 @@ export function PurchaseOrderForm({ onSuccess, onCancel, isSubmitting, setIsSubm
           totalTaxAmount: item.totalTaxAmount,
           lineTotal: item.lineTotal,
           deliveryDate: item.deliveryDate,
-          notes: item.notes
+          notes: item.notes,
+          category: item.category
         })),
         amounts: {
           subtotal,
@@ -376,7 +378,7 @@ export function PurchaseOrderForm({ onSuccess, onCancel, isSubmitting, setIsSubm
             const inventoryData = {
               itemName: item.itemName,
               itemCode: item.itemCode,
-              category: formData.category,
+              category: item.category || 'raw_material',
               warehouseId: formData.selectedWarehouseId,
               reorderPoint: 0,
               reorderQuantity: item.quantity,

@@ -1,5 +1,5 @@
 import { BaseService } from './BaseService';
-import { Company } from '@/models';
+import Company from '../models/Company';
 import { ICompany } from '@/types/models';
 import { AppError } from '../utils/errors';
 

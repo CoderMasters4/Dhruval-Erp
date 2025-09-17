@@ -74,9 +74,9 @@ const InventoryItemSchema = new Schema<IInventoryItem>({
 
   // Categorization
   category: {
-    primary: { 
-      type: String, 
-      enum: ['raw_material', 'semi_finished', 'finished_goods', 'consumables', 'spare_parts'], 
+    primary: {
+      type: String,
+      enum: ['raw_material', 'working_inventory', 'semi_finished', 'finished_goods', 'consumables', 'spare_parts'],
       required: true
     },
     secondary: { type: String },
@@ -278,6 +278,20 @@ const InventoryItemSchema = new Schema<IInventoryItem>({
     isSlowMoving: { type: Boolean, default: false },
     isObsolete: { type: Boolean, default: false },
     requiresApproval: { type: Boolean, default: false }
+  },
+
+  // Production Information (for working inventory and finished goods)
+  productionInfo: {
+    batchId: { type: Schema.Types.ObjectId, ref: 'ProductionBatch' },
+    batchNumber: { type: String },
+    stageNumber: { type: Number },
+    sourceItemId: { type: Schema.Types.ObjectId, ref: 'InventoryItem' },
+    producedBy: { type: Schema.Types.ObjectId, ref: 'User' },
+    transferredBy: { type: Schema.Types.ObjectId, ref: 'User' },
+    productionDate: { type: Date },
+    transferDate: { type: Date },
+    completedBy: { type: Schema.Types.ObjectId, ref: 'User' },
+    completionDate: { type: Date }
   },
 
   // Additional Information

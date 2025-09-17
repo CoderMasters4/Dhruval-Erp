@@ -44,6 +44,7 @@ export function ItemsSection({ formData, updateFormData }: ItemsSectionProps) {
       unit: 'pcs',
       rate: 0,
       itemType: 'new' as const,
+      category: 'raw_material' as const,
       discount: { type: 'percentage' as const, value: 0 },
       discountAmount: 0,
       taxableAmount: 0,
@@ -274,6 +275,33 @@ export function ItemsSection({ formData, updateFormData }: ItemsSectionProps) {
                       <p className="text-xs text-green-600">✓ Auto-filled from inventory</p>
                     )}
                   </div>
+
+                  {/* Category Selection - Only for new items */}
+                  {item.itemType === 'new' && (
+                    <div className="space-y-2 col-span-full">
+                      <Label className="text-sm font-medium text-gray-700 flex items-center gap-2">
+                        <span className="w-2 h-2 bg-purple-500 rounded-full"></span>
+                        Category *
+                      </Label>
+                      <Select 
+                        value={item.category || 'raw_material'} 
+                        onValueChange={(value) => updateItem(index, 'category', value)}
+                      >
+                        <SelectTrigger className="bg-purple-50 border-purple-200 focus:border-purple-500 focus:ring-purple-500 w-full h-10">
+                          <SelectValue placeholder="Select category" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="raw_material">Raw Material</SelectItem>
+                          <SelectItem value="finished_goods">Finished Goods</SelectItem>
+                          <SelectItem value="consumables">Consumables</SelectItem>
+                          <SelectItem value="services">Services</SelectItem>
+                          <SelectItem value="capital_goods">Capital Goods</SelectItem>
+                          <SelectItem value="maintenance">Maintenance</SelectItem>
+                          <SelectItem value="spare_parts">Spare Parts</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
 
                   <div className="space-y-2">
                     <Label>HSN Code</Label>

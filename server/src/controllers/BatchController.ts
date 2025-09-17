@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { Types } from 'mongoose';
-import { InventoryBatch } from '@/models/InventoryBatch';
-import InventoryItem from '@/models/InventoryItem';
+import { InventoryBatch } from '../models/InventoryBatch';
+import InventoryItem from '../models/InventoryItem';
 
 export class BatchController {
 

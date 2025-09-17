@@ -1,5 +1,6 @@
 import { BaseService } from './BaseService';
-import { ProductionOrder, InventoryItem } from '@/models';
+import ProductionOrder from '../models/ProductionOrder';
+import InventoryItem from '../models/InventoryItem';
 import { IProductionOrder, IRawMaterial } from '@/types/models';
 import { AppError } from '../utils/errors';
 import { logger } from '@/utils/logger';

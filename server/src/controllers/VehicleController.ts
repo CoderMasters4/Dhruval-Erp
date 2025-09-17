@@ -92,17 +92,22 @@ export class VehicleController {
    */
   async getVehiclesByCompany(req: Request, res: Response): Promise<void> {
     try {
-      const companyId = req.user?.companyId;
-      const { page = 1, limit = 10, search, vehicleType, status } = req.query;
+      // Get companyId from query parameter or user context
+      let companyId = req.query.companyId as string || req.user?.companyId;
+      const { page = 1, limit = 10, search, vehicleType, status, dateFrom, dateTo } = req.query;
 
       if (!companyId) {
         this.sendError(res, new Error('Company ID is required'), 'Company ID is required', 400);
         return;
       }
 
+      const pageNum = parseInt(page as string);
+      const limitNum = parseInt(limit as string);
+      const skip = (pageNum - 1) * limitNum;
+
       const options: any = {
-        page: parseInt(page as string),
-        limit: parseInt(limit as string)
+        skip,
+        limit: limitNum
       };
 
       if (search) {
@@ -117,9 +122,51 @@ export class VehicleController {
         options.status = status;
       }
 
+      if (dateFrom) {
+        options.dateFrom = dateFrom;
+      }
+
+      if (dateTo) {
+        options.dateTo = dateTo;
+      }
+
       const vehicles = await this.vehicleService.getVehiclesByCompany(companyId.toString(), options);
 
-      res.status(200).json(vehicles);
+      // Transform the data to match frontend expectations
+      const transformedData = vehicles.map(vehicle => {
+        const vehicleObj = typeof vehicle.toObject === 'function' ? vehicle.toObject() : vehicle;
+        
+        // Map status values to frontend expectations
+        let status = vehicleObj.status;
+        if (vehicleObj.currentStatus) {
+          // Map currentStatus values to status values
+          const statusMap: { [key: string]: string } = {
+            'in': 'in',
+            'out': 'out',
+            'pending': 'pending'
+          };
+          status = statusMap[vehicleObj.currentStatus] || vehicleObj.currentStatus;
+        }
+        
+        return {
+          ...vehicleObj,
+          status, // Use mapped status
+          companyId: typeof vehicleObj.companyId === 'object' ? vehicleObj.companyId._id : vehicleObj.companyId,
+          createdBy: typeof vehicleObj.createdBy === 'object' ? vehicleObj.createdBy._id : vehicleObj.createdBy,
+        };
+      });
+
+      // Calculate pagination info
+      const total = vehicles.length;
+      const totalPages = Math.ceil(total / limitNum);
+
+      res.status(200).json({
+        data: transformedData,
+        total,
+        page: pageNum,
+        limit: limitNum,
+        totalPages
+      });
     } catch (error) {
       this.sendError(res, error, 'Failed to get vehicles');
     }

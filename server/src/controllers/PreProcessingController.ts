@@ -406,7 +406,23 @@ export class PreProcessingController {
       return /^[0-9a-fA-F]{24}$/.test(value);
     };
 
-    // Remove empty string ObjectIds or invalid ObjectIds
+    // Helper function to clean ObjectId field
+    const cleanObjectIdField = (obj: any, fieldPath: string) => {
+      const fields = fieldPath.split('.');
+      let current = obj;
+      for (let i = 0; i < fields.length - 1; i++) {
+        if (!current[fields[i]]) {
+          current[fields[i]] = {};
+        }
+        current = current[fields[i]];
+      }
+      const field = fields[fields.length - 1];
+      if (current[field] !== undefined && !isValidObjectId(current[field])) {
+        current[field] = null;
+      }
+    };
+
+    // Clean top-level ObjectIds
     if (!isValidObjectId(cleaned.productionOrderId)) {
       delete cleaned.productionOrderId;
     }
@@ -414,29 +430,45 @@ export class PreProcessingController {
       delete cleaned.greyFabricInwardId;
     }
 
-    // Clean nested ObjectIds - if invalid, remove the ObjectId field or set to null
-    if (cleaned.machineAssignment?.machineId !== undefined && !isValidObjectId(cleaned.machineAssignment.machineId)) {
-      cleaned.machineAssignment.machineId = null;
+    // Clean nested ObjectIds using the helper function
+    cleanObjectIdField(cleaned, 'machineAssignment.machineId');
+    cleanObjectIdField(cleaned, 'workerAssignment.supervisorId');
+    cleanObjectIdField(cleaned, 'qualityControl.preProcessCheck.checkedBy');
+    cleanObjectIdField(cleaned, 'qualityControl.inProcessCheck.checkedBy');
+    cleanObjectIdField(cleaned, 'qualityControl.postProcessCheck.checkedBy');
+    cleanObjectIdField(cleaned, 'outputMaterial.location.warehouseId');
+
+    // Clean chemical recipe ObjectIds
+    if (cleaned.chemicalRecipe?.chemicals) {
+      cleaned.chemicalRecipe.chemicals = cleaned.chemicalRecipe.chemicals.map((chemical: any) => {
+        if (chemical.chemicalId && !isValidObjectId(chemical.chemicalId)) {
+          chemical.chemicalId = null;
+        }
+        return chemical;
+      });
     }
 
-    if (cleaned.workerAssignment?.supervisorId !== undefined && !isValidObjectId(cleaned.workerAssignment.supervisorId)) {
-      cleaned.workerAssignment.supervisorId = null;
+    // Clean worker assignment ObjectIds
+    if (cleaned.workerAssignment?.workers) {
+      cleaned.workerAssignment.workers = cleaned.workerAssignment.workers.map((worker: any) => {
+        if (worker.workerId && !isValidObjectId(worker.workerId)) {
+          worker.workerId = null;
+        }
+        return worker;
+      });
     }
 
-    // Clean quality control ObjectIds
-    if (cleaned.qualityControl?.preProcessCheck?.checkedBy !== undefined && !isValidObjectId(cleaned.qualityControl.preProcessCheck.checkedBy)) {
-      cleaned.qualityControl.preProcessCheck.checkedBy = null;
-    }
-    if (cleaned.qualityControl?.inProcessCheck?.checkedBy !== undefined && !isValidObjectId(cleaned.qualityControl.inProcessCheck.checkedBy)) {
-      cleaned.qualityControl.inProcessCheck.checkedBy = null;
-    }
-    if (cleaned.qualityControl?.postProcessCheck?.checkedBy !== undefined && !isValidObjectId(cleaned.qualityControl.postProcessCheck.checkedBy)) {
-      cleaned.qualityControl.postProcessCheck.checkedBy = null;
+    // Clean status change log ObjectIds - remove invalid entries entirely
+    if (cleaned.statusChangeLog) {
+      cleaned.statusChangeLog = cleaned.statusChangeLog.filter((log: any) => {
+        // Only keep logs with valid changedBy ObjectId
+        return log.changedBy && isValidObjectId(log.changedBy);
+      });
     }
 
-    // Clean output material location ObjectId
-    if (cleaned.outputMaterial?.location?.warehouseId !== undefined && !isValidObjectId(cleaned.outputMaterial.location.warehouseId)) {
-      cleaned.outputMaterial.location.warehouseId = null;
+    // Clean approvedBy ObjectId - remove if invalid
+    if (cleaned.approvedBy && !isValidObjectId(cleaned.approvedBy)) {
+      delete cleaned.approvedBy;
     }
 
     // Clean chemical recipe units - convert to valid enum values
@@ -474,6 +506,32 @@ export class PreProcessingController {
     cleaned.documents = cleaned.documents || [];
     cleaned.tags = cleaned.tags || [];
     cleaned.statusChangeLog = cleaned.statusChangeLog || [];
+
+    // Ensure inputMaterials is properly initialized
+    if (!cleaned.inputMaterials || !Array.isArray(cleaned.inputMaterials)) {
+      cleaned.inputMaterials = [];
+    }
+
+    // Ensure chemicalRecipe is properly initialized
+    if (!cleaned.chemicalRecipe) {
+      cleaned.chemicalRecipe = {
+        recipeName: '',
+        recipeVersion: '1.0',
+        chemicals: [],
+        totalRecipeCost: 0
+      };
+    }
+
+    // Ensure processParameters is properly initialized
+    if (!cleaned.processParameters) {
+      cleaned.processParameters = {
+        temperature: { min: 0, max: 0, actual: 0, unit: 'celsius' },
+        pressure: { min: 0, max: 0, actual: 0, unit: 'bar' },
+        ph: { min: 0, max: 14, actual: 7 },
+        time: { planned: 0, actual: 0, unit: 'minutes' },
+        speed: { planned: 0, actual: 0, unit: 'm/min' }
+      };
+    }
 
     // Initialize waste management if not provided
     if (!cleaned.wasteManagement) {

@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
 import config from './environment';
-import logger from '@/utils/logger';
+import logger from '../utils/logger';
 import { createDatabaseIndexes } from './database-indexes';
 
 interface DatabaseConfig {
@@ -189,8 +189,8 @@ class DatabaseManager {
     try {
       logger.info('Setting up database indexes...');
 
-      // Import models to ensure schema indexes are created
-      await import('@/models');
+      // Temporarily skip model imports to identify hanging issue
+      logger.info('⚠️ Skipping model imports temporarily to debug server hanging issue');
 
       // Skip manual index creation to avoid duplicates - schema indexes are sufficient
       logger.info('✅ Database indexes setup completed successfully (using schema-defined indexes only)');

@@ -1,5 +1,5 @@
 import { Model, Document, Types, FilterQuery, UpdateQuery, QueryOptions, PipelineStage } from 'mongoose';
-import { logger } from '@/utils/logger';
+import { logger } from '../utils/logger';
 import { AppError } from '../utils/errors';
 import { advancedCache } from '../utils/advanced-cache';
 
@@ -36,9 +36,13 @@ export abstract class BaseService<T extends Document> implements IBaseService<T>
     try {
       logger.info(`Creating new ${this.modelName}`, { data, userId });
       
+      if (!userId) {
+        throw new AppError('User ID is required for creating documents', 400);
+      }
+      
       const document = new this.model({
         ...data,
-        createdBy: userId ? new Types.ObjectId(userId) : undefined
+        createdBy: new Types.ObjectId(userId)
       });
       
       const savedDocument = await document.save();
@@ -46,7 +50,20 @@ export abstract class BaseService<T extends Document> implements IBaseService<T>
       
       return savedDocument;
     } catch (error) {
-      logger.error(`Error creating ${this.modelName}`, { error, data, userId });
+      logger.error(`Error creating ${this.modelName}`, { 
+        error: error.message || error, 
+        stack: error.stack,
+        data, 
+        userId,
+        validationErrors: error.errors
+      });
+      
+      // Handle Mongoose validation errors
+      if (error.name === 'ValidationError') {
+        const validationErrors = Object.values(error.errors).map((err: any) => err.message);
+        throw new AppError(`Validation failed: ${validationErrors.join(', ')}`, 400, error);
+      }
+      
       throw new AppError(`Failed to create ${this.modelName}`, 500, error);
     }
   }
@@ -106,7 +123,30 @@ export abstract class BaseService<T extends Document> implements IBaseService<T>
     populate?: string[]
   ): Promise<T[]> {
     try {
-      let query = this.model.find(filter, null, options);
+      // Debug logging
+      logger.info('BaseService.findMany called', {
+        filterType: typeof filter,
+        filterIsArray: Array.isArray(filter),
+        filterKeys: filter ? Object.keys(filter) : 'null',
+        timeInInFilter: filter && filter.timeIn ? {
+          type: typeof filter.timeIn,
+          value: filter.timeIn,
+          keys: Object.keys(filter.timeIn)
+        } : 'not present'
+      });
+      
+      let query = this.model.find(filter);
+      
+      // Apply options
+      if (options.sort) {
+        query = query.sort(options.sort);
+      }
+      if (options.skip) {
+        query = query.skip(options.skip);
+      }
+      if (options.limit) {
+        query = query.limit(options.limit);
+      }
       
       if (populate && populate.length > 0) {
         populate.forEach(path => {
@@ -397,10 +437,7 @@ export abstract class BaseService<T extends Document> implements IBaseService<T>
    */
   async aggregate(pipeline: PipelineStage[]): Promise<any[]> {
     try {
-      // Add explain option in development for query optimization
-      const options = process.env.NODE_ENV === 'development' ? { explain: false } : {};
-
-      const result = await this.model.aggregate(pipeline, options).exec();
+      const result = await this.model.aggregate(pipeline).exec();
 
       logger.debug(`Aggregation completed for ${this.modelName}`, {
         stages: pipeline.length,

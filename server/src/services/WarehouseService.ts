@@ -1,6 +1,6 @@
 import { Types } from 'mongoose';
 import { BaseService } from './BaseService';
-import { Warehouse } from '../models';
+import Warehouse from '../models/Warehouse';
 import { IWarehouse } from '../types/models';
 import { AppError } from '../utils/errors';
 import { logger } from '../utils/logger';

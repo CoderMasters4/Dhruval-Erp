@@ -1,11 +1,11 @@
 import { Router } from 'express';
-import { ProductionFlowController } from '../controllers/ProductionFlowController';
 import { authenticate } from '../middleware/auth';
 // import { validateRequest } from '../middleware/validation';
 import { body, param, query } from 'express-validator';
 
 const router = Router();
-const productionFlowController = new ProductionFlowController();
+// ✅ FIXED: Use lazy instantiation instead of immediate instantiation
+// This prevents the controller from being created when the module is imported
 
 // Apply authentication middleware to all routes
 router.use(authenticate);
@@ -21,7 +21,19 @@ router.post(
     param('productionOrderId').isMongoId().withMessage('Valid production order ID is required')
   ],
   // validateRequest,
-  productionFlowController.initializeFlow.bind(productionFlowController)
+  async (req, res) => {
+    try {
+      const { ProductionFlowController } = await import('../controllers/ProductionFlowController');
+      const productionFlowController = new ProductionFlowController();
+      await productionFlowController.initializeFlow(req, res);
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        message: 'Internal server error',
+        error: error.message
+      });
+    }
+  }
 );
 
 /**
@@ -37,7 +49,19 @@ router.post(
     body('startedBy').optional().isMongoId().withMessage('Valid user ID is required')
   ],
   // validateRequest,
-  productionFlowController.startStage.bind(productionFlowController)
+  async (req, res) => {
+    try {
+      const { ProductionFlowController } = await import('../controllers/ProductionFlowController');
+      const productionFlowController = new ProductionFlowController();
+      await productionFlowController.startStage(req, res);
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        message: 'Internal server error',
+        error: error.message
+      });
+    }
+  }
 );
 
 /**
@@ -59,7 +83,19 @@ router.post(
     body('qualityNotes').optional().isString().withMessage('Quality notes must be a string')
   ],
   // validateRequest,
-  productionFlowController.completeStage.bind(productionFlowController)
+  async (req, res) => {
+    try {
+      const { ProductionFlowController } = await import('../controllers/ProductionFlowController');
+      const productionFlowController = new ProductionFlowController();
+      await productionFlowController.completeStage(req, res);
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        message: 'Internal server error',
+        error: error.message
+      });
+    }
+  }
 );
 
 /**
@@ -73,7 +109,19 @@ router.get(
     param('productionOrderId').isMongoId().withMessage('Valid production order ID is required')
   ],
   // validateRequest,
-  productionFlowController.getFlowStatus.bind(productionFlowController)
+  async (req, res) => {
+    try {
+      const { ProductionFlowController } = await import('../controllers/ProductionFlowController');
+      const productionFlowController = new ProductionFlowController();
+      await productionFlowController.getFlowStatus(req, res);
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        message: 'Internal server error',
+        error: error.message
+      });
+    }
+  }
 );
 
 /**
@@ -83,7 +131,19 @@ router.get(
  */
 router.get(
   '/dashboard',
-  productionFlowController.getFlowDashboard.bind(productionFlowController)
+  async (req, res) => {
+    try {
+      const { ProductionFlowController } = await import('../controllers/ProductionFlowController');
+      const productionFlowController = new ProductionFlowController();
+      await productionFlowController.getFlowDashboard(req, res);
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        message: 'Internal server error',
+        error: error.message
+      });
+    }
+  }
 );
 
 /**
@@ -100,7 +160,19 @@ router.post(
     body('heldBy').optional().isMongoId().withMessage('Valid user ID is required')
   ],
   // validateRequest,
-  productionFlowController.holdStage.bind(productionFlowController)
+  async (req, res) => {
+    try {
+      const { ProductionFlowController } = await import('../controllers/ProductionFlowController');
+      const productionFlowController = new ProductionFlowController();
+      await productionFlowController.holdStage(req, res);
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        message: 'Internal server error',
+        error: error.message
+      });
+    }
+  }
 );
 
 /**
@@ -116,7 +188,19 @@ router.post(
     body('resumedBy').optional().isMongoId().withMessage('Valid user ID is required')
   ],
   // validateRequest,
-  productionFlowController.resumeStage.bind(productionFlowController)
+  async (req, res) => {
+    try {
+      const { ProductionFlowController } = await import('../controllers/ProductionFlowController');
+      const productionFlowController = new ProductionFlowController();
+      await productionFlowController.resumeStage(req, res);
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        message: 'Internal server error',
+        error: error.message
+      });
+    }
+  }
 );
 
 /**
@@ -132,7 +216,19 @@ router.get(
     query('dateTo').optional().isISO8601().withMessage('Date to must be a valid date')
   ],
   // validateRequest,
-  productionFlowController.getStageSummary.bind(productionFlowController)
+  async (req, res) => {
+    try {
+      const { ProductionFlowController } = await import('../controllers/ProductionFlowController');
+      const productionFlowController = new ProductionFlowController();
+      await productionFlowController.getStageSummary(req, res);
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        message: 'Internal server error',
+        error: error.message
+      });
+    }
+  }
 );
 
 /**
@@ -146,7 +242,19 @@ router.get(
     query('period').optional().isIn(['7d', '30d', '90d', '1y']).withMessage('Period must be 7d, 30d, 90d, or 1y')
   ],
   // validateRequest,
-  productionFlowController.getFlowAnalytics.bind(productionFlowController)
+  async (req, res) => {
+    try {
+      const { ProductionFlowController } = await import('../controllers/ProductionFlowController');
+      const productionFlowController = new ProductionFlowController();
+      await productionFlowController.getFlowAnalytics(req, res);
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        message: 'Internal server error',
+        error: error.message
+      });
+    }
+  }
 );
 
 export default router;

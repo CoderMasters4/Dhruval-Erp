@@ -17,11 +17,51 @@ router.use(requireCompany);
 router.post('/', customerVisitController.createCustomerVisit.bind(customerVisitController));
 
 /**
+ * @route   GET /api/v1/customer-visits/test
+ * @desc    Test endpoint for customer visits
+ * @access  Private
+ */
+router.get('/test', (req, res) => {
+  console.log('Customer visits test endpoint called:', {
+    user: req.user ? {
+      userId: req.user.userId,
+      username: req.user.username,
+      companyId: req.user.companyId
+    } : null,
+    headers: req.headers,
+    method: req.method,
+    path: req.path
+  });
+  
+  res.json({
+    success: true,
+    message: 'Customer visits API is working',
+    timestamp: new Date().toISOString(),
+    user: req.user ? {
+      userId: req.user.userId,
+      username: req.user.username,
+      companyId: req.user.companyId
+    } : null
+  });
+});
+
+/**
  * @route   GET /api/v1/customer-visits
  * @desc    Get all customer visits with pagination and filters
  * @access  Private
  */
-router.get('/', customerVisitController.getAllCustomerVisits.bind(customerVisitController));
+router.get('/', (req, res, next) => {
+  console.log('Customer visits GET endpoint called:', {
+    query: req.query,
+    user: req.user ? {
+      userId: req.user.userId,
+      username: req.user.username,
+      companyId: req.user.companyId
+    } : null,
+    headers: req.headers
+  });
+  customerVisitController.getAllCustomerVisits(req, res);
+});
 
 /**
  * @route   GET /api/v1/customer-visits/stats
@@ -59,25 +99,25 @@ router.put('/:id', customerVisitController.updateCustomerVisit.bind(customerVisi
 router.delete('/:id', customerVisitController.deleteCustomerVisit.bind(customerVisitController));
 
 /**
- * @route   PUT /api/v1/customer-visits/:id/approve
+ * @route   PATCH /api/v1/customer-visits/:id/approve
  * @desc    Approve customer visit
  * @access  Private
  */
-router.put('/:id/approve', customerVisitController.approveVisit.bind(customerVisitController));
+router.patch('/:id/approve', customerVisitController.approveVisit.bind(customerVisitController));
 
 /**
- * @route   PUT /api/v1/customer-visits/:id/reject
+ * @route   PATCH /api/v1/customer-visits/:id/reject
  * @desc    Reject customer visit
  * @access  Private
  */
-router.put('/:id/reject', customerVisitController.rejectVisit.bind(customerVisitController));
+router.patch('/:id/reject', customerVisitController.rejectVisit.bind(customerVisitController));
 
 /**
- * @route   PUT /api/v1/customer-visits/:id/reimburse
+ * @route   PATCH /api/v1/customer-visits/:id/reimburse
  * @desc    Process reimbursement for customer visit
  * @access  Private
  */
-router.put('/:id/reimburse', customerVisitController.markAsReimbursed.bind(customerVisitController));
+router.patch('/:id/reimburse', customerVisitController.markAsReimbursed.bind(customerVisitController));
 
 /**
  * @route   POST /api/v1/customer-visits/:id/food-expense
@@ -92,5 +132,26 @@ router.post('/:id/food-expense', customerVisitController.addFoodExpense.bind(cus
  * @access  Private
  */
 router.post('/:id/gift', customerVisitController.addGift.bind(customerVisitController));
+
+/**
+ * @route   POST /api/v1/customer-visits/:id/transportation-expense
+ * @desc    Add transportation expense to customer visit
+ * @access  Private
+ */
+router.post('/:id/transportation-expense', customerVisitController.addTransportationExpense.bind(customerVisitController));
+
+/**
+ * @route   POST /api/v1/customer-visits/:id/other-expense
+ * @desc    Add other expense to customer visit
+ * @access  Private
+ */
+router.post('/:id/other-expense', customerVisitController.addOtherExpense.bind(customerVisitController));
+
+/**
+ * @route   POST /api/v1/customer-visits/:id/recalculate-totals
+ * @desc    Recalculate totals for customer visit
+ * @access  Private
+ */
+router.post('/:id/recalculate-totals', customerVisitController.recalculateTotals.bind(customerVisitController));
 
 export default router;

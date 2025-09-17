@@ -1,5 +1,5 @@
-import User from '@/models/User';
-import Company from '@/models/Company';
+import User from '../models/User';
+import Company from '../models/Company';
 import { logger } from '@/utils/logger';
 import { generateTokenPair, setTokenCookies, clearTokenCookies, type JWTPayload } from '@/utils/jwt';
 

@@ -493,7 +493,7 @@ export interface IInventoryItem extends AuditableDocument {
   internalSKU?: string;
   
   category: {
-    primary: 'raw_material' | 'semi_finished' | 'finished_goods' | 'consumables' | 'spare_parts';
+    primary: 'raw_material' | 'working_inventory' | 'semi_finished' | 'finished_goods' | 'consumables' | 'spare_parts';
     secondary?: string;
     tertiary?: string;
   };
@@ -637,7 +637,21 @@ export interface IInventoryItem extends AuditableDocument {
     isObsolete: boolean;
     requiresApproval: boolean;
   };
-  
+
+  // Production tracking for working inventory and finished goods
+  productionInfo?: {
+    batchId?: Types.ObjectId;
+    batchNumber?: string;
+    stageNumber?: number;
+    sourceItemId?: Types.ObjectId;
+    producedBy?: Types.ObjectId;
+    productionDate?: Date;
+    transferredBy?: Types.ObjectId;
+    transferDate?: Date;
+    completedBy?: Types.ObjectId;
+    completionDate?: Date;
+  };
+
   notes?: string;
   tags: string[];
   images: string[];

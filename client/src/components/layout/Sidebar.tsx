@@ -197,12 +197,12 @@ const navigationItems: NavigationItem[] = [
         icon: Truck,
         permission: 'view:Supplier'
       },
-      {
-        name: 'Purchase Quotations',
-        href: '/purchase/quotations',
-        icon: Quote,
-        permission: 'view:Quotation'
-      }
+      // {
+      //   name: 'Purchase Quotations',
+      //   href: '/purchase/quotations',
+      //   icon: Quote,
+      //   permission: 'view:Quotation'
+      // }
     ]
   },
 
@@ -303,13 +303,7 @@ const navigationItems: NavigationItem[] = [
     icon: Factory,
     permission: 'view:ProductionOrder',
     children: [
-      {
-        name: 'Production Flow',
-        href: '/production',
-        icon: TrendingUp,
-        permission: 'view:ProductionOrder',
-        roles: ['admin', 'manager', 'production']
-      },
+      
       {
         name: 'Grey Fabric Inward',
         href: '/production/grey-fabric-inward',
@@ -317,81 +311,82 @@ const navigationItems: NavigationItem[] = [
         permission: 'view:ProductionOrder',
         roles: ['admin', 'manager', 'production']
       },
+      
+      // {
+      //   name: 'Dyeing Process',
+      //   href: '/production/dyeing',
+      //   icon: Palette,
+      //   permission: 'view:ProductionOrder',
+      //   roles: ['admin', 'manager', 'production']
+      // },
+      // {
+      //   name: 'Printing Process',
+      //   href: '/production/printing',
+      //   icon: Printer,
+      //   permission: 'view:ProductionOrder',
+      //   roles: ['admin', 'manager', 'production']
+      // },
+      // {
+      //   name: 'Finishing Process',
+      //   href: '/production/finishing',
+      //   icon: Zap,
+      //   permission: 'view:ProductionOrder',
+      //   roles: ['admin', 'manager', 'production']
+      // },
+      // {
+      //   name: 'Quality Control',
+      //   href: '/production/quality-control',
+      //   icon: CheckCircle,
+      //   permission: 'view:ProductionOrder',
+      //   roles: ['admin', 'manager', 'production']
+      // },
+      // {
+      //   name: 'Cutting & Packing',
+      //   href: '/production/cutting-packing',
+      //   icon: Scissors,
+      //   permission: 'view:ProductionOrder',
+      //   roles: ['admin', 'manager', 'production']
+      // },
+      // {
+      //   name: 'Enhanced Production',
+      //   href: '/production/enhanced',
+      //   icon: Factory,
+      //   permission: 'view:ProductionOrder'
+      // },
       {
-        name: 'Pre-Processing',
-        href: '/production/pre-processing',
-        icon: Settings,
+        name: 'Production Batches',
+        href: '/production/batches',
+        icon: Layers,
         permission: 'view:ProductionOrder',
         roles: ['admin', 'manager', 'production']
       },
-      {
-        name: 'Dyeing Process',
-        href: '/production/dyeing',
-        icon: Palette,
-        permission: 'view:ProductionOrder',
-        roles: ['admin', 'manager', 'production']
-      },
-      {
-        name: 'Printing Process',
-        href: '/production/printing',
-        icon: Printer,
-        permission: 'view:ProductionOrder',
-        roles: ['admin', 'manager', 'production']
-      },
-      {
-        name: 'Finishing Process',
-        href: '/production/finishing',
-        icon: Zap,
-        permission: 'view:ProductionOrder',
-        roles: ['admin', 'manager', 'production']
-      },
-      {
-        name: 'Quality Control',
-        href: '/production/quality-control',
-        icon: CheckCircle,
-        permission: 'view:ProductionOrder',
-        roles: ['admin', 'manager', 'production']
-      },
-      {
-        name: 'Cutting & Packing',
-        href: '/production/cutting-packing',
-        icon: Scissors,
-        permission: 'view:ProductionOrder',
-        roles: ['admin', 'manager', 'production']
-      },
-      {
-        name: 'Enhanced Production',
-        href: '/production/enhanced',
-        icon: Factory,
-        permission: 'view:ProductionOrder'
-      },
-      {
-        name: 'Production Tracking',
-        href: '/production-tracking',
-        icon: Activity,
-        permission: 'view:ProductionOrder',
-        roles: ['admin', 'manager', 'production']
-      },
-      {
-        name: 'Real-time Production',
-        href: '/real-time-production',
-        icon: Activity,
-        permission: 'view:ProductionOrder',
-        roles: ['admin', 'manager', 'production']
-      },
-      {
-        name: 'Batch Management',
-        href: '/batches',
-        icon: Package,
-        permission: 'view:Batch'
-      },
-      {
-        name: 'Machine Management',
-        href: '/machines',
-        icon: Settings,
-        permission: 'view:Machine',
-        roles: ['admin', 'manager', 'production']
-      }
+      // {
+      //   name: 'Production Tracking',
+      //   href: '/production-tracking',
+      //   icon: Activity,
+      //   permission: 'view:ProductionOrder',
+      //   roles: ['admin', 'manager', 'production']
+      // },
+      // {
+      //   name: 'Real-time Production',
+      //   href: '/real-time-production',
+      //   icon: Activity,
+      //   permission: 'view:ProductionOrder',
+      //   roles: ['admin', 'manager', 'production']
+      // },
+      // {
+      //   name: 'Batch Management',
+      //   href: '/batches',
+      //   icon: Package,
+      //   permission: 'view:Batch'
+      // },
+      // {
+      //   name: 'Machine Management',
+      //   href: '/machines',
+      //   icon: Settings,
+      //   permission: 'view:Machine',
+      //   roles: ['admin', 'manager', 'production']
+      // }
     ]
   },
 
@@ -403,7 +398,7 @@ const navigationItems: NavigationItem[] = [
     permission: 'view:Dispatch',
     children: [
       {
-        name: 'Enhanced Dispatch',
+        name: 'Dispatch',
         href: '/operations/dispatch/enhanced',
         icon: Send,
         permission: 'view:Dispatch'
@@ -457,27 +452,7 @@ const navigationItems: NavigationItem[] = [
     ]
   },
 
-  // Financial Management
-  {
-    name: 'Financial',
-    href: '/financial',
-    icon: DollarSign,
-    permission: 'view:FinancialTransaction',
-    children: [
-      {
-        name: 'Transactions',
-        href: '/financial',
-        icon: DollarSign,
-        permission: 'view:FinancialTransaction'
-      },
-      {
-        name: 'Invoices',
-        href: '/invoices',
-        icon: FileText,
-        permission: 'view:Invoice'
-      }
-    ]
-  },
+ 
 
   // Security & Monitoring
   {
@@ -486,12 +461,7 @@ const navigationItems: NavigationItem[] = [
     icon: Shield,
     permission: 'view:SecurityLog',
     children: [
-      {
-        name: 'Security Overview',
-        href: '/security',
-        icon: Shield,
-        permission: 'view:SecurityLog'
-      },
+     
       {
         name: 'Visitor Management',
         href: '/visitors',
@@ -503,6 +473,12 @@ const navigationItems: NavigationItem[] = [
         href: '/vehicles',
         icon: Car,
         permission: 'view:Vehicle'
+      },
+      {
+        name: 'Gate Passes',
+        href: '/gatepasses',
+        icon: FileText,
+        permission: 'view:GatePass'
       },
       // {
       //   name: 'Security Logs',
@@ -561,46 +537,16 @@ const navigationItems: NavigationItem[] = [
     permission: 'view:Report',
     children: [
       {
-        name: 'Business Analytics',
-        href: '/reports/business',
+        name: 'Standard Reports',
+        href: '/reports',
+        icon: FileText,
+        permission: 'view:Report'
+      },
+      {
+        name: 'Advanced Analytics',
+        href: '/analytics/advanced',
         icon: TrendingUp,
-        permission: 'view:Report',
-        roles: ['admin', 'manager']
-      },
-      {
-        name: 'Production Analytics',
-        href: '/reports/production',
-        icon: Factory,
-        permission: 'view:Report',
-        roles: ['admin', 'manager', 'production']
-      },
-      {
-        name: 'Sales Analytics',
-        href: '/sales?tab=analytics',
-        icon: BarChart3,
-        permission: 'view:Sale',
-        roles: ['admin', 'manager', 'sales']
-      },
-      {
-        name: 'Purchase Analytics',
-        href: '/purchase?tab=analytics',
-        icon: BarChart3,
-        permission: 'view:Purchase',
-        roles: ['admin', 'manager', 'purchase']
-      },
-      {
-        name: 'Financial Reports',
-        href: '/reports/financial',
-        icon: DollarSign,
-        permission: 'view:FinancialTransaction',
-        roles: ['admin', 'manager', 'finance']
-      },
-      {
-        name: 'Automated Reports',
-        href: '/reports/automated',
-        icon: BarChart3,
-        permission: 'view:Report',
-        roles: ['admin', 'manager']
+        permission: 'view:Report'
       }
     ]
   },

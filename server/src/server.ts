@@ -1,3 +1,5 @@
+console.log('Server: Starting imports...');
+
 import 'express-async-errors';
 import express, { Request, Response, NextFunction } from 'express';
 import cookieParser from 'cookie-parser';
@@ -7,23 +9,31 @@ import { createServer } from 'http';
 import { Server as SocketIOServer } from 'socket.io';
 import mongoose from 'mongoose';
 
+console.log('Server: Basic imports completed');
+
+console.log('Server: About to import configurations...');
+
 // Import configurations
-import config from '@/config/environment';
-import database from '@/config/database';
-import logger from '@/utils/logger';
+import config from './config/environment';
+import database from './config/database';
+import logger from './utils/logger';
+
+console.log('Server: Configurations imported successfully');
 
 // Configure Mongoose to suppress verbose logs and prevent duplicate index warnings
 mongoose.set('debug', false);
 mongoose.set('autoIndex', false); // Disable automatic index creation
 
 // Import middleware
-import { securityMiddleware, requestLogger, securityErrorHandler } from '@/middleware/security';
-import { errorHandler, notFoundHandler } from '@/middleware/errorHandler';
+import { securityMiddleware, requestLogger, securityErrorHandler } from './middleware/security';
+import { errorHandler, notFoundHandler } from './middleware/errorHandler';
+
+console.log('Server: About to import API routes...');
 
 // Import consolidated routes
 import apiRoutes from './routes';
 
-console.log('Server: Importing API routes...');
+console.log('Server: API routes imported successfully');
 
 // Automated reports will be integrated later
 
@@ -513,8 +523,13 @@ const startServer = async () => {
 
     // Connect to database
     console.log('📊 Attempting database connection...');
-    await database.connect();
-    console.log('✅ Database connected successfully!');
+    try {
+      await database.connect();
+      console.log('✅ Database connected successfully!');
+    } catch (error) {
+      console.error('❌ Database connection failed:', error);
+      console.log('⚠️  Continuing without database connection for debugging...');
+    }
     
     // Start HTTP server
     httpServer.listen(config.PORT, () => {

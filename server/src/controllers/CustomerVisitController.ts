@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { BaseController } from './BaseController';
 import { CustomerVisitService } from '../services/CustomerVisitService';
+import { logger } from '../utils/logger';
 
 // Simplified CustomerVisit interface for controller
 interface ICustomerVisit {
@@ -58,11 +59,20 @@ export class CustomerVisitController {
   }
 
   private sendError(res: Response, error: any, message: string, statusCode: number = 500): void {
-    res.status(statusCode).json({
+    logger.error('CustomerVisitController error', { error, message, statusCode });
+    
+    // Ensure we always send a proper JSON response
+    const errorResponse = {
       success: false,
       message,
-      error: error.message || error
-    });
+      error: error?.message || error?.toString() || 'Unknown error',
+      timestamp: new Date().toISOString()
+    };
+
+    // Log the error response for debugging
+    console.error('CustomerVisitController.sendError - Sending error response:', errorResponse);
+    
+    res.status(statusCode).json(errorResponse);
   }
 
   /**
@@ -84,6 +94,19 @@ export class CustomerVisitController {
    * Get all customer visits with pagination and filters
    */
   async getAllCustomerVisits(req: Request, res: Response): Promise<void> {
+    console.log('CustomerVisitController.getAllCustomerVisits - Request received:', {
+      query: req.query,
+      user: req.user ? {
+        userId: req.user.userId,
+        companyId: req.user.companyId,
+        isSuperAdmin: req.user.isSuperAdmin
+      } : null,
+      headers: {
+        'x-company-id': req.headers['x-company-id'],
+        authorization: !!req.headers.authorization
+      }
+    });
+
     try {
       const {
         page = 1,
@@ -139,7 +162,6 @@ export class CustomerVisitController {
         sort: { [sortBy as string]: sortOrder === 'desc' ? -1 : 1 },
         populate: [
           { path: 'createdBy', select: 'username email personalInfo.firstName personalInfo.lastName' },
-          { path: 'approvedBy', select: 'username email personalInfo.firstName personalInfo.lastName' },
           { path: 'companyId', select: 'companyName companyCode' }
         ]
       };
@@ -167,6 +189,12 @@ export class CustomerVisitController {
       
       res.status(200).json(result);
     } catch (error) {
+      console.error('CustomerVisitController.getAllCustomerVisits - Error details:', {
+        error: error,
+        message: error?.message,
+        stack: error?.stack,
+        name: error?.name
+      });
       this.sendError(res, error, 'Failed to retrieve customer visits');
     }
   }
@@ -338,6 +366,70 @@ export class CustomerVisitController {
       this.sendSuccess(res, visit, 'Gift/sample added successfully');
     } catch (error) {
       this.sendError(res, error, 'Failed to add gift/sample');
+    }
+  }
+
+  /**
+   * Add transportation expense
+   */
+  async addTransportationExpense(req: Request, res: Response): Promise<void> {
+    try {
+      const { id } = req.params;
+      const expenseData = req.body;
+      const updatedBy = (req.user?.userId || req.user?._id)?.toString();
+
+      const visit = await this.customerVisitService.addTransportationExpense(id, expenseData, updatedBy);
+
+      if (!visit) {
+        this.sendError(res, new Error('Customer visit not found'), 'Customer visit not found', 404);
+        return;
+      }
+
+      this.sendSuccess(res, visit, 'Transportation expense added successfully');
+    } catch (error) {
+      this.sendError(res, error, 'Failed to add transportation expense');
+    }
+  }
+
+  /**
+   * Add other expense
+   */
+  async addOtherExpense(req: Request, res: Response): Promise<void> {
+    try {
+      const { id } = req.params;
+      const expenseData = req.body;
+      const updatedBy = (req.user?.userId || req.user?._id)?.toString();
+
+      const visit = await this.customerVisitService.addOtherExpense(id, expenseData, updatedBy);
+
+      if (!visit) {
+        this.sendError(res, new Error('Customer visit not found'), 'Customer visit not found', 404);
+        return;
+      }
+
+      this.sendSuccess(res, visit, 'Other expense added successfully');
+    } catch (error) {
+      this.sendError(res, error, 'Failed to add other expense');
+    }
+  }
+
+  /**
+   * Recalculate visit totals
+   */
+  async recalculateTotals(req: Request, res: Response): Promise<void> {
+    try {
+      const { id } = req.params;
+
+      const visit = await this.customerVisitService.recalculateVisitTotals(id);
+
+      if (!visit) {
+        this.sendError(res, new Error('Customer visit not found'), 'Customer visit not found', 404);
+        return;
+      }
+
+      this.sendSuccess(res, visit, 'Visit totals recalculated successfully');
+    } catch (error) {
+      this.sendError(res, error, 'Failed to recalculate visit totals');
     }
   }
 

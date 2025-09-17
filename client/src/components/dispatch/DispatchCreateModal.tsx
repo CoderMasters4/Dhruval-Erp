@@ -101,6 +101,7 @@ export const DispatchCreateModal = ({
 
   // State for selected sales order
   const [selectedSalesOrderId, setSelectedSalesOrderId] = useState<string>('')
+  const [selectedSalesOrder, setSelectedSalesOrder] = useState<any>(null)
   const [salesOrderSearch, setSalesOrderSearch] = useState<string>('')
   const [searchedSalesOrder, setSearchedSalesOrder] = useState<any>(null)
 
@@ -129,6 +130,17 @@ export const DispatchCreateModal = ({
         
         // Set selected customer order ID for auto-updating
         setSelectedSalesOrderId(customerOrderId)
+        
+        // Set selected sales order object for stats display
+        if (prefilledData) {
+          setSelectedSalesOrder({
+            orderNumber: prefilledData.orderNumber,
+            customerName: prefilledData.customerName,
+            orderSummary: {
+              finalAmount: prefilledData.orderAmount
+            }
+          })
+        }
         
         console.log('Prefilled data:', {
           companyId: initialFormData.companyId,
@@ -243,6 +255,7 @@ export const DispatchCreateModal = ({
                   customerOrderId: salesOrder._id
                 })
                 setSelectedSalesOrderId(salesOrder._id)
+                setSelectedSalesOrder(salesOrder)
   }
 
   const handleSearchSalesOrder = async () => {
@@ -311,14 +324,14 @@ export const DispatchCreateModal = ({
             }
           }).unwrap()
           
-          toast.success(`Dispatch ${result.dispatchNumber} created and sales order updated successfully!`)
+          // Success message will be handled by the parent component
         } catch (salesError) {
           console.error('Failed to update sales order:', salesError)
           toast.error('Dispatch created but failed to update sales order')
         }
       } else {
         console.log('No valid sales order ID to update:', selectedSalesOrderId)
-        toast.success(`Dispatch ${result.dispatchNumber} created successfully!`)
+        // Success message will be handled by the parent component
       }
       
       if (onSuccess) {
@@ -340,6 +353,72 @@ export const DispatchCreateModal = ({
       size="xl"
     >
       <div className="max-h-[90vh] overflow-y-auto space-y-6">
+        {/* Stats Cards Header */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+          <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+            <div className="flex items-center">
+              <div className="p-2 bg-blue-100 rounded-lg">
+                <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+              </div>
+              <div className="ml-3">
+                <p className="text-sm font-medium text-gray-600">Order Number</p>
+                <p className="text-lg font-semibold text-gray-900">
+                  {prefilledData?.orderNumber || selectedSalesOrder?.orderNumber || 'N/A'}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-green-50 p-4 rounded-lg border border-green-200">
+            <div className="flex items-center">
+              <div className="p-2 bg-green-100 rounded-lg">
+                <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
+              </div>
+              <div className="ml-3">
+                <p className="text-sm font-medium text-gray-600">Customer</p>
+                <p className="text-lg font-semibold text-gray-900">
+                  {prefilledData?.customerName || selectedSalesOrder?.customerName || 'N/A'}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-yellow-50 p-4 rounded-lg border border-yellow-200">
+            <div className="flex items-center">
+              <div className="p-2 bg-yellow-100 rounded-lg">
+                <svg className="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+                </svg>
+              </div>
+              <div className="ml-3">
+                <p className="text-sm font-medium text-gray-600">Order Amount</p>
+                <p className="text-lg font-semibold text-gray-900">
+                  ₹{prefilledData?.orderAmount || selectedSalesOrder?.orderSummary?.finalAmount || '0'}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-purple-50 p-4 rounded-lg border border-purple-200">
+            <div className="flex items-center">
+              <div className="p-2 bg-purple-100 rounded-lg">
+                <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                </svg>
+              </div>
+              <div className="ml-3">
+                <p className="text-sm font-medium text-gray-600">Dispatch Number</p>
+                <p className="text-lg font-semibold text-gray-900">
+                  {generateDispatchNumber()}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
         {/* Basic Information */}
         <div className="bg-gray-50 p-4 rounded-lg">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">📋 Basic Information</h3>

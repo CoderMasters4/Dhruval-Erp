@@ -1,10 +1,10 @@
 import { Request, Response } from 'express';
-import { DocumentManagement } from '../models';
+import { DocumentManagement } from '../models/DocumentManagement';
 import { BaseController } from './BaseController';
 
-export class DocumentManagementController extends BaseController<any> {
+export class DocumentManagementController {
   constructor() {
-    super(null as any, 'DocumentManagement');
+    // Initialize without BaseController for now to avoid circular dependencies
   }
   /**
    * Get documents by company
@@ -37,7 +37,13 @@ export class DocumentManagementController extends BaseController<any> {
         }
       };
 
-      this.sendPaginatedResponse(res, result, 'Documents retrieved successfully');
+      res.status(200).json({
+        success: true,
+        message: 'Documents retrieved successfully',
+        data: result.documents,
+        pagination: result.pagination,
+        timestamp: new Date().toISOString()
+      });
     } catch (error) {
       console.error('Error getting documents:', error);
       res.status(500).json({
@@ -64,7 +70,12 @@ export class DocumentManagementController extends BaseController<any> {
       const document = new DocumentManagement(documentData);
       await document.save();
 
-      this.sendSuccess(res, document, 'Document created successfully', 201);
+      res.status(201).json({
+        success: true,
+        message: 'Document created successfully',
+        data: document,
+        timestamp: new Date().toISOString()
+      });
     } catch (error) {
       console.error('Error creating document:', error);
       res.status(500).json({
@@ -93,7 +104,12 @@ export class DocumentManagementController extends BaseController<any> {
         });
       }
       
-      this.sendSuccess(res, document, 'Document retrieved successfully');
+      res.status(200).json({
+        success: true,
+        message: 'Document retrieved successfully',
+        data: document,
+        timestamp: new Date().toISOString()
+      });
     } catch (error) {
       console.error('Error getting document:', error);
       res.status(500).json({
@@ -124,7 +140,12 @@ export class DocumentManagementController extends BaseController<any> {
         });
       }
       
-      this.sendSuccess(res, document, 'Document updated successfully');
+      res.status(200).json({
+        success: true,
+        message: 'Document updated successfully',
+        data: document,
+        timestamp: new Date().toISOString()
+      });
     } catch (error) {
       console.error('Error updating document:', error);
       res.status(500).json({
@@ -151,7 +172,12 @@ export class DocumentManagementController extends BaseController<any> {
         });
       }
       
-      this.sendSuccess(res, document, 'Document deleted successfully');
+      res.status(200).json({
+        success: true,
+        message: 'Document deleted successfully',
+        data: document,
+        timestamp: new Date().toISOString()
+      });
     } catch (error) {
       console.error('Error deleting document:', error);
       res.status(500).json({
@@ -179,7 +205,12 @@ export class DocumentManagementController extends BaseController<any> {
         fileUrl: `/uploads/documents/${Date.now()}_${req.body.fileName || 'document.pdf'}`
       };
       
-      this.sendSuccess(res, uploadData, 'File uploaded successfully');
+      res.status(200).json({
+        success: true,
+        message: 'File uploaded successfully',
+        data: uploadData,
+        timestamp: new Date().toISOString()
+      });
     } catch (error) {
       console.error('Error uploading file:', error);
       res.status(500).json({
@@ -215,7 +246,12 @@ export class DocumentManagementController extends BaseController<any> {
         downloadedAt: new Date()
       };
 
-      this.sendSuccess(res, downloadData, 'Document download initiated');
+      res.status(200).json({
+        success: true,
+        message: 'Document download initiated',
+        data: downloadData,
+        timestamp: new Date().toISOString()
+      });
     } catch (error) {
       console.error('Error downloading document:', error);
       res.status(500).json({
@@ -256,7 +292,12 @@ export class DocumentManagementController extends BaseController<any> {
         .sort({ createdAt: -1 })
         .populate('uploadedBy', 'name email');
       
-      this.sendSuccess(res, documents, 'Document search completed');
+      res.status(200).json({
+        success: true,
+        message: 'Document search completed',
+        data: documents,
+        timestamp: new Date().toISOString()
+      });
     } catch (error) {
       console.error('Error searching documents:', error);
       res.status(500).json({
@@ -279,7 +320,12 @@ export class DocumentManagementController extends BaseController<any> {
         documentType 
       }).populate('uploadedBy', 'name email');
       
-      this.sendSuccess(res, documents, 'Documents by type retrieved successfully');
+      res.status(200).json({
+        success: true,
+        message: 'Documents by type retrieved successfully',
+        data: documents,
+        timestamp: new Date().toISOString()
+      });
     } catch (error) {
       console.error('Error getting documents by type:', error);
       res.status(500).json({
@@ -302,7 +348,12 @@ export class DocumentManagementController extends BaseController<any> {
         category 
       }).populate('uploadedBy', 'name email');
       
-      this.sendSuccess(res, documents, 'Documents by category retrieved successfully');
+      res.status(200).json({
+        success: true,
+        message: 'Documents by category retrieved successfully',
+        data: documents,
+        timestamp: new Date().toISOString()
+      });
     } catch (error) {
       console.error('Error getting documents by category:', error);
       res.status(500).json({
@@ -324,7 +375,12 @@ export class DocumentManagementController extends BaseController<any> {
         status: 'pending_approval' 
       }).populate('uploadedBy', 'name email');
       
-      this.sendSuccess(res, documents, 'Pending approval documents retrieved successfully');
+      res.status(200).json({
+        success: true,
+        message: 'Pending approval documents retrieved successfully',
+        data: documents,
+        timestamp: new Date().toISOString()
+      });
     } catch (error) {
       console.error('Error getting pending approval documents:', error);
       res.status(500).json({
@@ -349,7 +405,12 @@ export class DocumentManagementController extends BaseController<any> {
         createdAt: { $lte: overdueDate }
       }).populate('uploadedBy', 'name email');
       
-      this.sendSuccess(res, documents, 'Overdue approvals retrieved successfully');
+      res.status(200).json({
+        success: true,
+        message: 'Overdue approvals retrieved successfully',
+        data: documents,
+        timestamp: new Date().toISOString()
+      });
     } catch (error) {
       console.error('Error getting overdue approvals:', error);
       res.status(500).json({
@@ -377,7 +438,12 @@ export class DocumentManagementController extends BaseController<any> {
         uploadedAt: new Date()
       };
       
-      this.sendSuccess(res, uploadData, 'Document uploaded successfully');
+      res.status(200).json({
+        success: true,
+        message: 'Document uploaded successfully',
+        data: uploadData,
+        timestamp: new Date().toISOString()
+      });
     } catch (error) {
       console.error('Error uploading document:', error);
       res.status(500).json({
@@ -403,7 +469,12 @@ export class DocumentManagementController extends BaseController<any> {
         createdAt: new Date()
       };
       
-      this.sendSuccess(res, versionData, 'Version added successfully');
+      res.status(200).json({
+        success: true,
+        message: 'Version added successfully',
+        data: versionData,
+        timestamp: new Date().toISOString()
+      });
     } catch (error) {
       console.error('Error adding version:', error);
       res.status(500).json({
@@ -425,7 +496,12 @@ export class DocumentManagementController extends BaseController<any> {
         { version: '1.0', changes: 'Initial version', createdAt: new Date() }
       ];
       
-      this.sendSuccess(res, versions, 'Document versions retrieved successfully');
+      res.status(200).json({
+        success: true,
+        message: 'Document versions retrieved successfully',
+        data: versions,
+        timestamp: new Date().toISOString()
+      });
     } catch (error) {
       console.error('Error getting document versions:', error);
       res.status(500).json({
@@ -450,7 +526,12 @@ export class DocumentManagementController extends BaseController<any> {
         status: 'pending_approval'
       };
       
-      this.sendSuccess(res, approvalRequest, 'Approval requested successfully');
+      res.status(200).json({
+        success: true,
+        message: 'Approval requested successfully',
+        data: approvalRequest,
+        timestamp: new Date().toISOString()
+      });
     } catch (error) {
       console.error('Error requesting approval:', error);
       res.status(500).json({
@@ -475,7 +556,12 @@ export class DocumentManagementController extends BaseController<any> {
         status: 'approved'
       };
       
-      this.sendSuccess(res, approval, 'Document approved successfully');
+      res.status(200).json({
+        success: true,
+        message: 'Document approved successfully',
+        data: approval,
+        timestamp: new Date().toISOString()
+      });
     } catch (error) {
       console.error('Error approving document:', error);
       res.status(500).json({
@@ -502,7 +588,12 @@ export class DocumentManagementController extends BaseController<any> {
         status: 'rejected'
       };
       
-      this.sendSuccess(res, rejection, 'Document rejected successfully');
+      res.status(200).json({
+        success: true,
+        message: 'Document rejected successfully',
+        data: rejection,
+        timestamp: new Date().toISOString()
+      });
     } catch (error) {
       console.error('Error rejecting document:', error);
       res.status(500).json({
@@ -529,7 +620,12 @@ export class DocumentManagementController extends BaseController<any> {
         permissions
       };
       
-      this.sendSuccess(res, accessGranted, 'Access granted successfully');
+      res.status(200).json({
+        success: true,
+        message: 'Access granted successfully',
+        data: accessGranted,
+        timestamp: new Date().toISOString()
+      });
     } catch (error) {
       console.error('Error granting access:', error);
       res.status(500).json({
@@ -554,7 +650,12 @@ export class DocumentManagementController extends BaseController<any> {
         revokedAt: new Date()
       };
       
-      this.sendSuccess(res, accessRevoked, 'Access revoked successfully');
+      res.status(200).json({
+        success: true,
+        message: 'Access revoked successfully',
+        data: accessRevoked,
+        timestamp: new Date().toISOString()
+      });
     } catch (error) {
       console.error('Error revoking access:', error);
       res.status(500).json({
@@ -576,7 +677,12 @@ export class DocumentManagementController extends BaseController<any> {
         { userId: 'user1', permissions: ['read'], grantedAt: new Date() }
       ];
       
-      this.sendSuccess(res, accessList, 'Document access retrieved successfully');
+      res.status(200).json({
+        success: true,
+        message: 'Document access retrieved successfully',
+        data: accessList,
+        timestamp: new Date().toISOString()
+      });
     } catch (error) {
       console.error('Error getting document access:', error);
       res.status(500).json({
@@ -600,7 +706,12 @@ export class DocumentManagementController extends BaseController<any> {
         viewedAt: new Date()
       };
       
-      this.sendSuccess(res, viewRecord, 'View recorded successfully');
+      res.status(200).json({
+        success: true,
+        message: 'View recorded successfully',
+        data: viewRecord,
+        timestamp: new Date().toISOString()
+      });
     } catch (error) {
       console.error('Error recording view:', error);
       res.status(500).json({
@@ -624,7 +735,12 @@ export class DocumentManagementController extends BaseController<any> {
         downloadedAt: new Date()
       };
       
-      this.sendSuccess(res, downloadRecord, 'Download recorded successfully');
+      res.status(200).json({
+        success: true,
+        message: 'Download recorded successfully',
+        data: downloadRecord,
+        timestamp: new Date().toISOString()
+      });
     } catch (error) {
       console.error('Error recording download:', error);
       res.status(500).json({
@@ -649,7 +765,12 @@ export class DocumentManagementController extends BaseController<any> {
         shares: 2
       };
       
-      this.sendSuccess(res, analytics, 'Document analytics retrieved successfully');
+      res.status(200).json({
+        success: true,
+        message: 'Document analytics retrieved successfully',
+        data: analytics,
+        timestamp: new Date().toISOString()
+      });
     } catch (error) {
       console.error('Error getting document analytics:', error);
       res.status(500).json({
@@ -674,7 +795,12 @@ export class DocumentManagementController extends BaseController<any> {
         status: 'processed'
       };
       
-      this.sendSuccess(res, processResult, 'Document processed successfully');
+      res.status(200).json({
+        success: true,
+        message: 'Document processed successfully',
+        data: processResult,
+        timestamp: new Date().toISOString()
+      });
     } catch (error) {
       console.error('Error processing document:', error);
       res.status(500).json({
@@ -698,7 +824,12 @@ export class DocumentManagementController extends BaseController<any> {
         thumbnailUrl: `/thumbnail/${id}`
       };
       
-      this.sendSuccess(res, preview, 'Document preview retrieved successfully');
+      res.status(200).json({
+        success: true,
+        message: 'Document preview retrieved successfully',
+        data: preview,
+        timestamp: new Date().toISOString()
+      });
     } catch (error) {
       console.error('Error getting document preview:', error);
       res.status(500).json({
@@ -722,7 +853,12 @@ export class DocumentManagementController extends BaseController<any> {
         dimensions: { width: 200, height: 200 }
       };
       
-      this.sendSuccess(res, thumbnail, 'Document thumbnail retrieved successfully');
+      res.status(200).json({
+        success: true,
+        message: 'Document thumbnail retrieved successfully',
+        data: thumbnail,
+        timestamp: new Date().toISOString()
+      });
     } catch (error) {
       console.error('Error getting document thumbnail:', error);
       res.status(500).json({
@@ -749,7 +885,12 @@ export class DocumentManagementController extends BaseController<any> {
         permissions
       };
       
-      this.sendSuccess(res, shareData, 'Document shared successfully');
+      res.status(200).json({
+        success: true,
+        message: 'Document shared successfully',
+        data: shareData,
+        timestamp: new Date().toISOString()
+      });
     } catch (error) {
       console.error('Error sharing document:', error);
       res.status(500).json({
@@ -774,7 +915,12 @@ export class DocumentManagementController extends BaseController<any> {
         status: 'archived'
       };
       
-      this.sendSuccess(res, archiveData, 'Document archived successfully');
+      res.status(200).json({
+        success: true,
+        message: 'Document archived successfully',
+        data: archiveData,
+        timestamp: new Date().toISOString()
+      });
     } catch (error) {
       console.error('Error archiving document:', error);
       res.status(500).json({
@@ -799,7 +945,12 @@ export class DocumentManagementController extends BaseController<any> {
         status: 'active'
       };
       
-      this.sendSuccess(res, restoreData, 'Document restored successfully');
+      res.status(200).json({
+        success: true,
+        message: 'Document restored successfully',
+        data: restoreData,
+        timestamp: new Date().toISOString()
+      });
     } catch (error) {
       console.error('Error restoring document:', error);
       res.status(500).json({
@@ -824,7 +975,12 @@ export class DocumentManagementController extends BaseController<any> {
         uploadedAt: new Date()
       }));
       
-      this.sendSuccess(res, uploadResults, 'Bulk upload completed successfully');
+      res.status(200).json({
+        success: true,
+        message: 'Bulk upload completed successfully',
+        data: uploadResults,
+        timestamp: new Date().toISOString()
+      });
     } catch (error) {
       console.error('Error in bulk upload:', error);
       res.status(500).json({
@@ -849,7 +1005,12 @@ export class DocumentManagementController extends BaseController<any> {
         approvedAt: new Date()
       }));
       
-      this.sendSuccess(res, approvalResults, 'Bulk approval completed successfully');
+      res.status(200).json({
+        success: true,
+        message: 'Bulk approval completed successfully',
+        data: approvalResults,
+        timestamp: new Date().toISOString()
+      });
     } catch (error) {
       console.error('Error in bulk approval:', error);
       res.status(500).json({

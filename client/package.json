@@ -10,7 +10,7 @@
     "start:prod": "NODE_ENV=production next start -p 4001",
     "lint": "next lint",
     "export": "next export",
-    "error":"npx tsc --noEmit --skipLibCheck"
+    "error": "npx tsc --noEmit --skipLibCheck"
   },
   "dependencies": {
     "@casl/ability": "^6.7.3",
@@ -37,6 +37,8 @@
     "i18next": "^25.3.2",
     "i18next-browser-languagedetector": "^8.2.0",
     "i18next-http-backend": "^3.0.2",
+    "jspdf": "^3.0.2",
+    "jspdf-autotable": "^5.0.2",
     "lucide-react": "^0.526.0",
     "next": "15.4.4",
     "next-pwa": "^5.6.0",
@@ -55,6 +57,7 @@
     "speakeasy": "^2.0.0",
     "tailwind-merge": "^3.3.1",
     "workbox-webpack-plugin": "^7.3.0",
+    "xlsx": "^0.18.5",
     "zod": "^4.0.10"
   },
   "devDependencies": {

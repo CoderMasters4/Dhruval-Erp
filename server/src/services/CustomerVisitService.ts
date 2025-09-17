@@ -340,6 +340,81 @@ export class CustomerVisitService {
   }
 
   /**
+   * Recalculate total expenses for a visit
+   */
+  private async recalculateTotalExpenses(visitId: string): Promise<void> {
+    try {
+      const visit = await CustomerVisit.findById(visitId);
+      if (!visit) return;
+
+      // Calculate accommodation total
+      let accommodationTotal = 0;
+      if (visit.accommodation && visit.accommodation.checkInDate && visit.accommodation.checkOutDate) {
+        const checkIn = new Date(visit.accommodation.checkInDate);
+        const checkOut = new Date(visit.accommodation.checkOutDate);
+        
+        // Handle same-day check-in/check-out
+        let totalNights = Math.ceil((checkOut.getTime() - checkIn.getTime()) / (1000 * 60 * 60 * 24));
+        if (totalNights <= 0) totalNights = 1; // Minimum 1 night for same day
+        
+        const totalCost = totalNights * (visit.accommodation.numberOfRooms || 1) * (visit.accommodation.costPerNight || 0);
+        
+        // Update accommodation totals
+        await CustomerVisit.findByIdAndUpdate(visitId, {
+          'accommodation.totalNights': totalNights,
+          'accommodation.totalCost': totalCost
+        });
+        
+        accommodationTotal = totalCost;
+      }
+
+      // Calculate food expenses total
+      const foodTotal = visit.foodExpenses.reduce((sum, expense) => {
+        // Use existing totalCost if available, otherwise calculate
+        return sum + (expense.totalCost || (expense.numberOfPeople * expense.costPerPerson));
+      }, 0);
+
+      // Calculate gifts total
+      const giftsTotal = visit.giftsGiven.reduce((sum, gift) => {
+        // Use existing totalCost if available, otherwise calculate
+        return sum + (gift.totalCost || (gift.quantity * gift.unitCost));
+      }, 0);
+
+      // Calculate transportation total
+      const transportationTotal = visit.transportationExpenses.reduce((sum, expense) => sum + (expense.cost || 0), 0);
+
+      // Calculate other expenses total
+      const otherTotal = visit.otherExpenses.reduce((sum, expense) => sum + (expense.cost || 0), 0);
+
+      // Calculate grand total
+      const grandTotal = accommodationTotal + foodTotal + transportationTotal + giftsTotal + otherTotal;
+
+      // Update totalExpenses
+      await CustomerVisit.findByIdAndUpdate(visitId, {
+        'totalExpenses.accommodation': accommodationTotal,
+        'totalExpenses.food': foodTotal,
+        'totalExpenses.transportation': transportationTotal,
+        'totalExpenses.gifts': giftsTotal,
+        'totalExpenses.other': otherTotal,
+        'totalExpenses.total': grandTotal
+      });
+
+      logger.info('Total expenses recalculated', { 
+        visitId, 
+        accommodationTotal, 
+        foodTotal, 
+        transportationTotal, 
+        giftsTotal, 
+        otherTotal,
+        grandTotal
+      });
+    } catch (error) {
+      logger.error('Error recalculating total expenses', { error, visitId });
+      throw error;
+    }
+  }
+
+  /**
    * Add food expense to visit
    */
   async addFoodExpense(visitId: string, expenseData: any, updatedBy: string): Promise<ICustomerVisit | null> {
@@ -361,6 +436,9 @@ export class CustomerVisitService {
         },
         { new: true }
       );
+
+      // Recalculate total expenses
+      await this.recalculateTotalExpenses(visitId);
 
       logger.info('Food expense added', { visitId, expenseData, updatedBy });
       return updatedVisit as any;
@@ -393,10 +471,120 @@ export class CustomerVisitService {
         { new: true }
       );
 
+      // Recalculate total expenses
+      await this.recalculateTotalExpenses(visitId);
+
       logger.info('Gift added', { visitId, giftData, updatedBy });
       return updatedVisit as any;
     } catch (error) {
       logger.error('Error adding gift', { error, visitId, giftData, updatedBy });
+      throw error;
+    }
+  }
+
+  /**
+   * Add transportation expense to visit
+   */
+  async addTransportationExpense(visitId: string, expenseData: any, updatedBy: string): Promise<ICustomerVisit | null> {
+    try {
+      const visit = await this.findById(visitId);
+      if (!visit) {
+        throw new AppError('Visit not found', 404);
+      }
+
+      const updatedVisit = await CustomerVisit.findByIdAndUpdate(
+        visitId,
+        { 
+          $push: { transportationExpenses: expenseData },
+          lastModifiedBy: new Types.ObjectId(updatedBy),
+          updatedAt: new Date()
+        },
+        { new: true }
+      );
+
+      // Recalculate total expenses
+      await this.recalculateTotalExpenses(visitId);
+
+      logger.info('Transportation expense added', { visitId, expenseData, updatedBy });
+      return updatedVisit as any;
+    } catch (error) {
+      logger.error('Error adding transportation expense', { error, visitId, expenseData, updatedBy });
+      throw error;
+    }
+  }
+
+  /**
+   * Add other expense to visit
+   */
+  async addOtherExpense(visitId: string, expenseData: any, updatedBy: string): Promise<ICustomerVisit | null> {
+    try {
+      const visit = await this.findById(visitId);
+      if (!visit) {
+        throw new AppError('Visit not found', 404);
+      }
+
+      const updatedVisit = await CustomerVisit.findByIdAndUpdate(
+        visitId,
+        { 
+          $push: { otherExpenses: expenseData },
+          lastModifiedBy: new Types.ObjectId(updatedBy),
+          updatedAt: new Date()
+        },
+        { new: true }
+      );
+
+      // Recalculate total expenses
+      await this.recalculateTotalExpenses(visitId);
+
+      logger.info('Other expense added', { visitId, expenseData, updatedBy });
+      return updatedVisit as any;
+    } catch (error) {
+      logger.error('Error adding other expense', { error, visitId, expenseData, updatedBy });
+      throw error;
+    }
+  }
+
+  /**
+   * Update customer visit and recalculate totals
+   */
+  async updateCustomerVisit(visitId: string, updateData: any, updatedBy: string): Promise<ICustomerVisit | null> {
+    try {
+      const updatedVisit = await CustomerVisit.findByIdAndUpdate(
+        visitId,
+        { 
+          ...updateData,
+          lastModifiedBy: new Types.ObjectId(updatedBy),
+          updatedAt: new Date()
+        },
+        { new: true }
+      );
+
+      if (!updatedVisit) {
+        throw new AppError('Visit not found', 404);
+      }
+
+      // Recalculate total expenses
+      await this.recalculateTotalExpenses(visitId);
+
+      logger.info('Customer visit updated', { visitId, updateData, updatedBy });
+      return updatedVisit as any;
+    } catch (error) {
+      logger.error('Error updating customer visit', { error, visitId, updateData, updatedBy });
+      throw error;
+    }
+  }
+
+  /**
+   * Manually recalculate totals for a visit (public method)
+   */
+  async recalculateVisitTotals(visitId: string): Promise<ICustomerVisit | null> {
+    try {
+      await this.recalculateTotalExpenses(visitId);
+      const updatedVisit = await this.findById(visitId);
+      logger.info('Visit totals recalculated manually', { visitId });
+      return updatedVisit;
+    } catch (error) {
+      logger.error('Error manually recalculating visit totals', { error, visitId });
       throw error;
     }
   }
@@ -475,7 +663,8 @@ export class CustomerVisitService {
         query,
         options,
         skip,
-        limit
+        limit,
+        mongooseConnectionState: CustomerVisit.db.readyState
       });
 
       let queryBuilder = CustomerVisit.find(query)

@@ -1,8 +1,8 @@
 import { Router, Request, Response } from 'express';
-import { authenticate, requireCompany } from '@/middleware/auth';
-import Company from '@/models/Company';
-import User from '@/models/User';
-import { logger } from '@/utils/logger';
+import { authenticate, requireCompany } from '../../middleware/auth';
+import Company from '../../models/Company';
+import User from '../../models/User';
+import { logger } from '../../utils/logger';
 
 const router = Router();
 
@@ -66,10 +66,52 @@ router.get('/', authenticate, async (req: Request, res: Response) => {
   }
 });
 
+// GET /api/v1/companies/stats - Get company statistics (SUPERADMIN CAN ACCESS WITHOUT COMPANY ID)
+// MOVED BEFORE /:id route to prevent route conflict
+router.get('/stats', authenticate, async (req: Request, res: Response) => {
+  try {
+    logger.info('GET /api/v1/companies/stats - Fetching company statistics');
+
+    const stats = await Company.aggregate([
+      { $match: { isActive: true } },
+      {
+        $group: {
+          _id: null,
+          totalCompanies: { $sum: 1 },
+          activeCompanies: { $sum: { $cond: [{ $eq: ['$status', 'active'] }, 1, 0] } },
+          inactiveCompanies: { $sum: { $cond: [{ $eq: ['$status', 'inactive'] }, 1, 0] } }
+        }
+      }
+    ]);
+
+    const result = stats[0] || {
+      totalCompanies: 0,
+      activeCompanies: 0,
+      inactiveCompanies: 0
+    };
+
+    res.status(200).json({
+      success: true,
+      message: 'Company statistics retrieved successfully',
+      data: result,
+      timestamp: new Date().toISOString()
+    });
+
+  } catch (error: any) {
+    logger.error('Error fetching company statistics:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Internal Server Error',
+      message: 'Failed to fetch company statistics',
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
 // GET /api/v1/companies/:id - Get company by ID with detailed information (SUPERADMIN CAN ACCESS WITHOUT COMPANY ID)
 router.get('/:id', authenticate, async (req: Request, res: Response) => {
   const { id } = req.params;
-  
+
   try {
     logger.info(`GET /api/v1/companies/${id} - Fetching company details`);
 
@@ -105,41 +147,6 @@ router.get('/:id', authenticate, async (req: Request, res: Response) => {
       error: 'Internal Server Error',
       message: 'Failed to fetch company',
       details: error.message,
-      timestamp: new Date().toISOString()
-    });
-  }
-});
-
-// GET /api/v1/companies/stats - Get company statistics (SUPERADMIN CAN ACCESS WITHOUT COMPANY ID)
-router.get('/stats', authenticate, async (req: Request, res: Response) => {
-  try {
-    logger.info('GET /api/v1/companies/stats - Fetching company statistics');
-
-    const stats = await Company.aggregate([
-      { $match: { isActive: true } },
-      {
-        $group: {
-          _id: null,
-          totalCompanies: { $sum: 1 },
-          activeCompanies: { $sum: { $cond: [{ $eq: ['$isActive', true] }, 1, 0] } },
-          inactiveCompanies: { $sum: { $cond: [{ $eq: ['$isActive', false] }, 1, 0] } }
-        }
-      }
-    ]);
-
-    res.status(200).json({
-      success: true,
-      message: 'Company statistics retrieved successfully',
-      data: stats[0] || { totalCompanies: 0, activeCompanies: 0, inactiveCompanies: 0 },
-      timestamp: new Date().toISOString()
-    });
-
-  } catch (error: any) {
-    logger.error('Error fetching company statistics:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Internal Server Error',
-      message: 'Failed to fetch company statistics',
       timestamp: new Date().toISOString()
     });
   }

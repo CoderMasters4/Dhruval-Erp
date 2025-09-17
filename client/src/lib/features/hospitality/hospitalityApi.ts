@@ -216,12 +216,18 @@ export const hospitalityApi = baseApi.injectEndpoints({
           Object.entries(params).filter(([_, value]) => value !== undefined && value !== '')
         ),
       }),
+      transformResponse: (response: { data: any[]; total: number; page: number; limit: number; totalPages: number }) => {
+        console.log('Transform response:', response)
+        // Return the response object which contains the data array and pagination info
+        return response
+      },
       providesTags: ['CustomerVisit'],
     }),
 
     // Get customer visit by ID
     getCustomerVisitById: builder.query<CustomerVisit, string>({
       query: (id) => `/customer-visits/${id}`,
+      transformResponse: (response: { success: boolean; data: CustomerVisit; message: string }) => response.data,
       providesTags: (_, __, id) => [{ type: 'CustomerVisit', id }],
     }),
 
@@ -236,12 +242,14 @@ export const hospitalityApi = baseApi.injectEndpoints({
           Object.entries(params).filter(([_, value]) => value !== undefined && value !== '')
         ),
       }),
+      transformResponse: (response: { success: boolean; data: HospitalityStats; message: string }) => response.data,
       providesTags: ['HospitalityStats'],
     }),
 
     // Get pending approvals
     getPendingApprovals: builder.query<CustomerVisit[], void>({
       query: () => '/customer-visits/pending-approvals',
+      transformResponse: (response: { success: boolean; data: CustomerVisit[]; message: string }) => response.data,
       providesTags: ['CustomerVisit'],
     }),
 
@@ -322,6 +330,35 @@ export const hospitalityApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: ['CustomerVisit', 'HospitalityStats'],
     }),
+
+    // Add transportation expense
+    addTransportationExpense: builder.mutation<CustomerVisit, { id: string; expense: any }>({
+      query: ({ id, expense }) => ({
+        url: `/customer-visits/${id}/transportation-expense`,
+        method: 'POST',
+        body: expense,
+      }),
+      invalidatesTags: ['CustomerVisit', 'HospitalityStats'],
+    }),
+
+    // Add other expense
+    addOtherExpense: builder.mutation<CustomerVisit, { id: string; expense: any }>({
+      query: ({ id, expense }) => ({
+        url: `/customer-visits/${id}/other-expense`,
+        method: 'POST',
+        body: expense,
+      }),
+      invalidatesTags: ['CustomerVisit', 'HospitalityStats'],
+    }),
+
+    // Recalculate totals
+    recalculateTotals: builder.mutation<CustomerVisit, { id: string }>({
+      query: ({ id }) => ({
+        url: `/customer-visits/${id}/recalculate-totals`,
+        method: 'POST',
+      }),
+      invalidatesTags: ['CustomerVisit', 'HospitalityStats'],
+    }),
   }),
 })
 
@@ -338,4 +375,7 @@ export const {
   useMarkAsReimbursedMutation,
   useAddFoodExpenseMutation,
   useAddGiftMutation,
+  useAddTransportationExpenseMutation,
+  useAddOtherExpenseMutation,
+  useRecalculateTotalsMutation,
 } = hospitalityApi

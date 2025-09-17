@@ -19,6 +19,7 @@ import {
   useDeleteVehicleImageMutation
 } from '@/lib/features/vehicles/vehiclesApi'
 import { useGetAllCompaniesQuery } from '@/lib/features/companies/companiesApi'
+import { useGetAllVehiclesQuery } from '@/lib/features/vehicles/vehiclesApi'
 
 
 interface VehicleFormModalProps {
@@ -34,7 +35,6 @@ interface FormData {
   driverPhone: string
   purpose: Vehicle['purpose']
   reason: string
-  gatePassNumber: string
   companyId: string
 }
 
@@ -44,7 +44,6 @@ const getInitialFormData = (): FormData => ({
   driverPhone: '',
   purpose: 'delivery',
   reason: '',
-  gatePassNumber: '',
   companyId: ''
 })
 
@@ -65,6 +64,22 @@ export default function VehicleFormModal({ isOpen, onClose, onSuccess, vehicle }
   const { data: companiesResponse } = useGetAllCompaniesQuery()
   const companies = companiesResponse?.data || []
 
+  // Get today's vehicles for the selected company
+  const today = new Date()
+  const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate())
+  const todayEnd = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1)
+
+  const { data: todayVehiclesResponse } = useGetAllVehiclesQuery({
+    page: 1,
+    limit: 1000,
+    companyId: formData.companyId,
+    dateFrom: todayStart.toISOString(),
+    dateTo: todayEnd.toISOString(),
+    sortBy: 'timeIn',
+    sortOrder: 'desc'
+  })
+  const todayVehicles = todayVehiclesResponse?.data || []
+
   const isEditing = !!vehicle
   const isLoading = isCreating || isUpdating || isUploading
 
@@ -76,7 +91,6 @@ export default function VehicleFormModal({ isOpen, onClose, onSuccess, vehicle }
         driverPhone: vehicle.driverPhone || '',
         purpose: vehicle.purpose || 'delivery',
         reason: vehicle.reason || '',
-        gatePassNumber: vehicle.gatePassNumber || '',
         companyId: vehicle.companyId || ''
       })
       setExistingImages(vehicle.images || [])
@@ -179,7 +193,6 @@ export default function VehicleFormModal({ isOpen, onClose, onSuccess, vehicle }
         driverPhone: formData.driverPhone,
         purpose: formData.purpose,
         reason: formData.reason,
-        gatePassNumber: formData.gatePassNumber,
         companyId: formData.companyId
       }
 
@@ -283,18 +296,6 @@ export default function VehicleFormModal({ isOpen, onClose, onSuccess, vehicle }
                   )}
                 </div>
 
-                <div>
-                  <label className="block text-sm font-semibold text-black mb-2">
-                    Gate Pass Number
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.gatePassNumber}
-                    onChange={(e) => updateFormData({ gatePassNumber: e.target.value })}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white"
-                    placeholder="e.g., GP001"
-                  />
-                </div>
 
                 <div>
                   <label className="block text-sm font-semibold text-black mb-2">
@@ -399,7 +400,63 @@ export default function VehicleFormModal({ isOpen, onClose, onSuccess, vehicle }
               </div>
             </div>
 
-
+            {/* Today's Vehicles for Selected Company */}
+            {formData.companyId && (
+              <div className="bg-yellow-50 rounded-xl p-6 border border-yellow-200">
+                <h3 className="text-lg font-semibold text-black mb-4 flex items-center">
+                  <Car className="w-5 h-5 mr-2 text-yellow-600" />
+                  Today's Vehicles ({todayVehicles.length})
+                </h3>
+                
+                {todayVehicles.length > 0 ? (
+                  <div className="space-y-3">
+                    <div className="text-sm text-gray-600 mb-3">
+                      Showing vehicles that entered today for the selected company
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                      {todayVehicles.map((vehicle) => (
+                        <div
+                          key={vehicle._id}
+                          className="bg-white p-4 rounded-lg border border-gray-200 hover:border-yellow-300 transition-colors cursor-pointer"
+                          onClick={() => {
+                            setFormData(prev => ({
+                              ...prev,
+                              vehicleNumber: vehicle.vehicleNumber,
+                              driverName: vehicle.driverName,
+                              driverPhone: vehicle.driverPhone,
+                              purpose: vehicle.purpose,
+                              reason: vehicle.reason
+                            }))
+                          }}
+                        >
+                          <div className="flex items-center justify-between mb-2">
+                            <span className="font-semibold text-gray-900">{vehicle.vehicleNumber}</span>
+                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                              vehicle.status === 'in' ? 'bg-green-100 text-green-800' :
+                              vehicle.status === 'out' ? 'bg-red-100 text-red-800' :
+                              'bg-yellow-100 text-yellow-800'
+                            }`}>
+                              {vehicle.status}
+                            </span>
+                          </div>
+                          <div className="text-sm text-gray-600">
+                            <div>Driver: {vehicle.driverName}</div>
+                            <div>Phone: {vehicle.driverPhone}</div>
+                            <div>Purpose: {vehicle.purpose}</div>
+                            <div>Time In: {new Date(vehicle.timeIn).toLocaleTimeString()}</div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-center py-8 text-gray-500">
+                    <Car className="w-12 h-12 mx-auto mb-3 text-gray-300" />
+                    <p>No vehicles entered today for this company</p>
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* Vehicle Images */}
             <div className="bg-green-50 rounded-xl p-6 border border-green-200">

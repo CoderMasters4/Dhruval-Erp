@@ -100,14 +100,14 @@ export default function VehicleDetailsModal({ isOpen, onClose, vehicle }: Vehicl
                 <p className="text-lg font-semibold text-gray-900">{vehicle.vehicleNumber}</p>
               </div>
               
-              {vehicle.gatePassNumber && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Gate Pass Number
-                  </label>
-                  <p className="text-lg font-semibold text-gray-900">{vehicle.gatePassNumber}</p>
-                </div>
-              )}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Current Gate Pass
+                </label>
+                <p className="text-lg font-semibold text-gray-900">
+                  {vehicle.gatePassNumber || 'No active gate pass'}
+                </p>
+              </div>
               
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">

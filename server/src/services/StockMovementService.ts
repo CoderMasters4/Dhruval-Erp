@@ -1,6 +1,6 @@
 import { Types, FilterQuery } from 'mongoose';
 import { BaseService } from './BaseService';
-import { StockMovement } from '../models';
+import StockMovement from '../models/StockMovement';
 import { IStockMovement } from '../types/models';
 import { AppError } from '../utils/errors';
 import { logger } from '../utils/logger';
@@ -82,8 +82,12 @@ export class StockMovementService extends BaseService<IStockMovement> {
         .limit(limit);
       
       if (options.populate) {
-        options.populate.forEach((path: string) => {
-          query = query.populate(path);
+        options.populate.forEach((populateOption: any) => {
+          if (typeof populateOption === 'string') {
+            query = query.populate(populateOption);
+          } else if (typeof populateOption === 'object') {
+            query = query.populate(populateOption);
+          }
         });
       }
       

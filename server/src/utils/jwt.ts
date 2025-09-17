@@ -1,6 +1,6 @@
 import jwt from 'jsonwebtoken';
 import { Response } from 'express';
-import config from '@/config/environment';
+import config from '../config/environment';
 
 
 export interface JWTPayload {

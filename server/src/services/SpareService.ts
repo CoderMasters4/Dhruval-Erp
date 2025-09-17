@@ -1,7 +1,7 @@
 import { FilterQuery, Types } from 'mongoose';
 import { BaseService } from './BaseService';
 import { ISpare } from '@/types/models';
-import Spare from '@/models/Spare';
+import Spare from '../models/Spare';
 import { logger } from '@/utils/logger';
 import { AppError } from '@/utils/errors';
 

@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { authenticate, requireCompany } from '@/middleware/auth';
+import { authenticate, requireCompany } from '../middleware/auth';
 
 // Import V1 routes only (clean structure)
 import v1AuthRoutes from './v1/auth';
@@ -13,7 +13,7 @@ import v1SuppliersRoutes from './v1/suppliers';
 import v1InventoryRoutes from './v1/inventory';
 import v1ProductionRoutes from './v1/production';
 import v1CustomerOrdersRoutes from './v1/customer-orders';
-import v1PurchaseOrdersRoutes from './v1/purchase-orders'; // Commented out to prevent route conflicts
+import v1PurchaseOrdersRoutes from './v1/purchase-orders';
 import v1PurchaseRoutes from './v1/purchase';
 import v1InvoicesRoutes from './v1/invoices';
 import v1WarehousesRoutes from './v1/warehouses';
@@ -21,6 +21,7 @@ import v1StockMovementsRoutes from './v1/stock-movements';
 import v1FinancialTransactionsRoutes from './v1/financial-transactions';
 import v1VisitorsRoutes from './v1/visitors';
 import v1VehiclesRoutes from './v1/vehicles';
+import v1GatePassesRoutes from './v1/gatepasses';
 import v1SecurityLogsRoutes from './v1/security-logs';
 import v1AuditLogsRoutes from './v1/audit-logs';
 import v1BusinessAnalyticsRoutes from './v1/business-analytics';
@@ -51,6 +52,7 @@ import productionFlowRoutes from './productionFlow';
 import productionStagesRoutes from './productionStages';
 import greyFabricInwardRoutes from './greyFabricInward';
 import preProcessingRoutes from './preProcessing';
+import productionBatchRoutes from './productionBatchRoutes';
 
 // Import new feature routes
 import maintenanceRoutes from './maintenance';
@@ -154,25 +156,25 @@ router.use('/auth', v1AuthRoutes);
 // Apply authentication middleware to all other v1 routes
 router.use('/', authenticate);
 
-// ADDING ROUTES BACK ONE BY ONE TO IDENTIFY HANGING ISSUE
-// Core business management
+// // ADDING ROUTES BACK ONE BY ONE TO IDENTIFY HANGING ISSUE
+// // Core business management
 router.use('/companies', v1CompaniesRoutes); // ❌ HANGING: Companies route causing server hang
 router.use('/users', v1UsersRoutes); // ✅ WORKING: Users route working
-router.use('/customers', v1CustomersRoutes); // ❌ HANGING: Customers route also causing hang
+router.use('/customers', v1CustomersRoutes); // 
 router.use('/suppliers', v1SuppliersRoutes); // ✅ TESTING: Testing suppliers separately
 
-// Dashboard and orders
+// // Dashboard and orders
 router.use('/dashboard', v1DashboardRoutes);
 router.use('/orders', v1OrdersRoutes);
 
-// Inventory and production
-router.use('/inventory', v1InventoryRoutes);
+// // Inventory and production
+router.use ('/inventory', v1InventoryRoutes);
 router.use('/production', v1ProductionRoutes);
 router.use('/warehouses', v1WarehousesRoutes);
 router.use('/stock-movements', v1StockMovementsRoutes);
 router.use('/spares', v1SparesRoutes);
 
-// New feature routes
+// // New feature routes
 router.use('/maintenance', maintenanceRoutes);
 router.use('/quality', qualityRoutes);
 router.use('/compatibility', compatibilityRoutes);
@@ -180,24 +182,26 @@ router.use('/suppliers-management', suppliersRoutes);
 
 router.use('/batches', v1BatchesRoutes);
 
-// Orders and financial
+// // Orders and financial - Using fixed routes with lazy loading
 router.use('/customer-orders', v1CustomerOrdersRoutes);
 router.use('/purchase-orders', v1PurchaseOrdersRoutes); 
+router.use('/purchase', v1PurchaseRoutes); // ENABLED WITH SIMPLIFIED HANDLERS
 
 router.use('/invoices', v1InvoicesRoutes);
 router.use('/quotations', v1QuotationsRoutes);
 router.use('/financial-transactions', v1FinancialTransactionsRoutes);
 
-// Operations and management
+// // Operations and management
 router.use('/manpower', v1ManpowerRoutes);
 router.use('/stickers', v1StickerRoutes);
 router.use('/visitors', v1VisitorsRoutes);
 router.use('/vehicles', v1VehiclesRoutes);
+router.use('/gatepasses', v1GatePassesRoutes);
 router.use('/attendance', v1AttendanceRoutes);
 router.use('/employees', v1EmployeesRoutes);
 router.use('/shifts', v1ShiftsRoutes);
 
-// Monitoring and analytics
+// // Monitoring and analytics
 router.use('/boiler-monitoring', v1BoilerMonitoringRoutes);
 router.use('/electricity-monitoring', v1ElectricityMonitoringRoutes);
 router.use('/business-analytics', v1BusinessAnalyticsRoutes);
@@ -210,10 +214,11 @@ router.use('/production-flow', productionFlowRoutes);
 router.use('/production-stages', productionStagesRoutes);
 router.use('/grey-fabric-inward', greyFabricInwardRoutes);
 router.use('/pre-processing', preProcessingRoutes);
+router.use('/production-batches', productionBatchRoutes);
 router.use('/security-logs', v1SecurityLogsRoutes);
 router.use('/audit-logs', v1AuditLogsRoutes);
 
-// Specialized services
+// // Specialized services
 router.use('/hospitality', v1HospitalityRoutes);
 router.use('/customer-visits', v1CustomerVisitsRoutes);
 router.use('/dispatch', v1DispatchRoutes);
@@ -223,8 +228,8 @@ router.use('/reports', v1ReportsRoutes);
 // Advanced features
 router.use('/file-access', v1FileAccessRoutes);
 
-router.use('/production-dashboard', v1ProductionDashboardRoutes); // 🔍 TESTING: Temporarily disabled to isolate hanging issue
-router.use('/advanced-reports', v1AdvancedReportsRoutes); // 🔍 ISSUE: Still causing infinite restart loop
-router.use('/document-management', v1DocumentManagementRoutes); // 🔍 TESTING: Temporarily disabled to isolate hanging issue
+router.use('/production-dashboard', v1ProductionDashboardRoutes); // ✅ FIXED: Now using lazy loading
+router.use('/advanced-reports', v1AdvancedReportsRoutes);
+router.use('/document-management', v1DocumentManagementRoutes); // ✅ FIXED: Now using lazy loading
 
 export default router;

@@ -20,10 +20,20 @@ export class AdvancedReportController extends BaseController<IReport> {
 
       const reports = await this.advancedReportService.getReportsByCompany(companyId.toString());
 
-      this.sendSuccess(res, reports, 'Advanced reports retrieved successfully');
+      res.status(200).json({
+        success: true,
+        message: 'Advanced reports retrieved successfully',
+        data: reports,
+        timestamp: new Date().toISOString()
+      });
     } catch (error) {
       console.error('Error getting advanced reports:', error);
-      this.sendError(res, error);
+      res.status(500).json({
+        success: false,
+        message: "Internal server error",
+        error: error instanceof Error ? error.message : "Unknown error",
+        timestamp: new Date().toISOString()
+      });
     }
   }
 
@@ -41,10 +51,20 @@ export class AdvancedReportController extends BaseController<IReport> {
 
       const report = await this.advancedReportService.createAdvancedReport(reportData, userId.toString());
 
-      this.sendSuccess(res, report, 'Advanced report created successfully', 201);
+      res.status(201).json({
+        success: true,
+        message: 'Advanced report created successfully',
+        data: report,
+        timestamp: new Date().toISOString()
+      });
     } catch (error) {
       console.error('Error creating advanced report:', error);
-      this.sendError(res, error);
+      res.status(500).json({
+        success: false,
+        message: "Internal server error",
+        error: error instanceof Error ? error.message : "Unknown error",
+        timestamp: new Date().toISOString()
+      });
     }
   }
 
@@ -65,10 +85,20 @@ export class AdvancedReportController extends BaseController<IReport> {
         });
       }
 
-      this.sendSuccess(res, report, 'Advanced report retrieved successfully');
+      res.status(200).json({
+        success: true,
+        message: 'Advanced report retrieved successfully',
+        data: report,
+        timestamp: new Date().toISOString()
+      });
     } catch (error) {
       console.error('Error getting advanced report:', error);
-      this.sendError(res, error);
+      res.status(500).json({
+        success: false,
+        message: "Internal server error",
+        error: error instanceof Error ? error.message : "Unknown error",
+        timestamp: new Date().toISOString()
+      });
     }
   }
 
@@ -93,10 +123,20 @@ export class AdvancedReportController extends BaseController<IReport> {
         });
       }
 
-      this.sendSuccess(res, report, 'Advanced report updated successfully');
+      res.status(200).json({
+        success: true,
+        message: 'Advanced report updated successfully',
+        data: report,
+        timestamp: new Date().toISOString()
+      });
     } catch (error) {
       console.error('Error updating advanced report:', error);
-      this.sendError(res, error);
+      res.status(500).json({
+        success: false,
+        message: "Internal server error",
+        error: error instanceof Error ? error.message : "Unknown error",
+        timestamp: new Date().toISOString()
+      });
     }
   }
 
@@ -119,10 +159,20 @@ export class AdvancedReportController extends BaseController<IReport> {
 
       await this.advancedReportService.delete(id);
 
-      this.sendSuccess(res, report, 'Advanced report deleted successfully');
+      res.status(200).json({
+        success: true,
+        message: 'Advanced report deleted successfully',
+        data: report,
+        timestamp: new Date().toISOString()
+      });
     } catch (error) {
       console.error('Error deleting advanced report:', error);
-      this.sendError(res, error);
+      res.status(500).json({
+        success: false,
+        message: "Internal server error",
+        error: error instanceof Error ? error.message : "Unknown error",
+        timestamp: new Date().toISOString()
+      });
     }
   }
 
@@ -149,7 +199,12 @@ export class AdvancedReportController extends BaseController<IReport> {
         }
       };
       
-      this.sendSuccess(res, reportData, 'Report generated successfully');
+      res.status(200).json({
+        success: true,
+        message: 'Report generated successfully',
+        data: reportData,
+        timestamp: new Date().toISOString()
+      });
     } catch (error) {
       console.error('Error generating report:', error);
       res.status(500).json({
@@ -186,10 +241,20 @@ export class AdvancedReportController extends BaseController<IReport> {
         downloadUrl: `/api/v1/advanced-reports/${id}/download?format=${format}`
       };
 
-      this.sendSuccess(res, exportData, 'Report export initiated successfully');
+      res.status(200).json({
+        success: true,
+        message: 'Report export initiated successfully',
+        data: exportData,
+        timestamp: new Date().toISOString()
+      });
     } catch (error) {
       console.error('Error exporting report:', error);
-      this.sendError(res, error);
+      res.status(500).json({
+        success: false,
+        message: "Internal server error",
+        error: error instanceof Error ? error.message : "Unknown error",
+        timestamp: new Date().toISOString()
+      });
     }
   }
 
@@ -216,10 +281,20 @@ export class AdvancedReportController extends BaseController<IReport> {
         userId.toString()
       );
 
-      this.sendSuccess(res, scheduleData, 'Report scheduled successfully');
+      res.status(200).json({
+        success: true,
+        message: 'Report scheduled successfully',
+        data: scheduleData,
+        timestamp: new Date().toISOString()
+      });
     } catch (error) {
       console.error('Error scheduling report:', error);
-      this.sendError(res, error);
+      res.status(500).json({
+        success: false,
+        message: "Internal server error",
+        error: error instanceof Error ? error.message : "Unknown error",
+        timestamp: new Date().toISOString()
+      });
     }
   }
 
@@ -230,10 +305,20 @@ export class AdvancedReportController extends BaseController<IReport> {
     try {
       const { companyId } = req.user!;
       const scheduledReports = await this.advancedReportService.getScheduledReports(companyId.toString());
-      this.sendSuccess(res, scheduledReports, 'Scheduled reports retrieved successfully');
+      res.status(200).json({
+        success: true,
+        message: 'Scheduled reports retrieved successfully',
+        data: scheduledReports,
+        timestamp: new Date().toISOString()
+      });
     } catch (error) {
       console.error('Error getting scheduled reports:', error);
-      this.sendError(res, error);
+      res.status(500).json({
+        success: false,
+        message: "Internal server error",
+        error: error instanceof Error ? error.message : "Unknown error",
+        timestamp: new Date().toISOString()
+      });
     }
   }
 
@@ -244,10 +329,20 @@ export class AdvancedReportController extends BaseController<IReport> {
     try {
       const { companyId } = req.user!;
       const templates = await this.advancedReportService.getReportTemplates(companyId.toString());
-      this.sendSuccess(res, templates, 'Report templates retrieved successfully');
+      res.status(200).json({
+        success: true,
+        message: 'Report templates retrieved successfully',
+        data: templates,
+        timestamp: new Date().toISOString()
+      });
     } catch (error) {
       console.error('Error getting report templates:', error);
-      this.sendError(res, error);
+      res.status(500).json({
+        success: false,
+        message: "Internal server error",
+        error: error instanceof Error ? error.message : "Unknown error",
+        timestamp: new Date().toISOString()
+      });
     }
   }
 
@@ -258,10 +353,20 @@ export class AdvancedReportController extends BaseController<IReport> {
     try {
       const { companyId } = req.user!;
       const publicReports = await this.advancedReportService.getPublicReports(companyId.toString());
-      this.sendSuccess(res, publicReports, 'Public reports retrieved successfully');
+      res.status(200).json({
+        success: true,
+        message: 'Public reports retrieved successfully',
+        data: publicReports,
+        timestamp: new Date().toISOString()
+      });
     } catch (error) {
       console.error('Error getting public reports:', error);
-      this.sendError(res, error);
+      res.status(500).json({
+        success: false,
+        message: "Internal server error",
+        error: error instanceof Error ? error.message : "Unknown error",
+        timestamp: new Date().toISOString()
+      });
     }
   }
 
@@ -273,10 +378,20 @@ export class AdvancedReportController extends BaseController<IReport> {
       const { companyId, userId } = req.user!;
       const { id } = req.params;
       const clonedReport = await this.advancedReportService.cloneReport(id, userId.toString());
-      this.sendSuccess(res, clonedReport, 'Report cloned successfully');
+      res.status(200).json({
+        success: true,
+        message: 'Report cloned successfully',
+        data: clonedReport,
+        timestamp: new Date().toISOString()
+      });
     } catch (error) {
       console.error('Error cloning report:', error);
-      this.sendError(res, error);
+      res.status(500).json({
+        success: false,
+        message: "Internal server error",
+        error: error instanceof Error ? error.message : "Unknown error",
+        timestamp: new Date().toISOString()
+      });
     }
   }
 
@@ -288,10 +403,20 @@ export class AdvancedReportController extends BaseController<IReport> {
       const { companyId } = req.user!;
       const { id } = req.params;
       const status = await this.advancedReportService.getReportStatus(id);
-      this.sendSuccess(res, status, 'Report status retrieved successfully');
+      res.status(200).json({
+        success: true,
+        message: 'Report status retrieved successfully',
+        data: status,
+        timestamp: new Date().toISOString()
+      });
     } catch (error) {
       console.error('Error getting report status:', error);
-      this.sendError(res, error);
+      res.status(500).json({
+        success: false,
+        message: "Internal server error",
+        error: error instanceof Error ? error.message : "Unknown error",
+        timestamp: new Date().toISOString()
+      });
     }
   }
 
@@ -304,10 +429,20 @@ export class AdvancedReportController extends BaseController<IReport> {
       const { id } = req.params;
       const { schedule } = req.body;
       const updatedSchedule = await this.advancedReportService.updateSchedule(id, schedule, userId.toString());
-      this.sendSuccess(res, updatedSchedule, 'Schedule updated successfully');
+      res.status(200).json({
+        success: true,
+        message: 'Schedule updated successfully',
+        data: updatedSchedule,
+        timestamp: new Date().toISOString()
+      });
     } catch (error) {
       console.error('Error updating schedule:', error);
-      this.sendError(res, error);
+      res.status(500).json({
+        success: false,
+        message: "Internal server error",
+        error: error instanceof Error ? error.message : "Unknown error",
+        timestamp: new Date().toISOString()
+      });
     }
   }
 
@@ -320,10 +455,20 @@ export class AdvancedReportController extends BaseController<IReport> {
       const { id } = req.params;
       const { distribution } = req.body;
       const updatedDistribution = await this.advancedReportService.updateDistribution(id, distribution, userId.toString());
-      this.sendSuccess(res, updatedDistribution, 'Distribution updated successfully');
+      res.status(200).json({
+        success: true,
+        message: 'Distribution updated successfully',
+        data: updatedDistribution,
+        timestamp: new Date().toISOString()
+      });
     } catch (error) {
       console.error('Error updating distribution:', error);
-      this.sendError(res, error);
+      res.status(500).json({
+        success: false,
+        message: "Internal server error",
+        error: error instanceof Error ? error.message : "Unknown error",
+        timestamp: new Date().toISOString()
+      });
     }
   }
 
@@ -336,10 +481,20 @@ export class AdvancedReportController extends BaseController<IReport> {
       const { id } = req.params;
       const { accessControl } = req.body;
       const updatedAccessControl = await this.advancedReportService.updateAccessControl(id, accessControl, userId.toString());
-      this.sendSuccess(res, updatedAccessControl, 'Access control updated successfully');
+      res.status(200).json({
+        success: true,
+        message: 'Access control updated successfully',
+        data: updatedAccessControl,
+        timestamp: new Date().toISOString()
+      });
     } catch (error) {
       console.error('Error updating access control:', error);
-      this.sendError(res, error);
+      res.status(500).json({
+        success: false,
+        message: "Internal server error",
+        error: error instanceof Error ? error.message : "Unknown error",
+        timestamp: new Date().toISOString()
+      });
     }
   }
 
@@ -351,10 +506,20 @@ export class AdvancedReportController extends BaseController<IReport> {
       const { companyId } = req.user!;
       const { id } = req.params;
       const analytics = await this.advancedReportService.getReportAnalytics(id);
-      this.sendSuccess(res, analytics, 'Report analytics retrieved successfully');
+      res.status(200).json({
+        success: true,
+        message: 'Report analytics retrieved successfully',
+        data: analytics,
+        timestamp: new Date().toISOString()
+      });
     } catch (error) {
       console.error('Error getting report analytics:', error);
-      this.sendError(res, error);
+      res.status(500).json({
+        success: false,
+        message: "Internal server error",
+        error: error instanceof Error ? error.message : "Unknown error",
+        timestamp: new Date().toISOString()
+      });
     }
   }
 
@@ -367,10 +532,20 @@ export class AdvancedReportController extends BaseController<IReport> {
       const { id } = req.params;
       const { targetUserId, permissions } = req.body;
       const accessGranted = await this.advancedReportService.grantAccess(id, targetUserId, permissions, userId.toString());
-      this.sendSuccess(res, accessGranted, 'Access granted successfully');
+      res.status(200).json({
+        success: true,
+        message: 'Access granted successfully',
+        data: accessGranted,
+        timestamp: new Date().toISOString()
+      });
     } catch (error) {
       console.error('Error granting access:', error);
-      this.sendError(res, error);
+      res.status(500).json({
+        success: false,
+        message: "Internal server error",
+        error: error instanceof Error ? error.message : "Unknown error",
+        timestamp: new Date().toISOString()
+      });
     }
   }
 
@@ -382,10 +557,20 @@ export class AdvancedReportController extends BaseController<IReport> {
       const { companyId, userId } = req.user!;
       const { id, userId: targetUserId } = req.params;
       await this.advancedReportService.revokeAccess(id, targetUserId, userId.toString());
-      this.sendSuccess(res, null, 'Access revoked successfully');
+      res.status(200).json({
+        success: true,
+        message: 'Access revoked successfully',
+        data: null,
+        timestamp: new Date().toISOString()
+      });
     } catch (error) {
       console.error('Error revoking access:', error);
-      this.sendError(res, error);
+      res.status(500).json({
+        success: false,
+        message: "Internal server error",
+        error: error instanceof Error ? error.message : "Unknown error",
+        timestamp: new Date().toISOString()
+      });
     }
   }
 
@@ -397,10 +582,45 @@ export class AdvancedReportController extends BaseController<IReport> {
       const { companyId } = req.user!;
       const { query, filters } = req.query;
       const searchResults = await this.advancedReportService.searchReports(companyId.toString(), query as string, filters as any);
-      this.sendSuccess(res, searchResults, 'Search results retrieved successfully');
+      res.status(200).json({
+        success: true,
+        message: 'Search results retrieved successfully',
+        data: searchResults,
+        timestamp: new Date().toISOString()
+      });
     } catch (error) {
       console.error('Error searching reports:', error);
-      this.sendError(res, error);
+      res.status(500).json({
+        success: false,
+        message: "Internal server error",
+        error: error instanceof Error ? error.message : "Unknown error",
+        timestamp: new Date().toISOString()
+      });
+    }
+  }
+
+  /**
+   * Get reports by category
+   */
+  async getReportsByCategory(req: Request, res: Response) {
+    try {
+      const { companyId } = req.user!;
+      const { category } = req.params;
+      const reports = await this.advancedReportService.getReportsByCompany(companyId.toString(), { category });
+      res.status(200).json({
+        success: true,
+        message: 'Reports by category retrieved successfully',
+        data: reports,
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error('Error getting reports by category:', error);
+      res.status(500).json({
+        success: false,
+        message: "Internal server error",
+        error: error instanceof Error ? error.message : "Unknown error",
+        timestamp: new Date().toISOString()
+      });
     }
   }
 }

@@ -1,10 +1,10 @@
 import { Router } from 'express';
 import { body, param, query } from 'express-validator';
 import { authenticate } from '../middleware/auth';
-import { GreyFabricInwardController } from '../controllers/GreyFabricInwardController';
 
 const router = Router();
-const controller = new GreyFabricInwardController();
+// ✅ FIXED: Use lazy instantiation instead of immediate instantiation
+// This prevents the controller from being created when the module is imported
 
 // Apply authentication middleware to all routes
 router.use(authenticate);
@@ -82,13 +82,116 @@ const validateAnalytics = [
 ];
 
 // Routes
-router.get('/', validateQuery, controller.getAll.bind(controller));
-router.get('/analytics', validateAnalytics, controller.getAnalytics.bind(controller));
-router.get('/:id', param('id').isMongoId().withMessage('Valid GRN ID is required'), controller.getById.bind(controller));
-router.post('/', validateCreate, controller.create.bind(controller));
-router.put('/:id', validateUpdate, controller.update.bind(controller));
-router.delete('/:id', param('id').isMongoId().withMessage('Valid GRN ID is required'), controller.delete.bind(controller));
-router.post('/:id/receive', validateMarkAsReceived, controller.markAsReceived.bind(controller));
-router.post('/:id/quality-check', validateQualityCheck, controller.addQualityCheck.bind(controller));
+router.get('/', validateQuery, async (req, res) => {
+  try {
+    const { GreyFabricInwardController } = await import('../controllers/GreyFabricInwardController');
+    const controller = new GreyFabricInwardController();
+    await controller.getAll(req, res);
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error',
+      error: error.message
+    });
+  }
+});
+
+router.get('/analytics', validateAnalytics, async (req, res) => {
+  try {
+    const { GreyFabricInwardController } = await import('../controllers/GreyFabricInwardController');
+    const controller = new GreyFabricInwardController();
+    await controller.getAnalytics(req, res);
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error',
+      error: error.message
+    });
+  }
+});
+
+router.get('/:id', param('id').isMongoId().withMessage('Valid GRN ID is required'), async (req, res) => {
+  try {
+    const { GreyFabricInwardController } = await import('../controllers/GreyFabricInwardController');
+    const controller = new GreyFabricInwardController();
+    await controller.getById(req, res);
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error',
+      error: error.message
+    });
+  }
+});
+
+router.post('/', validateCreate, async (req, res) => {
+  try {
+    const { GreyFabricInwardController } = await import('../controllers/GreyFabricInwardController');
+    const controller = new GreyFabricInwardController();
+    await controller.create(req, res);
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error',
+      error: error.message
+    });
+  }
+});
+
+router.put('/:id', validateUpdate, async (req, res) => {
+  try {
+    const { GreyFabricInwardController } = await import('../controllers/GreyFabricInwardController');
+    const controller = new GreyFabricInwardController();
+    await controller.update(req, res);
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error',
+      error: error.message
+    });
+  }
+});
+
+router.delete('/:id', param('id').isMongoId().withMessage('Valid GRN ID is required'), async (req, res) => {
+  try {
+    const { GreyFabricInwardController } = await import('../controllers/GreyFabricInwardController');
+    const controller = new GreyFabricInwardController();
+    await controller.delete(req, res);
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error',
+      error: error.message
+    });
+  }
+});
+
+router.post('/:id/receive', validateMarkAsReceived, async (req, res) => {
+  try {
+    const { GreyFabricInwardController } = await import('../controllers/GreyFabricInwardController');
+    const controller = new GreyFabricInwardController();
+    await controller.markAsReceived(req, res);
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error',
+      error: error.message
+    });
+  }
+});
+
+router.post('/:id/quality-check', validateQualityCheck, async (req, res) => {
+  try {
+    const { GreyFabricInwardController } = await import('../controllers/GreyFabricInwardController');
+    const controller = new GreyFabricInwardController();
+    await controller.addQualityCheck(req, res);
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error',
+      error: error.message
+    });
+  }
+});
 
 export default router;

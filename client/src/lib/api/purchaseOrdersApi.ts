@@ -176,7 +176,7 @@ export const purchaseOrdersApi = baseApi.injectEndpoints({
     // Update purchase order
     updatePurchaseOrder: builder.mutation<
       { success: boolean; data: PurchaseOrder; message: string },
-      { orderId: string; orderData: Partial<CreatePurchaseOrderRequest> }
+      { orderId: string; orderData: Partial<CreatePurchaseOrderRequest & { status?: string }> }
     >({
       query: ({ orderId, orderData }) => ({
         url: `/purchase-orders/${orderId}`,

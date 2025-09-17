@@ -83,7 +83,12 @@ class AdvancedCacheManager {
       avgResponseTime: 0
     };
 
-    this.initializeRedis();
+    // Initialize Redis asynchronously to avoid blocking
+    setImmediate(() => {
+      this.initializeRedis().catch(error => {
+        logger.warn('Redis initialization failed, continuing with in-memory cache only:', error);
+      });
+    });
   }
 
   /**
@@ -109,14 +114,15 @@ class AdvancedCacheManager {
 
       this.redis = new Redis(redisUrl, {
         retryDelayOnFailover: 100,
-        maxRetriesPerRequest: 3,
+        maxRetriesPerRequest: 1, // Reduced retries
         lazyConnect: true,
         keepAlive: 30000,
-        connectTimeout: 10000,
-        commandTimeout: 5000,
+        connectTimeout: 3000, // Reduced timeout
+        commandTimeout: 2000, // Reduced timeout
         // Connection pooling
         family: 4,
-        db: 0
+        db: 0,
+        enableReadyCheck: false // Disable ready check to prevent hanging
       });
 
       this.redis.on('connect', () => {
@@ -125,7 +131,7 @@ class AdvancedCacheManager {
       });
 
       this.redis.on('error', (error) => {
-        logger.warn('⚠️ Redis connection error, falling back to in-memory cache:', error);
+        logger.warn('⚠️ Redis connection error, falling back to in-memory cache');
         this.redis = null;
         this.redisAvailable = false;
       });
@@ -135,14 +141,17 @@ class AdvancedCacheManager {
         this.redisAvailable = true;
       });
 
-      // Test connection with timeout
-      const pingPromise = this.redis.ping();
-      const timeoutPromise = new Promise((_, reject) =>
-        setTimeout(() => reject(new Error('Redis connection timeout')), 5000)
-      );
+      // Test connection with short timeout - don't block startup
+      const connectionTest = Promise.race([
+        this.redis.ping(),
+        new Promise((_, reject) =>
+          setTimeout(() => reject(new Error('Redis connection timeout')), 2000)
+        )
+      ]);
 
-      await Promise.race([pingPromise, timeoutPromise]);
+      await connectionTest;
       this.redisAvailable = true;
+      logger.info('✅ Redis connection test successful');
 
     } catch (error) {
       logger.info('📦 Redis not available, using in-memory cache only. This is perfectly fine for development!');
@@ -363,7 +372,7 @@ class AdvancedCacheManager {
   getStats(): CacheStats {
     const totalHits = this.stats.l1Hits + this.stats.l2Hits;
     const hitRate = this.stats.totalRequests > 0 ? (totalHits / this.stats.totalRequests) * 100 : 0;
-    
+
     return {
       ...this.stats,
       hitRate: Math.round(hitRate * 100) / 100
@@ -448,13 +457,13 @@ class AdvancedCacheManager {
   private serialize(value: any, compress: boolean = false): string {
     try {
       const jsonString = JSON.stringify(value);
-      
+
       if (compress && this.compressionEnabled && jsonString.length > 1024) {
         // For large objects, we could implement compression here
         // For now, just return JSON string
         return jsonString;
       }
-      
+
       return jsonString;
     } catch (error) {
       logger.error('Serialization error:', error);
@@ -529,7 +538,7 @@ export function cacheResult(options: CacheOptions = {}) {
 
     descriptor.value = async function (...args: any[]) {
       const cacheKey = `${target.constructor.name}.${propertyName}:${JSON.stringify(args)}`;
-      
+
       // Try to get from cache
       const cached = await advancedCache.get(cacheKey, options);
       if (cached !== null) {
@@ -539,7 +548,7 @@ export function cacheResult(options: CacheOptions = {}) {
       // Execute method and cache result
       const result = await method.apply(this, args);
       await advancedCache.set(cacheKey, result, options);
-      
+
       return result;
     };
 

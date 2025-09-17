@@ -1,5 +1,6 @@
 import { BaseService } from './BaseService';
-import { Visitor, User } from '@/models';
+import Visitor from '../models/Visitor';
+import User from '../models/User';
 import { IVisitor } from '@/types/models';
 import { AppError } from '@/utils/errors';
 import { logger } from '@/utils/logger';

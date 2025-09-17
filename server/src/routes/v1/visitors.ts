@@ -1,10 +1,11 @@
 import { Router } from 'express';
-import { authenticate, requirePermission } from '@/middleware/auth';
-import { VisitorController } from '@/controllers/VisitorController';
-import { uploadVisitorFiles, uploadSingle, validateUploadedFiles } from '@/middleware/upload';
+import { authenticate, requirePermission } from '../../middleware/auth';
+import { uploadVisitorFiles, uploadSingle, validateUploadedFiles } from '../../middleware/upload';
 
 const router = Router();
-const visitorController = new VisitorController();
+
+// ✅ FIXED: Use lazy instantiation instead of immediate instantiation
+// This prevents the controller from being created when the module is imported
 
 // =============================================
 // VISITOR CRUD OPERATIONS
@@ -14,35 +15,95 @@ const visitorController = new VisitorController();
 router.get('/',
   authenticate,
   requirePermission('security', 'visitorManagement'),
-  visitorController.getAll.bind(visitorController)
+  async (req, res) => {
+  try {
+    const { VisitorController } = await import('../../controllers/VisitorController');
+    const visitorController = new VisitorController();
+    await visitorController.getAll(req, res, () => {});
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error',
+      error: error.message
+    });
+  }
+}
 );
 
 // Get visitor by ID
 router.get('/:id',
   authenticate,
   requirePermission('security', 'visitorManagement'),
-  visitorController.getById.bind(visitorController)
+  async (req, res) => {
+  try {
+    const { VisitorController } = await import('../../controllers/VisitorController');
+    const visitorController = new VisitorController();
+    await visitorController.getById(req, res, () => {});
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error',
+      error: error.message
+    });
+  }
+}
 );
 
 // Create new visitor
 router.post('/',
   authenticate,
   requirePermission('security', 'visitorManagement'),
-  visitorController.create.bind(visitorController)
+  async (req, res) => {
+  try {
+    const { VisitorController } = await import('../../controllers/VisitorController');
+    const visitorController = new VisitorController();
+    await visitorController.create(req, res, () => {});
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error',
+      error: error.message
+    });
+  }
+}
 );
 
 // Update visitor
 router.put('/:id',
   authenticate,
   requirePermission('security', 'visitorManagement'),
-  visitorController.update.bind(visitorController)
+  async (req, res) => {
+  try {
+    const { VisitorController } = await import('../../controllers/VisitorController');
+    const visitorController = new VisitorController();
+    await visitorController.update(req, res, () => {});
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error',
+      error: error.message
+    });
+  }
+}
 );
 
 // Delete visitor (soft delete)
 router.delete('/:id',
   authenticate,
   requirePermission('security', 'visitorManagement'),
-  visitorController.delete.bind(visitorController)
+  async (req, res) => {
+  try {
+    const { VisitorController } = await import('../../controllers/VisitorController');
+    const visitorController = new VisitorController();
+    await visitorController.delete(req, res, () => {});
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error',
+      error: error.message
+    });
+  }
+}
 );
 
 // =============================================
@@ -53,14 +114,38 @@ router.delete('/:id',
 router.post('/:id/checkin',
   authenticate,
   requirePermission('security', 'gateManagement'),
-  visitorController.checkIn.bind(visitorController)
+  async (req, res) => {
+  try {
+    const { VisitorController } = await import('../../controllers/VisitorController');
+    const visitorController = new VisitorController();
+    await visitorController.checkIn(req, res, () => {});
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error',
+      error: error.message
+    });
+  }
+}
 );
 
 // Check-out visitor
 router.post('/:id/checkout',
   authenticate,
   requirePermission('security', 'gateManagement'),
-  visitorController.checkOut.bind(visitorController)
+  async (req, res) => {
+  try {
+    const { VisitorController } = await import('../../controllers/VisitorController');
+    const visitorController = new VisitorController();
+    await visitorController.checkOut(req, res, () => {});
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error',
+      error: error.message
+    });
+  }
+}
 );
 
 // =============================================
@@ -71,14 +156,38 @@ router.post('/:id/checkout',
 router.post('/:id/approve',
   authenticate,
   requirePermission('security', 'visitorApproval'),
-  visitorController.approve.bind(visitorController)
+  async (req, res) => {
+  try {
+    const { VisitorController } = await import('../../controllers/VisitorController');
+    const visitorController = new VisitorController();
+    await visitorController.approve(req, res, () => {});
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error',
+      error: error.message
+    });
+  }
+}
 );
 
 // Reject visitor
 router.post('/:id/reject',
   authenticate,
   requirePermission('security', 'visitorApproval'),
-  visitorController.reject.bind(visitorController)
+  async (req, res) => {
+  try {
+    const { VisitorController } = await import('../../controllers/VisitorController');
+    const visitorController = new VisitorController();
+    await visitorController.reject(req, res, () => {});
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error',
+      error: error.message
+    });
+  }
+}
 );
 
 // =============================================
@@ -89,35 +198,95 @@ router.post('/:id/reject',
 router.get('/reports/currently-inside',
   authenticate,
   requirePermission('security', 'securityReports'),
-  visitorController.getCurrentlyInside.bind(visitorController)
+  async (req, res) => {
+  try {
+    const { VisitorController } = await import('../../controllers/VisitorController');
+    const visitorController = new VisitorController();
+    await visitorController.getCurrentlyInside(req, res, () => {});
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error',
+      error: error.message
+    });
+  }
+}
 );
 
 // Get scheduled visitors for today
 router.get('/reports/scheduled-today',
   authenticate,
   requirePermission('security', 'visitorManagement'),
-  visitorController.getScheduledToday.bind(visitorController)
+  async (req, res) => {
+  try {
+    const { VisitorController } = await import('../../controllers/VisitorController');
+    const visitorController = new VisitorController();
+    await visitorController.getScheduledToday(req, res, () => {});
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error',
+      error: error.message
+    });
+  }
+}
 );
 
 // Get overstaying visitors
 router.get('/reports/overstaying',
   authenticate,
   requirePermission('security', 'securityReports'),
-  visitorController.getOverstaying.bind(visitorController)
+  async (req, res) => {
+  try {
+    const { VisitorController } = await import('../../controllers/VisitorController');
+    const visitorController = new VisitorController();
+    await visitorController.getOverstaying(req, res, () => {});
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error',
+      error: error.message
+    });
+  }
+}
 );
 
 // Get visitor statistics
 router.get('/reports/stats',
   authenticate,
   requirePermission('security', 'securityReports'),
-  visitorController.getStats.bind(visitorController)
+  async (req, res) => {
+  try {
+    const { VisitorController } = await import('../../controllers/VisitorController');
+    const visitorController = new VisitorController();
+    await visitorController.getStats(req, res, () => {});
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error',
+      error: error.message
+    });
+  }
+}
 );
 
 // Get visitor dashboard data
 router.get('/dashboard',
   authenticate,
   requirePermission('security', 'visitorManagement'),
-  visitorController.getDashboard.bind(visitorController)
+  async (req, res) => {
+  try {
+    const { VisitorController } = await import('../../controllers/VisitorController');
+    const visitorController = new VisitorController();
+    await visitorController.getDashboard(req, res, () => {});
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error',
+      error: error.message
+    });
+  }
+}
 );
 
 // =============================================
@@ -128,7 +297,19 @@ router.get('/dashboard',
 router.get('/search',
   authenticate,
   requirePermission('security', 'visitorManagement'),
-  visitorController.search.bind(visitorController)
+  async (req, res) => {
+  try {
+    const { VisitorController } = await import('../../controllers/VisitorController');
+    const visitorController = new VisitorController();
+    await visitorController.search(req, res, () => {});
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error',
+      error: error.message
+    });
+  }
+}
 );
 
 // =============================================
@@ -141,7 +322,19 @@ router.post('/with-files',
   requirePermission('security', 'visitorManagement'),
   uploadVisitorFiles,
   validateUploadedFiles,
-  visitorController.create.bind(visitorController)
+  async (req, res) => {
+  try {
+    const { VisitorController } = await import('../../controllers/VisitorController');
+    const visitorController = new VisitorController();
+    await visitorController.create(req, res, () => {});
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error',
+      error: error.message
+    });
+  }
+}
 );
 
 // Upload entry photo (S3)
@@ -150,7 +343,19 @@ router.post('/:id/entry-photo',
   requirePermission('security', 'gateManagement'),
   uploadSingle('entryPhoto', 'visitors/entry'),
   validateUploadedFiles,
-  visitorController.uploadEntryPhoto.bind(visitorController)
+  async (req, res) => {
+  try {
+    const { VisitorController } = await import('../../controllers/VisitorController');
+    const visitorController = new VisitorController();
+    await visitorController.uploadEntryPhoto(req, res, () => {});
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error',
+      error: error.message
+    });
+  }
+}
 );
 
 // Upload exit photo (S3)
@@ -159,7 +364,19 @@ router.post('/:id/exit-photo',
   requirePermission('security', 'gateManagement'),
   uploadSingle('exitPhoto', 'visitors/exit'),
   validateUploadedFiles,
-  visitorController.uploadExitPhoto.bind(visitorController)
+  async (req, res) => {
+  try {
+    const { VisitorController } = await import('../../controllers/VisitorController');
+    const visitorController = new VisitorController();
+    await visitorController.uploadExitPhoto(req, res, () => {});
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error',
+      error: error.message
+    });
+  }
+}
 );
 
 // Upload visitor documents (S3)
@@ -184,6 +401,8 @@ router.post('/:id/documents',
       const { documentType, documentNumber, notes } = req.body;
 
       // Update visitor with new document using the base service
+      const { VisitorController } = await import('../../controllers/VisitorController');
+      const visitorController = new VisitorController();
       const updatedVisitor = await (visitorController as any).service.update(id, {
         $push: {
           documents: {
@@ -215,14 +434,38 @@ router.post('/:id/documents',
 router.post('/upload-url',
   authenticate,
   requirePermission('security', 'visitorManagement'),
-  visitorController.getUploadUrl.bind(visitorController)
+  async (req, res) => {
+  try {
+    const { VisitorController } = await import('../../controllers/VisitorController');
+    const visitorController = new VisitorController();
+    await visitorController.getUploadUrl(req, res, () => {});
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error',
+      error: error.message
+    });
+  }
+}
 );
 
 // Get presigned URL for file download
 router.get('/download/:key',
   authenticate,
   requirePermission('security', 'visitorManagement'),
-  visitorController.getDownloadUrl.bind(visitorController)
+  async (req, res) => {
+  try {
+    const { VisitorController } = await import('../../controllers/VisitorController');
+    const visitorController = new VisitorController();
+    await visitorController.getDownloadUrl(req, res, () => {});
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error',
+      error: error.message
+    });
+  }
+}
 );
 
 // =============================================
@@ -250,6 +493,8 @@ router.post('/bulk-checkin',
 
       for (const visitorId of visitorIds) {
         try {
+          const { VisitorController } = await import('../../controllers/VisitorController');
+          const visitorController = new VisitorController();
           const visitor = await (visitorController as any).service.checkInVisitor(
             visitorId,
             entryData,
@@ -293,6 +538,8 @@ router.post('/bulk-checkout',
 
       for (const visitorId of visitorIds) {
         try {
+          const { VisitorController } = await import('../../controllers/VisitorController');
+          const visitorController = new VisitorController();
           const visitor = await (visitorController as any).service.checkOutVisitor(
             visitorId,
             exitData,

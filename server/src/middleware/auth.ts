@@ -1,11 +1,11 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import { Types } from 'mongoose';
-import User from '@/models/User';
-import Company from '@/models/Company';
-import config from '@/config/environment';
-import logger from '@/utils/logger';
-import { IUser, ICompanyAccess } from '@/types/models';
+import User from '../models/User';
+import Company from '../models/Company';
+import config from '../config/environment';
+import logger from '../utils/logger';
+import { IUser, ICompanyAccess } from '../types/models';
 
 // Extend Request interface to include user and company info
 declare global {
@@ -279,11 +279,28 @@ export const authenticate = async (req: Request, res: Response, next: NextFuncti
         username: user.username,
         path: req.path
       });
+      
       // Super admin can access everything without company context
-      // Set a default company context for compatibility
-      if (user.companyAccess?.[0]?.companyId) {
+      // Set company context based on request or use the first available company
+      if (targetCompanyId) {
+        // If a specific company is requested, use that
+        req.company = targetCompanyId;
+        req.companyAccess = {
+          role: 'super_admin',
+          companyId: targetCompanyId,
+          isActive: true
+        } as any;
+      } else if (user.companyAccess?.[0]?.companyId) {
+        // Use the first available company if no specific company requested
         req.company = user.companyAccess[0].companyId;
         req.companyAccess = user.companyAccess[0];
+      } else {
+        // Create a default company access for super admin
+        req.companyAccess = {
+          role: 'super_admin',
+          companyId: new Types.ObjectId(),
+          isActive: true
+        } as any;
       }
       // Continue to next middleware without requiring company ID
     } else if (!user.isSuperAdmin && !is2FARoute) {
@@ -361,6 +378,13 @@ export const allowSuperadmin = (req: Request, res: Response, next: NextFunction)
 // =============================================
 export const requireCompany = async (req: Request, res: Response, next: Function) => {
   try {
+    const currentUser = req.user;
+    
+    // Super admins can access any company or no company
+    if (currentUser?.isSuperAdmin) {
+      return next();
+    }
+    
     // Get company ID from header or from the user object that was set by authenticate middleware
     const headerCompanyId = req.headers['x-company-id'] as string;
     const userCompanyId = (req as any).user?.companyId;
@@ -381,8 +405,7 @@ export const requireCompany = async (req: Request, res: Response, next: Function
     }
 
     // Check if user has access to this company
-    const user = (req as any).user;
-    if (!user) {
+    if (!currentUser) {
       return res.status(401).json({
         error: 'User not authenticated',
         message: 'Please log in to access this resource'
@@ -392,8 +415,8 @@ export const requireCompany = async (req: Request, res: Response, next: Function
     let companyAccess = null;
 
     // Super admin can access any company
-    if (!user.isSuperAdmin) {
-      companyAccess = user.companyAccess?.find(
+    if (!currentUser.isSuperAdmin) {
+      companyAccess = currentUser.companyAccess?.find(
         access => access.companyId.toString() === companyId && access.isActive
       );
 
@@ -440,6 +463,13 @@ export const requireCompany = async (req: Request, res: Response, next: Function
 // =============================================
 export const requireRole = (roles: string | string[]) => {
   return (req: Request, res: Response, next: NextFunction) => {
+    const user = req.user!;
+    
+    // Super admins have access to everything
+    if (user.isSuperAdmin) {
+      return next();
+    }
+    
     const userRole = req.companyAccess?.role;
     
     if (!userRole) {
@@ -450,11 +480,6 @@ export const requireRole = (roles: string | string[]) => {
     }
 
     const allowedRoles = Array.isArray(roles) ? roles : [roles];
-    
-    // Super admin has access to everything
-    if (userRole === 'super_admin') {
-      return next();
-    }
 
     if (!allowedRoles.includes(userRole)) {
       logger.warn('Role authorization failed', {
@@ -484,11 +509,19 @@ export const requirePermission = (module: string, action: string, options: {
 } = {}) => {
   return (req: Request, res: Response, next: NextFunction) => {
     const user = req.user!;
-    const companyAccess = req.companyAccess!;
+    const companyAccess = req.companyAccess;
 
-    // Super admin has all permissions
-    if (companyAccess.role === 'super_admin') {
+    // Check if user is super admin (from user object) - super admins have all permissions
+    if (user.isSuperAdmin) {
       return next();
+    }
+
+    // Check if companyAccess exists for regular users
+    if (!companyAccess) {
+      return res.status(403).json({
+        error: 'Access denied',
+        message: 'Company access not found'
+      });
     }
 
     // Admin only check

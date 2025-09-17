@@ -46,8 +46,19 @@ export default function PurchaseOrdersPage() {
   // Fetch purchase order statistics
   const { data: orderStats } = useGetPurchaseOrderStatsQuery({})
 
-  const orders = ordersData?.data || []
+  // Ensure orders is always an array
+  const orders = Array.isArray(ordersData?.data) ? ordersData.data : []
   const pagination = ordersData?.pagination
+
+  // Debug logging in development
+  if (process.env.NODE_ENV === 'development' && ordersData) {
+    console.log('Purchase Orders API Response:', {
+      ordersData,
+      dataType: typeof ordersData?.data,
+      isArray: Array.isArray(ordersData?.data),
+      ordersLength: orders.length
+    })
+  }
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-IN', {
@@ -237,6 +248,17 @@ export default function PurchaseOrdersPage() {
             <ShoppingCart className="h-12 w-12 text-red-500 mx-auto mb-4" />
             <h3 className="text-lg font-semibold text-black mb-2">Error Loading Purchase Orders</h3>
             <p className="text-red-600">Failed to load purchase orders. Please try again.</p>
+          </div>
+        ) : !Array.isArray(orders) ? (
+          <div className="bg-white rounded-xl border-2 border-red-500 p-6 text-center">
+            <ShoppingCart className="h-12 w-12 text-red-500 mx-auto mb-4" />
+            <h3 className="text-lg font-semibold text-black mb-2">Invalid Data Format</h3>
+            <p className="text-red-600">
+              The API returned invalid data format. Expected an array of orders.
+            </p>
+            <p className="text-xs text-gray-500 mt-2">
+              Data type: {typeof ordersData?.data}, Is Array: {Array.isArray(ordersData?.data) ? 'Yes' : 'No'}
+            </p>
           </div>
         ) : orders.length === 0 ? (
           <div className="bg-white rounded-xl border-2 border-sky-500 p-6 text-center">

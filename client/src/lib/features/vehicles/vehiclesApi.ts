@@ -87,6 +87,7 @@ export const vehiclesApi = baseApi.injectEndpoints({
       sortOrder?: 'asc' | 'desc'
       dateFrom?: string
       dateTo?: string
+      companyId?: string
     }>({
       query: (params) => ({
         url: '/vehicles',

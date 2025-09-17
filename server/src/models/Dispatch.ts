@@ -124,7 +124,7 @@ const dispatchSchema = new Schema<IDispatch>({
 
 // Indexes for better query performance
 dispatchSchema.index({ companyId: 1, createdAt: -1 });
-dispatchSchema.index({ dispatchNumber: 1 }, { unique: true });
+// dispatchNumber index is automatically created by unique: true
 dispatchSchema.index({ status: 1 });
 dispatchSchema.index({ priority: 1 });
 dispatchSchema.index({ dispatchDate: 1 });

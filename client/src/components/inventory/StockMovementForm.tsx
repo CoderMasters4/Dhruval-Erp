@@ -230,7 +230,7 @@ export function StockMovementForm({ movement, onClose, onSubmit, isLoading = fal
                 <option value="inward">Inward (Stock In)</option>
                 <option value="outward">Outward (Stock Out)</option>
                 <option value="transfer">Transfer (Internal)</option>
-                <option value="adjustment">Adjustment</option>
+                <option value="adjustment_note">Adjustment</option>
               </select>
             </div>
 
@@ -447,7 +447,7 @@ export function StockMovementForm({ movement, onClose, onSubmit, isLoading = fal
                 <option value="sales_order">Sales Order</option>
                 <option value="production_order">Production Order</option>
                 <option value="transfer_request">Transfer Request</option>
-                <option value="adjustment">Stock Adjustment</option>
+                <option value="adjustment_note">Stock Adjustment</option>
               </select>
             </div>
 

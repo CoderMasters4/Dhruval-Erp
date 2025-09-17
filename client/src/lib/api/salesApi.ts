@@ -17,24 +17,117 @@ export interface SalesOrder {
   _id: string;
   orderNumber: string;
   orderDate: Date;
-  customerId: string;
+  customerId: string | {
+    _id: string;
+    customerCode: string;
+    customerName: string;
+  };
   customerName?: string;
   customerCode?: string;
+  companyId?: string;
   status: string;
+  priority?: string;
+  specialInstructions?: string;
+  customerPhone?: string;
+  customerEmail?: string;
+  customerAddress?: string;
+  customerDetails?: {
+    phone?: string;
+    email?: string;
+    address?: string;
+  };
+  orderItems?: Array<{
+    _id?: string;
+    itemId?: string;
+    productId?: string;
+    itemName?: string;
+    name?: string;
+    productType?: string;
+    quantity: number;
+    unit?: string;
+    rate?: number;
+    unitPrice?: number;
+    price?: number;
+    discount?: number;
+    discountAmount?: number;
+    taxRate?: number;
+    taxAmount?: number;
+    totalAmount?: number;
+    category?: string;
+    description?: string;
+    status?: string;
+    productionStatus?: string;
+    deliveryPriority?: string;
+    specifications?: any;
+    qualityRequirements?: any;
+  }>;
   payment: {
     paymentStatus: 'pending' | 'paid' | 'overdue' | 'partial';
     balanceAmount: number;
     advanceReceived: number;
+    totalAmount?: number;
     dueDate?: Date;
+    paymentTerms?: string;
+    paymentMethod?: string;
+    creditDays?: number;
+    advanceAmount?: number;
+    paymentSummary?: {
+      totalReceived: number;
+      totalOverdue: number;
+      overdueDays: number;
+    };
+    paymentAlerts?: {
+      isOverdue: boolean;
+      overdueAmount: number;
+      overdueDays: number;
+      alertFrequency: string;
+    };
+    collection?: {
+      collectionNotes: any[];
+      followUpRequired: boolean;
+      collectionStatus: string;
+    };
+    paymentHistory?: any[];
+  };
+  delivery?: {
+    deliveryType: string;
+    expectedDeliveryDate?: Date;
+    deliveryInstructions?: string;
+    deliveryAddress?: {
+      contactPerson?: string;
+      phone?: string;
+      email?: string;
+      addressLine1?: string;
+      addressLine2?: string;
+      city?: string;
+      state?: string;
+      pincode?: string;
+      country?: string;
+      landmark?: string;
+    };
   };
   orderSummary: {
     finalAmount: number;
     subtotal: number;
     totalTax: number;
     totalDiscount: number;
+    shippingCharges?: number;
+    packingCharges?: number;
+    otherCharges?: number;
+    roundOffAmount?: number;
+    totalAmount?: number;
   };
+  orderType?: string;
+  orderSource?: string;
+  referenceOrders?: any[];
+  tags?: any[];
+  attachments?: any[];
+  createdBy?: string;
+  approvals?: any[];
+  communications?: any[];
   createdAt: Date;
   updatedAt: Date;
+  __v?: number;
 }
 
 export interface SalesDashboard {
@@ -246,6 +339,20 @@ export const salesApi = baseApi.injectEndpoints({
       providesTags: (result, error, id) => [{ type: 'Sales', id }],
     }),
 
+    // Get sales order with full details (including customer, items, etc.)
+    getSalesOrderDetails: builder.query<
+      { success: boolean; data: SalesOrder & { 
+        customerDetails?: any; 
+        orderItems?: any[];
+        delivery?: any;
+        payment?: any;
+      } },
+      string
+    >({
+      query: (id) => `/sales/orders/${id}`,
+      providesTags: (result, error, id) => [{ type: 'Sales', id }],
+    }),
+
     // Create sales order
     createSalesOrder: builder.mutation<
       { success: boolean; data: SalesOrder },
@@ -403,6 +510,7 @@ export const {
   // Orders CRUD hooks
   useGetSalesOrdersQuery,
   useGetSalesOrderQuery,
+  useGetSalesOrderDetailsQuery,
   useCreateSalesOrderMutation,
   useUpdateSalesOrderMutation,
   useDeleteSalesOrderMutation,

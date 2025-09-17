@@ -289,13 +289,13 @@ export function StockMovementDetails({
               <div>
                 <label className="block text-sm font-medium text-gray-600 mb-1">Document Type</label>
                 <p className="text-gray-900 capitalize">
-                  {movement.referenceDocument?.type?.replace('_', ' ') || 'Manual Entry'}
+                  {movement.referenceDocument?.documentType?.replace('_', ' ') || movement.referenceDocument?.type?.replace('_', ' ') || 'Manual Entry'}
                 </p>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-600 mb-1">Reference Number</label>
                 <p className="text-gray-900 font-medium">
-                  {movement.referenceDocument?.number || 'N/A'}
+                  {movement.referenceDocument?.documentNumber || movement.referenceDocument?.number || 'N/A'}
                 </p>
               </div>
               <div>

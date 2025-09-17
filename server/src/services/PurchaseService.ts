@@ -1,10 +1,10 @@
 import { Types } from 'mongoose';
-import PurchaseOrder from '@/models/PurchaseOrder';
-import { ISpareSupplier, IPurchaseOrder } from '@/types/models';
-import { BaseService } from '@/services/BaseService';
-import { InventoryService } from './InventoryService';
+import PurchaseOrder from '../models/PurchaseOrder';
+import { ISpareSupplier, IPurchaseOrder } from '../types/models';
+import { BaseService } from './BaseService';
+// import { InventoryService } from './InventoryService'; // REMOVED TO PREVENT CIRCULAR DEPENDENCY
 import { AppError } from '../utils/errors';
-import { logger } from '@/utils/logger';
+import { logger } from '../utils/logger';
 
 export interface PurchaseFilters {
   companyId: string;
@@ -386,8 +386,17 @@ export class PurchaseService extends BaseService<IPurchaseOrder> {
       if (typeof item.quantity !== 'number' || typeof item.rate !== 'number') {
         throw new Error('Item quantity and rate must be numbers');
       }
+      
+      // Handle temporary item IDs - if it's a temp ID, generate a new ObjectId
+      let itemId = item.itemId;
+      if (itemId && typeof itemId === 'string' && itemId.startsWith('temp-')) {
+        // For temporary items, generate a new ObjectId
+        itemId = new Types.ObjectId();
+      }
+      
       return {
         ...item,
+        itemId: itemId,
         lineTotal: item.quantity * item.rate,
       };
     });
@@ -411,8 +420,8 @@ export class PurchaseService extends BaseService<IPurchaseOrder> {
         grandTotal,
       },
       purchaseOrderId,
-      createdBy,
-      updatedBy: createdBy,
+      createdBy: new Types.ObjectId(createdBy), // Ensure it's a proper ObjectId
+      updatedBy: new Types.ObjectId(createdBy),
       status: 'draft',
       orderDate: new Date(),
     });
@@ -443,6 +452,8 @@ export class PurchaseService extends BaseService<IPurchaseOrder> {
    * Create inventory items for PO items
    */
   private async createInventoryItemsForPO(purchaseOrder: any, createdBy: string): Promise<void> {
+    // Dynamic import to prevent circular dependency
+    const { InventoryService } = await import('./InventoryService');
     const inventoryService = new InventoryService();
     
     for (const item of purchaseOrder.items) {
@@ -966,6 +977,8 @@ export class PurchaseService extends BaseService<IPurchaseOrder> {
     companyId: string
   ): Promise<any> {
     try {
+      // Dynamic import to prevent circular dependency
+      const { InventoryService } = await import('./InventoryService');
       const inventoryService = new InventoryService();
       
       const newItemData = {

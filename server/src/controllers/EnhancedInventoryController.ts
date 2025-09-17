@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
-import InventoryItem from '@/models/InventoryItem';
-import { InventoryBatch } from '@/models/InventoryBatch';
+import InventoryItem from '../models/InventoryItem';
+import { InventoryBatch } from '../models/InventoryBatch';
 
 export class EnhancedInventoryController {
 

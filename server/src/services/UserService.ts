@@ -1,5 +1,7 @@
 import { BaseService } from './BaseService';
-import { User, Company, Role } from '@/models';
+import User from '../models/User';
+import Company from '../models/Company';
+import Role from '../models/Role';
 import { IUser, ICompanyAccess } from '@/types/models';
 import { AppError } from '../utils/errors';
 

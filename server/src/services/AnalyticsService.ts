@@ -17,26 +17,33 @@ export interface AnalyticsParams {
   year?: number;
   month?: number;
   departments?: string[];
+  products?: string[];
+  statuses?: string[];
   metrics?: string[];
   includeDetails?: boolean;
+  groupBy?: string;
+  sortBy?: string;
+  sortOrder?: 'asc' | 'desc';
+  page?: number;
+  limit?: number;
 }
 
 export class AnalyticsService {
   async getAnalyticsDashboard(params: AnalyticsParams) {
-    const { companyId, timeRange = '30d' } = params;
+    const { companyId, timeRange = '30d', startDate, endDate } = params;
     
-    const endDate = new Date();
-    const startDate = this.calculateStartDate(timeRange);
+    const queryEndDate = endDate || new Date();
+    const queryStartDate = startDate || this.calculateStartDate(timeRange);
     
     const [orders, inventory, production, financial, employees, customers, suppliers, visitors] = await Promise.all([
-      this.getOrdersData(companyId, startDate, endDate),
+      this.getOrdersData(companyId, queryStartDate, queryEndDate),
       this.getInventoryData(companyId),
-      this.getProductionData(companyId, startDate, endDate),
-      this.getFinancialData(companyId, startDate, endDate),
+      this.getProductionData(companyId, queryStartDate, queryEndDate),
+      this.getFinancialData(companyId, queryStartDate, queryEndDate),
       this.getEmployeeData(companyId),
       this.getCustomerData(companyId),
       this.getSupplierData(companyId),
-      this.getVisitorData(companyId, startDate, endDate)
+      this.getVisitorData(companyId, queryStartDate, queryEndDate)
     ]);
 
     return {
@@ -49,15 +56,15 @@ export class AnalyticsService {
   }
 
   async getKPIData(params: AnalyticsParams) {
-    const { companyId, timeRange = '30d' } = params;
+    const { companyId, timeRange = '30d', startDate, endDate } = params;
     
-    const endDate = new Date();
-    const startDate = this.calculateStartDate(timeRange);
+    const queryEndDate = endDate || new Date();
+    const queryStartDate = startDate || this.calculateStartDate(timeRange);
     
     const [orders, production, financial, inventory] = await Promise.all([
-      this.getOrdersData(companyId, startDate, endDate),
-      this.getProductionData(companyId, startDate, endDate),
-      this.getFinancialData(companyId, startDate, endDate),
+      this.getOrdersData(companyId, queryStartDate, queryEndDate),
+      this.getProductionData(companyId, queryStartDate, queryEndDate),
+      this.getFinancialData(companyId, queryStartDate, queryEndDate),
       this.getInventoryData(companyId)
     ]);
 
@@ -65,7 +72,7 @@ export class AnalyticsService {
   }
 
   async getDailyReports(params: AnalyticsParams) {
-    const { companyId, date } = params;
+    const { companyId, date, departments, metrics, includeDetails } = params;
     
     const reportDate = date || new Date();
     const startDate = new Date(reportDate);
@@ -73,49 +80,147 @@ export class AnalyticsService {
     const endDate = new Date(reportDate);
     endDate.setHours(23, 59, 59, 999);
 
-    const [orders, production, visitors] = await Promise.all([
+    const [orders, production, visitors, financial, inventory] = await Promise.all([
       this.getOrdersData(companyId, startDate, endDate),
       this.getProductionData(companyId, startDate, endDate),
-      this.getVisitorData(companyId, startDate, endDate)
+      this.getVisitorData(companyId, startDate, endDate),
+      this.getFinancialData(companyId, startDate, endDate),
+      this.getInventoryData(companyId)
     ]);
 
-    return {
-      date: reportDate,
-      summary: {
-        totalOrders: orders.length,
-        totalRevenue: orders.reduce((sum, order) => sum + (order.orderSummary?.totalAmount || 0), 0),
-        productionOrders: production.length,
-        visitors: visitors.length
-      }
+    // Filter by departments if specified
+    let filteredProduction = production;
+    if (departments && departments.length > 0) {
+      filteredProduction = production.filter(p => 
+        p.product?.productType && departments.includes(p.product.productType)
+      );
+    }
+
+    const summary = {
+      totalOrders: orders.length,
+      totalRevenue: orders.reduce((sum, order) => sum + (order.orderSummary?.totalAmount || 0), 0),
+      productionOrders: filteredProduction.length,
+      completedProduction: filteredProduction.filter(p => p.status === 'completed').length,
+      visitors: visitors.length,
+      totalExpenses: financial.filter(f => f.transactionType === 'expense').reduce((sum, f) => sum + (f.amount || 0), 0),
+      totalIncome: financial.filter(f => f.transactionType === 'income').reduce((sum, f) => sum + (f.amount || 0), 0),
+      inventoryItems: inventory.length,
+      lowStockItems: inventory.filter(i => (i.stock?.currentStock || 0) < (i.stock?.reorderLevel || 0)).length
     };
+
+    const result: any = {
+      date: reportDate,
+      summary
+    };
+
+    if (includeDetails) {
+      result.data = {
+        orders: orders.map(order => ({
+          id: order._id,
+          orderNumber: order.orderNumber,
+          customerName: order.customerName,
+          totalAmount: order.orderSummary?.totalAmount || 0,
+          status: order.status,
+          createdAt: order.createdAt
+        })),
+        production: filteredProduction.map(prod => ({
+          id: prod._id,
+          orderNumber: prod.productionOrderNumber,
+          productName: prod.product?.design || prod.product?.productType || 'Unknown',
+          quantity: prod.orderQuantity,
+          status: prod.status,
+          department: prod.product?.productType,
+          createdAt: prod.createdAt
+        })),
+        visitors: visitors.map(visitor => ({
+          id: visitor._id,
+          name: visitor.personalInfo?.fullName || `${visitor.personalInfo?.firstName || ''} ${visitor.personalInfo?.lastName || ''}`.trim(),
+          purpose: visitor.visitInfo?.visitPurpose || 'Not specified',
+          personToMeet: visitor.hostInfo?.hostName || 'Not specified',
+          inTime: visitor.entries?.[0]?.entryDateTime,
+          outTime: visitor.exits?.[0]?.exitDateTime
+        }))
+      };
+    }
+
+    return result;
   }
 
   async getWeeklyReports(params: AnalyticsParams) {
-    const { companyId } = params;
+    const { companyId, departments, metrics, includeDetails } = params;
     
     const startDate = this.getWeekStart();
     const endDate = this.getWeekEnd(startDate);
 
-    const [orders, production, visitors] = await Promise.all([
+    const [orders, production, visitors, financial, inventory] = await Promise.all([
       this.getOrdersData(companyId, startDate, endDate),
       this.getProductionData(companyId, startDate, endDate),
-      this.getVisitorData(companyId, startDate, endDate)
+      this.getVisitorData(companyId, startDate, endDate),
+      this.getFinancialData(companyId, startDate, endDate),
+      this.getInventoryData(companyId)
     ]);
 
-    return {
+    // Filter by departments if specified
+    let filteredProduction = production;
+    if (departments && departments.length > 0) {
+      filteredProduction = production.filter(p => 
+        p.product?.productType && departments.includes(p.product.productType)
+      );
+    }
+
+    const summary = {
+      totalOrders: orders.length,
+      totalRevenue: orders.reduce((sum, order) => sum + (order.orderSummary?.totalAmount || 0), 0),
+      productionOrders: filteredProduction.length,
+      completedProduction: filteredProduction.filter(p => p.status === 'completed').length,
+      visitors: visitors.length,
+      totalExpenses: financial.filter(f => f.transactionType === 'expense').reduce((sum, f) => sum + (f.amount || 0), 0),
+      totalIncome: financial.filter(f => f.transactionType === 'income').reduce((sum, f) => sum + (f.amount || 0), 0),
+      inventoryItems: inventory.length,
+      lowStockItems: inventory.filter(i => (i.stock?.currentStock || 0) < (i.stock?.reorderLevel || 0)).length
+    };
+
+    const result: any = {
       weekStart: startDate,
       weekEnd: endDate,
-      summary: {
-        totalOrders: orders.length,
-        totalRevenue: orders.reduce((sum, order) => sum + (order.orderSummary?.totalAmount || 0), 0),
-        productionOrders: production.length,
-        visitors: visitors.length
-      }
+      summary
     };
+
+    if (includeDetails) {
+      result.data = {
+        orders: orders.map(order => ({
+          id: order._id,
+          orderNumber: order.orderNumber,
+          customerName: order.customerName,
+          totalAmount: order.orderSummary?.totalAmount || 0,
+          status: order.status,
+          createdAt: order.createdAt
+        })),
+        production: filteredProduction.map(prod => ({
+          id: prod._id,
+          orderNumber: prod.productionOrderNumber,
+          productName: prod.product?.design || prod.product?.productType || 'Unknown',
+          quantity: prod.orderQuantity,
+          status: prod.status,
+          department: prod.product?.productType,
+          createdAt: prod.createdAt
+        })),
+        visitors: visitors.map(visitor => ({
+          id: visitor._id,
+          name: visitor.personalInfo?.fullName || `${visitor.personalInfo?.firstName || ''} ${visitor.personalInfo?.lastName || ''}`.trim(),
+          purpose: visitor.visitInfo?.visitPurpose || 'Not specified',
+          personToMeet: visitor.hostInfo?.hostName || 'Not specified',
+          inTime: visitor.entries?.[0]?.entryDateTime,
+          outTime: visitor.exits?.[0]?.exitDateTime
+        }))
+      };
+    }
+
+    return result;
   }
 
   async getMonthlyReports(params: AnalyticsParams) {
-    const { companyId, year, month } = params;
+    const { companyId, year, month, departments, metrics, includeDetails } = params;
     
     const reportYear = year || new Date().getFullYear();
     const reportMonth = month || new Date().getMonth() + 1;
@@ -123,39 +228,197 @@ export class AnalyticsService {
     const startDate = new Date(reportYear, reportMonth - 1, 1);
     const endDate = new Date(reportYear, reportMonth, 0, 23, 59, 59, 999);
 
-    const [orders, production, visitors] = await Promise.all([
+    const [orders, production, visitors, financial, inventory] = await Promise.all([
       this.getOrdersData(companyId, startDate, endDate),
       this.getProductionData(companyId, startDate, endDate),
-      this.getVisitorData(companyId, startDate, endDate)
+      this.getVisitorData(companyId, startDate, endDate),
+      this.getFinancialData(companyId, startDate, endDate),
+      this.getInventoryData(companyId)
     ]);
 
-    return {
+    // Filter by departments if specified
+    let filteredProduction = production;
+    if (departments && departments.length > 0) {
+      filteredProduction = production.filter(p => 
+        p.product?.productType && departments.includes(p.product.productType)
+      );
+    }
+
+    const summary = {
+      totalOrders: orders.length,
+      totalRevenue: orders.reduce((sum, order) => sum + (order.orderSummary?.totalAmount || 0), 0),
+      productionOrders: filteredProduction.length,
+      completedProduction: filteredProduction.filter(p => p.status === 'completed').length,
+      visitors: visitors.length,
+      totalExpenses: financial.filter(f => f.transactionType === 'expense').reduce((sum, f) => sum + (f.amount || 0), 0),
+      totalIncome: financial.filter(f => f.transactionType === 'income').reduce((sum, f) => sum + (f.amount || 0), 0),
+      inventoryItems: inventory.length,
+      lowStockItems: inventory.filter(i => (i.stock?.currentStock || 0) < (i.stock?.reorderLevel || 0)).length
+    };
+
+    const result: any = {
       year: reportYear,
       month: reportMonth,
-      summary: {
-        totalOrders: orders.length,
-        totalRevenue: orders.reduce((sum, order) => sum + (order.orderSummary?.totalAmount || 0), 0),
-        productionOrders: production.length,
-        visitors: visitors.length
-      }
+      summary
     };
+
+    if (includeDetails) {
+      result.data = {
+        orders: orders.map(order => ({
+          id: order._id,
+          orderNumber: order.orderNumber,
+          customerName: order.customerName,
+          totalAmount: order.orderSummary?.totalAmount || 0,
+          status: order.status,
+          createdAt: order.createdAt
+        })),
+        production: filteredProduction.map(prod => ({
+          id: prod._id,
+          orderNumber: prod.productionOrderNumber,
+          productName: prod.product?.design || prod.product?.productType || 'Unknown',
+          quantity: prod.orderQuantity,
+          status: prod.status,
+          department: prod.product?.productType,
+          createdAt: prod.createdAt
+        })),
+        visitors: visitors.map(visitor => ({
+          id: visitor._id,
+          name: visitor.personalInfo?.fullName || `${visitor.personalInfo?.firstName || ''} ${visitor.personalInfo?.lastName || ''}`.trim(),
+          purpose: visitor.visitInfo?.visitPurpose || 'Not specified',
+          personToMeet: visitor.hostInfo?.hostName || 'Not specified',
+          inTime: visitor.entries?.[0]?.entryDateTime,
+          outTime: visitor.exits?.[0]?.exitDateTime
+        }))
+      };
+    }
+
+    return result;
   }
 
   async getCustomReports(params: AnalyticsParams) {
-    const { companyId, startDate, endDate } = params;
+    const { 
+      companyId, 
+      startDate, 
+      endDate, 
+      departments, 
+      products, 
+      statuses, 
+      metrics, 
+      groupBy, 
+      sortBy, 
+      sortOrder, 
+      page = 1, 
+      limit = 50 
+    } = params;
 
     if (!startDate || !endDate) {
       throw new Error('Start date and end date are required');
     }
 
-    const orders = await CustomerOrder.find({
+    // Build query filters
+    const queryFilters: any = {
       companyId,
       createdAt: { $gte: startDate, $lte: endDate }
-    }).lean();
+    };
+
+    if (statuses && statuses.length > 0) {
+      queryFilters.status = { $in: statuses };
+    }
+
+    if (products && products.length > 0) {
+      queryFilters['items.productName'] = { $in: products };
+    }
+
+    const [orders, production, visitors, financial, inventory] = await Promise.all([
+      CustomerOrder.find(queryFilters).lean(),
+      ProductionOrder.find({
+        companyId,
+        createdAt: { $gte: startDate, $lte: endDate },
+        ...(departments && departments.length > 0 ? { department: { $in: departments } } : {})
+      }).lean(),
+      Visitor.find({
+        companyId,
+        createdAt: { $gte: startDate, $lte: endDate }
+      }).lean(),
+      FinancialTransaction.find({
+        companyId,
+        createdAt: { $gte: startDate, $lte: endDate }
+      }).lean(),
+      InventoryItem.find({ companyId }).lean()
+    ]);
+
+    // Calculate summary
+    const summary = {
+      totalOrders: orders.length,
+      totalRevenue: orders.reduce((sum, order) => sum + (order.orderSummary?.totalAmount || 0), 0),
+      productionOrders: production.length,
+      completedProduction: production.filter(p => p.status === 'completed').length,
+      visitors: visitors.length,
+      totalExpenses: financial.filter(f => f.transactionType === 'expense').reduce((sum, f) => sum + (f.amount || 0), 0),
+      totalIncome: financial.filter(f => f.transactionType === 'income').reduce((sum, f) => sum + (f.amount || 0), 0),
+      inventoryItems: inventory.length,
+      lowStockItems: inventory.filter(i => (i.stock?.currentStock || 0) < (i.stock?.reorderLevel || 0)).length
+    };
+
+    // Prepare data for response
+    const allData = [
+      ...orders.map(order => ({
+        type: 'order',
+        id: order._id,
+        orderNumber: order.orderNumber,
+        customerName: order.customerName,
+        totalAmount: order.orderSummary?.totalAmount || 0,
+        status: order.status,
+        createdAt: order.createdAt
+      })),
+      ...production.map(prod => ({
+        type: 'production',
+        id: prod._id,
+        orderNumber: prod.productionOrderNumber,
+        productName: prod.product?.design || prod.product?.productType || 'Unknown',
+        quantity: prod.orderQuantity,
+        status: prod.status,
+        department: prod.product?.productType,
+        createdAt: prod.createdAt
+      })),
+      ...visitors.map(visitor => ({
+        type: 'visitor',
+        id: visitor._id,
+        name: visitor.personalInfo?.fullName || `${visitor.personalInfo?.firstName || ''} ${visitor.personalInfo?.lastName || ''}`.trim(),
+        purpose: visitor.visitInfo?.visitPurpose || 'Not specified',
+        personToMeet: visitor.hostInfo?.hostName || 'Not specified',
+        inTime: visitor.entries?.[0]?.entryDateTime,
+        outTime: visitor.exits?.[0]?.exitDateTime,
+        createdAt: visitor.createdAt
+      }))
+    ];
+
+    // Sort data
+    if (sortBy && sortOrder) {
+      allData.sort((a, b) => {
+        const aValue = a[sortBy as keyof typeof a];
+        const bValue = b[sortBy as keyof typeof b];
+        
+        if (sortOrder === 'asc') {
+          return aValue > bValue ? 1 : -1;
+        } else {
+          return aValue < bValue ? 1 : -1;
+        }
+      });
+    }
+
+    // Pagination
+    const startIndex = (page - 1) * limit;
+    const endIndex = startIndex + limit;
+    const paginatedData = allData.slice(startIndex, endIndex);
 
     return {
-      data: orders,
-      total: orders.length
+      data: paginatedData,
+      total: allData.length,
+      page,
+      limit,
+      totalPages: Math.ceil(allData.length / limit),
+      summary
     };
   }
 
@@ -443,11 +706,108 @@ export class AnalyticsService {
   }
 
   async exportReport(params: any) {
-    // Mock export functionality
-    return {
-      success: true,
-      message: 'Report exported successfully',
-      downloadUrl: `/api/analytics/export/${Date.now()}.pdf`
-    };
+    const { 
+      reportType, 
+      format, 
+      timeRange, 
+      startDate, 
+      endDate, 
+      departments, 
+      products, 
+      statuses, 
+      includeCharts, 
+      includeDetails 
+    } = params;
+
+    try {
+      let reportData: any = {};
+
+      // Get data based on report type
+      switch (reportType) {
+        case 'dashboard':
+          reportData = await this.getAnalyticsDashboard({
+            companyId: params.companyId,
+            timeRange,
+            startDate: startDate ? new Date(startDate) : undefined,
+            endDate: endDate ? new Date(endDate) : undefined,
+            departments,
+            metrics: ['all']
+          });
+          break;
+        case 'daily':
+          reportData = await this.getDailyReports({
+            companyId: params.companyId,
+            date: startDate ? new Date(startDate) : new Date(),
+            departments,
+            metrics: ['all'],
+            includeDetails
+          });
+          break;
+        case 'weekly':
+          reportData = await this.getWeeklyReports({
+            companyId: params.companyId,
+            departments,
+            metrics: ['all'],
+            includeDetails
+          });
+          break;
+        case 'monthly':
+          reportData = await this.getMonthlyReports({
+            companyId: params.companyId,
+            year: startDate ? new Date(startDate).getFullYear() : new Date().getFullYear(),
+            month: startDate ? new Date(startDate).getMonth() + 1 : new Date().getMonth() + 1,
+            departments,
+            metrics: ['all'],
+            includeDetails
+          });
+          break;
+        case 'custom':
+          reportData = await this.getCustomReports({
+            companyId: params.companyId,
+            startDate: new Date(startDate),
+            endDate: new Date(endDate),
+            departments,
+            products,
+            statuses,
+            metrics: ['all'],
+            includeDetails: true
+          });
+          break;
+        default:
+          throw new Error('Invalid report type');
+      }
+
+      // Generate export file
+      const timestamp = new Date().toISOString().split('T')[0];
+      const filename = `analytics-${reportType}-${timestamp}`;
+
+      if (format === 'excel') {
+        return {
+          success: true,
+          message: 'Excel report generated successfully',
+          downloadUrl: `/api/analytics/export/${filename}.xlsx`,
+          data: reportData
+        };
+      } else if (format === 'pdf') {
+        return {
+          success: true,
+          message: 'PDF report generated successfully',
+          downloadUrl: `/api/analytics/export/${filename}.pdf`,
+          data: reportData
+        };
+      } else if (format === 'csv') {
+        return {
+          success: true,
+          message: 'CSV report generated successfully',
+          downloadUrl: `/api/analytics/export/${filename}.csv`,
+          data: reportData
+        };
+      } else {
+        throw new Error('Unsupported export format');
+      }
+    } catch (error) {
+      console.error('Export error:', error);
+      throw new Error('Failed to export report');
+    }
   }
 }

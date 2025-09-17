@@ -21,6 +21,21 @@ export interface ICustomerVisit extends Document {
     travelClass?: string;
   };
 
+  // Accommodation Details
+  accommodation?: {
+    hotelName: string;
+    hotelAddress: string;
+    checkInDate: Date;
+    checkOutDate: Date;
+    roomType: 'single' | 'double' | 'suite' | 'deluxe';
+    numberOfRooms: number;
+    costPerNight: number;
+    totalNights: number;
+    totalCost: number;
+    bookingReference?: string;
+    amenities?: string[];
+  };
+
   // Food Expenses
   foodExpenses: Array<{
     date: Date;
@@ -149,6 +164,21 @@ const CustomerVisitSchema = new Schema<ICustomerVisit>({
     travelClass: { type: String }
   },
 
+  // Accommodation Details
+  accommodation: {
+    hotelName: { type: String, trim: true },
+    hotelAddress: { type: String, trim: true },
+    checkInDate: { type: Date },
+    checkOutDate: { type: Date },
+    roomType: { type: String, enum: ['single', 'double', 'suite', 'deluxe'] },
+    numberOfRooms: { type: Number, min: 1 },
+    costPerNight: { type: Number, min: 0 },
+    totalNights: { type: Number, min: 0 },
+    totalCost: { type: Number, min: 0 },
+    bookingReference: { type: String, trim: true },
+    amenities: [{ type: String }]
+  },
+
   // Food Expenses
   foodExpenses: [{
     date: { type: Date, required: true },
@@ -225,6 +255,50 @@ const CustomerVisitSchema = new Schema<ICustomerVisit>({
 }, {
   timestamps: true,
   collection: 'customer_visits'
+});
+
+// Pre-save middleware to calculate totals
+CustomerVisitSchema.pre('save', function(next) {
+  // Calculate accommodation total
+  if (this.accommodation) {
+    const checkIn = new Date(this.accommodation.checkInDate);
+    const checkOut = new Date(this.accommodation.checkOutDate);
+    this.accommodation.totalNights = Math.ceil((checkOut.getTime() - checkIn.getTime()) / (1000 * 60 * 60 * 24));
+    this.accommodation.totalCost = this.accommodation.totalNights * this.accommodation.numberOfRooms * this.accommodation.costPerNight;
+  }
+
+  // Calculate food expenses total
+  const foodTotal = this.foodExpenses.reduce((sum, expense) => {
+    expense.totalCost = expense.numberOfPeople * expense.costPerPerson;
+    return sum + expense.totalCost;
+  }, 0);
+
+  // Calculate gifts total
+  const giftsTotal = this.giftsGiven.reduce((sum, gift) => {
+    gift.totalCost = gift.quantity * gift.unitCost;
+    return sum + gift.totalCost;
+  }, 0);
+
+  // Calculate transportation total
+  const transportationTotal = this.transportationExpenses.reduce((sum, expense) => sum + expense.cost, 0);
+
+  // Calculate other expenses total
+  const otherTotal = this.otherExpenses.reduce((sum, expense) => sum + expense.cost, 0);
+
+  // Calculate accommodation total
+  const accommodationTotal = this.accommodation?.totalCost || 0;
+
+  // Update totalExpenses
+  this.totalExpenses = {
+    accommodation: accommodationTotal,
+    food: foodTotal,
+    transportation: transportationTotal,
+    gifts: giftsTotal,
+    other: otherTotal,
+    total: accommodationTotal + foodTotal + transportationTotal + giftsTotal + otherTotal
+  };
+
+  next();
 });
 
 // Basic indexes

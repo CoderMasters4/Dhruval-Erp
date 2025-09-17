@@ -176,6 +176,8 @@ export const baseApi = createApi({
     'OrderStats',
     'Vehicle',
     'VehicleStats',
+    'GatePass',
+    'GatePassStats',
     'Invoice',
     'Quotation',
     'FinancialTransaction',

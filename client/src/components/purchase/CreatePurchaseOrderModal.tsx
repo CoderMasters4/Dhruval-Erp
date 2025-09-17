@@ -40,6 +40,7 @@ interface PurchaseItem {
   selectedInventoryItemId?: string
   currentStock?: number
   availableStock?: number
+  category?: 'raw_material' | 'finished_goods' | 'consumables' | 'services' | 'capital_goods' | 'maintenance' | 'spare_parts'
   discount: {
     type: 'percentage' | 'amount'
     value: number
@@ -296,6 +297,7 @@ export function CreatePurchaseOrderModal({ onSuccess, open: controlledOpen, onOp
       unit: 'pcs',
       rate: 0,
       itemType: 'new',
+      category: 'raw_material',
       discount: { type: 'percentage', value: 0 },
       discountAmount: 0,
       taxableAmount: 0,
@@ -320,6 +322,11 @@ export function CreatePurchaseOrderModal({ onSuccess, open: controlledOpen, onOp
   const updateItem = (index: number, field: keyof PurchaseItem, value: any) => {
     const updatedItems = [...items]
     updatedItems[index] = { ...updatedItems[index], [field]: value }
+    
+    // If changing to new item type, set default category
+    if (field === 'itemType' && value === 'new' && !updatedItems[index].category) {
+      updatedItems[index].category = 'raw_material'
+    }
     
     // Recalculate item totals
     const item = updatedItems[index]
@@ -496,12 +503,13 @@ export function CreatePurchaseOrderModal({ onSuccess, open: controlledOpen, onOp
             const inventoryData = {
               itemName: item.itemName,
               itemCode: item.itemCode,
-              category: category,
+              category: item.category || 'raw_material',
+              itemDescription: item.description || '',
               warehouseId: selectedWarehouseId,
               reorderPoint: 0,
               reorderQuantity: item.quantity,
               stockingMethod: 'fifo' as const,
-              currentStock: item.quantity,
+              initialStockLevel: item.quantity,
               unitOfMeasure: item.unit,
               specifications: {
                 color: '',
@@ -718,7 +726,7 @@ export function CreatePurchaseOrderModal({ onSuccess, open: controlledOpen, onOp
                 <div className="space-y-2">
                   <Label>Category *</Label>
                   <Select value={category} onValueChange={(value: any) => setCategory(value)}>
-                    <SelectTrigger>
+                    <SelectTrigger className="bg-blue-50 border-blue-200 focus:border-blue-500 focus:ring-blue-500">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -748,7 +756,7 @@ export function CreatePurchaseOrderModal({ onSuccess, open: controlledOpen, onOp
                 <div className="space-y-2">
                   <Label>Select Supplier *</Label>
                   <Select value={selectedSupplierId} onValueChange={setSelectedSupplierId}>
-                    <SelectTrigger>
+                    <SelectTrigger className="bg-green-50 border-green-200 focus:border-green-500 focus:ring-green-500">
                       <SelectValue placeholder="Select a supplier" />
                     </SelectTrigger>
                     <SelectContent>
@@ -952,6 +960,33 @@ export function CreatePurchaseOrderModal({ onSuccess, open: controlledOpen, onOp
                             disabled={item.itemType === 'existing'}
                           />
                         </div>
+
+                        {/* Category Selection - Only for new items */}
+                        {item.itemType === 'new' && (
+                          <div className="space-y-2 col-span-full">
+                            <Label className="text-sm font-medium text-gray-700 flex items-center gap-2">
+                              <span className="w-2 h-2 bg-purple-500 rounded-full"></span>
+                              Category *
+                            </Label>
+                            <Select 
+                              value={item.category || 'raw_material'} 
+                              onValueChange={(value) => updateItem(index, 'category', value)}
+                            >
+                              <SelectTrigger className="bg-purple-50 border-purple-200 focus:border-purple-500 focus:ring-purple-500 w-full h-10">
+                                <SelectValue placeholder="Select category" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="raw_material">Raw Material</SelectItem>
+                                <SelectItem value="finished_goods">Finished Goods</SelectItem>
+                                <SelectItem value="consumables">Consumables</SelectItem>
+                                <SelectItem value="services">Services</SelectItem>
+                                <SelectItem value="capital_goods">Capital Goods</SelectItem>
+                                <SelectItem value="maintenance">Maintenance</SelectItem>
+                                <SelectItem value="spare_parts">Spare Parts</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        )}
 
                         <div className="space-y-2">
                           <Label>HSN Code</Label>

@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { requirePermission, requireCompany } from '@/middleware/auth';
+import { requirePermission, requireCompany } from '../../middleware/auth';
 
 const router = Router();
 

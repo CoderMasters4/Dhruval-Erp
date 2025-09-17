@@ -1,19 +1,18 @@
 import { Types } from 'mongoose';
 import { BaseService } from './BaseService';
-import { Report } from '../models';
-import { IReport } from '../types/models';
+import { AdvancedReport } from '../models';
 import { AppError } from '../utils/errors';
 import { logger } from '../utils/logger';
 
-export class AdvancedReportService extends BaseService<IReport> {
+export class AdvancedReportService extends BaseService<any> {
   constructor() {
-    super(Report);
+    super(AdvancedReport);
   }
 
   /**
    * Create a new advanced report
    */
-  async createAdvancedReport(reportData: Partial<IReport>, createdBy?: string): Promise<IReport> {
+  async createAdvancedReport(reportData: any, createdBy?: string): Promise<any> {
     try {
       // Validate report data
       this.validateReportData(reportData);
@@ -56,9 +55,9 @@ export class AdvancedReportService extends BaseService<IReport> {
    */
   async updateAdvancedReport(
     reportId: string,
-    updateData: Partial<IReport>,
+    updateData: any,
     updatedBy?: string
-  ): Promise<IReport> {
+  ): Promise<any> {
     try {
       // Set updated by
       if (updatedBy) {
@@ -81,7 +80,7 @@ export class AdvancedReportService extends BaseService<IReport> {
   /**
    * Get reports by company
    */
-  async getReportsByCompany(companyId: string, options: any = {}): Promise<IReport[]> {
+  async getReportsByCompany(companyId: string, options: any = {}): Promise<any[]> {
     try {
       const filter = { companyId: new Types.ObjectId(companyId) };
       

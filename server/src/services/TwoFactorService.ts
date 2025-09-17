@@ -1,7 +1,7 @@
 import speakeasy from 'speakeasy';
 import QRCode from 'qrcode';
-import TwoFactor, { ITwoFactor } from '@/models/TwoFactor';
-import User from '@/models/User';
+import TwoFactor, { ITwoFactor } from '../models/TwoFactor';
+import User from '../models/User';
 import mongoose from 'mongoose';
 
 export interface TwoFactorSetupResponse {

@@ -82,27 +82,71 @@ export class StockMovementController extends BaseController<IStockMovement> {
       let fromLocation = movementData.fromLocation;
       let toLocation = movementData.toLocation;
       
-      // If locations are strings, convert them to proper objects
+      // Helper function to find warehouse by name
+      const findWarehouseByName = async (warehouseName: string, companyId: string) => {
+        try {
+          const Warehouse = require('../models/Warehouse').default;
+          const warehouse = await Warehouse.findOne({ 
+            warehouseName: warehouseName, 
+            companyId: companyId,
+            isActive: true 
+          });
+          return warehouse;
+        } catch (error) {
+          console.log('Error finding warehouse:', error);
+          return null;
+        }
+      };
+      
+      // If locations are strings, convert them to proper objects with warehouse IDs
       if (typeof fromLocation === 'string') {
-        fromLocation = {
-          warehouseName: fromLocation,
-          isExternal: ['Supplier', 'Production', 'Customer', 'Scrap/Disposal'].includes(fromLocation)
-        };
+        const isExternal = ['Supplier', 'Production', 'Customer', 'Scrap/Disposal'].includes(fromLocation);
+        if (!isExternal) {
+          // Try to find the warehouse ID for internal warehouses
+          const warehouse = await findWarehouseByName(fromLocation, companyId.toString());
+          fromLocation = {
+            warehouseId: warehouse?._id,
+            warehouseName: fromLocation,
+            isExternal: false
+          };
+        } else {
+          fromLocation = {
+            warehouseName: fromLocation,
+            isExternal: true
+          };
+        }
       }
       
       if (typeof toLocation === 'string') {
-        toLocation = {
-          warehouseName: toLocation,
-          isExternal: ['Supplier', 'Production', 'Customer', 'Scrap/Disposal'].includes(toLocation)
-        };
+        const isExternal = ['Supplier', 'Production', 'Customer', 'Scrap/Disposal'].includes(toLocation);
+        if (!isExternal) {
+          // Try to find the warehouse ID for internal warehouses
+          const warehouse = await findWarehouseByName(toLocation, companyId.toString());
+          toLocation = {
+            warehouseId: warehouse?._id,
+            warehouseName: toLocation,
+            isExternal: false
+          };
+        } else {
+          toLocation = {
+            warehouseName: toLocation,
+            isExternal: true
+          };
+        }
       }
 
       // Fix reference document structure if needed
       let referenceDocument = movementData.referenceDocument;
       if (referenceDocument && referenceDocument.type && !referenceDocument.documentType) {
+        // Map old 'adjustment' value to 'adjustment_note' for backward compatibility
+        let documentType = referenceDocument.type;
+        if (documentType === 'adjustment') {
+          documentType = 'adjustment_note';
+        }
+        
         referenceDocument = {
           ...referenceDocument,
-          documentType: referenceDocument.type,
+          documentType: documentType,
           documentNumber: referenceDocument.number
         };
       }
@@ -244,7 +288,17 @@ export class StockMovementController extends BaseController<IStockMovement> {
       const options = {
         page: parseInt(page as string),
         limit: parseInt(limit as string),
-        sort: { movementDate: -1 }
+        sort: { movementDate: -1 },
+        populate: [
+          {
+            path: 'itemId',
+            select: 'itemName itemCode description category stock.unit pricing.costPrice pricing.sellingPrice'
+          },
+          {
+            path: 'createdBy',
+            select: 'personalInfo.firstName personalInfo.lastName username'
+          }
+        ]
       };
 
       const result = await this.stockMovementService.findManyWithPagination(query, options);

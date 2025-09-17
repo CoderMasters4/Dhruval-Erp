@@ -1,9 +1,9 @@
 import { Router } from 'express';
-import { ProductionDashboardController } from '../../controllers/ProductionDashboardController';
 import { authenticate } from '../../middleware/auth';
 
 const router = Router();
-const productionDashboardController = new ProductionDashboardController();
+// ✅ FIXED: Use lazy instantiation instead of immediate instantiation
+// This prevents the controller from being created when the module is imported
 
 // Apply authentication middleware to all routes
 router.use(authenticate);
@@ -13,111 +13,319 @@ router.use(authenticate);
  * @desc    Get production dashboard by company
  * @access  Private
  */
-router.get('/', productionDashboardController.getDashboardByCompany.bind(productionDashboardController));
+router.get('/', async (req, res) => {
+  try {
+    // Lazy import and instantiation
+    const { ProductionDashboardController } = await import('../../controllers/ProductionDashboardController');
+    const productionDashboardController = new ProductionDashboardController();
+    await productionDashboardController.getDashboardByCompany(req, res);
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error',
+      error: error.message
+    });
+  }
+});
 
 /**
  * @route   POST /api/v1/production-dashboard
  * @desc    Create new production dashboard
  * @access  Private
  */
-router.post('/', productionDashboardController.createDashboard.bind(productionDashboardController));
+router.post('/', async (req, res) => {
+  try {
+    // Lazy import and instantiation
+    const { ProductionDashboardController } = await import('../../controllers/ProductionDashboardController');
+    const productionDashboardController = new ProductionDashboardController();
+    await productionDashboardController.createDashboard(req, res);
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error',
+      error: error.message
+    });
+  }
+});
 
 /**
  * @route   GET /api/v1/production-dashboard/machine/:machineId
  * @desc    Get machine status from dashboard
  * @access  Private
  */
-router.get('/machine/:machineId', productionDashboardController.getMachineStatus.bind(productionDashboardController));
+router.get('/machine/:machineId', async (req, res) => {
+  try {
+    // Lazy import and instantiation
+    const { ProductionDashboardController } = await import('../../controllers/ProductionDashboardController');
+    const productionDashboardController = new ProductionDashboardController();
+    await productionDashboardController.getMachineStatus(req, res);
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error',
+      error: error.message
+    });
+  }
+});
 
 /**
  * @route   PUT /api/v1/production-dashboard/machine/:machineId
  * @desc    Update machine status in dashboard
  * @access  Private
  */
-router.put('/machine/:machineId', productionDashboardController.updateMachineStatus.bind(productionDashboardController));
+router.put('/machine/:machineId', async (req, res) => {
+  try {
+    // Lazy import and instantiation
+    const { ProductionDashboardController } = await import('../../controllers/ProductionDashboardController');
+    const productionDashboardController = new ProductionDashboardController();
+    await productionDashboardController.updateMachineStatus(req, res);
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error',
+      error: error.message
+    });
+  }
+});
 
 /**
  * @route   GET /api/v1/production-dashboard/daily-summary
  * @desc    Get daily production summary
  * @access  Private
  */
-router.get('/daily-summary', productionDashboardController.getDailySummary.bind(productionDashboardController));
+router.get('/daily-summary', async (req, res) => {
+  try {
+    // Lazy import and instantiation
+    const { ProductionDashboardController } = await import('../../controllers/ProductionDashboardController');
+    const productionDashboardController = new ProductionDashboardController();
+    await productionDashboardController.getDailySummary(req, res);
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error',
+      error: error.message
+    });
+  }
+});
 
 /**
  * @route   POST /api/v1/production-dashboard/daily-summary
  * @desc    Add daily production summary
  * @access  Private
  */
-router.post('/daily-summary', productionDashboardController.addDailySummary.bind(productionDashboardController));
+router.post('/daily-summary', async (req, res) => {
+  try {
+    // Lazy import and instantiation
+    const { ProductionDashboardController } = await import('../../controllers/ProductionDashboardController');
+    const productionDashboardController = new ProductionDashboardController();
+    await productionDashboardController.addDailySummary(req, res);
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error',
+      error: error.message
+    });
+  }
+});
 
 /**
  * @route   GET /api/v1/production-dashboard/printing-status
  * @desc    Get printing status for all machines
  * @access  Private
  */
-router.get('/printing-status', productionDashboardController.getPrintingStatus.bind(productionDashboardController));
+router.get('/printing-status', async (req, res) => {
+  try {
+    // Lazy import and instantiation
+    const { ProductionDashboardController } = await import('../../controllers/ProductionDashboardController');
+    const productionDashboardController = new ProductionDashboardController();
+    await productionDashboardController.getPrintingStatus(req, res);
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error',
+      error: error.message
+    });
+  }
+});
 
 /**
  * @route   PUT /api/v1/production-dashboard/printing-status/:machineId
  * @desc    Update printing status for specific machine
  * @access  Private
  */
-router.put('/printing-status/:machineId', productionDashboardController.updatePrintingStatus.bind(productionDashboardController));
+router.put('/printing-status/:machineId', async (req, res) => {
+  try {
+    // Lazy import and instantiation
+    const { ProductionDashboardController } = await import('../../controllers/ProductionDashboardController');
+    const productionDashboardController = new ProductionDashboardController();
+    await productionDashboardController.updatePrintingStatus(req, res);
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error',
+      error: error.message
+    });
+  }
+});
 
 /**
  * @route   GET /api/v1/production-dashboard/alerts
  * @desc    Get active alerts
  * @access  Private
  */
-router.get('/alerts', productionDashboardController.getActiveAlerts.bind(productionDashboardController));
+router.get('/alerts', async (req, res) => {
+  try {
+    // Lazy import and instantiation
+    const { ProductionDashboardController } = await import('../../controllers/ProductionDashboardController');
+    const productionDashboardController = new ProductionDashboardController();
+    await productionDashboardController.getActiveAlerts(req, res);
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error',
+      error: error.message
+    });
+  }
+});
 
 /**
  * @route   POST /api/v1/production-dashboard/alerts
  * @desc    Add new alert
  * @access  Private
  */
-router.post('/alerts', productionDashboardController.addAlert.bind(productionDashboardController));
+router.post('/alerts', async (req, res) => {
+  try {
+    // Lazy import and instantiation
+    const { ProductionDashboardController } = await import('../../controllers/ProductionDashboardController');
+    const productionDashboardController = new ProductionDashboardController();
+    await productionDashboardController.addAlert(req, res);
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error',
+      error: error.message
+    });
+  }
+});
 
 /**
  * @route   PUT /api/v1/production-dashboard/alerts/:alertIndex/acknowledge
  * @desc    Acknowledge alert
  * @access  Private
  */
-router.put('/alerts/:alertIndex/acknowledge', productionDashboardController.acknowledgeAlert.bind(productionDashboardController));
+router.put('/alerts/:alertIndex/acknowledge', async (req, res) => {
+  try {
+    // Lazy import and instantiation
+    const { ProductionDashboardController } = await import('../../controllers/ProductionDashboardController');
+    const productionDashboardController = new ProductionDashboardController();
+    await productionDashboardController.acknowledgeAlert(req, res);
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error',
+      error: error.message
+    });
+  }
+});
 
 /**
  * @route   PUT /api/v1/production-dashboard/alerts/:alertIndex/resolve
  * @desc    Resolve alert
  * @access  Private
  */
-router.put('/alerts/:alertIndex/resolve', productionDashboardController.resolveAlert.bind(productionDashboardController));
+router.put('/alerts/:alertIndex/resolve', async (req, res) => {
+  try {
+    // Lazy import and instantiation
+    const { ProductionDashboardController } = await import('../../controllers/ProductionDashboardController');
+    const productionDashboardController = new ProductionDashboardController();
+    await productionDashboardController.resolveAlert(req, res);
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error',
+      error: error.message
+    });
+  }
+});
 
 /**
  * @route   GET /api/v1/production-dashboard/performance
  * @desc    Get performance metrics
  * @access  Private
  */
-router.get('/performance', productionDashboardController.getPerformanceMetrics.bind(productionDashboardController));
+router.get('/performance', async (req, res) => {
+  try {
+    // Lazy import and instantiation
+    const { ProductionDashboardController } = await import('../../controllers/ProductionDashboardController');
+    const productionDashboardController = new ProductionDashboardController();
+    await productionDashboardController.getPerformanceMetrics(req, res);
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error',
+      error: error.message
+    });
+  }
+});
 
 /**
  * @route   PUT /api/v1/production-dashboard/performance
  * @desc    Update performance metrics
  * @access  Private
  */
-router.put('/performance', productionDashboardController.updatePerformanceMetrics.bind(productionDashboardController));
+router.put('/performance', async (req, res) => {
+  try {
+    // Lazy import and instantiation
+    const { ProductionDashboardController } = await import('../../controllers/ProductionDashboardController');
+    const productionDashboardController = new ProductionDashboardController();
+    await productionDashboardController.updatePerformanceMetrics(req, res);
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error',
+      error: error.message
+    });
+  }
+});
 
 /**
  * @route   GET /api/v1/production-dashboard/config
  * @desc    Get dashboard configuration
  * @access  Private
  */
-router.get('/config', productionDashboardController.getDashboardConfig.bind(productionDashboardController));
+router.get('/config', async (req, res) => {
+  try {
+    // Lazy import and instantiation
+    const { ProductionDashboardController } = await import('../../controllers/ProductionDashboardController');
+    const productionDashboardController = new ProductionDashboardController();
+    await productionDashboardController.getDashboardConfig(req, res);
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error',
+      error: error.message
+    });
+  }
+});
 
 /**
  * @route   PUT /api/v1/production-dashboard/config
  * @desc    Update dashboard configuration
  * @access  Private
  */
-router.put('/config', productionDashboardController.updateDashboardConfig.bind(productionDashboardController));
+router.put('/config', async (req, res) => {
+  try {
+    // Lazy import and instantiation
+    const { ProductionDashboardController } = await import('../../controllers/ProductionDashboardController');
+    const productionDashboardController = new ProductionDashboardController();
+    await productionDashboardController.updateDashboardConfig(req, res);
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error',
+      error: error.message
+    });
+  }
+});
 
 export default router;

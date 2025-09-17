@@ -282,6 +282,17 @@ CustomerSchema.pre('save', function(next) {
       this.purchaseHistory.totalOrderValue / this.purchaseHistory.totalOrders;
   }
   
+  // Auto-generate customer code if not provided
+  if (!this.customerCode && this.customerName) {
+    this.customerCode = this.customerName
+      .toUpperCase()
+      .replace(/[^A-Z0-9]/g, '')
+      .substring(0, 8) + '-' + Date.now().toString().slice(-4);
+  }
+
+  // Update lastUpdated timestamp
+  (this as any).lastUpdated = new Date();
+  
   next();
 });
 
@@ -400,20 +411,6 @@ CustomerSchema.virtual('primaryContact').get(function() {
   });
 };
 
-// Performance Optimization: Add pre-save middleware
-CustomerSchema.pre('save', function(next) {
-  // Auto-generate customer code if not provided
-  if (!this.customerCode && this.customerName) {
-    this.customerCode = this.customerName
-      .toUpperCase()
-      .replace(/[^A-Z0-9]/g, '')
-      .substring(0, 8) + '-' + Date.now().toString().slice(-4);
-  }
-
-  // Update lastUpdated timestamp
-  (this as any).lastUpdated = new Date();
-
-  next();
-});
+// Note: Pre-save middleware is already defined above at line 249
 
 export default model<ICustomer>('Customer', CustomerSchema);

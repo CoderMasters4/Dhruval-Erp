@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 
 interface CreateInventoryItemModalProps {
   isOpen: boolean
@@ -273,40 +274,46 @@ export function CreateInventoryItemModal({ isOpen, onClose, onSubmit }: CreateIn
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Primary Category *
                   </label>
-                  <select
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-sky-500"
+                  <Select
                     value={formData.category.primary}
-                    onChange={(e) => handleInputChange('category.primary', e.target.value)}
-                    required
+                    onValueChange={(value) => handleInputChange('category.primary', value)}
                   >
-                    <option value="raw_material">Raw Material</option>
-                    <option value="semi_finished">Semi Finished</option>
-                    <option value="finished_goods">Finished Goods</option>
-                    <option value="consumables">Consumables</option>
-                    <option value="spare_parts">Spare Parts</option>
-                  </select>
+                    <SelectTrigger className="bg-blue-50 border-blue-200 focus:border-blue-500 focus:ring-blue-500">
+                      <SelectValue placeholder="Select primary category" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="raw_material">Raw Material</SelectItem>
+                      <SelectItem value="semi_finished">Semi Finished</SelectItem>
+                      <SelectItem value="finished_goods">Finished Goods</SelectItem>
+                      <SelectItem value="consumables">Consumables</SelectItem>
+                      <SelectItem value="spare_parts">Spare Parts</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Product Type *
                   </label>
-                  <select
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-sky-500"
+                  <Select
                     value={formData.productType}
-                    onChange={(e) => handleInputChange('productType', e.target.value)}
-                    required
+                    onValueChange={(value) => handleInputChange('productType', value)}
                   >
-                    <option value="saree">Saree</option>
-                    <option value="african">African Cotton</option>
-                    <option value="garment">Garment Fabric</option>
-                    <option value="digital_print">Digital Print</option>
-                    <option value="custom">Custom</option>
-                    <option value="chemical">Chemical</option>
-                    <option value="dye">Dye</option>
-                    <option value="machinery">Machinery</option>
-                    <option value="yarn">Yarn</option>
-                    <option value="thread">Thread</option>
-                  </select>
+                    <SelectTrigger className="bg-green-50 border-green-200 focus:border-green-500 focus:ring-green-500">
+                      <SelectValue placeholder="Select product type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="saree">Saree</SelectItem>
+                      <SelectItem value="african">African Cotton</SelectItem>
+                      <SelectItem value="garment">Garment Fabric</SelectItem>
+                      <SelectItem value="digital_print">Digital Print</SelectItem>
+                      <SelectItem value="custom">Custom</SelectItem>
+                      <SelectItem value="chemical">Chemical</SelectItem>
+                      <SelectItem value="dye">Dye</SelectItem>
+                      <SelectItem value="machinery">Machinery</SelectItem>
+                      <SelectItem value="yarn">Yarn</SelectItem>
+                      <SelectItem value="thread">Thread</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
             </CardContent>

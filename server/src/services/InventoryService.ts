@@ -1,5 +1,7 @@
 import { BaseService } from './BaseService';
-import { InventoryItem, StockMovement, Warehouse } from '@/models';
+import InventoryItem from '../models/InventoryItem';
+import StockMovement from '../models/StockMovement';
+import Warehouse from '../models/Warehouse';
 import { IInventoryItem, IStockMovement } from '@/types/models';
 import { AppError } from '../utils/errors';
 
@@ -38,7 +40,7 @@ export class InventoryService extends BaseService<IInventoryItem> {
       // Generate company item code if not provided
       if (!itemData.companyItemCode) {
         // Get company code from companyId
-        const Company = (await import('@/models')).Company;
+        const Company = (await import('../models/Company')).default;
         const company = await Company.findById(itemData.companyId);
         if (!company) {
           throw new AppError('Company not found', 400);
@@ -46,21 +48,31 @@ export class InventoryService extends BaseService<IInventoryItem> {
         itemData.companyItemCode = `${company.companyCode}-${itemData.itemCode}`;
       }
 
+      // Get unit from multiple possible locations
+      const unit = itemData.stock?.unit || (itemData as any).unit || (itemData as any).unitOfMeasure || 'pcs';
+      
+      // Handle category in different formats
+      let category = itemData.category;
+      if (typeof category === 'string') {
+        category = { primary: category };
+      }
+      
       // Set default values
       const itemToCreate = {
         ...itemData,
         itemCode: itemData.itemCode.toUpperCase(),
         companyItemCode: itemData.companyItemCode.toUpperCase(),
+        category: category, // Use the processed category
         stock: {
           ...itemData.stock,
-          currentStock: itemData.stock?.currentStock || 0,
-          availableStock: itemData.stock?.availableStock || 0,
+          currentStock: itemData.stock?.currentStock || (itemData as any).currentStock || 0,
+          availableStock: itemData.stock?.availableStock || (itemData as any).currentStock || 0,
           reservedStock: itemData.stock?.reservedStock || 0,
-          reorderLevel: itemData.stock?.reorderLevel || 0,
+          reorderLevel: itemData.stock?.reorderLevel || (itemData as any).reorderPoint || 0,
           maxStockLevel: itemData.stock?.maxStockLevel || 0,
-          unit: itemData.stock?.unit || 'pcs',
-          valuationMethod: itemData.stock?.valuationMethod || 'FIFO',
-          averageCost: itemData.stock?.averageCost || 0,
+          unit: unit,
+          valuationMethod: itemData.stock?.valuationMethod || (itemData as any).stockingMethod || 'FIFO',
+          averageCost: itemData.stock?.averageCost || itemData.pricing?.costPrice || 0,
           totalValue: itemData.stock?.totalValue || 0,
           minStockLevel: itemData.stock?.minStockLevel || 0,
           inTransitStock: itemData.stock?.inTransitStock || 0,
@@ -499,7 +511,9 @@ export class InventoryService extends BaseService<IInventoryItem> {
       throw new AppError('Category is required', 400);
     }
 
-    if (!itemData.stock?.unit) {
+    // Check for unit in multiple possible locations
+    const unit = itemData.stock?.unit || (itemData as any).unit || (itemData as any).unitOfMeasure;
+    if (!unit) {
       throw new AppError('Unit is required', 400);
     }
 

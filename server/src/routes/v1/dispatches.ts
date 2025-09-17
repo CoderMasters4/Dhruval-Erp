@@ -1,9 +1,9 @@
 import express from 'express';
-import { DispatchController } from '@/controllers/DispatchController';
-import { authenticate } from '@/middleware/auth';
-import { requirePermission } from '@/middleware/permissions';
-import { uploadFields } from '@/middleware/upload';
-import { validateUploadedFiles } from '@/middleware/validation';
+import { DispatchController } from '../../controllers/DispatchController';
+import { authenticate } from '../../middleware/auth';
+import { requirePermission } from '../../middleware/permissions';
+import { uploadFields } from '../../middleware/upload';
+import { validateUploadedFiles } from '../../middleware/validation';
 
 const router = express.Router();
 const dispatchController = new DispatchController();

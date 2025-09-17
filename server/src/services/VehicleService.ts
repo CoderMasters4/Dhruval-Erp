@@ -1,31 +1,14 @@
 import { Types } from 'mongoose';
 import { BaseService } from './BaseService';
-import { Vehicle } from '../models';
-import { AppError } from '../utils/errors';
+import Vehicle from '../models/Vehicle';
+import type { ISimpleVehicle } from '../models/Vehicle';
+
 import { logger } from '../utils/logger';
+import { AppError } from '@/utils/errors';
 
-// Simplified Vehicle interface for gate pass system
-interface ISimpleVehicle {
-  _id: string;
-  vehicleNumber: string;
-  driverName: string;
-  driverPhone: string;
-  purpose: 'delivery' | 'pickup' | 'maintenance' | 'other';
-  reason: string;
-  timeIn: Date;
-  timeOut?: Date;
-  status: 'in' | 'out' | 'pending';
-  gatePassNumber?: string;
-  images?: string[];
-  companyId: Types.ObjectId;
-  createdBy: Types.ObjectId;
-  createdAt: Date;
-  updatedAt: Date;
-}
-
-export class VehicleService {
+export class VehicleService extends BaseService<ISimpleVehicle> {
   constructor() {
-    // Simple service without BaseService inheritance
+    super(Vehicle);
   }
 
   /**
@@ -163,22 +146,30 @@ export class VehicleService {
         throw new AppError('Vehicle number already exists', 400);
       }
 
-      const vehicle = await this.create({
+      const vehicleDataWithDefaults = {
         ...vehicleData,
         vehicleNumber: vehicleData.vehicleNumber?.toUpperCase(),
         status: 'in',
         timeIn: new Date()
+      };
+      
+      // Create vehicle using the model directly to avoid TypeScript issues
+      const vehicle = new Vehicle({
+        ...vehicleDataWithDefaults,
+        createdBy: createdBy ? new Types.ObjectId(createdBy) : undefined
       });
+      
+      const savedVehicle = await vehicle.save();
 
       logger.info('Vehicle created successfully', {
-        vehicleId: vehicle._id,
-        vehicleNumber: vehicle.vehicleNumber,
-        purpose: vehicle.purpose,
+        vehicleId: savedVehicle._id,
+        vehicleNumber: savedVehicle.vehicleNumber,
+        purpose: savedVehicle.purpose,
         companyId: vehicleData.companyId,
         createdBy
       });
 
-      return vehicle;
+      return savedVehicle;
     } catch (error) {
       logger.error('Error creating vehicle', { error, vehicleData, createdBy });
       throw error;
@@ -205,13 +196,97 @@ export class VehicleService {
    */
   async getVehiclesByCompany(companyId: string, options: any = {}): Promise<ISimpleVehicle[]> {
     try {
-      const query = {
+      // Build the base query
+      const baseQuery: any = {
         companyId: new Types.ObjectId(companyId)
       };
 
-      return await this.findMany(query, options);
+      // Add status filtering if provided
+      if (options.status) {
+        baseQuery.status = options.status;
+      }
+
+      // Add search filtering if provided
+      if (options.search) {
+        baseQuery.$or = [
+          { vehicleNumber: { $regex: options.search, $options: 'i' } },
+          { driverName: { $regex: options.search, $options: 'i' } },
+          { driverPhone: { $regex: options.search, $options: 'i' } }
+        ];
+      }
+
+      // Handle date filtering separately to avoid serialization issues
+      let finalQuery = { ...baseQuery };
+      
+      if (options.dateFrom || options.dateTo) {
+        // Create the date filter object directly without intermediate variables
+        finalQuery.timeIn = {};
+        if (options.dateFrom) {
+          finalQuery.timeIn.$gte = new Date(options.dateFrom);
+        }
+        if (options.dateTo) {
+          finalQuery.timeIn.$lt = new Date(options.dateTo);
+        }
+      }
+
+      logger.info('Vehicle query constructed', { 
+        query: JSON.stringify(finalQuery, null, 2), 
+        options
+      });
+
+      // Handle pagination
+      const queryOptions: any = {};
+      if (options.sort) {
+        queryOptions.sort = options.sort;
+      }
+      if (options.skip) {
+        queryOptions.skip = options.skip;
+      }
+      if (options.limit) {
+        queryOptions.limit = options.limit;
+      }
+
+      // Debug: Log the exact query object before passing to findMany
+      logger.info('About to execute query', { 
+        queryType: typeof finalQuery,
+        queryIsArray: Array.isArray(finalQuery),
+        queryKeys: Object.keys(finalQuery),
+        timeInType: typeof finalQuery.timeIn,
+        timeInValue: finalQuery.timeIn
+      });
+
+      // Use aggregation pipeline for date filtering to avoid casting issues
+      if (options.dateFrom || options.dateTo) {
+        const pipeline: any[] = [
+          { $match: finalQuery }
+        ];
+        
+        // Add pagination
+        if (queryOptions.skip) {
+          pipeline.push({ $skip: queryOptions.skip });
+        }
+        if (queryOptions.limit) {
+          pipeline.push({ $limit: queryOptions.limit });
+        }
+        if (queryOptions.sort) {
+          pipeline.push({ $sort: queryOptions.sort });
+        }
+        
+        // Add population for createdBy and companyId
+        pipeline.push(
+          { $lookup: { from: 'users', localField: 'createdBy', foreignField: '_id', as: 'createdBy' } },
+          { $lookup: { from: 'companies', localField: 'companyId', foreignField: '_id', as: 'companyId' } },
+          { $unwind: { path: '$createdBy', preserveNullAndEmptyArrays: true } },
+          { $unwind: { path: '$companyId', preserveNullAndEmptyArrays: true } }
+        );
+        
+        logger.info('Using aggregation pipeline for date filtering');
+        return await Vehicle.aggregate(pipeline);
+      } else {
+        return await this.findMany(finalQuery, queryOptions);
+      }
     } catch (error) {
-      logger.error('Error getting vehicles by company', { error, companyId });
+      logger.error('Error getting vehicles by company', { error, companyId, options });
       throw error;
     }
   }

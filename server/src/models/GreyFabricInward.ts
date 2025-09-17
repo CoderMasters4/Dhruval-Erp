@@ -120,8 +120,7 @@ const GreyFabricInwardSchema = new Schema<IGreyFabricInward>({
   grnNumber: { 
     type: String, 
     required: true, 
-    unique: true,
-    index: true 
+    unique: true
   },
   purchaseOrderId: { 
     type: Schema.Types.ObjectId, 
@@ -234,8 +233,7 @@ const GreyFabricInwardSchema = new Schema<IGreyFabricInward>({
   status: { 
     type: String, 
     enum: ['pending', 'approved', 'rejected', 'partially_approved'], 
-    default: 'pending',
-    index: true
+    default: 'pending'
   },
   inspectionStatus: { 
     type: String, 
@@ -309,7 +307,7 @@ const GreyFabricInwardSchema = new Schema<IGreyFabricInward>({
 });
 
 // Indexes
-GreyFabricInwardSchema.index({ grnNumber: 1 });
+// grnNumber index is automatically created by unique: true
 GreyFabricInwardSchema.index({ supplierId: 1 });
 GreyFabricInwardSchema.index({ status: 1 });
 GreyFabricInwardSchema.index({ inspectionDate: 1 });

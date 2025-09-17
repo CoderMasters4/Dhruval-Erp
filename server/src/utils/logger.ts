@@ -5,7 +5,7 @@ import morgan from 'morgan';
 import path from 'path';
 import fs from 'fs';
 import { Request, Response } from 'express';
-import config from '@/config/environment';
+import config from '../config/environment';
 
 // Define log levels
 const levels = {

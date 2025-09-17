@@ -17,7 +17,8 @@ import FinancialTransaction from './FinancialTransaction';
 import AuditLog from './AuditLog';
 import Role from './Role';
 import Visitor from './Visitor';
-import Vehicle from './Vehicle';
+import Vehicle, { ISimpleVehicle } from './Vehicle';
+import GatePass, { IGatePass } from './GatePass';
 import SecurityLog from './SecurityLog';
 import Warehouse from './Warehouse';
 import Invoice from './Invoice';
@@ -27,7 +28,7 @@ import BusinessAnalytics from './BusinessAnalytics';
 import BoilerMonitoring from './BoilerMonitoring';
 import ElectricityMonitoring from './ElectricityMonitoring';
 import Hospitality from './Hospitality';
-import { Dispatch } from './Dispatch'; // ✅ FIXED: TypeScript errors resolved
+import { Dispatch } from './Dispatch';
 import Report from './Report';
 import Spare from './Spare';
 import ProductionDashboard from './ProductionDashboard';
@@ -40,7 +41,6 @@ import Printing from './Printing';
 import Finishing from './Finishing';
 import CuttingPacking from './CuttingPacking';
 import ProductionLog from './ProductionLog';
-;
 
 // Export all models
 export {
@@ -58,6 +58,7 @@ export {
   Role,
   Visitor,
   Vehicle,
+  GatePass,
   SecurityLog,
   Warehouse,
   Invoice,
@@ -79,7 +80,10 @@ export {
   Printing,
   Finishing,
   CuttingPacking,
-  ProductionLog
+  ProductionLog,
+  // Export interfaces
+  ISimpleVehicle,
+  IGatePass
 };
 
 // Default export with all models
@@ -98,6 +102,7 @@ export default {
   Role,
   Visitor,
   Vehicle,
+  GatePass,
   SecurityLog,
   Warehouse,
   Invoice,
@@ -107,7 +112,7 @@ export default {
   BoilerMonitoring,
   ElectricityMonitoring,
   Hospitality,
-  // Dispatch, // Temporarily commented out due to TypeScript errors
+  Dispatch,
   Report,
   Spare,
   ProductionDashboard,
@@ -143,6 +148,7 @@ export const registerModels = () => {
     'Role',
     'Visitor',
     'Vehicle',
+    'GatePass',
     'SecurityLog',
     'Warehouse',
     'Invoice',
@@ -152,7 +158,7 @@ export const registerModels = () => {
     'BoilerMonitoring',
     'ElectricityMonitoring',
     'Hospitality',
-    // 'Dispatch', // Temporarily commented out due to TypeScript errors
+    'Dispatch',
     'Report',
     'Spare',
     'ProductionDashboard',

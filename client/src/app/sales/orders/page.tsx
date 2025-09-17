@@ -44,11 +44,23 @@ import {
   Package,
   UserCheck,
   FileText,
-  Truck
+  Truck,
+  ArrowUpDown,
+  ArrowUp,
+  ArrowDown,
+  X,
+  CheckCircle,
+  AlertTriangle,
+  Clock3,
+  CheckSquare,
+  XCircle,
+  SortAsc,
+  SortDesc
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import clsx from 'clsx'
 import SalesOrderModal from '@/components/modals/SalesOrderModal'
+import { DispatchCreateModal } from '@/components/dispatch/DispatchCreateModal'
 import { useRouter } from 'next/navigation'
 
 export default function SalesOrdersPage() {
@@ -59,7 +71,22 @@ export default function SalesOrdersPage() {
   const [currentPage, setCurrentPage] = useState(1)
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [showEditModal, setShowEditModal] = useState(false)
+  const [showDispatchModal, setShowDispatchModal] = useState(false)
   const [selectedOrder, setSelectedOrder] = useState<any>(null)
+  const [selectedOrderForDispatch, setSelectedOrderForDispatch] = useState<any>(null)
+  
+  // Enhanced filtering and sorting
+  const [sortField, setSortField] = useState('createdAt')
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc')
+  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false)
+  const [filters, setFilters] = useState({
+    status: 'all',
+    paymentStatus: 'all',
+    dateRange: 'all',
+    amountRange: 'all',
+    customer: ''
+  })
+  const [searchField, setSearchField] = useState('all') // all, orderNumber, customerName, customerCode
 
   // RTK Query hooks
   const {
@@ -83,6 +110,73 @@ export default function SalesOrdersPage() {
   // Extract data
   const orders = ordersData?.data?.orders || []
   const pagination = ordersData?.data?.pagination
+
+  // Calculate stats
+  const calculateStats = () => {
+    const totalOrders = orders.length
+    const totalAmount = orders.reduce((sum: number, order: any) => sum + (order.orderSummary?.finalAmount || 0), 0)
+    const pendingOrders = orders.filter((order: any) => order.status === 'pending').length
+    const confirmedOrders = orders.filter((order: any) => order.status === 'confirmed').length
+    const dispatchedOrders = orders.filter((order: any) => order.status === 'dispatched').length
+    const completedOrders = orders.filter((order: any) => order.status === 'completed').length
+    const cancelledOrders = orders.filter((order: any) => order.status === 'cancelled').length
+    
+    const paidOrders = orders.filter((order: any) => order.payment?.paymentStatus === 'paid').length
+    const pendingPayment = orders.filter((order: any) => order.payment?.paymentStatus === 'pending').length
+    const overdueOrders = orders.filter((order: any) => order.payment?.paymentStatus === 'overdue').length
+    
+    const averageOrderValue = totalOrders > 0 ? totalAmount / totalOrders : 0
+    
+    return {
+      totalOrders,
+      totalAmount,
+      pendingOrders,
+      confirmedOrders,
+      dispatchedOrders,
+      completedOrders,
+      cancelledOrders,
+      paidOrders,
+      pendingPayment,
+      overdueOrders,
+      averageOrderValue
+    }
+  }
+
+  const stats = calculateStats()
+
+  // Enhanced filtering and sorting functions
+  const handleSort = (field: string) => {
+    if (sortField === field) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc')
+    } else {
+      setSortField(field)
+      setSortDirection('desc')
+    }
+  }
+
+  const handleFilterChange = (filterType: string, value: string) => {
+    setFilters(prev => ({
+      ...prev,
+      [filterType]: value
+    }))
+  }
+
+  const clearFilters = () => {
+    setFilters({
+      status: 'all',
+      paymentStatus: 'all',
+      dateRange: 'all',
+      amountRange: 'all',
+      customer: ''
+    })
+    setSearchTerm('')
+    setSearchField('all')
+  }
+
+  const getSortIcon = (field: string) => {
+    if (sortField !== field) return <ArrowUpDown className="h-4 w-4" />
+    return sortDirection === 'asc' ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" />
+  }
 
   // Handler functions
   const handleQuickStatusUpdate = async (orderId: string, newStatus: string) => {
@@ -154,24 +248,26 @@ export default function SalesOrdersPage() {
   }
 
   const handleCreateDispatch = (order: any) => {
-    // Navigate to dispatch page with query parameters
-                    const params = new URLSearchParams({
-                  customerOrderId: order._id,
-                  companyId: order.companyId || '',
-                  customerId: order.customerId || '',
-                  customerName: order.customerName || '',
-                  customerCode: order.customerCode || '',
-                  orderNumber: order.orderNumber || '',
-                  orderAmount: order.orderSummary?.finalAmount?.toString() || '0'
-                })
-    
-    // Navigate to dispatch page with query parameters
-    router.push(`/operations/dispatch/enhanced?${params.toString()}`)
+    // Set the selected order for dispatch and open modal
+    setSelectedOrderForDispatch(order)
+    setShowDispatchModal(true)
   }
 
   const handleRefresh = () => {
     refetchOrders()
     toast.success('Orders refreshed!')
+  }
+
+  const handleDispatchSuccess = (dispatch: any) => {
+    setShowDispatchModal(false)
+    setSelectedOrderForDispatch(null)
+    refetchOrders() // Refresh orders to update status
+    toast.success(`Dispatch ${dispatch.dispatchNumber} created and sales order updated successfully!`)
+  }
+
+  const handleDispatchClose = () => {
+    setShowDispatchModal(false)
+    setSelectedOrderForDispatch(null)
   }
 
   const formatCurrency = (amount: number) => {
@@ -266,9 +362,151 @@ export default function SalesOrdersPage() {
         />
 
         <div className="space-y-6">
-          {/* Filters and Search */}
+          {/* Stats Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {/* Total Orders */}
+            <Card className="bg-gradient-to-r from-blue-50 to-blue-100 border-blue-200">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-blue-600">Total Orders</p>
+                    <p className="text-2xl font-bold text-blue-900">{stats.totalOrders}</p>
+                  </div>
+                  <div className="p-3 bg-blue-200 rounded-full">
+                    <ShoppingBag className="h-6 w-6 text-blue-600" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Total Amount */}
+            <Card className="bg-gradient-to-r from-green-50 to-green-100 border-green-200">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-green-600">Total Amount</p>
+                    <p className="text-2xl font-bold text-green-900">₹{formatNumber(stats.totalAmount)}</p>
+                  </div>
+                  <div className="p-3 bg-green-200 rounded-full">
+                    <DollarSign className="h-6 w-6 text-green-600" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Average Order Value */}
+            <Card className="bg-gradient-to-r from-purple-50 to-purple-100 border-purple-200">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-purple-600">Avg Order Value</p>
+                    <p className="text-2xl font-bold text-purple-900">₹{formatNumber(stats.averageOrderValue)}</p>
+                  </div>
+                  <div className="p-3 bg-purple-200 rounded-full">
+                    <BarChart3 className="h-6 w-6 text-purple-600" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Pending Orders */}
+            <Card className="bg-gradient-to-r from-yellow-50 to-yellow-100 border-yellow-200">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-yellow-600">Pending Orders</p>
+                    <p className="text-2xl font-bold text-yellow-900">{stats.pendingOrders}</p>
+                  </div>
+                  <div className="p-3 bg-yellow-200 rounded-full">
+                    <Clock3 className="h-6 w-6 text-yellow-600" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Detailed Stats Row */}
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+            {/* Order Status Breakdown */}
+            <Card className="bg-white border-gray-200">
+              <CardContent className="p-4">
+                <div className="text-center">
+                  <div className="flex items-center justify-center mb-2">
+                    <CheckCircle className="h-5 w-5 text-green-600 mr-1" />
+                    <span className="text-sm font-medium text-gray-600">Completed</span>
+                  </div>
+                  <p className="text-xl font-bold text-gray-900">{stats.completedOrders}</p>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-white border-gray-200">
+              <CardContent className="p-4">
+                <div className="text-center">
+                  <div className="flex items-center justify-center mb-2">
+                    <CheckSquare className="h-5 w-5 text-blue-600 mr-1" />
+                    <span className="text-sm font-medium text-gray-600">Confirmed</span>
+                  </div>
+                  <p className="text-xl font-bold text-gray-900">{stats.confirmedOrders}</p>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-white border-gray-200">
+              <CardContent className="p-4">
+                <div className="text-center">
+                  <div className="flex items-center justify-center mb-2">
+                    <Truck className="h-5 w-5 text-indigo-600 mr-1" />
+                    <span className="text-sm font-medium text-gray-600">Dispatched</span>
+                  </div>
+                  <p className="text-xl font-bold text-gray-900">{stats.dispatchedOrders}</p>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-white border-gray-200">
+              <CardContent className="p-4">
+                <div className="text-center">
+                  <div className="flex items-center justify-center mb-2">
+                    <XCircle className="h-5 w-5 text-red-600 mr-1" />
+                    <span className="text-sm font-medium text-gray-600">Cancelled</span>
+                  </div>
+                  <p className="text-xl font-bold text-gray-900">{stats.cancelledOrders}</p>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Payment Status */}
+            <Card className="bg-white border-gray-200">
+              <CardContent className="p-4">
+                <div className="text-center">
+                  <div className="flex items-center justify-center mb-2">
+                    <CheckCircle className="h-5 w-5 text-green-600 mr-1" />
+                    <span className="text-sm font-medium text-gray-600">Paid</span>
+                  </div>
+                  <p className="text-xl font-bold text-gray-900">{stats.paidOrders}</p>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-white border-gray-200">
+              <CardContent className="p-4">
+                <div className="text-center">
+                  <div className="flex items-center justify-center mb-2">
+                    <AlertTriangle className="h-5 w-5 text-red-600 mr-1" />
+                    <span className="text-sm font-medium text-gray-600">Overdue</span>
+                  </div>
+                  <p className="text-xl font-bold text-gray-900">{stats.overdueOrders}</p>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Enhanced Filters and Search */}
           <Card>
             <CardContent className="p-6">
+              <div className="space-y-4">
+                {/* Search Section */}
               <div className="flex flex-col sm:flex-row gap-4">
                 <div className="flex-1">
                   <div className="relative">
@@ -283,17 +521,109 @@ export default function SalesOrdersPage() {
                 </div>
                 <div className="flex gap-2">
                   <select
-                    value={selectedFilter}
-                    onChange={(e) => setSelectedFilter(e.target.value)}
+                      value={searchField}
+                      onChange={(e) => setSearchField(e.target.value)}
                     className="px-3 py-2 border border-gray-300 rounded-md text-sm"
+                    >
+                      <option value="all">All Fields</option>
+                      <option value="orderNumber">Order Number</option>
+                      <option value="customerName">Customer Name</option>
+                      <option value="customerCode">Customer Code</option>
+                    </select>
+                    <Button
+                      onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
+                      variant="outline"
+                      size="sm"
+                      className="flex items-center gap-2"
+                    >
+                      <Filter className="h-4 w-4" />
+                      Advanced Filters
+                    </Button>
+                    <Button
+                      onClick={clearFilters}
+                      variant="outline"
+                      size="sm"
+                      className="flex items-center gap-2"
+                    >
+                      <X className="h-4 w-4" />
+                      Clear
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Advanced Filters */}
+                {showAdvancedFilters && (
+                  <div className="border-t pt-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                      {/* Status Filter */}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Order Status</label>
+                        <select
+                          value={filters.status}
+                          onChange={(e) => handleFilterChange('status', e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
                   >
                     <option value="all">All Status</option>
                     <option value="pending">Pending</option>
-                    <option value="processing">Processing</option>
+                          <option value="confirmed">Confirmed</option>
+                          <option value="dispatched">Dispatched</option>
                     <option value="completed">Completed</option>
                     <option value="cancelled">Cancelled</option>
                   </select>
                 </div>
+
+                      {/* Payment Status Filter */}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Payment Status</label>
+                        <select
+                          value={filters.paymentStatus}
+                          onChange={(e) => handleFilterChange('paymentStatus', e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+                        >
+                          <option value="all">All Payment</option>
+                          <option value="paid">Paid</option>
+                          <option value="pending">Pending</option>
+                          <option value="overdue">Overdue</option>
+                          <option value="partial">Partial</option>
+                        </select>
+                      </div>
+
+                      {/* Date Range Filter */}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Date Range</label>
+                        <select
+                          value={filters.dateRange}
+                          onChange={(e) => handleFilterChange('dateRange', e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+                        >
+                          <option value="all">All Time</option>
+                          <option value="today">Today</option>
+                          <option value="week">This Week</option>
+                          <option value="month">This Month</option>
+                          <option value="quarter">This Quarter</option>
+                          <option value="year">This Year</option>
+                        </select>
+                      </div>
+
+                      {/* Amount Range Filter */}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Amount Range</label>
+                        <select
+                          value={filters.amountRange}
+                          onChange={(e) => handleFilterChange('amountRange', e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+                        >
+                          <option value="all">All Amounts</option>
+                          <option value="0-1000">₹0 - ₹1,000</option>
+                          <option value="1000-5000">₹1,000 - ₹5,000</option>
+                          <option value="5000-10000">₹5,000 - ₹10,000</option>
+                          <option value="10000-50000">₹10,000 - ₹50,000</option>
+                          <option value="50000+">₹50,000+</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -311,23 +641,59 @@ export default function SalesOrdersPage() {
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50">
                     <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th 
+                        className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                        onClick={() => handleSort('orderNumber')}
+                      >
+                        <div className="flex items-center gap-2">
                         Order ID
+                          {getSortIcon('orderNumber')}
+                        </div>
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th 
+                        className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                        onClick={() => handleSort('customerName')}
+                      >
+                        <div className="flex items-center gap-2">
                         Customer
+                          {getSortIcon('customerName')}
+                        </div>
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th 
+                        className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                        onClick={() => handleSort('status')}
+                      >
+                        <div className="flex items-center gap-2">
                         Status
+                          {getSortIcon('status')}
+                        </div>
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th 
+                        className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                        onClick={() => handleSort('paymentStatus')}
+                      >
+                        <div className="flex items-center gap-2">
                         Payment
+                          {getSortIcon('paymentStatus')}
+                        </div>
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th 
+                        className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                        onClick={() => handleSort('amount')}
+                      >
+                        <div className="flex items-center gap-2">
                         Amount
+                          {getSortIcon('amount')}
+                        </div>
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Date
+                      <th 
+                        className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                        onClick={() => handleSort('createdAt')}
+                      >
+                        <div className="flex items-center gap-2">
+                          Date
+                          {getSortIcon('createdAt')}
+                        </div>
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Quick Actions
@@ -340,7 +706,12 @@ export default function SalesOrdersPage() {
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="flex items-center gap-2">
                             <div>
-                              <div className="text-sm font-medium text-gray-900">#{order.orderNumber}</div>
+                              <button
+                                onClick={() => router.push(`/sales/orders/${order._id}`)}
+                                className="text-sm font-medium text-blue-600 hover:text-blue-800 hover:underline"
+                              >
+                                #{order.orderNumber}
+                              </button>
                               <div className="text-sm text-gray-500">{order._id}</div>
                             </div>
                             {(order.status === 'pending' || order.status === 'confirmed') && (
@@ -438,7 +809,13 @@ export default function SalesOrdersPage() {
                             </Button>
                             
                             {/* View Details */}
-                            <Button variant="ghost" size="sm" title="View Details">
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              onClick={() => router.push(`/sales/orders/${order._id}`)}
+                              className="text-gray-600 hover:text-gray-700 hover:bg-gray-50"
+                              title="View Details"
+                            >
                               <Eye className="h-3 w-3" />
                             </Button>
                             
@@ -492,64 +869,63 @@ export default function SalesOrdersPage() {
             </Card>
           )}
 
-          {/* Quick Stats */}
-          <ResponsiveGrid cols={{ default: 1, sm: 2, lg: 4 }} gap="md">
-            <Card>
-              <CardContent className="p-6">
+          {/* Filter Summary */}
+          {(searchTerm || filters.status !== 'all' || filters.paymentStatus !== 'all' || filters.dateRange !== 'all' || filters.amountRange !== 'all') && (
+            <Card className="bg-blue-50 border-blue-200">
+              <CardContent className="p-4">
                 <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-600">Total Orders</p>
-                    <p className="text-2xl font-bold text-gray-900">
-                      {formatNumber(pagination?.total || 0)}
-                    </p>
+                  <div className="flex items-center gap-4">
+                    <span className="text-sm font-medium text-blue-800">Active Filters:</span>
+                    <div className="flex flex-wrap gap-2">
+                      {searchTerm && (
+                        <span className="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">
+                          Search: "{searchTerm}"
+                          <button onClick={() => setSearchTerm('')} className="ml-1 hover:text-blue-600">
+                            <X className="h-3 w-3" />
+                          </button>
+                        </span>
+                      )}
+                      {filters.status !== 'all' && (
+                        <span className="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">
+                          Status: {filters.status}
+                          <button onClick={() => handleFilterChange('status', 'all')} className="ml-1 hover:text-blue-600">
+                            <X className="h-3 w-3" />
+                          </button>
+                        </span>
+                      )}
+                      {filters.paymentStatus !== 'all' && (
+                        <span className="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">
+                          Payment: {filters.paymentStatus}
+                          <button onClick={() => handleFilterChange('paymentStatus', 'all')} className="ml-1 hover:text-blue-600">
+                            <X className="h-3 w-3" />
+                          </button>
+                        </span>
+                      )}
+                      {filters.dateRange !== 'all' && (
+                        <span className="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">
+                          Date: {filters.dateRange}
+                          <button onClick={() => handleFilterChange('dateRange', 'all')} className="ml-1 hover:text-blue-600">
+                            <X className="h-3 w-3" />
+                          </button>
+                        </span>
+                      )}
+                      {filters.amountRange !== 'all' && (
+                        <span className="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">
+                          Amount: {filters.amountRange}
+                          <button onClick={() => handleFilterChange('amountRange', 'all')} className="ml-1 hover:text-blue-600">
+                            <X className="h-3 w-3" />
+                          </button>
+                        </span>
+                      )}
+                </div>
                   </div>
-                  <FileText className="h-8 w-8 text-blue-600" />
+                  <Button onClick={clearFilters} variant="outline" size="sm" className="text-blue-600 border-blue-300 hover:bg-blue-100">
+                    Clear All
+                  </Button>
                 </div>
               </CardContent>
             </Card>
-
-            <Card>
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-600">Pending Orders</p>
-                    <p className="text-2xl font-bold text-yellow-600">
-                      {formatNumber(orders.filter((o: any) => o.status === 'pending').length)}
-                    </p>
-                  </div>
-                  <Clock className="h-8 w-8 text-yellow-600" />
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-600">Completed Orders</p>
-                    <p className="text-2xl font-bold text-green-600">
-                      {formatNumber(orders.filter((o: any) => o.status === 'completed').length)}
-                    </p>
-                  </div>
-                  <Target className="h-8 w-8 text-green-600" />
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-600">Total Revenue</p>
-                    <p className="text-2xl font-bold text-gray-900">
-                      {formatCurrency(orders.reduce((sum: number, o: any) => sum + o.orderSummary.finalAmount, 0))}
-                    </p>
-                  </div>
-                  <DollarSign className="h-8 w-8 text-green-600" />
-                </div>
-              </CardContent>
-            </Card>
-          </ResponsiveGrid>
+          )}
         </div>
 
         {/* Modals */}
@@ -569,6 +945,29 @@ export default function SalesOrdersPage() {
           order={selectedOrder}
           mode="edit"
           onSuccess={handleUpdateOrder}
+        />
+
+        {/* Dispatch Create Modal */}
+        <DispatchCreateModal
+          isOpen={showDispatchModal}
+          onClose={handleDispatchClose}
+          onSuccess={handleDispatchSuccess}
+          userCompanyId={user?.companyAccess?.[0]?.companyId}
+          user={user}
+          prefilledData={selectedOrderForDispatch ? {
+            customerOrderId: selectedOrderForDispatch._id,
+            companyId: selectedOrderForDispatch.companyId || user?.companyAccess?.[0]?.companyId,
+            customerId: selectedOrderForDispatch.customerId,
+            customerName: selectedOrderForDispatch.customerName,
+            customerCode: selectedOrderForDispatch.customerCode,
+            orderNumber: selectedOrderForDispatch.orderNumber,
+            orderAmount: selectedOrderForDispatch.orderSummary?.finalAmount || 0,
+            // Pre-fill additional fields that might be useful
+            dispatchDate: new Date().toISOString().split('T')[0],
+            status: 'pending',
+            priority: 'normal',
+            dispatchType: 'delivery'
+          } : undefined}
         />
       </ResponsiveGrid>
     </AppLayout>

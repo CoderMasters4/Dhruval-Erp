@@ -181,7 +181,7 @@ export class PurchaseController extends BaseController<IPurchaseOrder> {
 
       const order = await this.purchaseService.createPurchaseOrder(
         { ...orderData, companyId: targetCompanyId },
-        user.id,
+        user.userId || user.id, // Use userId if available, fallback to id
       );
       this.sendSuccess(res, order, 'Purchase order created successfully', 201);
     } catch (error) {

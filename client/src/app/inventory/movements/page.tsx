@@ -40,7 +40,7 @@ import { StockMovementDetails } from '@/components/inventory/StockMovementDetail
 interface StockMovement {
   _id: string
   movementNumber: string
-  movementType: 'inward' | 'outward' | 'transfer' | 'adjustment'
+  movementType: 'inward' | 'outward' | 'transfer' | 'adjustment' | 'adjustment_note'
   itemName: string
   companyItemCode?: string
   itemCode?: string
@@ -191,7 +191,7 @@ export default function InventoryMovementsPage() {
   }
 
   const getQuantityColor = (type: string, quantity: number) => {
-    if (type === 'adjustment') {
+    if (type === 'adjustment' || type === 'adjustment_note') {
       return quantity > 0 ? 'text-green-600' : 'text-red-600'
     }
     switch (type) {
@@ -424,7 +424,7 @@ export default function InventoryMovementsPage() {
                   <option value="inward">Inward</option>
                   <option value="outward">Outward</option>
                   <option value="transfer">Transfer</option>
-                  <option value="adjustment">Adjustment</option>
+                  <option value="adjustment_note">Adjustment</option>
                 </select>
               </div>
 

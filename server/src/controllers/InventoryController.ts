@@ -86,12 +86,17 @@ export class InventoryController extends BaseController<IInventoryItem> {
       // Get company ID from user or query parameter (for super admin)
       let companyId = req.user?.companyId;
       
-      // For super admin, allow company ID from query parameter
-      if (req.user?.isSuperAdmin && req.query.companyId) {
-        companyId = req.query.companyId as any;
+      // For super admin, allow company ID from query parameter or fetch all
+      if (req.user?.isSuperAdmin) {
+        if (req.query.companyId) {
+          companyId = req.query.companyId as any;
+        } else {
+          // Super admin without specific company - fetch all inventory items
+          companyId = null;
+        }
       }
       
-      if (!companyId) {
+      if (!companyId && !req.user?.isSuperAdmin) {
         this.sendError(res, new Error('Company ID is required'), 'Company ID is required', 400);
         return;
       }
@@ -100,9 +105,16 @@ export class InventoryController extends BaseController<IInventoryItem> {
       const { page = 1, limit = 10, search, category, lowStock } = req.query;
 
       // Build optimized filter
-      let filter = QueryOptimizer.createCompanyFilter(companyId.toString(), {
+      let filter: any = {
         'status.isActive': true
-      });
+      };
+      
+      // Add company filter only if companyId is provided
+      if (companyId) {
+        filter = QueryOptimizer.createCompanyFilter(companyId.toString(), {
+          'status.isActive': true
+        });
+      }
 
       // Add search filter
       if (search && typeof search === 'string') {

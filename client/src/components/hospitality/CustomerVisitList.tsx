@@ -1,11 +1,12 @@
 import React, { useState } from 'react'
-import { 
-  Eye, 
-  Edit, 
-  Trash2, 
-  Clock, 
-  User, 
-  Phone, 
+import { useRouter } from 'next/navigation'
+import {
+  Eye,
+  Edit,
+  Trash2,
+  Clock,
+  User,
+  Phone,
   Users,
   CheckCircle,
   XCircle,
@@ -18,9 +19,9 @@ import {
   AlertTriangle
 } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
-import { 
-  CustomerVisit, 
-  useDeleteCustomerVisitMutation, 
+import {
+  CustomerVisit,
+  useDeleteCustomerVisitMutation,
   useApproveVisitMutation,
   useRejectVisitMutation,
   useMarkAsReimbursedMutation
@@ -50,6 +51,16 @@ export default function CustomerVisitList({
   onPageChange,
   onRefresh
 }: CustomerVisitListProps) {
+  const router = useRouter()
+  
+  // Debug logging
+  console.log('CustomerVisitList received:', {
+    visits,
+    visitsLength: visits?.length,
+    isLoading,
+    totalPages,
+    totalVisits
+  })
   const [editingVisit, setEditingVisit] = useState<CustomerVisit | null>(null)
   const [viewingVisit, setViewingVisit] = useState<CustomerVisit | null>(null)
   const [viewingExpenses, setViewingExpenses] = useState<CustomerVisit | null>(null)
@@ -64,7 +75,7 @@ export default function CustomerVisitList({
   }
 
   const handleView = (visit: CustomerVisit) => {
-    setViewingVisit(visit)
+    router.push(`/operations/hospitality/${visit._id}`)
   }
 
   const handleViewExpenses = (visit: CustomerVisit) => {
@@ -270,7 +281,7 @@ export default function CustomerVisitList({
                       <Users className="w-6 h-6 text-blue-600" />
                     </div>
                   </div>
-                  
+
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center space-x-3 mb-2">
                       <h3 className="text-lg font-semibold text-gray-900">
@@ -281,7 +292,7 @@ export default function CustomerVisitList({
                       {getTravelTypeBadge(visit.travelType)}
                       {visit.reimbursementStatus && getReimbursementBadge(visit.reimbursementStatus)}
                     </div>
-                    
+
                     <div className="flex items-center space-x-4 text-sm text-gray-500 mb-2">
                       <div className="flex items-center">
                         <User className="w-4 h-4 mr-1" />
@@ -296,7 +307,7 @@ export default function CustomerVisitList({
                         {format(new Date(visit.visitDate), 'MMM dd, yyyy')}
                       </div>
                     </div>
-                    
+
                     <div className="flex items-center space-x-4 text-sm">
                       <div className="flex items-center text-green-600">
                         <DollarSign className="w-4 h-4 mr-1" />
@@ -366,7 +377,7 @@ export default function CustomerVisitList({
                   >
                     <Eye className="w-4 h-4" />
                   </Button>
-                  
+
                   <Button
                     onClick={() => handleViewExpenses(visit)}
                     variant="outline"
@@ -376,7 +387,7 @@ export default function CustomerVisitList({
                   >
                     <DollarSign className="w-4 h-4" />
                   </Button>
-                  
+
                   <Button
                     onClick={() => handleEdit(visit)}
                     variant="outline"
@@ -384,7 +395,7 @@ export default function CustomerVisitList({
                   >
                     <Edit className="w-4 h-4" />
                   </Button>
-                  
+
                   {visit.approvalStatus === 'pending' && (
                     <>
                       <Button
@@ -395,7 +406,7 @@ export default function CustomerVisitList({
                       >
                         <CheckCircle className="w-4 h-4" />
                       </Button>
-                      
+
                       <Button
                         onClick={() => handleReject(visit._id)}
                         disabled={isRejecting}
@@ -406,7 +417,7 @@ export default function CustomerVisitList({
                       </Button>
                     </>
                   )}
-                  
+
                   {visit.approvalStatus === 'approved' && (
                     <Button
                       onClick={() => handleReimburse(visit._id)}
@@ -417,7 +428,7 @@ export default function CustomerVisitList({
                       <DollarSign className="w-4 h-4" />
                     </Button>
                   )}
-                  
+
                   <Button
                     onClick={() => handleDelete(visit._id)}
                     disabled={isDeleting}
@@ -440,7 +451,7 @@ export default function CustomerVisitList({
               <div className="text-sm text-gray-700">
                 Showing page {page} of {totalPages}
               </div>
-              
+
               <div className="flex items-center space-x-2">
                 <Button
                   onClick={() => onPageChange(page - 1)}
@@ -451,7 +462,7 @@ export default function CustomerVisitList({
                   <ChevronLeft className="w-4 h-4" />
                   Previous
                 </Button>
-                
+
                 <Button
                   onClick={() => onPageChange(page + 1)}
                   disabled={page >= totalPages}

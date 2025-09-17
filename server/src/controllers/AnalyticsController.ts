@@ -46,10 +46,24 @@ export class AnalyticsController {
       const params = {
         companyId: companyId.toString(),
         timeRange: timeRange as string,
-        departments: departments ? (Array.isArray(departments) ? departments as string[] : [departments as string]) : undefined,
-        metrics: metrics ? (Array.isArray(metrics) ? metrics as string[] : [metrics as string]) : undefined,
-        startDate: startDate ? new Date(startDate as string) : undefined,
-        endDate: endDate ? new Date(endDate as string) : undefined,
+        departments: departments
+          ? (Array.isArray(departments)
+              ? (departments as string[])
+              : [departments.toString()])
+          : undefined,
+        metrics: metrics
+          ? (Array.isArray(metrics)
+              ? (metrics as string[])
+              : [metrics.toString()])
+          : undefined,
+        startDate:
+          typeof startDate === 'string' && startDate.trim() !== ''
+            ? new Date(startDate)
+            : undefined,
+        endDate:
+          typeof endDate === 'string' && endDate.trim() !== ''
+            ? new Date(endDate)
+            : undefined,
       };
 
       const dashboardData = await this.analyticsService.getAnalyticsDashboard(params);
@@ -81,8 +95,8 @@ export class AnalyticsController {
         companyId: companyId.toString(),
         timeRange: timeRange as string,
         comparisonPeriod: comparisonPeriod as string,
-        startDate: startDate ? new Date(startDate as string) : undefined,
-        endDate: endDate ? new Date(endDate as string) : undefined,
+        startDate: startDate && startDate.toString().trim() !== '' ? new Date(startDate as string) : undefined,
+        endDate: endDate && endDate.toString().trim() !== '' ? new Date(endDate as string) : undefined,
       };
 
       const kpiData = await this.analyticsService.getKPIData(params);
@@ -112,7 +126,7 @@ export class AnalyticsController {
 
       const params = {
         companyId: companyId.toString(),
-        date: date ? new Date(date as string) : new Date(),
+        date: typeof date === 'string' && date.trim() !== '' ? new Date(date) : new Date(),
         departments: departments ? (Array.isArray(departments) ? departments as string[] : [departments as string]) : undefined,
         metrics: metrics ? (Array.isArray(metrics) ? metrics as string[] : [metrics as string]) : undefined,
         includeDetails: includeDetails === 'true',
@@ -146,8 +160,8 @@ export class AnalyticsController {
 
       const params = {
         companyId: companyId.toString(),
-        weekStart: weekStart ? new Date(weekStart as string) : undefined,
-        weekEnd: weekEnd ? new Date(weekEnd as string) : undefined,
+        weekStart: typeof weekStart === 'string' && weekStart.trim() !== '' ? new Date(weekStart) : undefined,
+        weekEnd: typeof weekEnd === 'string' && weekEnd.trim() !== '' ? new Date(weekEnd) : undefined,
         departments: departments ? (Array.isArray(departments) ? departments as string[] : [departments as string]) : undefined,
         metrics: metrics ? (Array.isArray(metrics) ? metrics as string[] : [metrics as string]) : undefined,
         includeDetails: includeDetails === 'true',
@@ -220,7 +234,7 @@ export class AnalyticsController {
         return;
       }
 
-      if (!startDate || !endDate) {
+      if (!startDate || !endDate || startDate.toString().trim() === '' || endDate.toString().trim() === '') {
         this.sendError(res, new Error('Start date and end date are required'), 'Date range is required', 400);
         return;
       }
