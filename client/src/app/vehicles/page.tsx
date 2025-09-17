@@ -72,6 +72,17 @@ export default function VehiclesPage() {
   console.log('Vehicles Response:', vehiclesResponse)
   console.log('Processed Vehicles:', vehicles)
   console.log('Total Pages:', totalPages, 'Total Vehicles:', totalVehicles)
+  
+  // Debug individual vehicle status
+  vehicles.forEach((vehicle, index) => {
+    console.log(`Vehicle ${index}:`, {
+      id: vehicle._id,
+      vehicleNumber: vehicle.vehicleNumber,
+      status: vehicle.status,
+      currentStatus: vehicle.currentStatus,
+      timeOut: vehicle.timeOut
+    })
+  })
 
   const handleSearch = (value: string) => {
     setSearchTerm(value)

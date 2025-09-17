@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { Button } from '@/components/ui/Button'
 import { ThemeToggle } from '@/components/ui/ThemeToggle'
+import { Logo } from '@/components/ui/Logo'
 import { useSelector } from 'react-redux'
 import { selectTheme } from '@/lib/features/ui/uiSlice'
 
@@ -16,7 +17,7 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center space-x-4">
-              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">ERP System</h1>
+              <Logo width={40} height={40} showText={true} textSize="lg" />
             </div>
             <div className="flex items-center space-x-4">
               <span className="text-sm text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 px-3 py-1 rounded-full">

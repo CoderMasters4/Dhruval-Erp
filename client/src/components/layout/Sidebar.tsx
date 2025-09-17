@@ -409,48 +409,48 @@ const navigationItems: NavigationItem[] = [
         icon: RotateCcw,
         permission: 'view:Dispatch'
       },
-      {
-        name: 'Packing Management',
-        href: '/operations/dispatch/packing',
-        icon: Package,
-        permission: 'view:Dispatch'
-      }
+      // {
+      //   name: 'Packing Management',
+      //   href: '/operations/dispatch/packing',
+      //   icon: Package,
+      //   permission: 'view:Dispatch'
+      // }
     ]
   },
 
-  // Quality Management
-  {
-    name: 'Quality Management',
-    href: '/quality',
-    icon: AlertTriangle,
-    permission: 'view:QualityCheck',
-    children: [
-      {
-        name: 'Quality Overview',
-        href: '/quality',
-        icon: AlertTriangle,
-        permission: 'view:QualityCheck'
-      },
-      {
-        name: 'Quality Checks',
-        href: '/quality/checks',
-        icon: AlertTriangle,
-        permission: 'view:QualityCheck'
-      },
-      {
-        name: 'Defect Tracking',
-        href: '/quality/defects',
-        icon: FileSearch,
-        permission: 'view:QualityCheck'
-      },
-      {
-        name: 'Quality Reports',
-        href: '/quality/reports',
-        icon: BarChart3,
-        permission: 'view:QualityCheck'
-      }
-    ]
-  },
+  // // Quality Management
+  // {
+  //   name: 'Quality Management',
+  //   href: '/quality',
+  //   icon: AlertTriangle,
+  //   permission: 'view:QualityCheck',
+  //   children: [
+  //     {
+  //       name: 'Quality Overview',
+  //       href: '/quality',
+  //       icon: AlertTriangle,
+  //       permission: 'view:QualityCheck'
+  //     },
+  //     {
+  //       name: 'Quality Checks',
+  //       href: '/quality/checks',
+  //       icon: AlertTriangle,
+  //       permission: 'view:QualityCheck'
+  //     },
+  //     {
+  //       name: 'Defect Tracking',
+  //       href: '/quality/defects',
+  //       icon: FileSearch,
+  //       permission: 'view:QualityCheck'
+  //     },
+  //     {
+  //       name: 'Quality Reports',
+  //       href: '/quality/reports',
+  //       icon: BarChart3,
+  //       permission: 'view:QualityCheck'
+  //     }
+  //   ]
+  // },
 
  
 

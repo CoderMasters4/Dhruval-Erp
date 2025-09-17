@@ -44,9 +44,15 @@ export class VehicleService extends BaseService<ISimpleVehicle> {
    */
   async update(id: string, data: any, updatedBy?: string): Promise<any> {
     try {
+      // Ensure both status and currentStatus are updated when status changes
+      const updateData = { ...data, lastModifiedBy: updatedBy };
+      if (data.status) {
+        updateData.currentStatus = data.status;
+      }
+      
       return await Vehicle.findByIdAndUpdate(
         id,
-        { ...data, lastModifiedBy: updatedBy },
+        updateData,
         { new: true, runValidators: true }
       ).lean();
     } catch (error) {
@@ -324,6 +330,7 @@ export class VehicleService extends BaseService<ISimpleVehicle> {
 
       const updatedVehicle = await this.update(vehicleId, {
         status: 'out',
+        currentStatus: 'out',
         timeOut: new Date()
       }, updatedBy);
 

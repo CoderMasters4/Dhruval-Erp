@@ -49,8 +49,8 @@ export function Logo({
     </div>
   )
 
-  // Use the new logo URL
-  const logoUrl = "https://sin1.contabostorage.com/f2fccc77b60c414fba55836499ec71b1:erp/logo.png"
+  // Use the local logo file
+  const logoUrl = "/logo.png"
 
   return (
     <div className="flex items-center space-x-2">

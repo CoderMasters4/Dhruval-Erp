@@ -148,6 +148,23 @@ VehicleSchema.pre('save', function(next) {
     this.gatePassNumber = `GP${timestamp}`;
   }
 
+  // Sync currentStatus with status
+  if (this.isModified('status')) {
+    this.currentStatus = this.status;
+  }
+
+  next();
+});
+
+// Pre-update middleware for findByIdAndUpdate
+VehicleSchema.pre(['findOneAndUpdate', 'findByIdAndUpdate'], function(next) {
+  const update = this.getUpdate() as any;
+  
+  // Sync currentStatus with status if status is being updated
+  if (update && update.status) {
+    update.currentStatus = update.status;
+  }
+  
   next();
 });
 
@@ -158,6 +175,7 @@ VehicleSchema.methods.isCurrentlyInside = function(): boolean {
 
 VehicleSchema.methods.checkout = function(): void {
   this.status = 'out';
+  this.currentStatus = 'out';
   this.timeOut = new Date();
 };
 

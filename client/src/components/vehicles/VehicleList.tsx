@@ -68,11 +68,21 @@ export default function VehicleList({
 
   const handleCheckout = async (vehicleId: string) => {
     try {
-      await checkoutVehicle({ id: vehicleId }).unwrap()
+      const result = await checkoutVehicle({ id: vehicleId }).unwrap()
+      console.log('Checkout result:', result)
       toast.success('Vehicle checked out successfully')
       onRefresh()
     } catch (error: any) {
-      toast.error(error?.data?.message || 'Failed to checkout vehicle')
+      console.error('Checkout error:', error)
+      const errorMessage = error?.data?.message || error?.message || 'Failed to checkout vehicle'
+      
+      // Handle specific error cases
+      if (errorMessage.includes('already checked out')) {
+        toast.error('This vehicle is already checked out')
+        onRefresh() // Refresh to get updated status
+      } else {
+        toast.error(errorMessage)
+      }
     }
   }
 
@@ -189,7 +199,7 @@ export default function VehicleList({
                       <h3 className="text-lg font-semibold text-gray-900">
                         {vehicle.vehicleNumber}
                       </h3>
-                      {getStatusBadge(vehicle.status || vehicle.currentStatus)}
+                      {getStatusBadge(vehicle.status || vehicle.currentStatus || 'in')}
                       {getPurposeBadge(vehicle.purpose)}
                     </div>
 
@@ -206,6 +216,12 @@ export default function VehicleList({
                         <Clock className="w-4 h-4 mr-1" />
                         {vehicle.timeIn ? formatDistanceToNow(new Date(vehicle.timeIn), { addSuffix: true }) : 'No time recorded'}
                       </div>
+                      {vehicle.timeOut && (
+                        <div className="flex items-center text-orange-600">
+                          <Clock className="w-4 h-4 mr-1" />
+                          Out: {formatDistanceToNow(new Date(vehicle.timeOut), { addSuffix: true })}
+                        </div>
+                      )}
                     </div>
 
                     {vehicle.gatePassNumber && (
@@ -239,15 +255,21 @@ export default function VehicleList({
                     <Edit className="w-4 h-4" />
                   </Button>
 
-                  {vehicle.status === 'in' && (
+                  {(vehicle.status === 'in' || vehicle.currentStatus === 'in') && !vehicle.timeOut && (
                     <Button
                       onClick={() => handleCheckout(vehicle._id)}
                       disabled={isCheckingOut}
                       className="bg-green-600 hover:bg-green-700 text-white"
                       size="sm"
                     >
-                      Check Out
+                      {isCheckingOut ? 'Checking Out...' : 'Check Out'}
                     </Button>
+                  )}
+                  
+                  {(vehicle.status === 'out' || vehicle.currentStatus === 'out' || vehicle.timeOut) && (
+                    <div className="text-sm text-gray-500 px-3 py-1 bg-gray-100 rounded">
+                      Checked Out
+                    </div>
                   )}
 
                   <Button
