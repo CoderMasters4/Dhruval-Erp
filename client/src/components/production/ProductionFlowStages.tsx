@@ -343,11 +343,11 @@ export function ProductionFlowStages({ orders, onStageAction, onRefresh, loading
                           <SelectTrigger>
                             <SelectValue placeholder="Select quality grade" />
                           </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="A">A - Excellent</SelectItem>
-                            <SelectItem value="B">B - Good</SelectItem>
-                            <SelectItem value="C">C - Fair</SelectItem>
-                            <SelectItem value="D">D - Poor</SelectItem>
+                          <SelectContent className="bg-white border border-gray-200 shadow-lg z-50">
+                            <SelectItem value="A" className="bg-white hover:bg-gray-50">A - Excellent</SelectItem>
+                            <SelectItem value="B" className="bg-white hover:bg-gray-50">B - Good</SelectItem>
+                            <SelectItem value="C" className="bg-white hover:bg-gray-50">C - Fair</SelectItem>
+                            <SelectItem value="D" className="bg-white hover:bg-gray-50">D - Poor</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
@@ -443,14 +443,14 @@ export function ProductionFlowStages({ orders, onStageAction, onRefresh, loading
               <SelectTrigger className="w-48">
                 <SelectValue placeholder="Filter by status" />
               </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Status</SelectItem>
-                <SelectItem value="draft">Draft</SelectItem>
-                <SelectItem value="approved">Approved</SelectItem>
-                <SelectItem value="in_progress">In Progress</SelectItem>
-                <SelectItem value="completed">Completed</SelectItem>
-                <SelectItem value="on_hold">On Hold</SelectItem>
-                <SelectItem value="cancelled">Cancelled</SelectItem>
+              <SelectContent className="bg-white border border-gray-200 shadow-lg z-50">
+                <SelectItem value="all" className="bg-white hover:bg-gray-50">All Status</SelectItem>
+                <SelectItem value="draft" className="bg-white hover:bg-gray-50">Draft</SelectItem>
+                <SelectItem value="approved" className="bg-white hover:bg-gray-50">Approved</SelectItem>
+                <SelectItem value="in_progress" className="bg-white hover:bg-gray-50">In Progress</SelectItem>
+                <SelectItem value="completed" className="bg-white hover:bg-gray-50">Completed</SelectItem>
+                <SelectItem value="on_hold" className="bg-white hover:bg-gray-50">On Hold</SelectItem>
+                <SelectItem value="cancelled" className="bg-white hover:bg-gray-50">Cancelled</SelectItem>
               </SelectContent>
             </Select>
           </div>

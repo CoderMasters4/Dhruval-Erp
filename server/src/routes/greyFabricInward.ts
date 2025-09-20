@@ -81,6 +81,30 @@ const validateAnalytics = [
   query('endDate').optional().isISO8601().withMessage('End date must be a valid ISO date')
 ];
 
+const validateAddLot = [
+  param('id').isMongoId().withMessage('Valid GRN ID is required'),
+  body('lotData.lotNumber').notEmpty().withMessage('Lot number is required'),
+  body('lotData.lotQuantity').isFloat({ min: 0 }).withMessage('Lot quantity must be a positive number'),
+  body('lotData.lotUnit').isIn(['meters', 'yards', 'pieces']).withMessage('Lot unit must be meters, yards, or pieces'),
+  body('lotData.qualityGrade').optional().isIn(['A+', 'A', 'B+', 'B', 'C']).withMessage('Quality grade must be A+, A, B+, B, or C'),
+  body('lotData.costPerUnit').optional().isFloat({ min: 0 }).withMessage('Cost per unit must be a positive number'),
+  body('lotData.warehouseId').optional().isMongoId().withMessage('Valid warehouse ID is required'),
+  body('lotData.expiryDate').optional().isISO8601().withMessage('Expiry date must be a valid ISO date')
+];
+
+const validateUpdateLotStatus = [
+  param('id').isMongoId().withMessage('Valid GRN ID is required'),
+  param('lotNumber').notEmpty().withMessage('Lot number is required'),
+  body('status').isIn(['active', 'consumed', 'damaged', 'reserved']).withMessage('Status must be active, consumed, damaged, or reserved'),
+  body('remarks').optional().isString().withMessage('Remarks must be a string')
+];
+
+const validateStockSummary = [
+  query('fabricType').optional().isString().withMessage('Fabric type must be a string'),
+  query('color').optional().isString().withMessage('Color must be a string'),
+  query('gsm').optional().isFloat({ min: 0 }).withMessage('GSM must be a positive number')
+];
+
 // Routes
 router.get('/', validateQuery, async (req, res) => {
   try {
@@ -185,6 +209,68 @@ router.post('/:id/quality-check', validateQualityCheck, async (req, res) => {
     const { GreyFabricInwardController } = await import('../controllers/GreyFabricInwardController');
     const controller = new GreyFabricInwardController();
     await controller.addQualityCheck(req, res);
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error',
+      error: error.message
+    });
+  }
+});
+
+// New Grey Stock Management Routes
+
+// Get stock summary
+router.get('/stock/summary', validateStockSummary, async (req, res) => {
+  try {
+    const { GreyFabricInwardController } = await import('../controllers/GreyFabricInwardController');
+    const controller = new GreyFabricInwardController();
+    await controller.getStockSummary(req, res);
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error',
+      error: error.message
+    });
+  }
+});
+
+// Get lot details for a specific entry
+router.get('/:id/lots', param('id').isMongoId().withMessage('Valid GRN ID is required'), async (req, res) => {
+  try {
+    const { GreyFabricInwardController } = await import('../controllers/GreyFabricInwardController');
+    const controller = new GreyFabricInwardController();
+    await controller.getLotDetails(req, res);
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error',
+      error: error.message
+    });
+  }
+});
+
+// Add new lot to existing entry
+router.post('/:id/lots', validateAddLot, async (req, res) => {
+  try {
+    const { GreyFabricInwardController } = await import('../controllers/GreyFabricInwardController');
+    const controller = new GreyFabricInwardController();
+    await controller.addLot(req, res);
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error',
+      error: error.message
+    });
+  }
+});
+
+// Update lot status
+router.put('/:id/lots/:lotNumber/status', validateUpdateLotStatus, async (req, res) => {
+  try {
+    const { GreyFabricInwardController } = await import('../controllers/GreyFabricInwardController');
+    const controller = new GreyFabricInwardController();
+    await controller.updateLotStatus(req, res);
   } catch (error) {
     res.status(500).json({
       success: false,

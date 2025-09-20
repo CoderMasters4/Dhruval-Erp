@@ -128,11 +128,11 @@ export const InventoryItemForm: React.FC<InventoryItemFormProps> = ({
               <SelectTrigger className="bg-blue-50 border-blue-200 focus:border-blue-500 focus:ring-blue-500">
                 <SelectValue placeholder="Select Category" />
               </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="raw_material">Raw Material</SelectItem>
-                <SelectItem value="finished_goods">Finished Goods</SelectItem>
-                <SelectItem value="consumables">Consumables</SelectItem>
-                <SelectItem value="spare_parts">Spare Parts</SelectItem>
+              <SelectContent className="bg-white border border-gray-200 shadow-lg z-50">
+                <SelectItem value="raw_material" className="bg-white hover:bg-gray-50">Raw Material</SelectItem>
+                <SelectItem value="finished_goods" className="bg-white hover:bg-gray-50">Finished Goods</SelectItem>
+                <SelectItem value="consumables" className="bg-white hover:bg-gray-50">Consumables</SelectItem>
+                <SelectItem value="spare_parts" className="bg-white hover:bg-gray-50">Spare Parts</SelectItem>
               </SelectContent>
             </Select>
             <input type="hidden" name="category" defaultValue={item?.category?.primary || ''} />

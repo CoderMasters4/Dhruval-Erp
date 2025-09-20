@@ -3,12 +3,13 @@ import { baseApi } from './baseApi';
 export interface GreyFabricInward {
   _id: string;
   grnNumber: string;
-  purchaseOrderId: string;
-  purchaseOrderNumber: string;
+  purchaseOrderId?: string;
+  purchaseOrderNumber?: string;
   productionOrderNumber?: string;
   customerName?: string;
   supplierName?: string;
   supplierId?: string;
+  entryType: 'purchase_order' | 'direct_stock_entry' | 'transfer_in' | 'adjustment';
   fabricType: string;
   fabricColor: string;
   fabricWeight: number;
@@ -22,9 +23,44 @@ export interface GreyFabricInward {
   };
   unit: string;
   quality: 'A+' | 'A' | 'B+' | 'B' | 'C' | 'D';
-  status: 'pending' | 'approved' | 'rejected' | 'partially_approved' | 'received';
-  inspectionStatus: 'pending' | 'in_progress' | 'completed';
+  status: 'pending' | 'approved' | 'rejected' | 'partially_approved' | 'received' | 'stock_created';
+  inspectionStatus: 'pending' | 'in_progress' | 'completed' | 'not_required';
   qualityStatus: 'passed' | 'failed' | 'conditional';
+  stockStatus: 'not_created' | 'active' | 'low_stock' | 'out_of_stock' | 'consumed';
+  greyStockLots?: Array<{
+    lotNumber: string;
+    lotQuantity: number;
+    lotUnit: string;
+    lotStatus: 'active' | 'consumed' | 'damaged' | 'reserved';
+    receivedDate: string;
+    expiryDate?: string;
+    qualityGrade: string;
+    storageLocation: {
+      warehouseId: string;
+      warehouseName: string;
+      rackNumber?: string;
+      shelfNumber?: string;
+      binNumber?: string;
+    };
+    costPerUnit: number;
+    totalCost: number;
+    remarks?: string;
+  }>;
+  stockBalance?: {
+    totalMeters: number;
+    totalYards: number;
+    totalPieces: number;
+    availableMeters: number;
+    availableYards: number;
+    availablePieces: number;
+    reservedMeters: number;
+    reservedYards: number;
+    reservedPieces: number;
+    damagedMeters: number;
+    damagedYards: number;
+    damagedPieces: number;
+    lastUpdated: string;
+  };
   receivedAt?: string;
   expectedAt?: string;
   remarks?: string;
@@ -55,8 +91,9 @@ export interface GreyFabricInward {
 }
 
 export interface CreateGreyFabricInwardRequest {
-  purchaseOrderId: string;
+  purchaseOrderId?: string;
   companyId: string;
+  entryType: 'purchase_order' | 'direct_stock_entry' | 'transfer_in' | 'adjustment';
   fabricType: 'cotton' | 'polyester' | 'viscose' | 'blend' | 'other';
   fabricColor: string;
   fabricWeight: number;
@@ -72,6 +109,20 @@ export interface CreateGreyFabricInwardRequest {
     transportationCost: number;
     inspectionCost: number;
   };
+  greyStockLots?: Array<{
+    lotNumber: string;
+    lotQuantity: number;
+    lotUnit: string;
+    qualityGrade: string;
+    costPerUnit: number;
+    warehouseId?: string;
+    warehouseName?: string;
+    rackNumber?: string;
+    shelfNumber?: string;
+    binNumber?: string;
+    expiryDate?: string;
+    remarks?: string;
+  }>;
 }
 
 export interface UpdateGreyFabricInwardRequest {

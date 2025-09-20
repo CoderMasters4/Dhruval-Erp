@@ -1764,14 +1764,14 @@ function StageStatusUpdateForm({ currentStatus, onUpdate }: { currentStatus: str
           <SelectTrigger>
             <SelectValue />
           </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="not_started">Not Started</SelectItem>
-            <SelectItem value="in_progress">In Progress</SelectItem>
-            <SelectItem value="completed">Completed</SelectItem>
-            <SelectItem value="on_hold">On Hold</SelectItem>
-            <SelectItem value="quality_hold">Quality Hold</SelectItem>
-            <SelectItem value="failed">Failed</SelectItem>
-            <SelectItem value="skipped">Skipped</SelectItem>
+          <SelectContent className="bg-white border border-gray-200 shadow-lg z-50">
+            <SelectItem value="not_started" className="bg-white hover:bg-gray-50">Not Started</SelectItem>
+            <SelectItem value="in_progress" className="bg-white hover:bg-gray-50">In Progress</SelectItem>
+            <SelectItem value="completed" className="bg-white hover:bg-gray-50">Completed</SelectItem>
+            <SelectItem value="on_hold" className="bg-white hover:bg-gray-50">On Hold</SelectItem>
+            <SelectItem value="quality_hold" className="bg-white hover:bg-gray-50">Quality Hold</SelectItem>
+            <SelectItem value="failed" className="bg-white hover:bg-gray-50">Failed</SelectItem>
+            <SelectItem value="skipped" className="bg-white hover:bg-gray-50">Skipped</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -1886,12 +1886,12 @@ function MaterialOutputForm({ stage, batchId, onAdd, onRefetch }: any) {
             <SelectTrigger>
               <SelectValue />
             </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="finished_goods">Finished Goods</SelectItem>
-              <SelectItem value="semi_finished">Semi-Finished</SelectItem>
-              <SelectItem value="by_product">By-Product</SelectItem>
-              <SelectItem value="waste">Waste</SelectItem>
-              <SelectItem value="scrap">Scrap</SelectItem>
+            <SelectContent className="bg-white border border-gray-200 shadow-lg z-50">
+              <SelectItem value="finished_goods" className="bg-white hover:bg-gray-50">Finished Goods</SelectItem>
+              <SelectItem value="semi_finished" className="bg-white hover:bg-gray-50">Semi-Finished</SelectItem>
+              <SelectItem value="by_product" className="bg-white hover:bg-gray-50">By-Product</SelectItem>
+              <SelectItem value="waste" className="bg-white hover:bg-gray-50">Waste</SelectItem>
+              <SelectItem value="scrap" className="bg-white hover:bg-gray-50">Scrap</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -2162,10 +2162,10 @@ function QualityCheckForm({ stage, batchId, onAdd, onRefetch, onClose }: any) {
           <SelectTrigger>
             <SelectValue />
           </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="pass">Pass</SelectItem>
-            <SelectItem value="fail">Fail</SelectItem>
-            <SelectItem value="conditional">Conditional</SelectItem>
+          <SelectContent className="bg-white border border-gray-200 shadow-lg z-50">
+            <SelectItem value="pass" className="bg-white hover:bg-gray-50">Pass</SelectItem>
+            <SelectItem value="fail" className="bg-white hover:bg-gray-50">Fail</SelectItem>
+            <SelectItem value="conditional" className="bg-white hover:bg-gray-50">Conditional</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -2383,21 +2383,21 @@ function CostManagementForm({ stage, batchId, onAddCost, onRefetch, onClose }: a
             <SelectTrigger>
               <SelectValue />
             </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="material">Material</SelectItem>
-              <SelectItem value="labor">Labor</SelectItem>
-              <SelectItem value="machine">Machine</SelectItem>
-              <SelectItem value="overhead">Overhead</SelectItem>
-              <SelectItem value="utility">Utility</SelectItem>
-              <SelectItem value="chemical">Chemical</SelectItem>
-              <SelectItem value="dye">Dye</SelectItem>
-              <SelectItem value="auxiliary">Auxiliary</SelectItem>
-              <SelectItem value="packaging">Packaging</SelectItem>
-              <SelectItem value="transport">Transport</SelectItem>
-              <SelectItem value="quality_control">Quality Control</SelectItem>
-              <SelectItem value="waste_disposal">Waste Disposal</SelectItem>
-              <SelectItem value="maintenance">Maintenance</SelectItem>
-              <SelectItem value="other">Other</SelectItem>
+            <SelectContent className="bg-white border border-gray-200 shadow-lg z-50">
+              <SelectItem value="material" className="bg-white hover:bg-gray-50">Material</SelectItem>
+              <SelectItem value="labor" className="bg-white hover:bg-gray-50">Labor</SelectItem>
+              <SelectItem value="machine" className="bg-white hover:bg-gray-50">Machine</SelectItem>
+              <SelectItem value="overhead" className="bg-white hover:bg-gray-50">Overhead</SelectItem>
+              <SelectItem value="utility" className="bg-white hover:bg-gray-50">Utility</SelectItem>
+              <SelectItem value="chemical" className="bg-white hover:bg-gray-50">Chemical</SelectItem>
+              <SelectItem value="dye" className="bg-white hover:bg-gray-50">Dye</SelectItem>
+              <SelectItem value="auxiliary" className="bg-white hover:bg-gray-50">Auxiliary</SelectItem>
+              <SelectItem value="packaging" className="bg-white hover:bg-gray-50">Packaging</SelectItem>
+              <SelectItem value="transport" className="bg-white hover:bg-gray-50">Transport</SelectItem>
+              <SelectItem value="quality_control" className="bg-white hover:bg-gray-50">Quality Control</SelectItem>
+              <SelectItem value="waste_disposal" className="bg-white hover:bg-gray-50">Waste Disposal</SelectItem>
+              <SelectItem value="maintenance" className="bg-white hover:bg-gray-50">Maintenance</SelectItem>
+              <SelectItem value="other" className="bg-white hover:bg-gray-50">Other</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -2408,16 +2408,16 @@ function CostManagementForm({ stage, batchId, onAddCost, onRefetch, onClose }: a
             <SelectTrigger>
               <SelectValue />
             </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="direct_material">Direct Material</SelectItem>
-              <SelectItem value="direct_labor">Direct Labor</SelectItem>
-              <SelectItem value="manufacturing_overhead">Manufacturing Overhead</SelectItem>
-              <SelectItem value="indirect_material">Indirect Material</SelectItem>
-              <SelectItem value="indirect_labor">Indirect Labor</SelectItem>
-              <SelectItem value="variable_overhead">Variable Overhead</SelectItem>
-              <SelectItem value="fixed_overhead">Fixed Overhead</SelectItem>
-              <SelectItem value="quality_cost">Quality Cost</SelectItem>
-              <SelectItem value="waste_cost">Waste Cost</SelectItem>
+            <SelectContent className="bg-white border border-gray-200 shadow-lg z-50">
+              <SelectItem value="direct_material" className="bg-white hover:bg-gray-50">Direct Material</SelectItem>
+              <SelectItem value="direct_labor" className="bg-white hover:bg-gray-50">Direct Labor</SelectItem>
+              <SelectItem value="manufacturing_overhead" className="bg-white hover:bg-gray-50">Manufacturing Overhead</SelectItem>
+              <SelectItem value="indirect_material" className="bg-white hover:bg-gray-50">Indirect Material</SelectItem>
+              <SelectItem value="indirect_labor" className="bg-white hover:bg-gray-50">Indirect Labor</SelectItem>
+              <SelectItem value="variable_overhead" className="bg-white hover:bg-gray-50">Variable Overhead</SelectItem>
+              <SelectItem value="fixed_overhead" className="bg-white hover:bg-gray-50">Fixed Overhead</SelectItem>
+              <SelectItem value="quality_cost" className="bg-white hover:bg-gray-50">Quality Cost</SelectItem>
+              <SelectItem value="waste_cost" className="bg-white hover:bg-gray-50">Waste Cost</SelectItem>
             </SelectContent>
           </Select>
         </div>

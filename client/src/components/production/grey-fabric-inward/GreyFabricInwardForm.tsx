@@ -16,9 +16,10 @@ import {
 } from '@/lib/api/greyFabricInwardApi';
 import { useGetAllCompaniesQuery } from '@/lib/features/companies/companiesApi';
 import { useGetPurchaseOrdersQuery } from '@/lib/api/purchaseOrdersApi';
+import { useGetWarehousesQuery } from '@/lib/api/warehousesApi';
 import { useSelector } from 'react-redux';
 import { selectCurrentUser, selectIsSuperAdmin } from '@/lib/features/auth/authSlice';
-import { X, Save, Package, AlertCircle } from 'lucide-react';
+import { X, Save, Package, AlertCircle, Plus } from 'lucide-react';
 
 interface GreyFabricInwardFormProps {
   grn?: GreyFabricInward | null;
@@ -49,8 +50,28 @@ export function GreyFabricInwardForm({ grn, onClose, onSuccess }: GreyFabricInwa
       fabricCost: 0,
       transportationCost: 0,
       inspectionCost: 0
-    }
+    },
+    entryType: 'direct_stock_entry',
+    greyStockLots: []
   });
+
+  const [showLotSection, setShowLotSection] = useState(false);
+  const [newLot, setNewLot] = useState({
+    lotNumber: '',
+    lotQuantity: 0,
+    lotUnit: 'meters',
+    qualityGrade: 'A',
+    costPerUnit: 0,
+    warehouseId: '',
+    warehouseName: '',
+    rackNumber: '',
+    shelfNumber: '',
+    binNumber: '',
+    expiryDate: '',
+    remarks: ''
+  });
+
+  const [lotCounter, setLotCounter] = useState(1);
 
   const [selectedCompanyId, setSelectedCompanyId] = useState(userCompanyId || '');
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -71,16 +92,44 @@ export function GreyFabricInwardForm({ grn, onClose, onSuccess }: GreyFabricInwa
     skip: !selectedCompanyId
   });
 
+  // Get warehouses for selected company
+  const { data: warehousesData, isLoading: warehousesLoading } = useGetWarehousesQuery({
+    companyId: formData.companyId,
+    page: 1,
+    limit: 100
+  }, {
+    skip: !formData.companyId
+  });
+
+  // Reset lot warehouse selection and counter when company changes
+  useEffect(() => {
+    if (formData.companyId && newLot.warehouseId) {
+      setNewLot(prev => ({
+        ...prev,
+        warehouseId: '',
+        warehouseName: ''
+      }));
+    }
+    // Reset lot counter when company changes
+    setLotCounter(1);
+  }, [formData.companyId]);
+
   const isEdit = !!grn;
   const isLoading = isCreating || isUpdating;
-  const isFormDisabled = !purchaseOrders?.data?.length || !!ordersError || 
-                        formData.purchaseOrderId === 'loading' || formData.purchaseOrderId === 'error' || formData.purchaseOrderId === 'no-data';
+  const isFormDisabled = formData.entryType === 'purchase_order' && (
+    !purchaseOrders?.data?.length || 
+    !!ordersError || 
+    formData.purchaseOrderId === 'loading' || 
+    formData.purchaseOrderId === 'error' || 
+    formData.purchaseOrderId === 'no-data'
+  );
 
   useEffect(() => {
     if (grn) {
       setFormData({
         purchaseOrderId: grn.purchaseOrderId || '',
         companyId: grn.companyId || userCompanyId || '',
+        entryType: grn.entryType || 'direct_stock_entry',
         fabricType: (grn.fabricType as 'cotton' | 'polyester' | 'viscose' | 'blend' | 'other') || 'cotton',
         fabricColor: grn.fabricColor,
         fabricWeight: grn.fabricWeight,
@@ -95,7 +144,8 @@ export function GreyFabricInwardForm({ grn, onClose, onSuccess }: GreyFabricInwa
           fabricCost: grn.costBreakdown?.fabricCost || 0,
           transportationCost: grn.costBreakdown?.transportationCost || 0,
           inspectionCost: grn.costBreakdown?.inspectionCost || 0
-        }
+        },
+        greyStockLots: grn.greyStockLots || []
       });
     }
   }, [grn, userCompanyId]);
@@ -181,8 +231,22 @@ export function GreyFabricInwardForm({ grn, onClose, onSuccess }: GreyFabricInwa
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
 
-    if (!formData.purchaseOrderId || formData.purchaseOrderId === 'loading' || formData.purchaseOrderId === 'error' || formData.purchaseOrderId === 'no-data') {
+    console.log('=== VALIDATION DEBUG ===');
+    console.log('Entry type:', formData.entryType);
+    console.log('Purchase Order ID:', formData.purchaseOrderId);
+    console.log('Company ID:', formData.companyId);
+    console.log('Fabric Type:', formData.fabricType);
+    console.log('Fabric Color:', formData.fabricColor);
+    console.log('Fabric Weight:', formData.fabricWeight);
+    console.log('Fabric Width:', formData.fabricWidth);
+    console.log('Quantity:', formData.quantity);
+    console.log('Unit:', formData.unit);
+    console.log('Quality:', formData.quality);
+
+    // Only require purchase order for purchase order entries
+    if (formData.entryType === 'purchase_order' && (!formData.purchaseOrderId || formData.purchaseOrderId === 'loading' || formData.purchaseOrderId === 'error' || formData.purchaseOrderId === 'no-data')) {
       newErrors.purchaseOrderId = 'Purchase Order is required';
+      console.log('❌ Purchase Order validation failed');
     }
     if (!formData.companyId) {
       newErrors.companyId = 'Company is required';
@@ -198,6 +262,9 @@ export function GreyFabricInwardForm({ grn, onClose, onSuccess }: GreyFabricInwa
     if ((formData.costBreakdown?.transportationCost || 0) < 0) newErrors.transportationCost = 'Transportation Cost cannot be negative';
     if ((formData.costBreakdown?.inspectionCost || 0) < 0) newErrors.inspectionCost = 'Inspection Cost cannot be negative';
 
+    console.log('Validation errors found:', Object.keys(newErrors).length);
+    console.log('Errors:', newErrors);
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -205,17 +272,40 @@ export function GreyFabricInwardForm({ grn, onClose, onSuccess }: GreyFabricInwa
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!validateForm()) return;
-
-    // Check if required data is available
-    if (!purchaseOrders?.data || purchaseOrders.data.length === 0) {
-      alert('No purchase orders available. Please create a purchase order first.');
+    console.log('=== FORM SUBMISSION DEBUG ===');
+    console.log('Form data:', formData);
+    console.log('Entry type:', formData.entryType);
+    console.log('Grey stock lots:', formData.greyStockLots);
+    console.log('Company ID:', formData.companyId);
+    console.log('Purchase Order ID:', formData.purchaseOrderId);
+    
+    const isValid = validateForm();
+    console.log('Form validation result:', isValid);
+    console.log('Current errors:', errors);
+    
+    if (!isValid) {
+      console.log('Form validation failed, stopping submission');
+      alert(`Form validation failed! Please check the following fields:\n${Object.keys(errors).join(', ')}`);
       return;
     }
 
-    // Check if valid IDs are selected (not special values)
-    if (formData.purchaseOrderId === 'loading' || formData.purchaseOrderId === 'error' || formData.purchaseOrderId === 'no-data') {
-      alert('Please select a valid purchase order.');
+    // Check if required data is available (only for purchase order entries)
+    if (formData.entryType === 'purchase_order') {
+      if (!purchaseOrders?.data || purchaseOrders.data.length === 0) {
+        alert('No purchase orders available. Please create a purchase order first.');
+        return;
+      }
+
+      // Check if valid IDs are selected (not special values)
+      if (formData.purchaseOrderId === 'loading' || formData.purchaseOrderId === 'error' || formData.purchaseOrderId === 'no-data') {
+        alert('Please select a valid purchase order.');
+        return;
+      }
+    }
+
+    // For direct stock entry, check if lots are added
+    if (formData.entryType === 'direct_stock_entry' && (!formData.greyStockLots || formData.greyStockLots.length === 0)) {
+      alert('Please add at least one lot for direct stock entry.');
       return;
     }
 
@@ -225,19 +315,27 @@ export function GreyFabricInwardForm({ grn, onClose, onSuccess }: GreyFabricInwa
     try {
       // Debug: Log the data being sent
       console.log('Form data being sent:', formData);
+      console.log('Is Edit:', isEdit);
+      console.log('GRN exists:', !!grn);
       
       if (isEdit && grn) {
+        console.log('Updating GRN with ID:', grn._id);
         await updateGrn({
           id: grn._id,
           data: formData
         }).unwrap();
       } else {
+        console.log('Creating new GRN...');
         // Use actual form data
-        await createGrn(formData).unwrap();
+        const result = await createGrn(formData).unwrap();
+        console.log('GRN created successfully:', result);
       }
+      console.log('GRN operation completed successfully');
       onSuccess();
     } catch (error: any) {
+      console.error('=== API ERROR ===');
       console.error('Error saving GRN:', error);
+      console.error('Error details:', error?.data || error?.message || error);
       
       // Better error handling
       let errorMessage = 'Error saving GRN. Please try again.';
@@ -257,6 +355,7 @@ export function GreyFabricInwardForm({ grn, onClose, onSuccess }: GreyFabricInwa
       }
       
       alert(errorMessage);
+      console.log('Error alert shown to user');
     }
   };
 
@@ -273,6 +372,65 @@ export function GreyFabricInwardForm({ grn, onClose, onSuccess }: GreyFabricInwa
         [field]: ''
       }));
     }
+  };
+
+  // Auto-generate lot number
+  const generateLotNumber = () => {
+    const date = new Date();
+    const year = date.getFullYear().toString().slice(-2);
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const day = date.getDate().toString().padStart(2, '0');
+    const counter = lotCounter.toString().padStart(3, '0');
+    
+    return `LOT-${year}${month}${day}-${counter}`;
+  };
+
+  const addLot = () => {
+    if (!newLot.lotQuantity || !newLot.lotUnit || !newLot.warehouseId) {
+      alert('Please fill all required lot fields (Quantity, Unit, and Warehouse)');
+      return;
+    }
+
+    // Auto-generate lot number
+    const autoGeneratedLotNumber = generateLotNumber();
+
+    const lotData = {
+      ...newLot,
+      lotNumber: autoGeneratedLotNumber,
+      totalCost: newLot.lotQuantity * newLot.costPerUnit,
+      receivedDate: new Date().toISOString().split('T')[0]
+    };
+
+    setFormData(prev => ({
+      ...prev,
+      greyStockLots: [...(prev.greyStockLots || []), lotData]
+    }));
+
+    // Increment lot counter for next lot
+    setLotCounter(prev => prev + 1);
+
+    // Reset form
+    setNewLot({
+      lotNumber: '',
+      lotQuantity: 0,
+      lotUnit: 'meters',
+      qualityGrade: 'A',
+      costPerUnit: 0,
+      warehouseId: '',
+      warehouseName: '',
+      rackNumber: '',
+      shelfNumber: '',
+      binNumber: '',
+      expiryDate: '',
+      remarks: ''
+    });
+  };
+
+  const removeLot = (index: number) => {
+    setFormData(prev => ({
+      ...prev,
+      greyStockLots: (prev.greyStockLots || []).filter((_, i) => i !== index)
+    }));
   };
 
   const handleCostChange = (field: string, value: number) => {
@@ -340,6 +498,27 @@ export function GreyFabricInwardForm({ grn, onClose, onSuccess }: GreyFabricInwa
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Entry Type Selection */}
+                <div>
+                  <Label htmlFor="entryType">Entry Type</Label>
+                  <Select
+                    value={formData.entryType}
+                    onValueChange={(value) => handleInputChange('entryType', value)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select Entry Type" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-white border border-gray-200 shadow-lg z-50">
+                      <SelectItem value="direct_stock_entry" className="bg-white hover:bg-gray-50">Direct Stock Entry</SelectItem>
+                      <SelectItem value="purchase_order" className="bg-white hover:bg-gray-50">Purchase Order</SelectItem>
+                      <SelectItem value="transfer_in" className="bg-white hover:bg-gray-50">Transfer In</SelectItem>
+                      <SelectItem value="adjustment" className="bg-white hover:bg-gray-50">Adjustment</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  {errors.entryType && (
+                    <p className="text-sm text-red-600 mt-1">{errors.entryType}</p>
+                  )}
+                </div>
                 {/* Company Selection - Only for Super Admin */}
                 {isSuperAdmin && (
                   <div>
@@ -348,15 +527,20 @@ export function GreyFabricInwardForm({ grn, onClose, onSuccess }: GreyFabricInwa
                       value={selectedCompanyId}
                       onValueChange={(value) => {
                         setSelectedCompanyId(value);
-                        setFormData(prev => ({ ...prev, companyId: value, purchaseOrderId: '' }));
+                        setFormData(prev => ({ 
+                          ...prev, 
+                          companyId: value, 
+                          purchaseOrderId: '',
+                          greyStockLots: [] // Reset lots when company changes
+                        }));
                       }}
                     >
                       <SelectTrigger>
                         <SelectValue placeholder="Select Company" />
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent className="bg-white border border-gray-200 shadow-lg z-50">
                         {companiesData?.data?.map((company) => (
-                          <SelectItem key={company._id} value={company._id}>
+                          <SelectItem key={company._id} value={company._id} className="bg-white hover:bg-gray-50">
                             {company.companyName}
                           </SelectItem>
                         ))}
@@ -378,19 +562,19 @@ export function GreyFabricInwardForm({ grn, onClose, onSuccess }: GreyFabricInwa
                     <SelectTrigger>
                       <SelectValue placeholder={ordersLoading ? "Loading..." : !selectedCompanyId ? "Select Company First" : "Select Purchase Order"} />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="bg-white border border-gray-200 shadow-lg z-50">
                       {ordersLoading ? (
-                        <SelectItem value="loading" disabled>Loading purchase orders...</SelectItem>
+                        <SelectItem value="loading" disabled className="bg-white hover:bg-gray-50">Loading purchase orders...</SelectItem>
                       ) : ordersError ? (
-                        <SelectItem value="error" disabled>Error loading orders</SelectItem>
+                        <SelectItem value="error" disabled className="bg-white hover:bg-gray-50">Error loading orders</SelectItem>
                       ) : purchaseOrders?.data && purchaseOrders.data.length > 0 ? (
                         purchaseOrders.data.map((order: any) => (
-                          <SelectItem key={order._id} value={order._id}>
+                          <SelectItem key={order._id} value={order._id} className="bg-white hover:bg-gray-50">
                             {order.poNumber} - {order.supplier?.supplierName || 'Unknown Supplier'}
                           </SelectItem>
                         ))
                       ) : (
-                        <SelectItem value="no-data" disabled>No purchase orders found</SelectItem>
+                        <SelectItem value="no-data" disabled className="bg-white hover:bg-gray-50">No purchase orders found</SelectItem>
                       )}
                     </SelectContent>
                   </Select>
@@ -449,9 +633,9 @@ export function GreyFabricInwardForm({ grn, onClose, onSuccess }: GreyFabricInwa
                           <SelectTrigger className="w-48">
                             <SelectValue />
                           </SelectTrigger>
-                          <SelectContent>
+                          <SelectContent className="bg-white border border-gray-200 shadow-lg z-50">
                             {selectedPO.items.map((item: any, index: number) => (
-                              <SelectItem key={index} value={index.toString()}>
+                              <SelectItem key={index} value={index.toString()} className="bg-white hover:bg-gray-50">
                                 {item.itemName} (Qty: {item.quantity} {item.unit})
                               </SelectItem>
                             ))}
@@ -505,12 +689,12 @@ export function GreyFabricInwardForm({ grn, onClose, onSuccess }: GreyFabricInwa
                     <SelectTrigger>
                       <SelectValue placeholder="Select Fabric Type" />
                     </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="cotton">Cotton</SelectItem>
-                      <SelectItem value="polyester">Polyester</SelectItem>
-                      <SelectItem value="viscose">Viscose</SelectItem>
-                      <SelectItem value="blend">Blend</SelectItem>
-                      <SelectItem value="other">Other</SelectItem>
+                    <SelectContent className="bg-white border border-gray-200 shadow-lg z-50">
+                      <SelectItem value="cotton" className="bg-white hover:bg-gray-50">Cotton</SelectItem>
+                      <SelectItem value="polyester" className="bg-white hover:bg-gray-50">Polyester</SelectItem>
+                      <SelectItem value="viscose" className="bg-white hover:bg-gray-50">Viscose</SelectItem>
+                      <SelectItem value="blend" className="bg-white hover:bg-gray-50">Blend</SelectItem>
+                      <SelectItem value="other" className="bg-white hover:bg-gray-50">Other</SelectItem>
                     </SelectContent>
                   </Select>
                   {errors.fabricType && (
@@ -582,10 +766,10 @@ export function GreyFabricInwardForm({ grn, onClose, onSuccess }: GreyFabricInwa
                     <SelectTrigger>
                       <SelectValue placeholder="Select Unit" />
                     </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="meters">Meters</SelectItem>
-                      <SelectItem value="yards">Yards</SelectItem>
-                      <SelectItem value="pieces">Pieces</SelectItem>
+                    <SelectContent className="bg-white border border-gray-200 shadow-lg z-50">
+                      <SelectItem value="meters" className="bg-white hover:bg-gray-50">Meters</SelectItem>
+                      <SelectItem value="yards" className="bg-white hover:bg-gray-50">Yards</SelectItem>
+                      <SelectItem value="pieces" className="bg-white hover:bg-gray-50">Pieces</SelectItem>
                     </SelectContent>
                   </Select>
                   {errors.unit && (
@@ -602,13 +786,13 @@ export function GreyFabricInwardForm({ grn, onClose, onSuccess }: GreyFabricInwa
                     <SelectTrigger>
                       <SelectValue placeholder="Select Quality" />
                     </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="A+">A+</SelectItem>
-                      <SelectItem value="A">A</SelectItem>
-                      <SelectItem value="B+">B+</SelectItem>
-                      <SelectItem value="B">B</SelectItem>
-                      <SelectItem value="C">C</SelectItem>
-                      <SelectItem value="D">D</SelectItem>
+                    <SelectContent className="bg-white border border-gray-200 shadow-lg z-50">
+                      <SelectItem value="A+" className="bg-white hover:bg-gray-50">A+</SelectItem>
+                      <SelectItem value="A" className="bg-white hover:bg-gray-50">A</SelectItem>
+                      <SelectItem value="B+" className="bg-white hover:bg-gray-50">B+</SelectItem>
+                      <SelectItem value="B" className="bg-white hover:bg-gray-50">B</SelectItem>
+                      <SelectItem value="C" className="bg-white hover:bg-gray-50">C</SelectItem>
+                      <SelectItem value="D" className="bg-white hover:bg-gray-50">D</SelectItem>
                     </SelectContent>
                   </Select>
                   {errors.quality && (
@@ -640,11 +824,180 @@ export function GreyFabricInwardForm({ grn, onClose, onSuccess }: GreyFabricInwa
             </CardContent>
           </Card>
 
+          {/* Grey Stock Lots Section */}
+          {formData.entryType === 'direct_stock_entry' && (
+            <Card className="border-0 shadow-lg bg-gradient-to-r from-green-50 to-blue-50">
+              <CardHeader className="pb-4">
+                <CardTitle className="flex items-center justify-between text-lg font-semibold text-gray-800">
+                  <div className="flex items-center gap-2">
+                    <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center text-white text-sm">3</div>
+                    Grey Stock Lots
+                  </div>
+                  <Button
+                    type="button"
+                    onClick={() => setShowLotSection(!showLotSection)}
+                    className="bg-green-600 hover:bg-green-700 text-white"
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    {showLotSection ? 'Hide' : 'Add'} Lots
+                  </Button>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {/* Existing Lots */}
+                {formData.greyStockLots && formData.greyStockLots.length > 0 && (
+                  <div className="space-y-2">
+                    <h4 className="font-medium text-gray-700">Added Lots:</h4>
+                    {(formData.greyStockLots || []).map((lot, index) => (
+                      <div key={index} className="bg-white p-3 rounded-lg border border-gray-200 flex justify-between items-center">
+                        <div className="flex items-center gap-4">
+                          <span className="font-medium text-blue-600">Lot: {lot.lotNumber}</span>
+                          <span className="text-gray-600">{lot.lotQuantity} {lot.lotUnit}</span>
+                          <span className="text-gray-600">Grade: {lot.qualityGrade}</span>
+                          <span className="text-gray-600">Warehouse: {lot.warehouseName}</span>
+                          <span className="text-green-600">₹{(lot.lotQuantity * lot.costPerUnit).toFixed(2)}</span>
+                        </div>
+                        <Button
+                          type="button"
+                          onClick={() => removeLot(index)}
+                          variant="outline"
+                          size="sm"
+                          className="text-red-600 hover:bg-red-50"
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Add Lot Form */}
+                {showLotSection && (
+                  <div className="bg-white p-4 rounded-lg border border-gray-200 space-y-4">
+                    <h4 className="font-medium text-gray-700">Add New Lot</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div>
+                        <Label htmlFor="lotNumber">Lot Number</Label>
+                        <Input
+                          id="lotNumber"
+                          value={generateLotNumber()}
+                          disabled
+                          placeholder="Auto-generated"
+                          className="bg-gray-100 text-gray-600"
+                        />
+                        <p className="text-xs text-gray-500 mt-1">Auto-generated based on date and sequence</p>
+                      </div>
+                      <div>
+                        <Label htmlFor="lotQuantity">Quantity *</Label>
+                        <Input
+                          id="lotQuantity"
+                          type="number"
+                          value={newLot.lotQuantity}
+                          onChange={(e) => setNewLot(prev => ({ ...prev, lotQuantity: Number(e.target.value) }))}
+                          placeholder="Enter quantity"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="lotUnit">Unit</Label>
+                        <Select value={newLot.lotUnit} onValueChange={(value) => setNewLot(prev => ({ ...prev, lotUnit: value }))}>
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent className="bg-white border border-gray-200 shadow-lg z-50">
+                            <SelectItem value="meters" className="bg-white hover:bg-gray-50">Meters</SelectItem>
+                            <SelectItem value="yards" className="bg-white hover:bg-gray-50">Yards</SelectItem>
+                            <SelectItem value="pieces" className="bg-white hover:bg-gray-50">Pieces</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <Label htmlFor="qualityGrade">Quality Grade</Label>
+                        <Select value={newLot.qualityGrade} onValueChange={(value) => setNewLot(prev => ({ ...prev, qualityGrade: value }))}>
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent className="bg-white border border-gray-200 shadow-lg z-50">
+                            <SelectItem value="A+" className="bg-white hover:bg-gray-50">A+</SelectItem>
+                            <SelectItem value="A" className="bg-white hover:bg-gray-50">A</SelectItem>
+                            <SelectItem value="B+" className="bg-white hover:bg-gray-50">B+</SelectItem>
+                            <SelectItem value="B" className="bg-white hover:bg-gray-50">B</SelectItem>
+                            <SelectItem value="C" className="bg-white hover:bg-gray-50">C</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <Label htmlFor="costPerUnit">Cost Per Unit</Label>
+                        <Input
+                          id="costPerUnit"
+                          type="number"
+                          value={newLot.costPerUnit}
+                          onChange={(e) => setNewLot(prev => ({ ...prev, costPerUnit: Number(e.target.value) }))}
+                          placeholder="Enter cost per unit"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="warehouseId">Warehouse *</Label>
+                        <Select 
+                          value={newLot.warehouseId} 
+                          onValueChange={(value) => {
+                            const selectedWarehouse = warehousesData?.data?.find((w: any) => w._id === value);
+                            setNewLot(prev => ({ 
+                              ...prev, 
+                              warehouseId: value,
+                              warehouseName: selectedWarehouse?.warehouseName || ''
+                            }));
+                          }}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder={warehousesLoading ? "Loading..." : "Select Warehouse"} />
+                          </SelectTrigger>
+                          <SelectContent className="bg-white border border-gray-200 shadow-lg z-50">
+                            {warehousesLoading ? (
+                              <SelectItem value="loading" disabled className="bg-white hover:bg-gray-50">Loading warehouses...</SelectItem>
+                            ) : warehousesData?.data && warehousesData.data.length > 0 ? (
+                              warehousesData.data.map((warehouse: any) => (
+                                <SelectItem key={warehouse._id} value={warehouse._id} className="bg-white hover:bg-gray-50">
+                                  {warehouse.warehouseName} - {warehouse.location}
+                                </SelectItem>
+                              ))
+                            ) : (
+                              <SelectItem value="no-data" disabled className="bg-white hover:bg-gray-50">No warehouses found</SelectItem>
+                            )}
+                          </SelectContent>
+                        </Select>
+                        {!formData.companyId && (
+                          <p className="text-xs text-red-500 mt-1">Please select a company first</p>
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex justify-end gap-2">
+                      <Button
+                        type="button"
+                        onClick={() => setShowLotSection(false)}
+                        variant="outline"
+                      >
+                        Cancel
+                      </Button>
+                      <Button
+                        type="button"
+                        onClick={addLot}
+                        className="bg-green-600 hover:bg-green-700 text-white"
+                      >
+                        <Plus className="h-4 w-4 mr-2" />
+                        Add Lot
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
+
           {/* Cost Breakdown */}
           <Card className="border-0 shadow-lg bg-gradient-to-r from-purple-50 to-pink-50">
             <CardHeader className="pb-4">
               <CardTitle className="flex items-center gap-2 text-lg font-semibold text-gray-800">
-                <div className="w-6 h-6 bg-purple-500 rounded-full flex items-center justify-center text-white text-sm">3</div>
+                <div className="w-6 h-6 bg-purple-500 rounded-full flex items-center justify-center text-white text-sm">4</div>
                 Cost Breakdown
               </CardTitle>
             </CardHeader>

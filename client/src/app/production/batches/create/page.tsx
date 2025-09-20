@@ -322,7 +322,7 @@ function CreateBatchPageContent() {
                 </SelectTrigger>
                 <SelectContent className="z-50">
                   {companies.map((company) => (
-                    <SelectItem key={company._id} value={company._id}>
+                    <SelectItem key={company._id} value={company._id} className="bg-white hover:bg-gray-50">
                       {company.companyName} ({company.companyCode})
                     </SelectItem>
                   ))}
@@ -383,8 +383,7 @@ function CreateBatchPageContent() {
                           <SelectItem 
                             key={item._id} 
                             value={item._id} 
-                            className="cursor-pointer hover:bg-blue-50 focus:bg-blue-50 active:bg-blue-100 py-2 px-3"
-                          >
+                            className="bg-white hover:bg-gray-50 cursor-pointer focus:bg-blue-50 active:bg-blue-100 py-2 px-3">
                           <div className="flex flex-col">
                             <span className="font-medium text-gray-900">{item.itemName}</span>
                             <div className="flex items-center space-x-2">
@@ -531,11 +530,11 @@ function CreateBatchPageContent() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent className="z-50">
-                      <SelectItem value="meters">Meters</SelectItem>
-                      <SelectItem value="yards">Yards</SelectItem>
-                      <SelectItem value="pieces">Pieces</SelectItem>
-                      <SelectItem value="kg">Kilograms</SelectItem>
-                      <SelectItem value="lbs">Pounds</SelectItem>
+                      <SelectItem value="meters" className="bg-white hover:bg-gray-50">Meters</SelectItem>
+                      <SelectItem value="yards" className="bg-white hover:bg-gray-50">Yards</SelectItem>
+                      <SelectItem value="pieces" className="bg-white hover:bg-gray-50">Pieces</SelectItem>
+                      <SelectItem value="kg" className="bg-white hover:bg-gray-50">Kilograms</SelectItem>
+                      <SelectItem value="lbs" className="bg-white hover:bg-gray-50">Pounds</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -551,10 +550,10 @@ function CreateBatchPageContent() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent className="z-50">
-                    <SelectItem value="low">Low</SelectItem>
-                    <SelectItem value="medium">Medium</SelectItem>
-                    <SelectItem value="high">High</SelectItem>
-                    <SelectItem value="urgent">Urgent</SelectItem>
+                    <SelectItem value="low" className="bg-white hover:bg-gray-50">Low</SelectItem>
+                    <SelectItem value="medium" className="bg-white hover:bg-gray-50">Medium</SelectItem>
+                    <SelectItem value="high" className="bg-white hover:bg-gray-50">High</SelectItem>
+                    <SelectItem value="urgent" className="bg-white hover:bg-gray-50">Urgent</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

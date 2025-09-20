@@ -150,9 +150,9 @@ export function ItemsSection({ formData, updateFormData }: ItemsSectionProps) {
                       <SelectTrigger>
                         <SelectValue />
                       </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="new">New Item</SelectItem>
-                        <SelectItem value="existing">Existing Item</SelectItem>
+                      <SelectContent className="bg-white border border-gray-200 shadow-lg z-50">
+                        <SelectItem value="new" className="bg-white hover:bg-gray-50">New Item</SelectItem>
+                        <SelectItem value="existing" className="bg-white hover:bg-gray-50">Existing Item</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -218,20 +218,20 @@ export function ItemsSection({ formData, updateFormData }: ItemsSectionProps) {
                         </SelectTrigger>
                         <SelectContent className="z-50">
                           {inventoryLoading ? (
-                            <SelectItem value="" disabled>
+                            <SelectItem value="" disabled className="bg-white hover:bg-gray-50">
                               Loading inventory items...
                             </SelectItem>
                           ) : inventoryError ? (
-                            <SelectItem value="" disabled>
+                            <SelectItem value="" disabled className="bg-white hover:bg-gray-50">
                               Error loading inventory items
                             </SelectItem>
                           ) : inventoryItems.length === 0 ? (
-                            <SelectItem value="" disabled>
+                            <SelectItem value="" disabled className="bg-white hover:bg-gray-50">
                               No inventory items available for this company
                             </SelectItem>
                           ) : (
                             inventoryItems.map((invItem) => (
-                              <SelectItem key={invItem._id} value={invItem._id}>
+                              <SelectItem key={invItem._id} value={invItem._id} className="bg-white hover:bg-gray-50">
                                 {invItem.itemName} ({invItem.itemCode}) - Stock: {invItem.stock?.currentStock || 0} {invItem.stock?.unit || 'pcs'} - ₹{invItem.pricing?.costPrice || 0}
                               </SelectItem>
                             ))
@@ -290,14 +290,14 @@ export function ItemsSection({ formData, updateFormData }: ItemsSectionProps) {
                         <SelectTrigger className="bg-purple-50 border-purple-200 focus:border-purple-500 focus:ring-purple-500 w-full h-10">
                           <SelectValue placeholder="Select category" />
                         </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="raw_material">Raw Material</SelectItem>
-                          <SelectItem value="finished_goods">Finished Goods</SelectItem>
-                          <SelectItem value="consumables">Consumables</SelectItem>
-                          <SelectItem value="services">Services</SelectItem>
-                          <SelectItem value="capital_goods">Capital Goods</SelectItem>
-                          <SelectItem value="maintenance">Maintenance</SelectItem>
-                          <SelectItem value="spare_parts">Spare Parts</SelectItem>
+                        <SelectContent className="bg-white border border-gray-200 shadow-lg z-50">
+                          <SelectItem value="raw_material" className="bg-white hover:bg-gray-50">Raw Material</SelectItem>
+                          <SelectItem value="finished_goods" className="bg-white hover:bg-gray-50">Finished Goods</SelectItem>
+                          <SelectItem value="consumables" className="bg-white hover:bg-gray-50">Consumables</SelectItem>
+                          <SelectItem value="services" className="bg-white hover:bg-gray-50">Services</SelectItem>
+                          <SelectItem value="capital_goods" className="bg-white hover:bg-gray-50">Capital Goods</SelectItem>
+                          <SelectItem value="maintenance" className="bg-white hover:bg-gray-50">Maintenance</SelectItem>
+                          <SelectItem value="spare_parts" className="bg-white hover:bg-gray-50">Spare Parts</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
@@ -340,13 +340,13 @@ export function ItemsSection({ formData, updateFormData }: ItemsSectionProps) {
                       <SelectTrigger>
                         <SelectValue />
                       </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="pcs">Pieces</SelectItem>
-                        <SelectItem value="kg">Kilograms</SelectItem>
-                        <SelectItem value="meters">Meters</SelectItem>
-                        <SelectItem value="liters">Liters</SelectItem>
-                        <SelectItem value="boxes">Boxes</SelectItem>
-                        <SelectItem value="sets">Sets</SelectItem>
+                      <SelectContent className="bg-white border border-gray-200 shadow-lg z-50">
+                        <SelectItem value="pcs" className="bg-white hover:bg-gray-50">Pieces</SelectItem>
+                        <SelectItem value="kg" className="bg-white hover:bg-gray-50">Kilograms</SelectItem>
+                        <SelectItem value="meters" className="bg-white hover:bg-gray-50">Meters</SelectItem>
+                        <SelectItem value="liters" className="bg-white hover:bg-gray-50">Liters</SelectItem>
+                        <SelectItem value="boxes" className="bg-white hover:bg-gray-50">Boxes</SelectItem>
+                        <SelectItem value="sets" className="bg-white hover:bg-gray-50">Sets</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -407,9 +407,9 @@ export function ItemsSection({ formData, updateFormData }: ItemsSectionProps) {
                       <SelectTrigger>
                         <SelectValue />
                       </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="percentage">Percentage (%)</SelectItem>
-                        <SelectItem value="amount">Amount (₹)</SelectItem>
+                      <SelectContent className="bg-white border border-gray-200 shadow-lg z-50">
+                        <SelectItem value="percentage" className="bg-white hover:bg-gray-50">Percentage (%)</SelectItem>
+                        <SelectItem value="amount" className="bg-white hover:bg-gray-50">Amount (₹)</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>

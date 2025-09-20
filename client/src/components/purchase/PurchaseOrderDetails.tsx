@@ -33,9 +33,9 @@ export function PurchaseOrderDetails({ formData, updateFormData, isSuperAdmin, c
                 <SelectTrigger>
                   <SelectValue placeholder="Select a company" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="bg-white border border-gray-200 shadow-lg z-50">
                   {companies.map((company) => (
-                    <SelectItem key={company._id} value={company._id}>
+                    <SelectItem key={company._id} value={company._id} className="bg-white hover:bg-gray-50">
                       {company.companyName} ({company.companyCode})
                     </SelectItem>
                   ))}
@@ -102,14 +102,14 @@ export function PurchaseOrderDetails({ formData, updateFormData, isSuperAdmin, c
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="standard">Standard</SelectItem>
-                  <SelectItem value="blanket">Blanket</SelectItem>
-                  <SelectItem value="contract">Contract</SelectItem>
-                  <SelectItem value="planned">Planned</SelectItem>
-                  <SelectItem value="emergency">Emergency</SelectItem>
-                  <SelectItem value="service">Service</SelectItem>
-                  <SelectItem value="capital">Capital</SelectItem>
+                <SelectContent className="bg-white border border-gray-200 shadow-lg z-50">
+                  <SelectItem value="standard" className="bg-white hover:bg-gray-50">Standard</SelectItem>
+                  <SelectItem value="blanket" className="bg-white hover:bg-gray-50">Blanket</SelectItem>
+                  <SelectItem value="contract" className="bg-white hover:bg-gray-50">Contract</SelectItem>
+                  <SelectItem value="planned" className="bg-white hover:bg-gray-50">Planned</SelectItem>
+                  <SelectItem value="emergency" className="bg-white hover:bg-gray-50">Emergency</SelectItem>
+                  <SelectItem value="service" className="bg-white hover:bg-gray-50">Service</SelectItem>
+                  <SelectItem value="capital" className="bg-white hover:bg-gray-50">Capital</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -120,11 +120,11 @@ export function PurchaseOrderDetails({ formData, updateFormData, isSuperAdmin, c
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="low">Low</SelectItem>
-                  <SelectItem value="medium">Medium</SelectItem>
-                  <SelectItem value="high">High</SelectItem>
-                  <SelectItem value="urgent">Urgent</SelectItem>
+                <SelectContent className="bg-white border border-gray-200 shadow-lg z-50">
+                  <SelectItem value="low" className="bg-white hover:bg-gray-50">Low</SelectItem>
+                  <SelectItem value="medium" className="bg-white hover:bg-gray-50">Medium</SelectItem>
+                  <SelectItem value="high" className="bg-white hover:bg-gray-50">High</SelectItem>
+                  <SelectItem value="urgent" className="bg-white hover:bg-gray-50">Urgent</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -135,13 +135,13 @@ export function PurchaseOrderDetails({ formData, updateFormData, isSuperAdmin, c
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="raw_material">Raw Material</SelectItem>
-                  <SelectItem value="finished_goods">Finished Goods</SelectItem>
-                  <SelectItem value="consumables">Consumables</SelectItem>
-                  <SelectItem value="services">Services</SelectItem>
-                  <SelectItem value="capital_goods">Capital Goods</SelectItem>
-                  <SelectItem value="maintenance">Maintenance</SelectItem>
+                <SelectContent className="bg-white border border-gray-200 shadow-lg z-50">
+                  <SelectItem value="raw_material" className="bg-white hover:bg-gray-50">Raw Material</SelectItem>
+                  <SelectItem value="finished_goods" className="bg-white hover:bg-gray-50">Finished Goods</SelectItem>
+                  <SelectItem value="consumables" className="bg-white hover:bg-gray-50">Consumables</SelectItem>
+                  <SelectItem value="services" className="bg-white hover:bg-gray-50">Services</SelectItem>
+                  <SelectItem value="capital_goods" className="bg-white hover:bg-gray-50">Capital Goods</SelectItem>
+                  <SelectItem value="maintenance" className="bg-white hover:bg-gray-50">Maintenance</SelectItem>
                 </SelectContent>
               </Select>
             </div>

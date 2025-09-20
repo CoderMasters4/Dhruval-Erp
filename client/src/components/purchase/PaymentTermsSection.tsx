@@ -29,12 +29,12 @@ export function PaymentTermsSection({ formData, updateFormData }: PaymentTermsSe
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="net">Net</SelectItem>
-                <SelectItem value="advance">Advance</SelectItem>
-                <SelectItem value="cod">Cash on Delivery</SelectItem>
-                <SelectItem value="credit">Credit</SelectItem>
-                <SelectItem value="milestone">Milestone</SelectItem>
+              <SelectContent className="bg-white border border-gray-200 shadow-lg z-50">
+                <SelectItem value="net" className="bg-white hover:bg-gray-50">Net</SelectItem>
+                <SelectItem value="advance" className="bg-white hover:bg-gray-50">Advance</SelectItem>
+                <SelectItem value="cod" className="bg-white hover:bg-gray-50">Cash on Delivery</SelectItem>
+                <SelectItem value="credit" className="bg-white hover:bg-gray-50">Credit</SelectItem>
+                <SelectItem value="milestone" className="bg-white hover:bg-gray-50">Milestone</SelectItem>
               </SelectContent>
             </Select>
           </div>

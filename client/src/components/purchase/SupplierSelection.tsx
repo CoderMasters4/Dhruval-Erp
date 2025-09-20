@@ -49,9 +49,9 @@ export function SupplierSelection({ formData, updateFormData }: SupplierSelectio
               <SelectTrigger>
                 <SelectValue placeholder="Select a supplier" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="bg-white border border-gray-200 shadow-lg z-50">
                 {suppliers.map((supplier) => (
-                  <SelectItem key={supplier._id || ''} value={supplier._id || ''}>
+                  <SelectItem key={supplier._id || ''} value={supplier._id || ''} className="bg-white hover:bg-gray-50">
                     {supplier.supplierName} ({supplier.supplierCode})
                   </SelectItem>
                 ))}

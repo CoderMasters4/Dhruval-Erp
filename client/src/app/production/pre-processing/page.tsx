@@ -1347,7 +1347,7 @@ export default function PreProcessingPage() {
                           </SelectTrigger>
                           <SelectContent className="z-[10001]">
                             {field.options?.map((option) => (
-                              <SelectItem key={option.value} value={option.value}>
+                              <SelectItem key={option.value} value={option.value} className="bg-white hover:bg-gray-50">
                                 {option.label}
                               </SelectItem>
                             ))}
@@ -1519,7 +1519,7 @@ export default function PreProcessingPage() {
                                   return itemsToShow
                                     .filter(item => !selectedFabricMaterials.find(f => f.item._id === item._id))
                                     .map((item) => (
-                                      <SelectItem key={item._id} value={item._id}>
+                                      <SelectItem key={item._id} value={item._id} className="bg-white hover:bg-gray-50">
                                         {item.itemName} - {item.quality?.qualityGrade || 'N/A'} ({item.specifications?.gsm || 'N/A'} GSM)
                                         {fabricItems.length === 0 && ' (All Items)'}
                                       </SelectItem>
@@ -1564,9 +1564,9 @@ export default function PreProcessingPage() {
                                 <SelectValue placeholder="Select unit" />
                               </SelectTrigger>
                               <SelectContent className="z-[10001]">
-                                <SelectItem value="meters">Meters</SelectItem>
-                                <SelectItem value="yards">Yards</SelectItem>
-                                <SelectItem value="pieces">Pieces</SelectItem>
+                                <SelectItem value="meters" className="bg-white hover:bg-gray-50">Meters</SelectItem>
+                                <SelectItem value="yards" className="bg-white hover:bg-gray-50">Yards</SelectItem>
+                                <SelectItem value="pieces" className="bg-white hover:bg-gray-50">Pieces</SelectItem>
                               </SelectContent>
                             </Select>
                           </div>
@@ -1618,9 +1618,9 @@ export default function PreProcessingPage() {
                                           <SelectValue />
                                         </SelectTrigger>
                                         <SelectContent className="z-[10001]">
-                                          <SelectItem value="meters">Meters</SelectItem>
-                                          <SelectItem value="yards">Yards</SelectItem>
-                                          <SelectItem value="pieces">Pieces</SelectItem>
+                                          <SelectItem value="meters" className="bg-white hover:bg-gray-50">Meters</SelectItem>
+                                          <SelectItem value="yards" className="bg-white hover:bg-gray-50">Yards</SelectItem>
+                                          <SelectItem value="pieces" className="bg-white hover:bg-gray-50">Pieces</SelectItem>
                                         </SelectContent>
                                       </Select>
                                     </div>
@@ -2298,26 +2298,26 @@ export default function PreProcessingPage() {
                     <SelectTrigger className="mt-1 border-gray-300 focus:border-blue-500 focus:ring-blue-500">
                       <SelectValue placeholder="Select stage" />
                     </SelectTrigger>
-                    <SelectContent className="z-[100001]">
-                      <SelectItem value="3" className="hover:bg-blue-50">
+                    <SelectContent className="bg-white border border-gray-200 shadow-lg z-[100001]">
+                      <SelectItem value="3" className="bg-white hover:bg-gray-50">
                         <div className="flex flex-col">
                           <span className="font-medium">Stage 3 - Dyeing/Printing</span>
                           <span className="text-xs text-gray-500">Batch Process</span>
                         </div>
                       </SelectItem>
-                      <SelectItem value="4" className="hover:bg-blue-50">
+                      <SelectItem value="4"  className="bg-white hover:bg-gray-50 hover:bg-blue-50">
                         <div className="flex flex-col">
                           <span className="font-medium">Stage 4 - Finishing Process</span>
                           <span className="text-xs text-gray-500">Stenter, Coating</span>
                         </div>
                       </SelectItem>
-                      <SelectItem value="5" className="hover:bg-blue-50">
+                      <SelectItem value="5"  className="bg-white hover:bg-gray-50 hover:bg-blue-50">
                         <div className="flex flex-col">
                           <span className="font-medium">Stage 5 - Quality Control</span>
                           <span className="text-xs text-gray-500">Pass/Hold/Reject</span>
                         </div>
                       </SelectItem>
-                      <SelectItem value="6" className="hover:bg-blue-50">
+                      <SelectItem value="6"  className="bg-white hover:bg-gray-50 hover:bg-blue-50">
                         <div className="flex flex-col">
                           <span className="font-medium">Stage 6 - Cutting & Packing</span>
                           <span className="text-xs text-gray-500">Labels & Cartons</span>

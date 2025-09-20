@@ -3,15 +3,18 @@ import { AuditableDocument } from '../types/models';
 
 export interface IGreyFabricInward extends AuditableDocument {
   grnNumber: string;
-  purchaseOrderId: mongoose.Types.ObjectId; // Required - GRN must be linked to PO
-  purchaseOrderNumber: string; // Required - for easy reference
-  // Supplier info will be populated from Purchase Order
-  supplierId?: mongoose.Types.ObjectId; // Optional - populated from PO
-  supplierName?: string; // Optional - populated from PO
+  purchaseOrderId?: mongoose.Types.ObjectId; // Optional - can be direct stock entry
+  purchaseOrderNumber?: string; // Optional - for direct stock entry
+  // Supplier info will be populated from Purchase Order or entered directly
+  supplierId?: mongoose.Types.ObjectId;
+  supplierName?: string;
   
   // Inventory Integration
   inventoryItemId?: mongoose.Types.ObjectId;
   inventoryItemCode?: string;
+  
+  // Entry Type - New field to distinguish between PO-based and direct stock entry
+  entryType: 'purchase_order' | 'direct_stock_entry' | 'transfer_in' | 'adjustment';
   
   // Fabric Details
   fabricDetails: {
@@ -33,6 +36,44 @@ export interface IGreyFabricInward extends AuditableDocument {
     rejectedQuantity: number;
     shortQuantity: number;
     excessQuantity: number;
+  };
+  
+  // Grey Stock Lot-wise Tracking - New section
+  greyStockLots: Array<{
+    lotNumber: string;
+    lotQuantity: number; // meters/yards in this lot
+    lotUnit: 'meters' | 'yards' | 'pieces';
+    lotStatus: 'active' | 'consumed' | 'damaged' | 'reserved';
+    receivedDate: Date;
+    expiryDate?: Date;
+    qualityGrade: 'A+' | 'A' | 'B+' | 'B' | 'C';
+    storageLocation: {
+      warehouseId: mongoose.Types.ObjectId;
+      warehouseName: string;
+      rackNumber?: string;
+      shelfNumber?: string;
+      binNumber?: string;
+    };
+    costPerUnit: number;
+    totalCost: number;
+    remarks?: string;
+  }>;
+  
+  // Stock Balance Tracking - New section
+  stockBalance: {
+    totalMeters: number; // Auto-calculated from lots
+    totalYards: number; // Auto-calculated from lots
+    totalPieces: number; // Auto-calculated from lots
+    availableMeters: number; // Total minus reserved/damaged
+    availableYards: number;
+    availablePieces: number;
+    reservedMeters: number;
+    reservedYards: number;
+    reservedPieces: number;
+    damagedMeters: number;
+    damagedYards: number;
+    damagedPieces: number;
+    lastUpdated: Date;
   };
   
   // Quality Parameters
@@ -71,9 +112,12 @@ export interface IGreyFabricInward extends AuditableDocument {
   };
   
   // Status and Approval
-  status: 'pending' | 'approved' | 'rejected' | 'partially_approved';
-  inspectionStatus: 'pending' | 'in_progress' | 'completed';
+  status: 'pending' | 'approved' | 'rejected' | 'partially_approved' | 'stock_created';
+  inspectionStatus: 'pending' | 'in_progress' | 'completed' | 'not_required';
   qualityStatus: 'passed' | 'failed' | 'conditional';
+  
+  // Stock Status - New field
+  stockStatus: 'not_created' | 'active' | 'low_stock' | 'out_of_stock' | 'consumed';
   
   // Location and Storage
   storageLocation: {
@@ -125,21 +169,19 @@ const GreyFabricInwardSchema = new Schema<IGreyFabricInward>({
   purchaseOrderId: { 
     type: Schema.Types.ObjectId, 
     ref: 'PurchaseOrder',
-    required: true,
     index: true
   },
   purchaseOrderNumber: { 
     type: String, 
-    required: true,
     index: true
   },
   
-  // Supplier info populated from Purchase Order
+  // Supplier info populated from Purchase Order or entered directly
   supplierId: { 
     type: Schema.Types.ObjectId, 
-    ref: 'Supplier' // Optional - populated from PO
+    ref: 'Supplier'
   },
-  supplierName: { type: String }, // Optional - populated from PO
+  supplierName: { type: String },
   
   // Inventory Integration
   inventoryItemId: { 
@@ -147,6 +189,14 @@ const GreyFabricInwardSchema = new Schema<IGreyFabricInward>({
     ref: 'InventoryItem' 
   },
   inventoryItemCode: { type: String },
+  
+  // Entry Type
+  entryType: { 
+    type: String, 
+    enum: ['purchase_order', 'direct_stock_entry', 'transfer_in', 'adjustment'], 
+    required: true,
+    default: 'direct_stock_entry'
+  },
   
   // Fabric Details
   fabricDetails: {
@@ -180,6 +230,60 @@ const GreyFabricInwardSchema = new Schema<IGreyFabricInward>({
     rejectedQuantity: { type: Number, default: 0, min: 0 },
     shortQuantity: { type: Number, default: 0, min: 0 },
     excessQuantity: { type: Number, default: 0, min: 0 }
+  },
+  
+  // Grey Stock Lot-wise Tracking
+  greyStockLots: [{
+    lotNumber: { type: String, required: true },
+    lotQuantity: { type: Number, required: true, min: 0 },
+    lotUnit: { 
+      type: String, 
+      enum: ['meters', 'yards', 'pieces'], 
+      required: true 
+    },
+    lotStatus: { 
+      type: String, 
+      enum: ['active', 'consumed', 'damaged', 'reserved'], 
+      default: 'active' 
+    },
+    receivedDate: { type: Date, required: true, default: Date.now },
+    expiryDate: { type: Date },
+    qualityGrade: { 
+      type: String, 
+      enum: ['A+', 'A', 'B+', 'B', 'C'], 
+      required: true 
+    },
+    storageLocation: {
+      warehouseId: { 
+        type: Schema.Types.ObjectId, 
+        ref: 'Warehouse', 
+        required: true 
+      },
+      warehouseName: { type: String, required: true },
+      rackNumber: { type: String },
+      shelfNumber: { type: String },
+      binNumber: { type: String }
+    },
+    costPerUnit: { type: Number, required: true, min: 0 },
+    totalCost: { type: Number, required: true, min: 0 },
+    remarks: { type: String }
+  }],
+  
+  // Stock Balance Tracking
+  stockBalance: {
+    totalMeters: { type: Number, default: 0, min: 0 },
+    totalYards: { type: Number, default: 0, min: 0 },
+    totalPieces: { type: Number, default: 0, min: 0 },
+    availableMeters: { type: Number, default: 0, min: 0 },
+    availableYards: { type: Number, default: 0, min: 0 },
+    availablePieces: { type: Number, default: 0, min: 0 },
+    reservedMeters: { type: Number, default: 0, min: 0 },
+    reservedYards: { type: Number, default: 0, min: 0 },
+    reservedPieces: { type: Number, default: 0, min: 0 },
+    damagedMeters: { type: Number, default: 0, min: 0 },
+    damagedYards: { type: Number, default: 0, min: 0 },
+    damagedPieces: { type: Number, default: 0, min: 0 },
+    lastUpdated: { type: Date, default: Date.now }
   },
   
   // Quality Parameters
@@ -232,18 +336,25 @@ const GreyFabricInwardSchema = new Schema<IGreyFabricInward>({
   // Status and Approval
   status: { 
     type: String, 
-    enum: ['pending', 'approved', 'rejected', 'partially_approved'], 
+    enum: ['pending', 'approved', 'rejected', 'partially_approved', 'stock_created'], 
     default: 'pending'
   },
   inspectionStatus: { 
     type: String, 
-    enum: ['pending', 'in_progress', 'completed'], 
+    enum: ['pending', 'in_progress', 'completed', 'not_required'], 
     default: 'pending' 
   },
   qualityStatus: { 
     type: String, 
     enum: ['passed', 'failed', 'conditional'], 
     default: 'passed' 
+  },
+  
+  // Stock Status
+  stockStatus: { 
+    type: String, 
+    enum: ['not_created', 'active', 'low_stock', 'out_of_stock', 'consumed'], 
+    default: 'not_created' 
   },
   
   // Location and Storage
@@ -273,21 +384,18 @@ const GreyFabricInwardSchema = new Schema<IGreyFabricInward>({
   inspection: {
     inspectedBy: { 
       type: Schema.Types.ObjectId, 
-      ref: 'User', 
-      required: true 
+      ref: 'User'
     },
-    inspectedByName: { type: String, required: true },
-    inspectionDate: { type: Date, required: true },
+    inspectedByName: { type: String },
+    inspectionDate: { type: Date },
     inspectionNotes: { type: String },
     qualityGrade: { 
       type: String, 
-      enum: ['A', 'B', 'C', 'D'], 
-      required: true 
+      enum: ['A', 'B', 'C', 'D']
     },
     recommendedAction: { 
       type: String, 
-      enum: ['accept', 'reject', 'conditional_accept', 'return_to_supplier'], 
-      required: true 
+      enum: ['accept', 'reject', 'conditional_accept', 'return_to_supplier']
     }
   },
   
@@ -310,7 +418,121 @@ const GreyFabricInwardSchema = new Schema<IGreyFabricInward>({
 // grnNumber index is automatically created by unique: true
 GreyFabricInwardSchema.index({ supplierId: 1 });
 GreyFabricInwardSchema.index({ status: 1 });
-GreyFabricInwardSchema.index({ inspectionDate: 1 });
+GreyFabricInwardSchema.index({ stockStatus: 1 });
+GreyFabricInwardSchema.index({ entryType: 1 });
+GreyFabricInwardSchema.index({ 'fabricDetails.fabricType': 1 });
+GreyFabricInwardSchema.index({ 'fabricDetails.color': 1 });
+GreyFabricInwardSchema.index({ 'fabricDetails.gsm': 1 });
 GreyFabricInwardSchema.index({ createdAt: -1 });
+
+// Pre-save middleware to calculate stock balances
+GreyFabricInwardSchema.pre('save', function(next) {
+  if (this.greyStockLots && this.greyStockLots.length > 0) {
+    let totalMeters = 0;
+    let totalYards = 0;
+    let totalPieces = 0;
+    let availableMeters = 0;
+    let availableYards = 0;
+    let availablePieces = 0;
+    let reservedMeters = 0;
+    let reservedYards = 0;
+    let reservedPieces = 0;
+    let damagedMeters = 0;
+    let damagedYards = 0;
+    let damagedPieces = 0;
+
+    this.greyStockLots.forEach(lot => {
+      switch (lot.lotUnit) {
+        case 'meters':
+          totalMeters += lot.lotQuantity;
+          if (lot.lotStatus === 'active') availableMeters += lot.lotQuantity;
+          else if (lot.lotStatus === 'reserved') reservedMeters += lot.lotQuantity;
+          else if (lot.lotStatus === 'damaged') damagedMeters += lot.lotQuantity;
+          break;
+        case 'yards':
+          totalYards += lot.lotQuantity;
+          if (lot.lotStatus === 'active') availableYards += lot.lotQuantity;
+          else if (lot.lotStatus === 'reserved') reservedYards += lot.lotQuantity;
+          else if (lot.lotStatus === 'damaged') damagedYards += lot.lotQuantity;
+          break;
+        case 'pieces':
+          totalPieces += lot.lotQuantity;
+          if (lot.lotStatus === 'active') availablePieces += lot.lotQuantity;
+          else if (lot.lotStatus === 'reserved') reservedPieces += lot.lotQuantity;
+          else if (lot.lotStatus === 'damaged') damagedPieces += lot.lotQuantity;
+          break;
+      }
+    });
+
+    this.stockBalance = {
+      totalMeters,
+      totalYards,
+      totalPieces,
+      availableMeters,
+      availableYards,
+      availablePieces,
+      reservedMeters,
+      reservedYards,
+      reservedPieces,
+      damagedMeters,
+      damagedYards,
+      damagedPieces,
+      lastUpdated: new Date()
+    };
+
+    // Update stock status
+    if (totalMeters === 0 && totalYards === 0 && totalPieces === 0) {
+      this.stockStatus = 'out_of_stock';
+    } else if (availableMeters < 100 && availableYards < 100 && availablePieces < 10) {
+      this.stockStatus = 'low_stock';
+    } else if (availableMeters === 0 && availableYards === 0 && availablePieces === 0) {
+      this.stockStatus = 'consumed';
+    } else {
+      this.stockStatus = 'active';
+    }
+  }
+  next();
+});
+
+// Instance methods
+GreyFabricInwardSchema.methods.addLot = function(lotData: any) {
+  this.greyStockLots.push(lotData);
+  return this.save();
+};
+
+GreyFabricInwardSchema.methods.updateLotStatus = function(lotNumber: string, status: string) {
+  const lot = this.greyStockLots.find((l: any) => l.lotNumber === lotNumber);
+  if (lot) {
+    lot.lotStatus = status;
+    return this.save();
+  }
+  throw new Error('Lot not found');
+};
+
+GreyFabricInwardSchema.methods.getAvailableStock = function() {
+  return {
+    meters: this.stockBalance.availableMeters,
+    yards: this.stockBalance.availableYards,
+    pieces: this.stockBalance.availablePieces
+  };
+};
+
+GreyFabricInwardSchema.methods.reserveStock = function(quantity: number, unit: string) {
+  // Implementation for reserving stock
+  // This would be used when fabric is allocated for production
+};
+
+// Static methods
+GreyFabricInwardSchema.statics.findByFabricType = function(fabricType: string) {
+  return this.find({ 'fabricDetails.fabricType': fabricType });
+};
+
+GreyFabricInwardSchema.statics.findActiveStock = function() {
+  return this.find({ stockStatus: 'active' });
+};
+
+GreyFabricInwardSchema.statics.findLowStock = function() {
+  return this.find({ stockStatus: 'low_stock' });
+};
 
 export default mongoose.model<IGreyFabricInward>('GreyFabricInward', GreyFabricInwardSchema);

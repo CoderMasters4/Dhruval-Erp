@@ -260,8 +260,8 @@ function PurchasePageContent() {
                   <SelectTrigger className="w-48">
                     <SelectValue placeholder="Select Company" />
                   </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Companies</SelectItem>
+                  <SelectContent className="bg-white border border-gray-200 shadow-lg z-50">
+                    <SelectItem value="all" className="bg-white hover:bg-gray-50">All Companies</SelectItem>
                     {/* Add company options here */}
                   </SelectContent>
                 </Select>
@@ -482,11 +482,11 @@ function PurchasePageContent() {
                 <SelectTrigger className="w-32">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="week">Week</SelectItem>
-                  <SelectItem value="month">Month</SelectItem>
-                  <SelectItem value="quarter">Quarter</SelectItem>
-                  <SelectItem value="year">Year</SelectItem>
+                <SelectContent className="bg-white border border-gray-200 shadow-lg z-50">
+                  <SelectItem value="week" className="bg-white hover:bg-gray-50">Week</SelectItem>
+                  <SelectItem value="month" className="bg-white hover:bg-gray-50">Month</SelectItem>
+                  <SelectItem value="quarter" className="bg-white hover:bg-gray-50">Quarter</SelectItem>
+                  <SelectItem value="year" className="bg-white hover:bg-gray-50">Year</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -613,13 +613,13 @@ function PurchasePageContent() {
                 <SelectTrigger className="w-40">
                   <SelectValue placeholder="Category" />
                 </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Categories</SelectItem>
-                  <SelectItem value="chemicals">Chemicals</SelectItem>
-                  <SelectItem value="grey_fabric">Grey Fabric</SelectItem>
-                  <SelectItem value="colors">Colors</SelectItem>
-                  <SelectItem value="packing_material">Packing Material</SelectItem>
-                  <SelectItem value="other">Other</SelectItem>
+                <SelectContent className="bg-white border border-gray-200 shadow-lg z-50">
+                  <SelectItem value="all" className="bg-white hover:bg-gray-50">All Categories</SelectItem>
+                  <SelectItem value="chemicals" className="bg-white hover:bg-gray-50">Chemicals</SelectItem>
+                  <SelectItem value="grey_fabric" className="bg-white hover:bg-gray-50">Grey Fabric</SelectItem>
+                  <SelectItem value="colors" className="bg-white hover:bg-gray-50">Colors</SelectItem>
+                  <SelectItem value="packing_material" className="bg-white hover:bg-gray-50">Packing Material</SelectItem>
+                  <SelectItem value="other" className="bg-white hover:bg-gray-50">Other</SelectItem>
                 </SelectContent>
               </Select>
               <Button onClick={() => handleExport('csv')} variant="outline" size="sm">

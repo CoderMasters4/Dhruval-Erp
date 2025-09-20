@@ -534,13 +534,13 @@ function BatchesPageContent() {
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="createdAt">Created Date</SelectItem>
-                    <SelectItem value="batchNumber">Batch Number</SelectItem>
-                    <SelectItem value="status">Status</SelectItem>
-                    <SelectItem value="priority">Priority</SelectItem>
-                    <SelectItem value="progress">Progress</SelectItem>
-                    <SelectItem value="plannedQuantity">Quantity</SelectItem>
+                  <SelectContent className="bg-white border border-gray-200 shadow-lg z-50">
+                    <SelectItem value="createdAt" className="bg-white hover:bg-gray-50">Created Date</SelectItem>
+                    <SelectItem value="batchNumber" className="bg-white hover:bg-gray-50">Batch Number</SelectItem>
+                    <SelectItem value="status" className="bg-white hover:bg-gray-50">Status</SelectItem>
+                    <SelectItem value="priority" className="bg-white hover:bg-gray-50">Priority</SelectItem>
+                    <SelectItem value="progress" className="bg-white hover:bg-gray-50">Progress</SelectItem>
+                    <SelectItem value="plannedQuantity" className="bg-white hover:bg-gray-50">Quantity</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -551,9 +551,9 @@ function BatchesPageContent() {
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="desc">Descending</SelectItem>
-                    <SelectItem value="asc">Ascending</SelectItem>
+                  <SelectContent className="bg-white border border-gray-200 shadow-lg z-50">
+                    <SelectItem value="desc" className="bg-white hover:bg-gray-50">Descending</SelectItem>
+                    <SelectItem value="asc" className="bg-white hover:bg-gray-50">Ascending</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -564,11 +564,11 @@ function BatchesPageContent() {
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="6">6 items</SelectItem>
-                    <SelectItem value="12">12 items</SelectItem>
-                    <SelectItem value="24">24 items</SelectItem>
-                    <SelectItem value="48">48 items</SelectItem>
+                  <SelectContent className="bg-white border border-gray-200 shadow-lg z-50">
+                    <SelectItem value="6" className="bg-white hover:bg-gray-50">6 items</SelectItem>
+                    <SelectItem value="12" className="bg-white hover:bg-gray-50">12 items</SelectItem>
+                    <SelectItem value="24" className="bg-white hover:bg-gray-50">24 items</SelectItem>
+                    <SelectItem value="48" className="bg-white hover:bg-gray-50">48 items</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -583,8 +583,8 @@ function BatchesPageContent() {
                     <SelectTrigger>
                       <SelectValue placeholder="All companies" />
                     </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All companies</SelectItem>
+                    <SelectContent className="bg-white border border-gray-200 shadow-lg z-50">
+                      <SelectItem value="all" className="bg-white hover:bg-gray-50">All companies</SelectItem>
                       {batches.reduce((unique: string[], batch) => {
                         const companyName = (batch as any).companyId?.companyName;
                         if (companyName && !unique.includes(companyName)) {
@@ -592,7 +592,7 @@ function BatchesPageContent() {
                         }
                         return unique;
                       }, []).map((companyName) => (
-                        <SelectItem key={companyName} value={companyName}>
+                        <SelectItem key={companyName} value={companyName} className="bg-white hover:bg-gray-50">
                           {companyName}
                         </SelectItem>
                       ))}
@@ -607,15 +607,15 @@ function BatchesPageContent() {
                 <SelectTrigger>
                   <SelectValue placeholder="All statuses" />
                 </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All statuses</SelectItem>
-                  <SelectItem value="pending">Pending</SelectItem>
-                  <SelectItem value="in_progress">In Progress</SelectItem>
-                  <SelectItem value="completed">Completed</SelectItem>
-                  <SelectItem value="on_hold">On Hold</SelectItem>
-                  <SelectItem value="quality_hold">Quality Hold</SelectItem>
-                  <SelectItem value="cancelled">Cancelled</SelectItem>
-                  <SelectItem value="rework">Rework</SelectItem>
+                <SelectContent className="bg-white border border-gray-200 shadow-lg z-50">
+                  <SelectItem value="all" className="bg-white hover:bg-gray-50">All statuses</SelectItem>
+                  <SelectItem value="pending" className="bg-white hover:bg-gray-50">Pending</SelectItem>
+                  <SelectItem value="in_progress" className="bg-white hover:bg-gray-50">In Progress</SelectItem>
+                  <SelectItem value="completed" className="bg-white hover:bg-gray-50">Completed</SelectItem>
+                  <SelectItem value="on_hold" className="bg-white hover:bg-gray-50">On Hold</SelectItem>
+                  <SelectItem value="quality_hold" className="bg-white hover:bg-gray-50">Quality Hold</SelectItem>
+                  <SelectItem value="cancelled" className="bg-white hover:bg-gray-50">Cancelled</SelectItem>
+                  <SelectItem value="rework" className="bg-white hover:bg-gray-50">Rework</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -626,12 +626,12 @@ function BatchesPageContent() {
                 <SelectTrigger>
                   <SelectValue placeholder="All priorities" />
                 </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All priorities</SelectItem>
-                  <SelectItem value="low">Low</SelectItem>
-                  <SelectItem value="medium">Medium</SelectItem>
-                  <SelectItem value="high">High</SelectItem>
-                  <SelectItem value="urgent">Urgent</SelectItem>
+                <SelectContent className="bg-white border border-gray-200 shadow-lg z-50">
+                  <SelectItem value="all" className="bg-white hover:bg-gray-50">All priorities</SelectItem>
+                  <SelectItem value="low" className="bg-white hover:bg-gray-50">Low</SelectItem>
+                  <SelectItem value="medium" className="bg-white hover:bg-gray-50">Medium</SelectItem>
+                  <SelectItem value="high" className="bg-white hover:bg-gray-50">High</SelectItem>
+                  <SelectItem value="urgent" className="bg-white hover:bg-gray-50">Urgent</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -1516,14 +1516,14 @@ function StageStatusUpdateForm({ batchId, stageNumber, currentStatus, onUpdate }
           <SelectTrigger>
             <SelectValue />
           </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="not_started">Not Started</SelectItem>
-            <SelectItem value="in_progress">In Progress</SelectItem>
-            <SelectItem value="completed">Completed</SelectItem>
-            <SelectItem value="on_hold">On Hold</SelectItem>
-            <SelectItem value="quality_hold">Quality Hold</SelectItem>
-            <SelectItem value="failed">Failed</SelectItem>
-            <SelectItem value="skipped">Skipped</SelectItem>
+          <SelectContent className="bg-white border border-gray-200 shadow-lg z-50">
+            <SelectItem value="not_started" className="bg-white hover:bg-gray-50">Not Started</SelectItem>
+            <SelectItem value="in_progress" className="bg-white hover:bg-gray-50">In Progress</SelectItem>
+            <SelectItem value="completed" className="bg-white hover:bg-gray-50">Completed</SelectItem>
+            <SelectItem value="on_hold" className="bg-white hover:bg-gray-50">On Hold</SelectItem>
+            <SelectItem value="quality_hold" className="bg-white hover:bg-gray-50">Quality Hold</SelectItem>
+            <SelectItem value="failed" className="bg-white hover:bg-gray-50">Failed</SelectItem>
+            <SelectItem value="skipped" className="bg-white hover:bg-gray-50">Skipped</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -1630,12 +1630,12 @@ function MaterialOutputForm({ batchId, stageNumber, onAdd }: {
           <SelectTrigger className="w-full">
             <SelectValue placeholder="Select category" />
           </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="finished_goods">Finished Goods</SelectItem>
-            <SelectItem value="semi_finished">Semi-Finished</SelectItem>
-            <SelectItem value="by_product">By-Product</SelectItem>
-            <SelectItem value="waste">Waste</SelectItem>
-            <SelectItem value="scrap">Scrap</SelectItem>
+          <SelectContent className="bg-white border border-gray-200 shadow-lg z-50">
+            <SelectItem value="finished_goods" className="bg-white hover:bg-gray-50">Finished Goods</SelectItem>
+            <SelectItem value="semi_finished" className="bg-white hover:bg-gray-50">Semi-Finished</SelectItem>
+            <SelectItem value="by_product" className="bg-white hover:bg-gray-50">By-Product</SelectItem>
+            <SelectItem value="waste" className="bg-white hover:bg-gray-50">Waste</SelectItem>
+            <SelectItem value="scrap" className="bg-white hover:bg-gray-50">Scrap</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -1662,25 +1662,25 @@ function MaterialOutputForm({ batchId, stageNumber, onAdd }: {
             <SelectTrigger className="w-full">
               <SelectValue placeholder="Select unit" />
             </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="pieces">Pieces</SelectItem>
-              <SelectItem value="meters">Meters</SelectItem>
-              <SelectItem value="kg">Kilograms</SelectItem>
-              <SelectItem value="grams">Grams</SelectItem>
-              <SelectItem value="liters">Liters</SelectItem>
-              <SelectItem value="ml">Milliliters</SelectItem>
-              <SelectItem value="yards">Yards</SelectItem>
-              <SelectItem value="feet">Feet</SelectItem>
-              <SelectItem value="inches">Inches</SelectItem>
-              <SelectItem value="tons">Tons</SelectItem>
-              <SelectItem value="pounds">Pounds</SelectItem>
-              <SelectItem value="dozen">Dozen</SelectItem>
-              <SelectItem value="pairs">Pairs</SelectItem>
-              <SelectItem value="sets">Sets</SelectItem>
-              <SelectItem value="boxes">Boxes</SelectItem>
-              <SelectItem value="rolls">Rolls</SelectItem>
-              <SelectItem value="sheets">Sheets</SelectItem>
-              <SelectItem value="units">Units</SelectItem>
+            <SelectContent className="bg-white border border-gray-200 shadow-lg z-50">
+              <SelectItem value="pieces" className="bg-white hover:bg-gray-50">Pieces</SelectItem>
+              <SelectItem value="meters" className="bg-white hover:bg-gray-50">Meters</SelectItem>
+              <SelectItem value="kg" className="bg-white hover:bg-gray-50">Kilograms</SelectItem>
+              <SelectItem value="grams" className="bg-white hover:bg-gray-50">Grams</SelectItem>
+              <SelectItem value="liters" className="bg-white hover:bg-gray-50">Liters</SelectItem>
+              <SelectItem value="ml" className="bg-white hover:bg-gray-50">Milliliters</SelectItem>
+              <SelectItem value="yards" className="bg-white hover:bg-gray-50">Yards</SelectItem>
+              <SelectItem value="feet" className="bg-white hover:bg-gray-50">Feet</SelectItem>
+              <SelectItem value="inches" className="bg-white hover:bg-gray-50">Inches</SelectItem>
+              <SelectItem value="tons" className="bg-white hover:bg-gray-50">Tons</SelectItem>
+              <SelectItem value="pounds" className="bg-white hover:bg-gray-50">Pounds</SelectItem>
+              <SelectItem value="dozen" className="bg-white hover:bg-gray-50">Dozen</SelectItem>
+              <SelectItem value="pairs" className="bg-white hover:bg-gray-50">Pairs</SelectItem>
+              <SelectItem value="sets" className="bg-white hover:bg-gray-50">Sets</SelectItem>
+              <SelectItem value="boxes" className="bg-white hover:bg-gray-50">Boxes</SelectItem>
+              <SelectItem value="rolls" className="bg-white hover:bg-gray-50">Rolls</SelectItem>
+              <SelectItem value="sheets" className="bg-white hover:bg-gray-50">Sheets</SelectItem>
+              <SelectItem value="units" className="bg-white hover:bg-gray-50">Units</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -1692,12 +1692,12 @@ function MaterialOutputForm({ batchId, stageNumber, onAdd }: {
           <SelectTrigger className="w-full">
             <SelectValue placeholder="Select quality grade" />
           </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="A+">A+ (Excellent)</SelectItem>
-            <SelectItem value="A">A (Very Good)</SelectItem>
-            <SelectItem value="B+">B+ (Good)</SelectItem>
-            <SelectItem value="B">B (Satisfactory)</SelectItem>
-            <SelectItem value="C">C (Below Standard)</SelectItem>
+          <SelectContent className="bg-white border border-gray-200 shadow-lg z-50">
+            <SelectItem value="A+" className="bg-white hover:bg-gray-50">A+ (Excellent)</SelectItem>
+            <SelectItem value="A" className="bg-white hover:bg-gray-50">A (Very Good)</SelectItem>
+            <SelectItem value="B+" className="bg-white hover:bg-gray-50">B+ (Good)</SelectItem>
+            <SelectItem value="B" className="bg-white hover:bg-gray-50">B (Satisfactory)</SelectItem>
+            <SelectItem value="C" className="bg-white hover:bg-gray-50">C (Below Standard)</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -1765,10 +1765,10 @@ function QualityCheckForm({ batchId, stageNumber, onAdd }: {
           <SelectTrigger>
             <SelectValue />
           </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="pass">Pass</SelectItem>
-            <SelectItem value="fail">Fail</SelectItem>
-            <SelectItem value="conditional">Conditional</SelectItem>
+          <SelectContent className="bg-white border border-gray-200 shadow-lg z-50">
+            <SelectItem value="pass" className="bg-white hover:bg-gray-50">Pass</SelectItem>
+            <SelectItem value="fail" className="bg-white hover:bg-gray-50">Fail</SelectItem>
+            <SelectItem value="conditional" className="bg-white hover:bg-gray-50">Conditional</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -1886,11 +1886,11 @@ function WorkingInventoryTransferForm({
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="meters">Meters</SelectItem>
-                  <SelectItem value="kg">Kilograms</SelectItem>
-                  <SelectItem value="pieces">Pieces</SelectItem>
-                  <SelectItem value="liters">Liters</SelectItem>
+                <SelectContent className="bg-white border border-gray-200 shadow-lg z-50">
+                  <SelectItem value="meters" className="bg-white hover:bg-gray-50">Meters</SelectItem>
+                  <SelectItem value="kg" className="bg-white hover:bg-gray-50">Kilograms</SelectItem>
+                  <SelectItem value="pieces" className="bg-white hover:bg-gray-50">Pieces</SelectItem>
+                  <SelectItem value="liters" className="bg-white hover:bg-gray-50">Liters</SelectItem>
                 </SelectContent>
               </Select>
             </div>

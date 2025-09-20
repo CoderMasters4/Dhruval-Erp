@@ -275,9 +275,9 @@ export function SupplierFormModal({ isOpen, onClose, onSuccess, supplier }: Supp
                     <SelectTrigger className={errors.companyId ? 'border-red-500' : ''}>
                       <SelectValue placeholder="Select a company" />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="bg-white border border-gray-200 shadow-lg z-50">
                       {companies.map((company) => (
-                        <SelectItem key={company._id} value={company._id}>
+                        <SelectItem key={company._id} value={company._id} className="bg-white hover:bg-gray-50">
                           {company.companyName} ({company.companyCode})
                         </SelectItem>
                       ))}
@@ -346,10 +346,10 @@ export function SupplierFormModal({ isOpen, onClose, onSuccess, supplier }: Supp
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="active">Active</SelectItem>
-                      <SelectItem value="inactive">Inactive</SelectItem>
-                      <SelectItem value="pending">Pending</SelectItem>
+                    <SelectContent className="bg-white border border-gray-200 shadow-lg z-50">
+                      <SelectItem value="active" className="bg-white hover:bg-gray-50">Active</SelectItem>
+                      <SelectItem value="inactive" className="bg-white hover:bg-gray-50">Inactive</SelectItem>
+                      <SelectItem value="pending" className="bg-white hover:bg-gray-50">Pending</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>

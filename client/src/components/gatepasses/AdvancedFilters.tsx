@@ -74,12 +74,12 @@ export default function AdvancedFilters({
             <SelectTrigger className="w-full">
               <SelectValue placeholder="All Status" />
             </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Status</SelectItem>
-              <SelectItem value="active">Active</SelectItem>
-              <SelectItem value="completed">Completed</SelectItem>
-              <SelectItem value="expired">Expired</SelectItem>
-              <SelectItem value="cancelled">Cancelled</SelectItem>
+            <SelectContent className="bg-white border border-gray-200 shadow-lg z-50">
+              <SelectItem value="all" className="bg-white hover:bg-gray-50">All Status</SelectItem>
+              <SelectItem value="active" className="bg-white hover:bg-gray-50">Active</SelectItem>
+              <SelectItem value="completed" className="bg-white hover:bg-gray-50">Completed</SelectItem>
+              <SelectItem value="expired" className="bg-white hover:bg-gray-50">Expired</SelectItem>
+              <SelectItem value="cancelled" className="bg-white hover:bg-gray-50">Cancelled</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -93,12 +93,12 @@ export default function AdvancedFilters({
             <SelectTrigger className="w-full">
               <SelectValue placeholder="All Purpose" />
             </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Purpose</SelectItem>
-              <SelectItem value="delivery">Delivery</SelectItem>
-              <SelectItem value="pickup">Pickup</SelectItem>
-              <SelectItem value="maintenance">Maintenance</SelectItem>
-              <SelectItem value="other">Other</SelectItem>
+            <SelectContent className="bg-white border border-gray-200 shadow-lg z-50">
+              <SelectItem value="all" className="bg-white hover:bg-gray-50">All Purpose</SelectItem>
+              <SelectItem value="delivery" className="bg-white hover:bg-gray-50">Delivery</SelectItem>
+              <SelectItem value="pickup" className="bg-white hover:bg-gray-50">Pickup</SelectItem>
+              <SelectItem value="maintenance" className="bg-white hover:bg-gray-50">Maintenance</SelectItem>
+              <SelectItem value="other" className="bg-white hover:bg-gray-50">Other</SelectItem>
             </SelectContent>
           </Select>
         </div>

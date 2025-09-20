@@ -235,11 +235,11 @@ export function ProductionFlowSettings() {
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="A">A - Excellent</SelectItem>
-                  <SelectItem value="B">B - Good</SelectItem>
-                  <SelectItem value="C">C - Fair</SelectItem>
-                  <SelectItem value="D">D - Poor</SelectItem>
+                <SelectContent className="bg-white border border-gray-200 shadow-lg z-50">
+                  <SelectItem value="A" className="bg-white hover:bg-gray-50">A - Excellent</SelectItem>
+                  <SelectItem value="B" className="bg-white hover:bg-gray-50">B - Good</SelectItem>
+                  <SelectItem value="C" className="bg-white hover:bg-gray-50">C - Fair</SelectItem>
+                  <SelectItem value="D" className="bg-white hover:bg-gray-50">D - Poor</SelectItem>
                 </SelectContent>
               </Select>
             </div>

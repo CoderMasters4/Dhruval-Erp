@@ -43,108 +43,166 @@ export class GreyFabricInwardController {
   }
 
   /**
-   * Create inventory item from GRN data
+   * Create or update inventory item from GRN data with proper grey stock handling
    */
-  private async createInventoryItemFromGRN(grn: any, companyId: string, userId: string): Promise<any> {
+  private async createOrUpdateInventoryItemFromGRN(grn: any, companyId: string, userId: string): Promise<any> {
     try {
-      // Generate unique item code for fabric
-      const fabricCode = `FAB-${grn.fabricType.toUpperCase()}-${grn.fabricColor.toUpperCase()}-${Date.now()}`;
+      // Calculate stock from grey stock lots if available, otherwise use quantity
+      let totalStock = 0;
+      let totalCost = 0;
+      let averageCost = 0;
       
-      // Create inventory item data
+      if (grn.greyStockLots && grn.greyStockLots.length > 0) {
+        // Calculate from lots
+        totalStock = grn.greyStockLots.reduce((sum: number, lot: any) => {
+          // Convert all to meters for consistency
+          if (lot.lotUnit === 'meters') return sum + lot.lotQuantity;
+          if (lot.lotUnit === 'yards') return sum + (lot.lotQuantity * 0.9144); // Convert yards to meters
+          return sum + lot.lotQuantity; // Assume pieces are counted as-is
+        }, 0);
+        
+        totalCost = grn.greyStockLots.reduce((sum: number, lot: any) => sum + lot.totalCost, 0);
+        averageCost = totalStock > 0 ? totalCost / totalStock : 0;
+      } else {
+        // Use quantity from GRN
+        totalStock = typeof grn.quantity === 'number' ? grn.quantity : grn.quantity.receivedQuantity;
+        averageCost = grn.financial?.unitPrice || 0;
+        totalCost = totalStock * averageCost;
+      }
+
+      // Generate unique item code for fabric
+      const fabricCode = `GREY-FAB-${grn.fabricDetails.fabricType.toUpperCase()}-${grn.fabricDetails.color.toUpperCase()}-${Date.now()}`;
+      
+      // Check if inventory item already exists for this fabric type and color
+      const existingItem = await InventoryItem.findOne({
+        companyId: new mongoose.Types.ObjectId(companyId),
+        'fabricDetails.fabricType': grn.fabricDetails.fabricType,
+        'fabricDetails.color': grn.fabricDetails.color,
+        'fabricDetails.gsm': grn.fabricDetails.gsm
+      });
+
+      if (existingItem) {
+        // Update existing item with new stock
+        const updatedStock = existingItem.stock.currentStock + totalStock;
+        const updatedCost = (existingItem.stock.totalValue + totalCost) / updatedStock;
+        
+        await InventoryItem.findByIdAndUpdate(existingItem._id, {
+          $inc: {
+            'stock.currentStock': totalStock,
+            'stock.totalValue': totalCost
+          },
+          'stock.averageCost': updatedCost,
+          'stock.availableStock': updatedStock,
+          'tracking.lastStockUpdate': new Date(),
+          'tracking.totalInward': (existingItem.tracking.totalInward || 0) + totalStock
+        });
+
+        logger.info('Updated existing inventory item with new grey stock', {
+          itemId: existingItem._id,
+          itemCode: existingItem.itemCode,
+          addedStock: totalStock,
+          newTotalStock: updatedStock
+        });
+
+        return existingItem;
+      }
+      
+      // Create new inventory item data
       const inventoryItemData = {
         itemCode: fabricCode,
-        companyItemCode: `${grn.grnNumber}-FAB`,
-        itemName: `${grn.fabricType} Fabric - ${grn.fabricColor}`,
-        description: `Grey fabric received via GRN ${grn.grnNumber}`,
+        companyItemCode: `${grn.grnNumber}-GREY-FAB`,
+        itemName: `${grn.fabricDetails.fabricType} Grey Fabric - ${grn.fabricDetails.color}`,
+        itemDescription: `Grey fabric received via GRN ${grn.grnNumber}. GSM: ${grn.fabricDetails.gsm}, Grade: ${grn.fabricDetails.fabricGrade}`,
         category: {
           primary: 'raw_material' as const,
           secondary: 'fabric',
-          tertiary: grn.fabricType
+          tertiary: 'grey_fabric'
         },
-        itemType: 'raw_material',
-        unit: grn.unit,
+        productType: 'custom' as 'saree' | 'african' | 'garment' | 'digital_print' | 'custom' | 'chemical' | 'dye' | 'machinery' | 'yarn' | 'thread',
         companyId: new mongoose.Types.ObjectId(companyId),
         
-        // Stock information
+        // Stock information calculated from lots
         stock: {
-          currentStock: grn.quantity,
-          availableStock: grn.quantity,
+          currentStock: totalStock,
+          availableStock: totalStock,
           reservedStock: 0,
           inTransitStock: 0,
           damagedStock: 0,
-          unit: grn.unit,
-          reorderLevel: 0,
-          minStockLevel: 0,
-          maxStockLevel: grn.quantity * 2,
+          unit: 'meters', // Standardize to meters
+          reorderLevel: totalStock * 0.1, // 10% of current stock
+          minStockLevel: totalStock * 0.05, // 5% of current stock
+          maxStockLevel: totalStock * 3, // 3x current stock
           valuationMethod: 'FIFO' as const,
-          averageCost: grn.costBreakdown?.fabricCost || 0,
-          totalValue: grn.quantity * (grn.costBreakdown?.fabricCost || 0)
+          averageCost: averageCost,
+          totalValue: totalCost
         },
         
         // Pricing information
         pricing: {
-          costPrice: grn.costBreakdown?.fabricCost || 0,
-          sellingPrice: (grn.costBreakdown?.fabricCost || 0) * 1.2, // 20% markup
+          costPrice: averageCost,
+          sellingPrice: averageCost * 1.2, // 20% markup
           currency: 'INR'
+        },
+        
+        // Technical specifications for fabric
+        specifications: {
+          gsm: grn.fabricDetails.gsm,
+          width: grn.fabricDetails.width,
+          color: grn.fabricDetails.color,
+          colorCode: `#${grn.fabricDetails.color.toLowerCase().replace(/\s/g, '')}`,
+          fabricComposition: grn.fabricDetails.fabricType,
+          weaveType: 'plain' as 'plain' | 'twill' | 'satin' | 'jacquard' | 'dobby' | 'other', // Default, can be updated later
+          finish: grn.fabricDetails.finish || 'grey',
+          batchNumber: grn.batchNumber || grn.grnNumber,
+          lotNumber: grn.lotNumber || 'BATCH-001'
         },
         
         // Quality information
         quality: {
-          qualityGrade: grn.quality,
+          qualityGrade: grn.fabricDetails.fabricGrade,
           defectPercentage: 0,
           qualityCheckRequired: true,
-          qualityParameters: ['Color', 'Weight', 'Width', 'Strength'],
+          qualityParameters: ['Color Fastness', 'GSM', 'Width', 'Shrinkage'],
           lastQualityCheck: new Date(),
-          qualityNotes: `Quality checked during GRN ${grn.grnNumber}`,
+          qualityNotes: `Grey fabric quality checked via GRN ${grn.grnNumber}`,
           certifications: []
         },
         
-        // Physical properties
-        physicalProperties: {
-          weight: grn.fabricWeight,
-          dimensions: {
-            length: grn.quantity,
-            width: grn.fabricWidth,
-            height: 0.1 // Default fabric thickness
-          },
-          color: grn.fabricColor,
-          material: grn.fabricType
-        },
-        
         // Supplier information
-        suppliers: [{
-          supplierId: grn.supplierId,
-          supplierName: grn.supplierName,
+        suppliers: grn.supplierId ? [{
+          supplierId: new mongoose.Types.ObjectId(grn.supplierId),
+          supplierName: grn.supplierName || 'Unknown Supplier',
           supplierItemCode: `${grn.supplierId}-${fabricCode}`,
           isPrimary: true,
           isActive: true,
           lastPurchaseDate: new Date(),
-          lastPurchasePrice: grn.costBreakdown?.fabricCost || 0
-        }],
+          lastPurchasePrice: averageCost,
+          qualityRating: 4 // Default rating
+        }] : [],
         
-        // Location information
+        // Location information - use storage location from GRN
         locations: [{
-          warehouseId: new mongoose.Types.ObjectId(), // Default warehouse
-          warehouseName: 'Main Warehouse',
-          quantity: grn.quantity,
+          warehouseId: grn.storageLocation.warehouseId,
+          warehouseName: grn.storageLocation.warehouseName,
+          quantity: totalStock,
           lastUpdated: new Date(),
           isActive: true
         }],
         
         // Manufacturing information
         manufacturing: {
-          batchSize: grn.quantity,
+          batchSize: totalStock,
           shelfLife: 365, // 1 year for fabric
-          manufacturingCost: grn.costBreakdown?.fabricCost || 0
+          manufacturingCost: averageCost
         },
         
         // Tracking information
         tracking: {
-          createdBy: userId,
+          createdBy: new mongoose.Types.ObjectId(userId),
           lastModifiedBy: new mongoose.Types.ObjectId(userId),
           lastStockUpdate: new Date(),
           lastMovementDate: new Date(),
-          totalInward: grn.quantity,
+          totalInward: totalStock,
           totalOutward: 0,
           totalAdjustments: 0
         },
@@ -298,7 +356,7 @@ export class GreyFabricInwardController {
     }
   }
 
-  // Create new grey fabric inward entry
+  // Create new grey fabric inward entry (supports both PO-based and direct stock entry)
   async create(req: Request, res: Response): Promise<void> {
     try {
       // For testing - use default values if user is not authenticated
@@ -309,8 +367,11 @@ export class GreyFabricInwardController {
       logger.info('Creating GRN with:', { companyId, userId, body: req.body });
 
       const {
+        entryType = 'direct_stock_entry',
         productionOrderId,
-        purchaseOrderId, // Required - GRN must be linked to PO
+        purchaseOrderId, // Optional - can be direct stock entry
+        supplierId,
+        supplierName,
         fabricType,
         fabricColor,
         fabricWeight,
@@ -321,20 +382,33 @@ export class GreyFabricInwardController {
         expectedAt,
         remarks,
         images,
-        costBreakdown
+        costBreakdown,
+        // New fields for grey stock
+        greyStockLots = [],
+        warehouseId,
+        warehouseName = 'Main Warehouse'
       } = req.body;
 
-      // Validate required fields
-      if (!purchaseOrderId || !fabricType || !fabricColor || !quantity || !unit || !quality) {
-        throw new AppError('Missing required fields: purchaseOrderId, fabricType, fabricColor, quantity, unit, quality', 400);
+      // Validate required fields based on entry type
+      if (entryType === 'purchase_order') {
+        if (!purchaseOrderId || !fabricType || !fabricColor || !quantity || !unit || !quality) {
+          throw new AppError('Missing required fields for PO-based entry: purchaseOrderId, fabricType, fabricColor, quantity, unit, quality', 400);
+        }
+      } else {
+        if (!fabricType || !fabricColor || !quantity || !unit || !quality) {
+          throw new AppError('Missing required fields: fabricType, fabricColor, quantity, unit, quality', 400);
+        }
       }
 
-      // Get Purchase Order details to populate supplier info
-      const PurchaseOrder = mongoose.model('PurchaseOrder');
-      const purchaseOrder = await PurchaseOrder.findById(purchaseOrderId);
-      
-      if (!purchaseOrder) {
-        throw new AppError('Purchase Order not found', 404);
+      // Get Purchase Order details if it's a PO-based entry
+      let purchaseOrder = null;
+      if (entryType === 'purchase_order' && purchaseOrderId) {
+        const PurchaseOrder = mongoose.model('PurchaseOrder');
+        purchaseOrder = await PurchaseOrder.findById(purchaseOrderId);
+        
+        if (!purchaseOrder) {
+          throw new AppError('Purchase Order not found', 404);
+        }
       }
 
       // Generate GRN number
@@ -348,14 +422,13 @@ export class GreyFabricInwardController {
 
       const grnData = {
         grnNumber,
-        purchaseOrderId: new mongoose.Types.ObjectId(purchaseOrderId),
-        purchaseOrderNumber: purchaseOrder.poNumber,
+        entryType,
+        purchaseOrderId: purchaseOrderId ? new mongoose.Types.ObjectId(purchaseOrderId) : undefined,
+        purchaseOrderNumber: purchaseOrder?.poNumber,
         
-        // Supplier info populated from Purchase Order
-        supplierId: purchaseOrder.supplier.supplierId,
-        supplierName: purchaseOrder.supplier.supplierName,
-        
-        customerName: 'Customer', // This should come from production order or be passed in request
+        // Supplier info populated from Purchase Order or provided directly
+        supplierId: entryType === 'purchase_order' ? purchaseOrder?.supplier?.supplierId : (supplierId ? new mongoose.Types.ObjectId(supplierId) : undefined),
+        supplierName: entryType === 'purchase_order' ? purchaseOrder?.supplier?.supplierName : supplierName,
         
         // Fabric Details
         fabricDetails: {
@@ -415,18 +488,40 @@ export class GreyFabricInwardController {
         },
         
         // Status and Approval
-        status: 'pending' as 'pending' | 'approved' | 'rejected' | 'partially_approved',
-        inspectionStatus: 'pending' as 'pending' | 'in_progress' | 'completed',
+        status: entryType === 'direct_stock_entry' ? 'stock_created' as 'pending' | 'approved' | 'rejected' | 'partially_approved' | 'stock_created' : 'pending' as 'pending' | 'approved' | 'rejected' | 'partially_approved' | 'stock_created',
+        inspectionStatus: entryType === 'direct_stock_entry' ? 'not_required' as 'pending' | 'in_progress' | 'completed' | 'not_required' : 'pending' as 'pending' | 'in_progress' | 'completed' | 'not_required',
         qualityStatus: 'passed' as 'passed' | 'failed' | 'conditional',
+        stockStatus: 'not_created' as 'not_created' | 'active' | 'low_stock' | 'out_of_stock' | 'consumed',
         
         // Location and Storage
         storageLocation: {
-          warehouseId: new mongoose.Types.ObjectId(), // This should be passed or default warehouse
-          warehouseName: 'Main Warehouse',
+          warehouseId: warehouseId ? new mongoose.Types.ObjectId(warehouseId) : new mongoose.Types.ObjectId(),
+          warehouseName: warehouseName,
           rackNumber: '',
           shelfNumber: '',
           binNumber: ''
         },
+        
+        // Grey Stock Lots (if provided)
+        greyStockLots: greyStockLots.length > 0 ? greyStockLots.map((lot: any) => ({
+          lotNumber: lot.lotNumber,
+          lotQuantity: lot.lotQuantity,
+          lotUnit: lot.lotUnit || unit,
+          lotStatus: 'active' as 'active' | 'consumed' | 'damaged' | 'reserved',
+          receivedDate: new Date(),
+          expiryDate: lot.expiryDate ? new Date(lot.expiryDate) : undefined,
+          qualityGrade: lot.qualityGrade || quality,
+          storageLocation: {
+            warehouseId: warehouseId ? new mongoose.Types.ObjectId(warehouseId) : new mongoose.Types.ObjectId(),
+            warehouseName: warehouseName,
+            rackNumber: lot.rackNumber || '',
+            shelfNumber: lot.shelfNumber || '',
+            binNumber: lot.binNumber || ''
+          },
+          costPerUnit: lot.costPerUnit || (costBreakdown?.fabricCost || 0),
+          totalCost: lot.totalCost || (lot.lotQuantity * (lot.costPerUnit || (costBreakdown?.fabricCost || 0))),
+          remarks: lot.remarks || ''
+        })) : [],
         
         // Financial Information
         financial: {
@@ -468,9 +563,9 @@ export class GreyFabricInwardController {
 
       const grn = await GreyFabricInward.create(grnData);
 
-      // Automatically create inventory item when GRN is created
+      // Automatically create/update inventory item when GRN is created
       try {
-        const inventoryItem = await this.createInventoryItemFromGRN(grn, companyId.toString(), userId.toString());
+        const inventoryItem = await this.createOrUpdateInventoryItemFromGRN(grn, companyId.toString(), userId.toString());
         
         // Update GRN with inventory item reference
         await GreyFabricInward.findByIdAndUpdate(grn._id, {
@@ -478,18 +573,16 @@ export class GreyFabricInwardController {
           inventoryItemCode: inventoryItem.itemCode
         });
 
-        logger.info('GRN created with inventory item and supplier info from PO', {
+        logger.info('GRN created with inventory item updated', {
           grnId: grn._id,
           grnNumber: grn.grnNumber,
-          purchaseOrderId: purchaseOrderId,
-          purchaseOrderNumber: purchaseOrder.poNumber,
-          supplierName: purchaseOrder.supplier.supplierName,
+          entryType: grn.entryType,
           inventoryItemId: inventoryItem._id,
           itemCode: inventoryItem.itemCode
         });
       } catch (inventoryError) {
         // Log error but don't fail GRN creation
-        logger.error('Failed to create inventory item for GRN', {
+        logger.error('Failed to create/update inventory item for GRN', {
           grnId: grn._id,
           grnNumber: grn.grnNumber,
           error: inventoryError
@@ -827,6 +920,294 @@ export class GreyFabricInwardController {
         success: true,
         message: 'Quality check added successfully',
         data: grn
+      });
+    } catch (error) {
+      this.handleError(res, error);
+    }
+  }
+
+  // Add new lot to existing grey stock entry
+  async addLot(req: Request, res: Response): Promise<void> {
+    try {
+      const { id } = req.params;
+      const { lotData } = req.body;
+      const companyId = req.user?.companyId;
+      const userId = req.user?.id;
+
+      if (!companyId || !userId) {
+        throw new AppError('Company ID and User ID are required', 400);
+      }
+
+      const grn = await GreyFabricInward.findOne({ _id: id, companyId });
+      if (!grn) {
+        throw new AppError('GRN entry not found', 404);
+      }
+
+      // Validate lot data
+      if (!lotData.lotNumber || !lotData.lotQuantity || !lotData.lotUnit) {
+        throw new AppError('Missing required lot fields: lotNumber, lotQuantity, lotUnit', 400);
+      }
+
+      // Check if lot number already exists
+      const existingLot = grn.greyStockLots.find((lot: any) => lot.lotNumber === lotData.lotNumber);
+      if (existingLot) {
+        throw new AppError('Lot number already exists', 400);
+      }
+
+      // Add the new lot
+      const newLot = {
+        lotNumber: lotData.lotNumber,
+        lotQuantity: lotData.lotQuantity,
+        lotUnit: lotData.lotUnit as 'meters' | 'yards' | 'pieces',
+        lotStatus: 'active' as 'active' | 'consumed' | 'damaged' | 'reserved',
+        receivedDate: new Date(),
+        expiryDate: lotData.expiryDate ? new Date(lotData.expiryDate) : undefined,
+        qualityGrade: lotData.qualityGrade || 'A' as 'A+' | 'A' | 'B+' | 'B' | 'C',
+        storageLocation: {
+          warehouseId: lotData.warehouseId ? new mongoose.Types.ObjectId(lotData.warehouseId) : grn.storageLocation.warehouseId,
+          warehouseName: lotData.warehouseName || grn.storageLocation.warehouseName,
+          rackNumber: lotData.rackNumber || '',
+          shelfNumber: lotData.shelfNumber || '',
+          binNumber: lotData.binNumber || ''
+        },
+        costPerUnit: lotData.costPerUnit || grn.financial.unitPrice,
+        totalCost: lotData.lotQuantity * (lotData.costPerUnit || grn.financial.unitPrice),
+        remarks: lotData.remarks || ''
+      };
+
+      grn.greyStockLots.push(newLot);
+      await grn.save(); // This will trigger the pre-save middleware to calculate stock balances
+
+      // Update inventory item with new stock from lot
+      if (grn.inventoryItemId) {
+        try {
+          const lotStock = newLot.lotUnit === 'meters' ? newLot.lotQuantity : 
+                          newLot.lotUnit === 'yards' ? (newLot.lotQuantity * 0.9144) : 
+                          newLot.lotQuantity;
+          
+          await InventoryItem.findByIdAndUpdate(grn.inventoryItemId, {
+            $inc: {
+              'stock.currentStock': lotStock,
+              'stock.totalValue': newLot.totalCost
+            },
+            'stock.availableStock': { $inc: lotStock },
+            'tracking.lastStockUpdate': new Date(),
+            'tracking.totalInward': { $inc: lotStock }
+          });
+
+          logger.info('Updated inventory item with new lot stock', {
+            grnId: grn._id,
+            lotNumber: newLot.lotNumber,
+            lotStock: lotStock,
+            inventoryItemId: grn.inventoryItemId
+          });
+        } catch (inventoryError) {
+          logger.error('Failed to update inventory item with new lot', {
+            grnId: grn._id,
+            lotNumber: newLot.lotNumber,
+            error: inventoryError
+          });
+        }
+      }
+
+      res.json({
+        success: true,
+        message: 'Lot added successfully and inventory updated',
+        data: grn
+      });
+    } catch (error) {
+      this.handleError(res, error);
+    }
+  }
+
+  // Update lot status
+  async updateLotStatus(req: Request, res: Response): Promise<void> {
+    try {
+      const { id, lotNumber } = req.params;
+      const { status, remarks } = req.body;
+      const companyId = req.user?.companyId;
+      const userId = req.user?.id;
+
+      if (!companyId || !userId) {
+        throw new AppError('Company ID and User ID are required', 400);
+      }
+
+      if (!['active', 'consumed', 'damaged', 'reserved'].includes(status)) {
+        throw new AppError('Invalid lot status', 400);
+      }
+
+      const grn = await GreyFabricInward.findOne({ _id: id, companyId });
+      if (!grn) {
+        throw new AppError('GRN entry not found', 404);
+      }
+
+      const lot = grn.greyStockLots.find((l: any) => l.lotNumber === lotNumber);
+      if (!lot) {
+        throw new AppError('Lot not found', 404);
+      }
+
+      const oldStatus = lot.lotStatus;
+      lot.lotStatus = status;
+      if (remarks) lot.remarks = remarks;
+      
+      await grn.save(); // This will trigger the pre-save middleware to recalculate stock balances
+
+      // Update inventory item based on status change
+      if (grn.inventoryItemId) {
+        try {
+          const lotStock = lot.lotUnit === 'meters' ? lot.lotQuantity : 
+                          lot.lotUnit === 'yards' ? (lot.lotQuantity * 0.9144) : 
+                          lot.lotQuantity;
+          
+          let inventoryUpdate: any = {
+            'tracking.lastStockUpdate': new Date()
+          };
+
+          // Handle status changes
+          if (oldStatus === 'active' && status !== 'active') {
+            // Moving from active to consumed/damaged/reserved
+            inventoryUpdate.$inc = {
+              'stock.availableStock': -lotStock
+            };
+            if (status === 'damaged') {
+              inventoryUpdate.$inc['stock.damagedStock'] = lotStock;
+            } else if (status === 'reserved') {
+              inventoryUpdate.$inc['stock.reservedStock'] = lotStock;
+            }
+          } else if (oldStatus !== 'active' && status === 'active') {
+            // Moving back to active
+            inventoryUpdate.$inc = {
+              'stock.availableStock': lotStock
+            };
+            if (oldStatus === 'damaged') {
+              inventoryUpdate.$inc['stock.damagedStock'] = -lotStock;
+            } else if (oldStatus === 'reserved') {
+              inventoryUpdate.$inc['stock.reservedStock'] = -lotStock;
+            }
+          }
+
+          if (inventoryUpdate.$inc) {
+            await InventoryItem.findByIdAndUpdate(grn.inventoryItemId, inventoryUpdate);
+          }
+
+          logger.info('Updated inventory item with lot status change', {
+            grnId: grn._id,
+            lotNumber: lot.lotNumber,
+            oldStatus,
+            newStatus: status,
+            inventoryItemId: grn.inventoryItemId
+          });
+        } catch (inventoryError) {
+          logger.error('Failed to update inventory item with lot status change', {
+            grnId: grn._id,
+            lotNumber: lot.lotNumber,
+            error: inventoryError
+          });
+        }
+      }
+
+      res.json({
+        success: true,
+        message: 'Lot status updated successfully and inventory synchronized',
+        data: grn
+      });
+    } catch (error) {
+      this.handleError(res, error);
+    }
+  }
+
+  // Get grey stock summary
+  async getStockSummary(req: Request, res: Response): Promise<void> {
+    try {
+      const companyId = req.user?.companyId;
+      if (!companyId) {
+        throw new AppError('Company ID is required', 400);
+      }
+
+      const { fabricType, color, gsm } = req.query;
+
+      // Build filter
+      const filter: any = { companyId, stockStatus: { $in: ['active', 'low_stock'] } };
+      if (fabricType) filter['fabricDetails.fabricType'] = fabricType;
+      if (color) filter['fabricDetails.color'] = new RegExp(color as string, 'i');
+      if (gsm) filter['fabricDetails.gsm'] = Number(gsm);
+
+      const stockEntries = await GreyFabricInward.find(filter)
+        .select('grnNumber fabricDetails stockBalance greyStockLots supplierName')
+        .lean();
+
+      // Aggregate stock data
+      const stockSummary = stockEntries.map(entry => ({
+        grnNumber: entry.grnNumber,
+        fabricDetails: entry.fabricDetails,
+        stockBalance: entry.stockBalance,
+        supplierName: entry.supplierName,
+        lotCount: entry.greyStockLots.length,
+        activeLots: entry.greyStockLots.filter((lot: any) => lot.lotStatus === 'active').length
+      }));
+
+      // Calculate totals
+      const totalMeters = stockSummary.reduce((sum, entry) => sum + entry.stockBalance.totalMeters, 0);
+      const totalYards = stockSummary.reduce((sum, entry) => sum + entry.stockBalance.totalYards, 0);
+      const totalPieces = stockSummary.reduce((sum, entry) => sum + entry.stockBalance.totalPieces, 0);
+      const availableMeters = stockSummary.reduce((sum, entry) => sum + entry.stockBalance.availableMeters, 0);
+      const availableYards = stockSummary.reduce((sum, entry) => sum + entry.stockBalance.availableYards, 0);
+      const availablePieces = stockSummary.reduce((sum, entry) => sum + entry.stockBalance.availablePieces, 0);
+
+      res.json({
+        success: true,
+        data: {
+          stockEntries: stockSummary,
+          totals: {
+            totalMeters,
+            totalYards,
+            totalPieces,
+            availableMeters,
+            availableYards,
+            availablePieces
+          }
+        }
+      });
+    } catch (error) {
+      this.handleError(res, error);
+    }
+  }
+
+  // Get lot-wise details for a specific entry
+  async getLotDetails(req: Request, res: Response): Promise<void> {
+    try {
+      const { id } = req.params;
+      const companyId = req.user?.companyId;
+
+      if (!companyId) {
+        throw new AppError('Company ID is required', 400);
+      }
+
+      const grn = await GreyFabricInward.findOne({ _id: id, companyId })
+        .select('grnNumber fabricDetails greyStockLots stockBalance')
+        .lean();
+
+      if (!grn) {
+        throw new AppError('GRN entry not found', 404);
+      }
+
+      // Group lots by status
+      const lotsByStatus = {
+        active: grn.greyStockLots.filter((lot: any) => lot.lotStatus === 'active'),
+        consumed: grn.greyStockLots.filter((lot: any) => lot.lotStatus === 'consumed'),
+        damaged: grn.greyStockLots.filter((lot: any) => lot.lotStatus === 'damaged'),
+        reserved: grn.greyStockLots.filter((lot: any) => lot.lotStatus === 'reserved')
+      };
+
+      res.json({
+        success: true,
+        data: {
+          grnNumber: grn.grnNumber,
+          fabricDetails: grn.fabricDetails,
+          stockBalance: grn.stockBalance,
+          lotsByStatus,
+          totalLots: grn.greyStockLots.length
+        }
       });
     } catch (error) {
       this.handleError(res, error);

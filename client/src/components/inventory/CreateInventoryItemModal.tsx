@@ -281,12 +281,12 @@ export function CreateInventoryItemModal({ isOpen, onClose, onSubmit }: CreateIn
                     <SelectTrigger className="bg-blue-50 border-blue-200 focus:border-blue-500 focus:ring-blue-500">
                       <SelectValue placeholder="Select primary category" />
                     </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="raw_material">Raw Material</SelectItem>
-                      <SelectItem value="semi_finished">Semi Finished</SelectItem>
-                      <SelectItem value="finished_goods">Finished Goods</SelectItem>
-                      <SelectItem value="consumables">Consumables</SelectItem>
-                      <SelectItem value="spare_parts">Spare Parts</SelectItem>
+                    <SelectContent className="bg-white border border-gray-200 shadow-lg z-50">
+                      <SelectItem value="raw_material" className="bg-white hover:bg-gray-50">Raw Material</SelectItem>
+                      <SelectItem value="semi_finished" className="bg-white hover:bg-gray-50">Semi Finished</SelectItem>
+                      <SelectItem value="finished_goods" className="bg-white hover:bg-gray-50">Finished Goods</SelectItem>
+                      <SelectItem value="consumables" className="bg-white hover:bg-gray-50">Consumables</SelectItem>
+                      <SelectItem value="spare_parts" className="bg-white hover:bg-gray-50">Spare Parts</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -301,17 +301,17 @@ export function CreateInventoryItemModal({ isOpen, onClose, onSubmit }: CreateIn
                     <SelectTrigger className="bg-green-50 border-green-200 focus:border-green-500 focus:ring-green-500">
                       <SelectValue placeholder="Select product type" />
                     </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="saree">Saree</SelectItem>
-                      <SelectItem value="african">African Cotton</SelectItem>
-                      <SelectItem value="garment">Garment Fabric</SelectItem>
-                      <SelectItem value="digital_print">Digital Print</SelectItem>
-                      <SelectItem value="custom">Custom</SelectItem>
-                      <SelectItem value="chemical">Chemical</SelectItem>
-                      <SelectItem value="dye">Dye</SelectItem>
-                      <SelectItem value="machinery">Machinery</SelectItem>
-                      <SelectItem value="yarn">Yarn</SelectItem>
-                      <SelectItem value="thread">Thread</SelectItem>
+                    <SelectContent className="bg-white border border-gray-200 shadow-lg z-50">
+                      <SelectItem value="saree" className="bg-white hover:bg-gray-50">Saree</SelectItem>
+                      <SelectItem value="african" className="bg-white hover:bg-gray-50">African Cotton</SelectItem>
+                      <SelectItem value="garment" className="bg-white hover:bg-gray-50">Garment Fabric</SelectItem>
+                      <SelectItem value="digital_print" className="bg-white hover:bg-gray-50">Digital Print</SelectItem>
+                      <SelectItem value="custom" className="bg-white hover:bg-gray-50">Custom</SelectItem>
+                      <SelectItem value="chemical" className="bg-white hover:bg-gray-50">Chemical</SelectItem>
+                      <SelectItem value="dye" className="bg-white hover:bg-gray-50">Dye</SelectItem>
+                      <SelectItem value="machinery" className="bg-white hover:bg-gray-50">Machinery</SelectItem>
+                      <SelectItem value="yarn" className="bg-white hover:bg-gray-50">Yarn</SelectItem>
+                      <SelectItem value="thread" className="bg-white hover:bg-gray-50">Thread</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>

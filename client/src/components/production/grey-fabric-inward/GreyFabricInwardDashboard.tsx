@@ -32,6 +32,8 @@ import { selectCurrentUser, selectCurrentCompanyId } from '@/lib/features/auth/a
 import { GreyFabricInwardForm } from './GreyFabricInwardForm';
 import { GreyFabricInwardDetails } from './GreyFabricInwardDetails';
 import { GreyFabricInwardAnalytics } from './GreyFabricInwardAnalytics';
+import GreyStockSummary from './GreyStockSummary';
+import GreyStockLotDetails from './GreyStockLotDetails';
 
 interface GreyFabricInwardDashboardProps {
   onRefresh?: () => void;
@@ -50,6 +52,8 @@ export default function GreyFabricInwardDashboard({ onRefresh }: GreyFabricInwar
   const [showForm, setShowForm] = useState(false);
   const [showDetails, setShowDetails] = useState(false);
   const [showAnalytics, setShowAnalytics] = useState(false);
+  const [showStockSummary, setShowStockSummary] = useState(false);
+  const [showLotDetails, setShowLotDetails] = useState(false);
 
   // Get user and company info
   const user = useSelector(selectCurrentUser);
@@ -196,6 +200,14 @@ export default function GreyFabricInwardDashboard({ onRefresh }: GreyFabricInwar
           <div className="flex gap-3">
             <Button
               variant="outline"
+              onClick={() => setShowStockSummary(!showStockSummary)}
+              className="flex items-center gap-2 bg-white/10 border-white/20 text-white hover:bg-white/20 backdrop-blur-sm transition-all duration-200"
+            >
+              <Package className="h-4 w-4" />
+              Stock Summary
+            </Button>
+            <Button
+              variant="outline"
               onClick={() => setShowAnalytics(!showAnalytics)}
               className="flex items-center gap-2 bg-white/10 border-white/20 text-white hover:bg-white/20 backdrop-blur-sm transition-all duration-200"
             >
@@ -212,6 +224,11 @@ export default function GreyFabricInwardDashboard({ onRefresh }: GreyFabricInwar
           </div>
         </div>
       </div>
+
+      {/* Stock Summary Section */}
+      {showStockSummary && (
+        <GreyStockSummary onClose={() => setShowStockSummary(false)} />
+      )}
 
       {/* Analytics Section */}
       {showAnalytics && (
@@ -249,12 +266,12 @@ export default function GreyFabricInwardDashboard({ onRefresh }: GreyFabricInwar
                 <SelectTrigger>
                   <SelectValue placeholder="All Status" />
                 </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Status</SelectItem>
-                  <SelectItem value="pending">Pending</SelectItem>
-                  <SelectItem value="in_transit">In Transit</SelectItem>
-                  <SelectItem value="received">Received</SelectItem>
-                  <SelectItem value="rejected">Rejected</SelectItem>
+                <SelectContent className="bg-white border border-gray-200 shadow-lg z-50">
+                  <SelectItem value="all" className="bg-white hover:bg-gray-50">All Status</SelectItem>
+                  <SelectItem value="pending" className="bg-white hover:bg-gray-50">Pending</SelectItem>
+                  <SelectItem value="in_transit" className="bg-white hover:bg-gray-50">In Transit</SelectItem>
+                  <SelectItem value="received" className="bg-white hover:bg-gray-50">Received</SelectItem>
+                  <SelectItem value="rejected" className="bg-white hover:bg-gray-50">Rejected</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -267,14 +284,14 @@ export default function GreyFabricInwardDashboard({ onRefresh }: GreyFabricInwar
                 <SelectTrigger>
                   <SelectValue placeholder="All Quality" />
                 </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Quality</SelectItem>
-                  <SelectItem value="A+">A+</SelectItem>
-                  <SelectItem value="A">A</SelectItem>
-                  <SelectItem value="B+">B+</SelectItem>
-                  <SelectItem value="B">B</SelectItem>
-                  <SelectItem value="C">C</SelectItem>
-                  <SelectItem value="D">D</SelectItem>
+                <SelectContent className="bg-white border border-gray-200 shadow-lg z-50">
+                  <SelectItem value="all" className="bg-white hover:bg-gray-50">All Quality</SelectItem>
+                  <SelectItem value="A+" className="bg-white hover:bg-gray-50">A+</SelectItem>
+                  <SelectItem value="A" className="bg-white hover:bg-gray-50">A</SelectItem>
+                  <SelectItem value="B+" className="bg-white hover:bg-gray-50">B+</SelectItem>
+                  <SelectItem value="B" className="bg-white hover:bg-gray-50">B</SelectItem>
+                  <SelectItem value="C" className="bg-white hover:bg-gray-50">C</SelectItem>
+                  <SelectItem value="D" className="bg-white hover:bg-gray-50">D</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -329,10 +346,16 @@ export default function GreyFabricInwardDashboard({ onRefresh }: GreyFabricInwar
                   </div>
                 </div>
                 
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
                   <div className="bg-gray-50 rounded-lg p-4 group-hover:bg-blue-50 transition-colors">
                     <p className="text-sm text-gray-500 mb-1">Fabric Type</p>
                     <p className="font-semibold text-gray-900">{grn.fabricType}</p>
+                  </div>
+                  <div className="bg-gray-50 rounded-lg p-4 group-hover:bg-orange-50 transition-colors">
+                    <p className="text-sm text-gray-500 mb-1">Entry Type</p>
+                    <p className="font-semibold text-gray-900 capitalize">
+                      {grn.entryType?.replace('_', ' ') || 'Purchase Order'}
+                    </p>
                   </div>
                   <div className="bg-gray-50 rounded-lg p-4 group-hover:bg-green-50 transition-colors">
                     <p className="text-sm text-gray-500 mb-1">Quantity</p>
@@ -353,6 +376,31 @@ export default function GreyFabricInwardDashboard({ onRefresh }: GreyFabricInwar
                       }
                     </p>
                   </div>
+                  {grn.greyStockLots && grn.greyStockLots.length > 0 && (
+                    <div className="bg-gray-50 rounded-lg p-4 group-hover:bg-indigo-50 transition-colors">
+                      <p className="text-sm text-gray-500 mb-1">Lots</p>
+                      <p className="font-semibold text-gray-900">{grn.greyStockLots.length} Lots</p>
+                      <p className="text-xs text-gray-600 mt-1">
+                        {grn.greyStockLots.map((lot: any, index: number) => (
+                          <span key={index}>
+                            {lot.lotNumber}
+                            {index < (grn.greyStockLots?.length || 0) - 1 ? ', ' : ''}
+                          </span>
+                        ))}
+                      </p>
+                    </div>
+                  )}
+                  {grn.stockBalance && (
+                    <div className="bg-gray-50 rounded-lg p-4 group-hover:bg-green-50 transition-colors">
+                      <p className="text-sm text-gray-500 mb-1">Stock Balance</p>
+                      <p className="font-semibold text-gray-900">
+                        {grn.stockBalance.totalMeters || 0}m / {grn.stockBalance.totalYards || 0}y
+                      </p>
+                      <p className="text-xs text-gray-600 mt-1">
+                        Available: {grn.stockBalance.availableMeters || 0}m
+                      </p>
+                    </div>
+                  )}
                 </div>
 
                 {grn.remarks && (
@@ -376,6 +424,20 @@ export default function GreyFabricInwardDashboard({ onRefresh }: GreyFabricInwar
                       <Eye className="h-4 w-4" />
                       View
                     </Button>
+                    {grn.stockStatus === 'active' && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          setSelectedGrn(grn);
+                          setShowLotDetails(true);
+                        }}
+                        className="flex items-center gap-2 hover:bg-purple-50 hover:border-purple-300 hover:text-purple-600 transition-all duration-200"
+                      >
+                        <Package className="h-4 w-4" />
+                        Stock
+                      </Button>
+                    )}
                     <Button
                       variant="outline"
                       size="sm"
@@ -477,6 +539,17 @@ export default function GreyFabricInwardDashboard({ onRefresh }: GreyFabricInwar
             setShowDetails(false);
             setShowForm(true);
           }}
+        />
+      )}
+
+      {showLotDetails && selectedGrn && (
+        <GreyStockLotDetails
+          grn={selectedGrn}
+          onClose={() => {
+            setShowLotDetails(false);
+            setSelectedGrn(null);
+          }}
+          onRefresh={handleRefresh}
         />
       )}
     </div>

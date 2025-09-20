@@ -52,9 +52,9 @@ export function WarehouseSelection({ formData, updateFormData }: WarehouseSelect
               <SelectTrigger>
                 <SelectValue placeholder="Select a warehouse" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="bg-white border border-gray-200 shadow-lg z-50">
                 {warehouses.map((warehouse) => (
-                  <SelectItem key={warehouse._id || ''} value={warehouse._id || ''}>
+                  <SelectItem key={warehouse._id || ''} value={warehouse._id || ''} className="bg-white hover:bg-gray-50">
                     {warehouse.warehouseName} ({warehouse.warehouseCode})
                   </SelectItem>
                 ))}

@@ -627,9 +627,9 @@ export function CreatePurchaseOrderModal({ onSuccess, open: controlledOpen, onOp
                     <SelectTrigger>
                       <SelectValue placeholder="Select a company" />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="bg-white border border-gray-200 shadow-lg z-50">
                       {companies.map((company) => (
-                        <SelectItem key={company._id} value={company._id}>
+                        <SelectItem key={company._id} value={company._id} className="bg-white hover:bg-gray-50">
                           {company.companyName} ({company.companyCode})
                         </SelectItem>
                       ))}
@@ -696,14 +696,14 @@ export function CreatePurchaseOrderModal({ onSuccess, open: controlledOpen, onOp
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="standard">Standard</SelectItem>
-                      <SelectItem value="blanket">Blanket</SelectItem>
-                      <SelectItem value="contract">Contract</SelectItem>
-                      <SelectItem value="planned">Planned</SelectItem>
-                      <SelectItem value="emergency">Emergency</SelectItem>
-                      <SelectItem value="service">Service</SelectItem>
-                      <SelectItem value="capital">Capital</SelectItem>
+                    <SelectContent className="bg-white border border-gray-200 shadow-lg z-50">
+                      <SelectItem value="standard" className="bg-white hover:bg-gray-50">Standard</SelectItem>
+                      <SelectItem value="blanket" className="bg-white hover:bg-gray-50">Blanket</SelectItem>
+                      <SelectItem value="contract" className="bg-white hover:bg-gray-50">Contract</SelectItem>
+                      <SelectItem value="planned" className="bg-white hover:bg-gray-50">Planned</SelectItem>
+                      <SelectItem value="emergency" className="bg-white hover:bg-gray-50">Emergency</SelectItem>
+                      <SelectItem value="service" className="bg-white hover:bg-gray-50">Service</SelectItem>
+                      <SelectItem value="capital" className="bg-white hover:bg-gray-50">Capital</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -714,11 +714,11 @@ export function CreatePurchaseOrderModal({ onSuccess, open: controlledOpen, onOp
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="low">Low</SelectItem>
-                      <SelectItem value="medium">Medium</SelectItem>
-                      <SelectItem value="high">High</SelectItem>
-                      <SelectItem value="urgent">Urgent</SelectItem>
+                    <SelectContent className="bg-white border border-gray-200 shadow-lg z-50">
+                      <SelectItem value="low" className="bg-white hover:bg-gray-50">Low</SelectItem>
+                      <SelectItem value="medium" className="bg-white hover:bg-gray-50">Medium</SelectItem>
+                      <SelectItem value="high" className="bg-white hover:bg-gray-50">High</SelectItem>
+                      <SelectItem value="urgent" className="bg-white hover:bg-gray-50">Urgent</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -729,13 +729,13 @@ export function CreatePurchaseOrderModal({ onSuccess, open: controlledOpen, onOp
                     <SelectTrigger className="bg-blue-50 border-blue-200 focus:border-blue-500 focus:ring-blue-500">
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="raw_material">Raw Material</SelectItem>
-                      <SelectItem value="finished_goods">Finished Goods</SelectItem>
-                      <SelectItem value="consumables">Consumables</SelectItem>
-                      <SelectItem value="services">Services</SelectItem>
-                      <SelectItem value="capital_goods">Capital Goods</SelectItem>
-                      <SelectItem value="maintenance">Maintenance</SelectItem>
+                    <SelectContent className="bg-white border border-gray-200 shadow-lg z-50">
+                      <SelectItem value="raw_material" className="bg-white hover:bg-gray-50">Raw Material</SelectItem>
+                      <SelectItem value="finished_goods" className="bg-white hover:bg-gray-50">Finished Goods</SelectItem>
+                      <SelectItem value="consumables" className="bg-white hover:bg-gray-50">Consumables</SelectItem>
+                      <SelectItem value="services" className="bg-white hover:bg-gray-50">Services</SelectItem>
+                      <SelectItem value="capital_goods" className="bg-white hover:bg-gray-50">Capital Goods</SelectItem>
+                      <SelectItem value="maintenance" className="bg-white hover:bg-gray-50">Maintenance</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -759,9 +759,9 @@ export function CreatePurchaseOrderModal({ onSuccess, open: controlledOpen, onOp
                     <SelectTrigger className="bg-green-50 border-green-200 focus:border-green-500 focus:ring-green-500">
                       <SelectValue placeholder="Select a supplier" />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="bg-white border border-gray-200 shadow-lg z-50">
                       {suppliers.map((supplier) => (
-                        <SelectItem key={supplier._id || ''} value={supplier._id || ''}>
+                        <SelectItem key={supplier._id || ''} value={supplier._id || ''} className="bg-white hover:bg-gray-50">
                           {supplier.supplierName} ({supplier.supplierCode})
                         </SelectItem>
                       ))}
@@ -809,9 +809,9 @@ export function CreatePurchaseOrderModal({ onSuccess, open: controlledOpen, onOp
                     <SelectTrigger>
                       <SelectValue placeholder="Select a warehouse" />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="bg-white border border-gray-200 shadow-lg z-50">
                       {warehouses.map((warehouse) => (
-                        <SelectItem key={warehouse._id || ''} value={warehouse._id || ''}>
+                        <SelectItem key={warehouse._id || ''} value={warehouse._id || ''} className="bg-white hover:bg-gray-50">
                           {warehouse.warehouseName} ({warehouse.warehouseCode})
                         </SelectItem>
                       ))}
@@ -896,9 +896,9 @@ export function CreatePurchaseOrderModal({ onSuccess, open: controlledOpen, onOp
                             <SelectTrigger>
                               <SelectValue />
                             </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="new">New Item</SelectItem>
-                              <SelectItem value="existing">Existing Item</SelectItem>
+                            <SelectContent className="bg-white border border-gray-200 shadow-lg z-50">
+                              <SelectItem value="new" className="bg-white hover:bg-gray-50">New Item</SelectItem>
+                              <SelectItem value="existing" className="bg-white hover:bg-gray-50">Existing Item</SelectItem>
                             </SelectContent>
                           </Select>
                         </div>
@@ -930,7 +930,7 @@ export function CreatePurchaseOrderModal({ onSuccess, open: controlledOpen, onOp
                               </SelectTrigger>
                               <SelectContent className="z-50">
                                 {inventoryItems.map((invItem) => (
-                                  <SelectItem key={invItem._id} value={invItem._id}>
+                                  <SelectItem key={invItem._id} value={invItem._id} className="bg-white hover:bg-gray-50">
                                     {invItem.itemName} ({invItem.itemCode}) - Stock: {invItem.stock?.currentStock || 0} {invItem.stock?.unit || 'pcs'}
                                   </SelectItem>
                                 ))}
@@ -975,14 +975,14 @@ export function CreatePurchaseOrderModal({ onSuccess, open: controlledOpen, onOp
                               <SelectTrigger className="bg-purple-50 border-purple-200 focus:border-purple-500 focus:ring-purple-500 w-full h-10">
                                 <SelectValue placeholder="Select category" />
                               </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="raw_material">Raw Material</SelectItem>
-                                <SelectItem value="finished_goods">Finished Goods</SelectItem>
-                                <SelectItem value="consumables">Consumables</SelectItem>
-                                <SelectItem value="services">Services</SelectItem>
-                                <SelectItem value="capital_goods">Capital Goods</SelectItem>
-                                <SelectItem value="maintenance">Maintenance</SelectItem>
-                                <SelectItem value="spare_parts">Spare Parts</SelectItem>
+                              <SelectContent className="bg-white border border-gray-200 shadow-lg z-50">
+                                <SelectItem value="raw_material" className="bg-white hover:bg-gray-50">Raw Material</SelectItem>
+                                <SelectItem value="finished_goods" className="bg-white hover:bg-gray-50">Finished Goods</SelectItem>
+                                <SelectItem value="consumables" className="bg-white hover:bg-gray-50">Consumables</SelectItem>
+                                <SelectItem value="services" className="bg-white hover:bg-gray-50">Services</SelectItem>
+                                <SelectItem value="capital_goods" className="bg-white hover:bg-gray-50">Capital Goods</SelectItem>
+                                <SelectItem value="maintenance" className="bg-white hover:bg-gray-50">Maintenance</SelectItem>
+                                <SelectItem value="spare_parts" className="bg-white hover:bg-gray-50">Spare Parts</SelectItem>
                               </SelectContent>
                             </Select>
                           </div>
@@ -1025,13 +1025,13 @@ export function CreatePurchaseOrderModal({ onSuccess, open: controlledOpen, onOp
                             <SelectTrigger>
                               <SelectValue />
                             </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="pcs">Pieces</SelectItem>
-                              <SelectItem value="kg">Kilograms</SelectItem>
-                              <SelectItem value="meters">Meters</SelectItem>
-                              <SelectItem value="liters">Liters</SelectItem>
-                              <SelectItem value="boxes">Boxes</SelectItem>
-                              <SelectItem value="sets">Sets</SelectItem>
+                            <SelectContent className="bg-white border border-gray-200 shadow-lg z-50">
+                              <SelectItem value="pcs" className="bg-white hover:bg-gray-50">Pieces</SelectItem>
+                              <SelectItem value="kg" className="bg-white hover:bg-gray-50">Kilograms</SelectItem>
+                              <SelectItem value="meters" className="bg-white hover:bg-gray-50">Meters</SelectItem>
+                              <SelectItem value="liters" className="bg-white hover:bg-gray-50">Liters</SelectItem>
+                              <SelectItem value="boxes" className="bg-white hover:bg-gray-50">Boxes</SelectItem>
+                              <SelectItem value="sets" className="bg-white hover:bg-gray-50">Sets</SelectItem>
                             </SelectContent>
                           </Select>
                         </div>
@@ -1088,9 +1088,9 @@ export function CreatePurchaseOrderModal({ onSuccess, open: controlledOpen, onOp
                             <SelectTrigger>
                               <SelectValue />
                             </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="percentage">Percentage (%)</SelectItem>
-                              <SelectItem value="amount">Amount (₹)</SelectItem>
+                            <SelectContent className="bg-white border border-gray-200 shadow-lg z-50">
+                              <SelectItem value="percentage" className="bg-white hover:bg-gray-50">Percentage (%)</SelectItem>
+                              <SelectItem value="amount" className="bg-white hover:bg-gray-50">Amount (₹)</SelectItem>
                             </SelectContent>
                           </Select>
                         </div>
@@ -1218,12 +1218,12 @@ export function CreatePurchaseOrderModal({ onSuccess, open: controlledOpen, onOp
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="net">Net</SelectItem>
-                      <SelectItem value="advance">Advance</SelectItem>
-                      <SelectItem value="cod">Cash on Delivery</SelectItem>
-                      <SelectItem value="credit">Credit</SelectItem>
-                      <SelectItem value="milestone">Milestone</SelectItem>
+                    <SelectContent className="bg-white border border-gray-200 shadow-lg z-50">
+                      <SelectItem value="net" className="bg-white hover:bg-gray-50">Net</SelectItem>
+                      <SelectItem value="advance" className="bg-white hover:bg-gray-50">Advance</SelectItem>
+                      <SelectItem value="cod" className="bg-white hover:bg-gray-50">Cash on Delivery</SelectItem>
+                      <SelectItem value="credit" className="bg-white hover:bg-gray-50">Credit</SelectItem>
+                      <SelectItem value="milestone" className="bg-white hover:bg-gray-50">Milestone</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
