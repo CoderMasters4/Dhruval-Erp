@@ -14,6 +14,7 @@ const createUserValidation = [
     .withMessage('Username can only contain letters, numbers, and underscores'),
   
   body('email')
+    .optional()
     .isEmail()
     .withMessage('Please provide a valid email address')
     .normalizeEmail(),
@@ -33,7 +34,6 @@ const createUserValidation = [
     .withMessage('Last name is required and must be less than 50 characters'),
   
   body('phone')
-    .optional()
     .isMobilePhone('any')
     .withMessage('Please provide a valid phone number'),
   

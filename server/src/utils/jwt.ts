@@ -6,7 +6,7 @@ import config from '../config/environment';
 export interface JWTPayload {
   userId: string;
   username: string;
-  email: string;
+  email?: string;
   isSuperAdmin: boolean;
   companyId?: string;
   role?: string;

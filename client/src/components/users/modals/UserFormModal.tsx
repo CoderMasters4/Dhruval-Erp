@@ -30,7 +30,6 @@ interface UserFormModalProps {
 }
 
 interface FormData {
-  username: string
   email: string
   password: string
   confirmPassword: string
@@ -169,7 +168,6 @@ const PERMISSION_PRESETS: { [key: string]: { [module: string]: { [action: string
 
 export default function UserFormModal({ isOpen, onClose, onSuccess, user }: UserFormModalProps) {
   const [formData, setFormData] = useState<FormData>({
-    username: '',
     email: '',
     password: '',
     confirmPassword: '',
@@ -195,6 +193,7 @@ export default function UserFormModal({ isOpen, onClose, onSuccess, user }: User
   const [apiErrors, setApiErrors] = useState<string[]>([])
   const [showSuccess, setShowSuccess] = useState(false)
   const [isServerReachable, setIsServerReachable] = useState(true)
+  const [generatedUsername, setGeneratedUsername] = useState<string>('')
 
   const [createUser, { isLoading: isCreating }] = useCreateUserMutation()
   const [updateUser, { isLoading: isUpdating }] = useUpdateUserMutation()
@@ -223,12 +222,45 @@ export default function UserFormModal({ isOpen, onClose, onSuccess, user }: User
     }
   }
 
+  // Function to generate username suggestions
+  const generateUsernameSuggestions = (firstName: string, email?: string): string[] => {
+    const suggestions: string[] = []
+    
+    // Clean first name
+    const cleanFirstName = firstName
+      .toLowerCase()
+      .replace(/[^a-z0-9]/g, '')
+      .substring(0, 10)
+
+    // Add first name based suggestions
+    if (cleanFirstName && cleanFirstName.length >= 2) {
+      suggestions.push(cleanFirstName)
+      suggestions.push(`${cleanFirstName}1`)
+      suggestions.push(`${cleanFirstName}2`)
+    }
+
+    // Add email based suggestions if available
+    if (email) {
+      const emailPrefix = email.split('@')[0]
+        .toLowerCase()
+        .replace(/[^a-z0-9]/g, '')
+        .substring(0, 10)
+      
+      if (emailPrefix && emailPrefix.length >= 3) {
+        suggestions.push(emailPrefix)
+        suggestions.push(`${emailPrefix}1`)
+      }
+    }
+
+    // Remove duplicates and limit to 5 suggestions
+    return [...new Set(suggestions)].slice(0, 5)
+  }
+
   // Reset form when modal opens/closes or user changes
   useEffect(() => {
     if (isOpen) {
       if (user) {
         setFormData({
-          username: user.username || '',
           email: user.email || '',
           password: '',
           confirmPassword: '',
@@ -251,9 +283,9 @@ export default function UserFormModal({ isOpen, onClose, onSuccess, user }: User
           isSuperAdmin: user.isSuperAdmin || false,
           permissions: user.companyAccess?.[0]?.permissions || PERMISSION_PRESETS.helper
         })
+        setGeneratedUsername(user.username || '')
       } else {
         setFormData({
-          username: '',
           email: '',
           password: '',
           confirmPassword: '',
@@ -272,6 +304,7 @@ export default function UserFormModal({ isOpen, onClose, onSuccess, user }: User
           isSuperAdmin: false,
           permissions: PERMISSION_PRESETS.helper
         })
+        setGeneratedUsername('')
       }
       setErrors({})
       setApiErrors([])
@@ -303,16 +336,18 @@ export default function UserFormModal({ isOpen, onClose, onSuccess, user }: User
     }
   }, [formData.permissions])
 
+  // Generate username suggestions when first name or email changes
+  useEffect(() => {
+    if (!isEditing && formData.firstName) {
+      const suggestions = generateUsernameSuggestions(formData.firstName, formData.email)
+      if (suggestions.length > 0) {
+        setGeneratedUsername(suggestions[0])
+      }
+    }
+  }, [formData.firstName, formData.email, isEditing])
+
   const validateForm = (): boolean => {
     const newErrors: Partial<FormData> = {}
-
-    if (!formData.username.trim()) {
-      newErrors.username = 'Username is required'
-    } else if (formData.username.length < 3) {
-      newErrors.username = 'Username must be at least 3 characters'
-    } else if (!/^[a-zA-Z0-9_]+$/.test(formData.username)) {
-      newErrors.username = 'Username can only contain letters, numbers, and underscores'
-    }
 
     if (!formData.firstName.trim()) {
       newErrors.firstName = 'First name is required'
@@ -322,9 +357,7 @@ export default function UserFormModal({ isOpen, onClose, onSuccess, user }: User
       newErrors.lastName = 'Last name is required'
     }
 
-    if (!formData.email.trim()) {
-      newErrors.email = 'Email is required'
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+    if (formData.email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
       newErrors.email = 'Please enter a valid email address'
     }
 
@@ -376,7 +409,6 @@ export default function UserFormModal({ isOpen, onClose, onSuccess, user }: User
         const updatePayload = {
           id: getUserId(user),
           user: {
-            username: formData.username,
             email: formData.email,
             personalInfo: {
               firstName: formData.firstName,
@@ -407,7 +439,6 @@ export default function UserFormModal({ isOpen, onClose, onSuccess, user }: User
         // Success message is handled by parent component's onSuccess callback
       } else {
         const createPayload = {
-          username: formData.username,
           email: formData.email,
           password: formData.password,
           personalInfo: {
@@ -477,7 +508,6 @@ export default function UserFormModal({ isOpen, onClose, onSuccess, user }: User
               
               // Map server field errors to form field errors
               const fieldMap: { [key: string]: keyof FormData } = {
-                'username': 'username',
                 'email': 'email',
                 'password': 'password',
                 'firstName': 'firstName',
@@ -501,7 +531,16 @@ export default function UserFormModal({ isOpen, onClose, onSuccess, user }: User
 
         // Handle single error message
         if (error.data.message) {
-          errorMessages.push(error.data.message)
+          // Handle specific validation errors with user-friendly messages
+          if (error.data.message.includes('username already exists')) {
+            errorMessages.push('This username is already taken. Please choose a different username.')
+          } else if (error.data.message.includes('email already exists')) {
+            errorMessages.push('This email address is already registered. Please use a different email or leave it empty.')
+          } else if (error.data.message.includes('User with this username or email already exists')) {
+            errorMessages.push('A user with this username or email already exists. Please choose different credentials.')
+          } else {
+            errorMessages.push(error.data.message)
+          }
         } else if (error.data.error) {
           errorMessages.push(error.data.error)
         }
@@ -516,7 +555,10 @@ export default function UserFormModal({ isOpen, onClose, onSuccess, user }: User
       if (error?.status === 500) {
         errorMessages.push('Server error occurred. Please try again later.')
       } else if (error?.status === 400) {
-        errorMessages.push('Invalid data provided. Please check your inputs.')
+        // Don't add generic message here as we handle specific 400 errors above
+        if (!errorMessages.length) {
+          errorMessages.push('Invalid data provided. Please check your inputs.')
+        }
       } else if (error?.status === 409) {
         errorMessages.push('Username or email already exists.')
       } else if (error?.status === 401) {
@@ -555,6 +597,17 @@ export default function UserFormModal({ isOpen, onClose, onSuccess, user }: User
           errorMessages.push('Internal server error. Please try again later.')
         } else if (error.originalStatus === 503) {
           errorMessages.push('Service temporarily unavailable. Please try again later.')
+        } else if (error.originalStatus === 400) {
+          // Handle validation errors with more specific messages
+          if (error?.data?.message) {
+            if (error.data.message.includes('username already exists')) {
+              errorMessages.push('This username is already taken. Please choose a different username.')
+            } else if (error.data.message.includes('email already exists')) {
+              errorMessages.push('This email address is already registered. Please use a different email or leave it empty.')
+            } else {
+              errorMessages.push(error.data.message)
+            }
+          }
         }
       }
 
@@ -771,20 +824,15 @@ export default function UserFormModal({ isOpen, onClose, onSuccess, user }: User
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-semibold text-black mb-2">
-                    Username *
+                    Generated Username
                   </label>
-                  <input
-                    type="text"
-                    required
-                    value={formData.username}
-                    onChange={(e) => updateFormData({ username: e.target.value.toLowerCase() })}
-                    className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-all duration-200 text-gray-900 font-medium placeholder:text-gray-500 ${
-                      errors.username ? 'border-red-300 bg-red-50' : 'border-gray-300 bg-white'
-                    }`}
-                    placeholder="Enter username"
-                  />
-                  {errors.username && (
-                    <p className="mt-1 text-sm text-red-600 font-medium">{errors.username}</p>
+                  <div className="w-full px-4 py-3 border border-gray-300 bg-gray-50 rounded-xl text-gray-700 font-medium">
+                    {isEditing ? (user?.username || 'N/A') : (generatedUsername || 'Will be generated based on first name')}
+                  </div>
+                  {!isEditing && (
+                    <p className="mt-1 text-sm text-gray-500">
+                      Username will be automatically generated based on first name and email
+                    </p>
                   )}
                 </div>
 
@@ -828,19 +876,18 @@ export default function UserFormModal({ isOpen, onClose, onSuccess, user }: User
 
                 <div>
                   <label className="block text-sm font-semibold text-black mb-2">
-                    Email Address *
+                    Email Address <span className="text-gray-500 font-normal">(Optional)</span>
                   </label>
                   <div className="relative">
                     <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
                     <input
                       type="email"
-                      required
                       value={formData.email}
                       onChange={(e) => updateFormData({ email: e.target.value.toLowerCase() })}
                       className={`w-full pl-10 pr-4 py-3 border rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-all duration-200 text-gray-900 font-medium placeholder:text-gray-500 ${
                         errors.email ? 'border-red-300 bg-red-50' : 'border-gray-300 bg-white'
                       }`}
-                      placeholder="Enter email address"
+                      placeholder="Enter email address (optional)"
                     />
                   </div>
                   {errors.email && (

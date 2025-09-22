@@ -5,6 +5,7 @@ import User from '../../models/User'
 import Company from '../../models/Company'
 import TwoFactor from '../../models/TwoFactor'
 import bcrypt from 'bcryptjs'
+import { generateUniqueUsername } from '../../utils/usernameGenerator'
 
 const router: Router = Router()
 
@@ -219,11 +220,11 @@ router.post('/', async (req: Request, res: Response) => {
       isSuperAdmin
     } = req.body
 
-    // Validate required fields
-    if (!username || !email || !password || !personalInfo || !primaryCompanyId || !role) {
+    // Validate required fields (username is now auto-generated)
+    if (!password || !personalInfo || !primaryCompanyId || !role) {
       return res.status(400).json({
         success: false,
-        message: 'Missing required fields: username, email, password, personalInfo, primaryCompanyId, and role are required'
+        message: 'Missing required fields: password, personalInfo, primaryCompanyId, and role are required'
       })
     }
 
@@ -235,16 +236,19 @@ router.post('/', async (req: Request, res: Response) => {
       })
     }
 
-    // Check if user already exists
-    const existingUser = await User.findOne({
-      $or: [{ username }, { email }]
-    })
+    // Auto-generate unique username
+    const generatedUsername = await generateUniqueUsername(personalInfo.firstName, email)
+    console.log('Generated username:', generatedUsername)
 
-    if (existingUser) {
-      return res.status(400).json({
-        success: false,
-        message: 'User with this username or email already exists'
-      })
+    // Check if email already exists (if provided)
+    if (email) {
+      const existingUserByEmail = await User.findOne({ email })
+      if (existingUserByEmail) {
+        return res.status(400).json({
+          success: false,
+          message: 'User with this email already exists'
+        })
+      }
     }
 
     // Verify company exists
@@ -313,9 +317,8 @@ router.post('/', async (req: Request, res: Response) => {
     }]
 
     // Create user
-    const newUser = new User({
-      username,
-      email,
+    const userData: any = {
+      username: generatedUsername,
       personalInfo,
       password: hashedPassword,
       primaryCompanyId,
@@ -324,7 +327,14 @@ router.post('/', async (req: Request, res: Response) => {
       isSuperAdmin: isSuperAdmin || false,
       createdAt: new Date(),
       updatedAt: new Date()
-    })
+    }
+
+    // Only add email if provided
+    if (email && email.trim()) {
+      userData.email = email
+    }
+
+    const newUser = new User(userData)
 
     await newUser.save()
 

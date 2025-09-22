@@ -22,7 +22,8 @@ declare global {
 interface JWTPayload {
   userId: string;
   username: string;
-  email: string;
+  email?: string;
+  isSuperAdmin: boolean;
   companyId?: string;
   role?: string;
   iat: number;
@@ -45,7 +46,8 @@ export const generateAccessToken = (user: IUser, companyId?: string): string => 
   const payload: Omit<JWTPayload, 'iat' | 'exp' | 'iss' | 'aud'> = {
     userId: user._id.toString(),
     username: user.username,
-    email: user.email
+    email: user.email || undefined,
+    isSuperAdmin: user.isSuperAdmin || false
   };
 
   if (companyId) {

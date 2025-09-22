@@ -135,8 +135,8 @@ export interface UsersResponse {
 }
 
 export interface CreateUserRequest {
-  username: string
-  email: string
+  username?: string
+  email?: string
   password: string
   personalInfo: {
     firstName: string

@@ -149,7 +149,7 @@ export interface ILicense {
 
 export interface IUser extends BaseDocument {
   username: string;
-  email: string;
+  email?: string;
   password: string;
   fullName?: string; // Virtual field
   userId?: Types.ObjectId; // From JWT payload

@@ -96,7 +96,7 @@ class AuthService {
       const tokenPayload: JWTPayload = {
         userId: user._id.toString(),
         username: user.username,
-        email: user.email,
+        email: user.email || undefined,
         isSuperAdmin: user.isSuperAdmin || false,
         companyId: user.primaryCompanyId?.toString(),
         role: user.companyAccess?.[0]?.role || 'user'

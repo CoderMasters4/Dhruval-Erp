@@ -533,8 +533,12 @@ export class UserService extends BaseService<IUser> {
       throw new AppError('Username is required', 400);
     }
 
-    if (!userData.email) {
-      throw new AppError('Email is required', 400);
+    // Email is optional, but if provided, validate format
+    if (userData.email) {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(userData.email)) {
+        throw new AppError('Invalid email format', 400);
+      }
     }
 
     if (!userData.password) {
@@ -549,11 +553,6 @@ export class UserService extends BaseService<IUser> {
       throw new AppError('Last name is required', 400);
     }
 
-    // Validate email format
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(userData.email)) {
-      throw new AppError('Invalid email format', 400);
-    }
 
     // Validate password strength
     if (userData.password.length < 8) {

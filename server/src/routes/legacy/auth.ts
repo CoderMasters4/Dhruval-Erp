@@ -27,6 +27,7 @@ const registerValidation = [
     .withMessage('Username must be 3-50 characters and contain only letters, numbers, and underscores'),
   
   body('email')
+    .optional()
     .isEmail()
     .normalizeEmail()
     .withMessage('Please provide a valid email address'),
