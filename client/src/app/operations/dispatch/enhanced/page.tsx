@@ -6,6 +6,8 @@ import { Button } from '@/components/ui/Button';
 import { DispatchList } from '@/components/dispatch/DispatchList';
 import { DispatchCreateModal } from '@/components/dispatch/DispatchCreateModal';
 import { DispatchViewModal } from '@/components/dispatch/DispatchViewModal';
+import { DispatchEditModal } from '@/components/dispatch/DispatchEditModal';
+import { QuickUpdateModal } from '@/components/dispatch/QuickUpdateModal';
 import { DispatchFilters } from '@/components/dispatch/DispatchFilters';
 import { Plus, Truck, TrendingUp } from 'lucide-react';
 import { useGetDispatchesQuery, useDeleteDispatchMutation } from '@/lib/api/enhancedDispatchApi';
@@ -22,6 +24,8 @@ const EnhancedDispatchPage = () => {
   const [priorityFilter, setPriorityFilter] = useState<string>('all');
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showViewModal, setShowViewModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [showQuickUpdateModal, setShowQuickUpdateModal] = useState(false);
   const [selectedDispatch, setSelectedDispatch] = useState<Dispatch | null>(null);
 
   // User data
@@ -64,10 +68,13 @@ const EnhancedDispatchPage = () => {
   };
 
   const handleEditDispatch = (dispatch: Dispatch) => {
-    // For now, just show the view modal
-    // TODO: Implement edit functionality
     setSelectedDispatch(dispatch);
-    setShowViewModal(true);
+    setShowEditModal(true);
+  };
+
+  const handleQuickUpdate = (dispatch: Dispatch) => {
+    setSelectedDispatch(dispatch);
+    setShowQuickUpdateModal(true);
   };
 
   const handleDeleteDispatch = async (dispatch: Dispatch) => {
@@ -86,6 +93,16 @@ const EnhancedDispatchPage = () => {
     refetch();
   };
 
+  const handleEditSuccess = (dispatch: Dispatch) => {
+    toast.success(`Dispatch ${dispatch.dispatchNumber} updated successfully!`);
+    refetch();
+  };
+
+  const handleQuickUpdateSuccess = (dispatch: Dispatch) => {
+    toast.success(`Dispatch ${dispatch.dispatchNumber} status updated!`);
+    refetch();
+  };
+
   const handleClearFilters = () => {
     setSearchTerm('');
     setStatusFilter('all');
@@ -101,65 +118,99 @@ const EnhancedDispatchPage = () => {
             <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
               <div className="flex-1">
                 <div className="flex items-center gap-3 mb-2">
-                  <div className="p-2 bg-blue-100 dark:bg-blue-900 rounded-lg">
-                    <Truck className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+                  <div className="p-3 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl shadow-lg">
+                    <Truck className="h-7 w-7 text-white" />
                   </div>
-                  <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-                    Enhanced Dispatch Operations
-                  </h1>
+                  <div>
+                    <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+                      Enhanced Dispatch Operations
+                    </h1>
+                    <div className="flex items-center gap-2 mt-1">
+                      <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                      <span className="text-sm text-gray-500 dark:text-gray-400">
+                        Real-time monitoring active
+                      </span>
+                    </div>
+                  </div>
                 </div>
                 <p className="text-gray-600 dark:text-gray-400 text-lg">
-                  Manage and track dispatch operations with advanced features and real-time monitoring
+                  Streamlined dispatch management with intelligent tracking, automated workflows, and comprehensive analytics
                 </p>
               </div>
-              <Button
-                onClick={() => setShowCreateModal(true)}
-                className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 h-12 flex items-center gap-2 shadow-lg hover:shadow-xl transition-all duration-200"
-              >
-                <Plus className="h-5 w-5" />
-                Create Dispatch
-              </Button>
+              <div className="flex items-center gap-3">
+                <div className="hidden md:flex items-center gap-2 px-3 py-2 bg-emerald-50 dark:bg-emerald-900/20 rounded-lg border border-emerald-200 dark:border-emerald-700">
+                  <div className="w-2 h-2 bg-emerald-500 rounded-full"></div>
+                  <span className="text-sm font-medium text-emerald-700 dark:text-emerald-300">
+                    {dispatches.length} Total Dispatches
+                  </span>
+                </div>
+                <Button
+                  onClick={() => setShowCreateModal(true)}
+                  className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-6 py-3 h-12 flex items-center gap-2 shadow-lg hover:shadow-xl transition-all duration-200 transform hover:-translate-y-0.5"
+                >
+                  <Plus className="h-5 w-5" />
+                  Create Dispatch
+                </Button>
+              </div>
             </div>
           </div>
 
-          {/* Quick Stats */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-            <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+          {/* Enhanced Quick Stats */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+            <div className="bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Total Dispatches</p>
-                  <p className="text-2xl font-bold text-gray-900 dark:text-white">{dispatches.length}</p>
+                  <p className="text-blue-100 text-sm font-medium">Total Dispatches</p>
+                  <p className="text-3xl font-bold">{dispatches.length}</p>
+                  <p className="text-blue-200 text-xs mt-1">All records</p>
                 </div>
-                <div className="p-2 bg-blue-100 dark:bg-blue-900 rounded-lg">
-                  <Truck className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                <div className="p-3 bg-white/20 rounded-xl">
+                  <Truck className="h-8 w-8" />
                 </div>
               </div>
             </div>
             
-            <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+            <div className="bg-gradient-to-br from-green-500 to-emerald-600 text-white rounded-xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Active Dispatches</p>
-                  <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                  <p className="text-green-100 text-sm font-medium">Active Dispatches</p>
+                  <p className="text-3xl font-bold">
                     {dispatches.filter(d => d.status === 'pending' || d.status === 'in-progress').length}
                   </p>
+                  <p className="text-green-200 text-xs mt-1">In progress</p>
                 </div>
-                <div className="p-2 bg-green-100 dark:bg-green-900 rounded-lg">
-                  <TrendingUp className="h-5 w-5 text-green-600 dark:text-green-400" />
+                <div className="p-3 bg-white/20 rounded-xl">
+                  <TrendingUp className="h-8 w-8" />
                 </div>
               </div>
             </div>
             
-            <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+            <div className="bg-gradient-to-br from-purple-500 to-indigo-600 text-white rounded-xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Total Value</p>
-                  <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                    ₹{dispatches.length * 50000} {/* Mock calculation since totalValue doesn't exist */}
+                  <p className="text-purple-100 text-sm font-medium">Completed</p>
+                  <p className="text-3xl font-bold">
+                    {dispatches.filter(d => d.status === 'completed' || d.status === 'delivered').length}
                   </p>
+                  <p className="text-purple-200 text-xs mt-1">Successfully done</p>
                 </div>
-                <div className="p-2 bg-purple-100 dark:bg-purple-900 rounded-lg">
-                  <TrendingUp className="h-5 w-5 text-purple-600 dark:text-purple-400" />
+                <div className="p-3 bg-white/20 rounded-xl">
+                  <TrendingUp className="h-8 w-8" />
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-gradient-to-br from-orange-500 to-red-600 text-white rounded-xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-orange-100 text-sm font-medium">Urgent Priority</p>
+                  <p className="text-3xl font-bold">
+                    {dispatches.filter(d => d.priority === 'urgent' || d.priority === 'high').length}
+                  </p>
+                  <p className="text-orange-200 text-xs mt-1">Need attention</p>
+                </div>
+                <div className="p-3 bg-white/20 rounded-xl">
+                  <TrendingUp className="h-8 w-8" />
                 </div>
               </div>
             </div>
@@ -178,15 +229,47 @@ const EnhancedDispatchPage = () => {
             />
           </div>
 
-          {/* Dispatch List */}
-          <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
-            <DispatchList
-              dispatches={filteredDispatches}
-              onView={handleViewDispatch}
-              onEdit={handleEditDispatch}
-              onDelete={handleDeleteDispatch}
-              isLoading={dispatchesLoading}
-            />
+          {/* Enhanced Dispatch List */}
+          <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-lg overflow-hidden">
+            <div className="bg-gradient-to-r from-gray-50 to-blue-50 dark:from-gray-800 dark:to-blue-900/20 px-6 py-4 border-b border-gray-200 dark:border-gray-600">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg">
+                    <Truck className="h-5 w-5 text-white" />
+                  </div>
+                  <div>
+                    <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Dispatch Management</h2>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                      {filteredDispatches.length} of {dispatches.length} dispatches
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="px-3 py-1 bg-green-100 dark:bg-green-900/20 rounded-full">
+                    <span className="text-xs font-medium text-green-700 dark:text-green-300">
+                      Live Updates
+                    </span>
+                  </div>
+                  <div className="hidden lg:flex items-center gap-1 px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded text-xs text-gray-600 dark:text-gray-400">
+                    <span>💡 Tips: Click</span>
+                    <span className="px-1 bg-purple-200 dark:bg-purple-800 rounded text-purple-700 dark:text-purple-300">⚡</span>
+                    <span>for quick update,</span>
+                    <span className="px-1 bg-green-200 dark:bg-green-800 rounded text-green-700 dark:text-green-300">✏️</span>
+                    <span>for full edit</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="p-6">
+              <DispatchList
+                dispatches={filteredDispatches}
+                onView={handleViewDispatch}
+                onEdit={handleEditDispatch}
+                onQuickUpdate={handleQuickUpdate}
+                onDelete={handleDeleteDispatch}
+                isLoading={dispatchesLoading}
+              />
+            </div>
           </div>
 
           {/* Create Modal */}
@@ -205,6 +288,29 @@ const EnhancedDispatchPage = () => {
               setSelectedDispatch(null);
             }}
             dispatch={selectedDispatch}
+          />
+
+          {/* Edit Modal */}
+          <DispatchEditModal
+            isOpen={showEditModal}
+            onClose={() => {
+              setShowEditModal(false);
+              setSelectedDispatch(null);
+            }}
+            dispatch={selectedDispatch}
+            onSuccess={handleEditSuccess}
+            userCompanyId={user?.companyId}
+          />
+
+          {/* Quick Update Modal */}
+          <QuickUpdateModal
+            isOpen={showQuickUpdateModal}
+            onClose={() => {
+              setShowQuickUpdateModal(false);
+              setSelectedDispatch(null);
+            }}
+            dispatch={selectedDispatch}
+            onSuccess={handleQuickUpdateSuccess}
           />
         </div>
       </div>

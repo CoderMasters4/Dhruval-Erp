@@ -355,64 +355,64 @@ export const DispatchCreateModal = ({
       <div className="max-h-[90vh] overflow-y-auto space-y-6">
         {/* Stats Cards Header */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-          <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+          <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg border border-blue-200 dark:border-blue-700">
             <div className="flex items-center">
-              <div className="p-2 bg-blue-100 rounded-lg">
-                <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="p-2 bg-blue-100 dark:bg-blue-800 rounded-lg">
+                <svg className="w-6 h-6 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                 </svg>
               </div>
               <div className="ml-3">
-                <p className="text-sm font-medium text-gray-600">Order Number</p>
-                <p className="text-lg font-semibold text-gray-900">
+                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Order Number</p>
+                <p className="text-lg font-semibold text-gray-900 dark:text-white">
                   {prefilledData?.orderNumber || selectedSalesOrder?.orderNumber || 'N/A'}
                 </p>
               </div>
             </div>
           </div>
 
-          <div className="bg-green-50 p-4 rounded-lg border border-green-200">
+          <div className="bg-green-50 dark:bg-green-900/20 p-4 rounded-lg border border-green-200 dark:border-green-700">
             <div className="flex items-center">
-              <div className="p-2 bg-green-100 rounded-lg">
-                <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="p-2 bg-green-100 dark:bg-green-800 rounded-lg">
+                <svg className="w-6 h-6 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                 </svg>
               </div>
               <div className="ml-3">
-                <p className="text-sm font-medium text-gray-600">Customer</p>
-                <p className="text-lg font-semibold text-gray-900">
+                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Customer</p>
+                <p className="text-lg font-semibold text-gray-900 dark:text-white">
                   {prefilledData?.customerName || selectedSalesOrder?.customerName || 'N/A'}
                 </p>
               </div>
             </div>
           </div>
 
-          <div className="bg-yellow-50 p-4 rounded-lg border border-yellow-200">
+          <div className="bg-yellow-50 dark:bg-yellow-900/20 p-4 rounded-lg border border-yellow-200 dark:border-yellow-700">
             <div className="flex items-center">
-              <div className="p-2 bg-yellow-100 rounded-lg">
-                <svg className="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="p-2 bg-yellow-100 dark:bg-yellow-800 rounded-lg">
+                <svg className="w-6 h-6 text-yellow-600 dark:text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
                 </svg>
               </div>
               <div className="ml-3">
-                <p className="text-sm font-medium text-gray-600">Order Amount</p>
-                <p className="text-lg font-semibold text-gray-900">
+                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Order Amount</p>
+                <p className="text-lg font-semibold text-gray-900 dark:text-white">
                   ₹{prefilledData?.orderAmount || selectedSalesOrder?.orderSummary?.finalAmount || '0'}
                 </p>
               </div>
             </div>
           </div>
 
-          <div className="bg-purple-50 p-4 rounded-lg border border-purple-200">
+          <div className="bg-purple-50 dark:bg-purple-900/20 p-4 rounded-lg border border-purple-200 dark:border-purple-700">
             <div className="flex items-center">
-              <div className="p-2 bg-purple-100 rounded-lg">
-                <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="p-2 bg-purple-100 dark:bg-purple-800 rounded-lg">
+                <svg className="w-6 h-6 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                 </svg>
               </div>
               <div className="ml-3">
-                <p className="text-sm font-medium text-gray-600">Dispatch Number</p>
-                <p className="text-lg font-semibold text-gray-900">
+                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Dispatch Number</p>
+                <p className="text-lg font-semibold text-gray-900 dark:text-white">
                   {generateDispatchNumber()}
                 </p>
               </div>
@@ -420,12 +420,12 @@ export const DispatchCreateModal = ({
           </div>
         </div>
         {/* Basic Information */}
-        <div className="bg-gray-50 p-4 rounded-lg">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">📋 Basic Information</h3>
+        <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">📋 Basic Information</h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Dispatch Date *</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Dispatch Date *</label>
               <Input
                 type="date"
                 value={formData.dispatchDate}
@@ -434,11 +434,11 @@ export const DispatchCreateModal = ({
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Status *</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Status *</label>
               <select
                 value={formData.status}
                 onChange={(e) => setFormData({ ...formData, status: e.target.value as Dispatch['status'] })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
               >
                 <option value="pending">⏳ Pending</option>
                 <option value="in-progress">🔄 In Progress</option>
@@ -451,11 +451,11 @@ export const DispatchCreateModal = ({
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Dispatch Type *</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Dispatch Type *</label>
               <select
                 value={formData.dispatchType}
                 onChange={(e) => setFormData({ ...formData, dispatchType: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
               >
                 <option value="pickup">📦 Pickup</option>
                 <option value="delivery">🚚 Delivery</option>
@@ -464,11 +464,11 @@ export const DispatchCreateModal = ({
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Priority *</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Priority *</label>
               <select
                 value={formData.priority}
                 onChange={(e) => setFormData({ ...formData, priority: e.target.value as Dispatch['priority'] })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
               >
                 <option value="low">🟢 Low</option>
                 <option value="medium">🟡 Medium</option>
@@ -477,7 +477,7 @@ export const DispatchCreateModal = ({
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Company *</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Company *</label>
               <select
                 value={formData.companyId}
                 onChange={(e) => {
@@ -487,7 +487,7 @@ export const DispatchCreateModal = ({
                     sourceWarehouseId: ''
                   })
                 }}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
               >
                 <option value="">Select company</option>
                 {(Array.isArray(companies)
@@ -507,8 +507,8 @@ export const DispatchCreateModal = ({
         {!prefilledData && (
           <div className="space-y-4">
             {/* Sales Order Search by ID */}
-            <div className="bg-yellow-50 p-4 rounded-lg">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+            <div className="bg-yellow-50 dark:bg-yellow-900/20 p-4 rounded-lg">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
                 🔍 Search Sales Order by ID
               </h3>
               <div className="flex gap-2">
@@ -527,8 +527,8 @@ export const DispatchCreateModal = ({
                 </Button>
               </div>
               {searchedSalesOrder && (
-                <div className="mt-3 p-3 bg-green-50 rounded-lg">
-                  <h4 className="text-sm font-medium text-gray-700 mb-2">Found Sales Order:</h4>
+                <div className="mt-3 p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
+                  <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Found Sales Order:</h4>
                   <div className="grid grid-cols-2 gap-2 text-sm">
                     <div>
                       <span className="text-gray-600">Order:</span>
@@ -568,10 +568,10 @@ export const DispatchCreateModal = ({
         )}
 
         {/* Source Warehouse Selection */}
-        <div className="bg-blue-50 p-4 rounded-lg">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">🏭 Source Warehouse</h3>
+        <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">🏭 Source Warehouse</h3>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Select Source Warehouse *</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Select Source Warehouse *</label>
             <select
               value={formData.sourceWarehouseId}
               onChange={(e) => {
@@ -580,7 +580,7 @@ export const DispatchCreateModal = ({
                   sourceWarehouseId: e.target.value
                 })
               }}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
               disabled={!formData.companyId}
             >
               <option value="">
@@ -596,11 +596,11 @@ export const DispatchCreateModal = ({
         </div>
 
         {/* Delivery Information */}
-        <div className="bg-green-50 p-4 rounded-lg">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">🚚 Delivery Information</h3>
+        <div className="bg-green-50 dark:bg-green-900/20 p-4 rounded-lg">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">🚚 Delivery Information</h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Vehicle Number</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Vehicle Number</label>
               <Input
                 value={formData.vehicleNumber}
                 onChange={(e) => setFormData({ ...formData, vehicleNumber: e.target.value })}
@@ -609,7 +609,7 @@ export const DispatchCreateModal = ({
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Delivery Person Name</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Delivery Person Name</label>
               <Input
                 value={formData.deliveryPersonName}
                 onChange={(e) => setFormData({ ...formData, deliveryPersonName: e.target.value })}
@@ -618,7 +618,7 @@ export const DispatchCreateModal = ({
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Delivery Person Number</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Delivery Person Number</label>
               <Input
                 value={formData.deliveryPersonNumber}
                 onChange={(e) => setFormData({ ...formData, deliveryPersonNumber: e.target.value })}
@@ -631,38 +631,38 @@ export const DispatchCreateModal = ({
 
         {/* Customer Information from Sales Order */}
         {prefilledData && (
-          <div className="bg-green-50 p-4 rounded-lg">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">👤 Customer Information (from Sales Order)</h3>
+          <div className="bg-green-50 dark:bg-green-900/20 p-4 rounded-lg">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">👤 Customer Information (from Sales Order)</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Customer Name</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Customer Name</label>
                 <Input
                   value={prefilledData.customerName}
-                  className="w-full bg-gray-50"
+                  className="w-full bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white"
                   readOnly
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Customer Code</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Customer Code</label>
                 <Input
                   value={prefilledData.customerCode}
-                  className="w-full bg-gray-50"
+                  className="w-full bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white"
                   readOnly
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Sales Order Number</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Sales Order Number</label>
                 <Input
                   value={`#${prefilledData.orderNumber}`}
-                  className="w-full bg-gray-50"
+                  className="w-full bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white"
                   readOnly
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Order Amount</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Order Amount</label>
                 <Input
                   value={`₹${prefilledData.orderAmount}`}
-                  className="w-full bg-gray-50"
+                  className="w-full bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white"
                   readOnly
                 />
               </div>
@@ -681,7 +681,7 @@ export const DispatchCreateModal = ({
         />
 
         {/* Action Buttons */}
-        <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200">
+        <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200 dark:border-gray-600">
           <Button 
             variant="outline" 
             onClick={onClose}

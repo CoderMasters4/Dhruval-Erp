@@ -158,7 +158,12 @@ export const companiesApi = baseApi.injectEndpoints({
       query: () => '/companies',
       providesTags: ['Company'],
     }),
-    getCompanyById: builder.query<Company, string>({
+    getCompanyById: builder.query<{
+      success: boolean
+      message: string
+      data: Company
+      timestamp: string
+    }, string>({
       query: (id) => `/companies/${id}`,
       providesTags: (result, error, id) => [{ type: 'Company', id }],
     }),
@@ -185,6 +190,79 @@ export const companiesApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: ['Company'],
     }),
+    getCompanyStats: builder.query<{
+      totalCompanies: number
+      activeCompanies: number
+      inactiveCompanies: number
+    }, void>({
+      query: () => '/companies/stats',
+      providesTags: ['Company'],
+    }),
+    getDashboardStats: builder.query<{
+      totalUsers: number
+      totalRevenue: number
+      totalProduction: number
+      totalOrders: number
+      totalCustomers: number
+    }, void>({
+      query: () => '/dashboard',
+      providesTags: ['Company'],
+    }),
+    getCompanyDetailedStats: builder.query<{
+      success: boolean
+      message: string
+      data: {
+        totalUsers: number
+        activeUsers: number
+        inactiveUsers: number
+        totalOrders: number
+        completedOrders: number
+        pendingOrders: number
+        totalRevenue: number
+        totalInventory: number
+        totalProduction: number
+        totalCustomers: number
+        totalInvoices: number
+        orderCompletionRate: number
+        userActivityRate: number
+      }
+      timestamp: string
+    }, string>({
+      query: (companyId) => `/companies/${companyId}/stats`,
+      providesTags: (result, error, companyId) => [{ type: 'Company', id: companyId }],
+      keepUnusedDataFor: 300, // Keep data for 5 minutes
+    }),
+    getBatchCompanyStats: builder.query<{
+      success: boolean
+      message: string
+      data: Array<{
+        companyId: string
+        stats: {
+          totalUsers: number
+          activeUsers: number
+          inactiveUsers: number
+          totalOrders: number
+          completedOrders: number
+          pendingOrders: number
+          totalRevenue: number
+          totalInventory: number
+          totalProduction: number
+          totalCustomers: number
+          totalInvoices: number
+          orderCompletionRate: number
+          userActivityRate: number
+        }
+      }>
+      timestamp: string
+    }, string[]>({
+      query: (companyIds) => ({
+        url: '/companies/batch-stats',
+        params: { companyIds }
+      }),
+      providesTags: (result) => 
+        result?.data ? result.data.map(({ companyId }) => ({ type: 'Company', id: companyId })) : [],
+      keepUnusedDataFor: 300, // Keep data for 5 minutes
+    }),
   }),
 });
 
@@ -194,4 +272,8 @@ export const {
   useCreateCompanyMutation,
   useUpdateCompanyMutation,
   useDeleteCompanyMutation,
+  useGetCompanyStatsQuery,
+  useGetDashboardStatsQuery,
+  useGetCompanyDetailedStatsQuery,
+  useGetBatchCompanyStatsQuery,
 } = companiesApi;

@@ -17,7 +17,9 @@ import {
   Search,
   Filter,
   Download,
-  RefreshCw
+  RefreshCw,
+  Moon,
+  Sun
 } from 'lucide-react';
 import { Input } from '@/components/ui/Input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -27,13 +29,15 @@ import {
   useMarkAsReceivedMutation,
   GreyFabricInward
 } from '@/lib/api/greyFabricInwardApi';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import { selectCurrentUser, selectCurrentCompanyId } from '@/lib/features/auth/authSlice';
+import { selectTheme, setTheme } from '@/lib/features/ui/uiSlice';
 import { GreyFabricInwardForm } from './GreyFabricInwardForm';
 import { GreyFabricInwardDetails } from './GreyFabricInwardDetails';
 import { GreyFabricInwardAnalytics } from './GreyFabricInwardAnalytics';
 import GreyStockSummary from './GreyStockSummary';
 import GreyStockLotDetails from './GreyStockLotDetails';
+import toast from 'react-hot-toast';
 
 interface GreyFabricInwardDashboardProps {
   onRefresh?: () => void;
@@ -58,6 +62,8 @@ export default function GreyFabricInwardDashboard({ onRefresh }: GreyFabricInwar
   // Get user and company info
   const user = useSelector(selectCurrentUser);
   const companyId = useSelector(selectCurrentCompanyId);
+  const theme = useSelector(selectTheme);
+  const dispatch = useDispatch();
 
   // RTK Query hooks
   const {
@@ -81,6 +87,48 @@ export default function GreyFabricInwardDashboard({ onRefresh }: GreyFabricInwar
   const handleRefresh = () => {
     refetch();
     onRefresh?.();
+  };
+
+  const handleThemeToggle = () => {
+    console.log('=== DASHBOARD THEME TOGGLE ===')
+    console.log('Current theme from Redux:', theme)
+    console.log('Document has dark class:', document.documentElement.classList.contains('dark'))
+    
+    const newTheme = theme === 'light' ? 'dark' : 'light';
+    console.log('Switching to theme:', newTheme)
+    
+    // Update localStorage first
+    localStorage.setItem('theme', newTheme)
+    console.log('Updated localStorage with theme:', newTheme)
+    
+    // Force immediate DOM update to ensure synchronization
+    if (newTheme === 'dark') {
+      document.documentElement.classList.add('dark')
+      document.body.classList.add('dark')
+      console.log('Added dark class to document and body')
+    } else {
+      document.documentElement.classList.remove('dark')
+      document.body.classList.remove('dark')
+      console.log('Removed dark class from document and body')
+    }
+    
+    // Dispatch the Redux action after DOM update
+    dispatch(setTheme(newTheme));
+    
+    // Update meta theme-color for mobile browsers
+    const metaThemeColor = document.querySelector('meta[name="theme-color"]')
+    if (metaThemeColor) {
+      metaThemeColor.setAttribute('content', newTheme === 'dark' ? '#0f172a' : '#ffffff')
+      console.log('Updated meta theme-color')
+    }
+    
+    // Force a re-render by triggering a custom event
+    window.dispatchEvent(new CustomEvent('themeChanged', { detail: { theme: newTheme } }))
+    
+    console.log('Final document classes:', document.documentElement.className)
+    console.log('Final body classes:', document.body.className)
+    
+    toast.success(`${newTheme === 'dark' ? 'Dark' : 'Light'} theme enabled`);
   };
 
   const handleDelete = async (id: string) => {
@@ -121,11 +169,11 @@ export default function GreyFabricInwardDashboard({ onRefresh }: GreyFabricInwar
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'received': return 'bg-green-100 text-green-800';
-      case 'in_transit': return 'bg-blue-100 text-blue-800';
-      case 'pending': return 'bg-yellow-100 text-yellow-800';
-      case 'rejected': return 'bg-red-100 text-red-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case 'received': return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300';
+      case 'in_transit': return 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300';
+      case 'pending': return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300';
+      case 'rejected': return 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300';
+      default: return 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300';
     }
   };
 
@@ -141,20 +189,20 @@ export default function GreyFabricInwardDashboard({ onRefresh }: GreyFabricInwar
 
   const getQualityColor = (quality: string) => {
     switch (quality) {
-      case 'A+': return 'bg-green-100 text-green-800';
-      case 'A': return 'bg-green-100 text-green-800';
-      case 'B+': return 'bg-blue-100 text-blue-800';
-      case 'B': return 'bg-blue-100 text-blue-800';
-      case 'C': return 'bg-yellow-100 text-yellow-800';
-      case 'D': return 'bg-red-100 text-red-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case 'A+': return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300';
+      case 'A': return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300';
+      case 'B+': return 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300';
+      case 'B': return 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300';
+      case 'C': return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300';
+      case 'D': return 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300';
+      default: return 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300';
     }
   };
 
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 dark:border-blue-400"></div>
       </div>
     );
   }
@@ -163,8 +211,8 @@ export default function GreyFabricInwardDashboard({ onRefresh }: GreyFabricInwar
     return (
       <div className="flex items-center justify-center h-64">
         <div className="text-center">
-          <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
-          <p className="text-red-600">Error loading GRN data</p>
+          <AlertCircle className="h-12 w-12 text-red-500 dark:text-red-400 mx-auto mb-4" />
+          <p className="text-red-600 dark:text-red-400">Error loading GRN data</p>
           <Button onClick={handleRefresh} className="mt-4">
             <RefreshCw className="h-4 w-4 mr-2" />
             Retry
@@ -177,14 +225,14 @@ export default function GreyFabricInwardDashboard({ onRefresh }: GreyFabricInwar
   return (
     <div className="space-y-8">
       {/* Enhanced Header */}
-      <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl p-8 text-white shadow-xl">
+      <div className="bg-gradient-to-r from-blue-600 to-purple-600 dark:from-blue-800 dark:to-purple-800 rounded-xl p-8 text-white shadow-xl">
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-4xl font-bold mb-2">Grey Fabric Inward</h1>
-            <p className="text-blue-100 text-lg mb-4">GRN Entry and fabric inspection management</p>
+            <p className="text-blue-100 dark:text-blue-200 text-lg mb-4">GRN Entry and fabric inspection management</p>
             <div className="flex items-center gap-6">
               <div className="flex items-center gap-2">
-                <div className="w-3 h-3 bg-green-400 rounded-full animate-pulse"></div>
+                <div className="w-3 h-3 bg-green-400 dark:bg-green-300 rounded-full animate-pulse"></div>
                 <span className="text-sm font-medium">Live System</span>
               </div>
               <div className="flex items-center gap-2">
@@ -198,6 +246,20 @@ export default function GreyFabricInwardDashboard({ onRefresh }: GreyFabricInwar
             </div>
           </div>
           <div className="flex gap-3">
+            {/* Theme Toggle Button */}
+            <Button
+              variant="outline"
+              onClick={handleThemeToggle}
+              className="flex items-center gap-2 bg-white/10 border-white/20 text-white hover:bg-white/20 backdrop-blur-sm transition-all duration-200"
+              title={`Switch to ${theme === 'light' ? 'dark' : 'light'} theme`}
+            >
+              {theme === 'light' ? (
+                <Moon className="h-4 w-4" />
+              ) : (
+                <Sun className="h-4 w-4" />
+              )}
+              {theme === 'light' ? 'Dark' : 'Light'}
+            </Button>
             <Button
               variant="outline"
               onClick={() => setShowStockSummary(!showStockSummary)}
@@ -216,7 +278,7 @@ export default function GreyFabricInwardDashboard({ onRefresh }: GreyFabricInwar
             </Button>
             <Button 
               onClick={() => setShowForm(true)}
-              className="flex items-center gap-2 bg-white text-blue-600 hover:bg-blue-50 shadow-lg transition-all duration-200 hover:scale-105"
+              className="flex items-center gap-2 bg-white text-blue-600 hover:bg-blue-50 dark:bg-gray-800 dark:text-white dark:hover:bg-gray-700 shadow-lg transition-all duration-200 hover:scale-105"
             >
               <Plus className="h-4 w-4" />
               New GRN Entry
@@ -236,71 +298,72 @@ export default function GreyFabricInwardDashboard({ onRefresh }: GreyFabricInwar
       )}
 
       {/* Enhanced Filters */}
-      <Card className="border-0 shadow-lg bg-gradient-to-r from-gray-50 to-blue-50">
+      <Card className="border-0 shadow-lg bg-gradient-to-r from-gray-50 to-blue-50 dark:from-gray-800 dark:to-gray-700">
         <CardHeader className="pb-4">
-          <CardTitle className="flex items-center gap-2 text-gray-800">
-            <Filter className="h-5 w-5 text-blue-600" />
+          <CardTitle className="flex items-center gap-2 text-gray-800 dark:text-gray-200">
+            <Filter className="h-5 w-5 text-blue-600 dark:text-blue-400" />
             Advanced Filters
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
             <div>
-              <label className="text-sm font-medium text-gray-700 mb-2 block">Search</label>
+              <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">Search</label>
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 dark:text-gray-500" />
                 <Input
                   placeholder="Search GRN, PO, Customer..."
                   value={filters.search}
                   onChange={(e) => setFilters(prev => ({ ...prev, search: e.target.value }))}
-                  className="pl-10 border-gray-200 focus:border-blue-500 focus:ring-blue-500 transition-all duration-200"
+                  className="pl-10 border-gray-200 dark:border-gray-600 focus:border-blue-500 dark:focus:border-blue-400 focus:ring-blue-500 dark:focus:ring-blue-400 transition-all duration-200 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                 />
               </div>
             </div>
             <div>
-              <label className="text-sm font-medium text-gray-700">Status</label>
+              <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Status</label>
               <Select
                 value={filters.status}
                 onValueChange={(value) => setFilters(prev => ({ ...prev, status: value }))}
               >
-                <SelectTrigger>
+                <SelectTrigger className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-600 text-gray-900 dark:text-gray-100">
                   <SelectValue placeholder="All Status" />
                 </SelectTrigger>
-                <SelectContent className="bg-white border border-gray-200 shadow-lg z-50">
-                  <SelectItem value="all" className="bg-white hover:bg-gray-50">All Status</SelectItem>
-                  <SelectItem value="pending" className="bg-white hover:bg-gray-50">Pending</SelectItem>
-                  <SelectItem value="in_transit" className="bg-white hover:bg-gray-50">In Transit</SelectItem>
-                  <SelectItem value="received" className="bg-white hover:bg-gray-50">Received</SelectItem>
-                  <SelectItem value="rejected" className="bg-white hover:bg-gray-50">Rejected</SelectItem>
+                <SelectContent className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 shadow-lg z-50">
+                  <SelectItem value="all" className="bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-900 dark:text-gray-100">All Status</SelectItem>
+                  <SelectItem value="pending" className="bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-900 dark:text-gray-100">Pending</SelectItem>
+                  <SelectItem value="in_transit" className="bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-900 dark:text-gray-100">In Transit</SelectItem>
+                  <SelectItem value="received" className="bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-900 dark:text-gray-100">Received</SelectItem>
+                  <SelectItem value="rejected" className="bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-900 dark:text-gray-100">Rejected</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <div>
-              <label className="text-sm font-medium text-gray-700">Quality</label>
+              <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Quality</label>
               <Select
                 value={filters.quality}
                 onValueChange={(value) => setFilters(prev => ({ ...prev, quality: value }))}
               >
-                <SelectTrigger>
+                <SelectTrigger className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-600 text-gray-900 dark:text-gray-100">
                   <SelectValue placeholder="All Quality" />
                 </SelectTrigger>
-                <SelectContent className="bg-white border border-gray-200 shadow-lg z-50">
-                  <SelectItem value="all" className="bg-white hover:bg-gray-50">All Quality</SelectItem>
-                  <SelectItem value="A+" className="bg-white hover:bg-gray-50">A+</SelectItem>
-                  <SelectItem value="A" className="bg-white hover:bg-gray-50">A</SelectItem>
-                  <SelectItem value="B+" className="bg-white hover:bg-gray-50">B+</SelectItem>
-                  <SelectItem value="B" className="bg-white hover:bg-gray-50">B</SelectItem>
-                  <SelectItem value="C" className="bg-white hover:bg-gray-50">C</SelectItem>
-                  <SelectItem value="D" className="bg-white hover:bg-gray-50">D</SelectItem>
+                <SelectContent className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 shadow-lg z-50">
+                  <SelectItem value="all" className="bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-900 dark:text-gray-100">All Quality</SelectItem>
+                  <SelectItem value="A+" className="bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-900 dark:text-gray-100">A+</SelectItem>
+                  <SelectItem value="A" className="bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-900 dark:text-gray-100">A</SelectItem>
+                  <SelectItem value="B+" className="bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-900 dark:text-gray-100">B+</SelectItem>
+                  <SelectItem value="B" className="bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-900 dark:text-gray-100">B</SelectItem>
+                  <SelectItem value="C" className="bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-900 dark:text-gray-100">C</SelectItem>
+                  <SelectItem value="D" className="bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-900 dark:text-gray-100">D</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <div>
-              <label className="text-sm font-medium text-gray-700">Fabric Type</label>
+              <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Fabric Type</label>
               <Input
                 placeholder="Fabric Type"
                 value={filters.fabricType}
                 onChange={(e) => setFilters(prev => ({ ...prev, fabricType: e.target.value }))}
+                className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-600 text-gray-900 dark:text-gray-100"
               />
             </div>
           </div>
@@ -308,11 +371,11 @@ export default function GreyFabricInwardDashboard({ onRefresh }: GreyFabricInwar
       </Card>
 
       {/* GRN List */}
-      <Card>
+      <Card className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
         <CardHeader>
           <div className="flex items-center justify-between">
-            <CardTitle>GRN Entries ({grnData?.total || 0})</CardTitle>
-            <Button variant="outline" onClick={handleRefresh}>
+            <CardTitle className="text-gray-900 dark:text-gray-100">GRN Entries ({grnData?.total || 0})</CardTitle>
+            <Button variant="outline" onClick={handleRefresh} className="border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700">
               <RefreshCw className="h-4 w-4 mr-2" />
               Refresh
             </Button>
@@ -321,16 +384,16 @@ export default function GreyFabricInwardDashboard({ onRefresh }: GreyFabricInwar
         <CardContent>
           <div className="space-y-4">
             {grnData?.data?.map((grn) => (
-              <div key={grn._id} className="border-0 rounded-xl p-6 hover:shadow-xl transition-all duration-300 bg-white hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 group">
+              <div key={grn._id} className="rounded-xl p-6 hover:shadow-xl transition-all duration-300 bg-white dark:bg-gray-800 hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 dark:hover:from-gray-700 dark:hover:to-gray-600 group border border-gray-200 dark:border-gray-700">
                 <div className="flex items-center justify-between mb-6">
                   <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center text-white font-bold text-lg">
+                    <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 dark:from-blue-600 dark:to-purple-700 rounded-lg flex items-center justify-center text-white font-bold text-lg">
                       {grn.grnNumber?.slice(-2) || 'GR'}
                     </div>
                     <div>
-                      <h3 className="text-xl font-bold text-gray-900 group-hover:text-blue-600 transition-colors">{grn.grnNumber}</h3>
-                      <p className="text-gray-600 font-medium">{grn.productionOrderNumber} - {grn.customerName}</p>
-                      <p className="text-sm text-gray-500 flex items-center gap-1">
+                      <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">{grn.grnNumber}</h3>
+                      <p className="text-gray-600 dark:text-gray-400 font-medium">{grn.productionOrderNumber} - {grn.customerName}</p>
+                      <p className="text-sm text-gray-500 dark:text-gray-500 flex items-center gap-1">
                         <Package className="h-3 w-3" />
                         Supplier: {grn.supplierName}
                       </p>
@@ -347,27 +410,27 @@ export default function GreyFabricInwardDashboard({ onRefresh }: GreyFabricInwar
                 </div>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
-                  <div className="bg-gray-50 rounded-lg p-4 group-hover:bg-blue-50 transition-colors">
-                    <p className="text-sm text-gray-500 mb-1">Fabric Type</p>
-                    <p className="font-semibold text-gray-900">{grn.fabricType}</p>
+                  <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 group-hover:bg-blue-50 dark:group-hover:bg-blue-900/20 transition-colors">
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">Fabric Type</p>
+                    <p className="font-semibold text-gray-900 dark:text-gray-100">{grn.fabricType}</p>
                   </div>
-                  <div className="bg-gray-50 rounded-lg p-4 group-hover:bg-orange-50 transition-colors">
-                    <p className="text-sm text-gray-500 mb-1">Entry Type</p>
-                    <p className="font-semibold text-gray-900 capitalize">
+                  <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 group-hover:bg-orange-50 dark:group-hover:bg-orange-900/20 transition-colors">
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">Entry Type</p>
+                    <p className="font-semibold text-gray-900 dark:text-gray-100 capitalize">
                       {grn.entryType?.replace('_', ' ') || 'Purchase Order'}
                     </p>
                   </div>
-                  <div className="bg-gray-50 rounded-lg p-4 group-hover:bg-green-50 transition-colors">
-                    <p className="text-sm text-gray-500 mb-1">Quantity</p>
-                    <p className="font-semibold text-gray-900">{typeof grn.quantity === 'number' ? grn.quantity : grn.quantity.receivedQuantity} {grn.unit}</p>
+                  <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 group-hover:bg-green-50 dark:group-hover:bg-green-900/20 transition-colors">
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">Quantity</p>
+                    <p className="font-semibold text-gray-900 dark:text-gray-100">{typeof grn.quantity === 'number' ? grn.quantity : grn.quantity.receivedQuantity} {grn.unit}</p>
                   </div>
-                  <div className="bg-gray-50 rounded-lg p-4 group-hover:bg-purple-50 transition-colors">
-                    <p className="text-sm text-gray-500 mb-1">Total Value</p>
-                    <p className="font-semibold text-gray-900">₹{grn.costBreakdown?.totalCost?.toLocaleString() || '0'}</p>
+                  <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 group-hover:bg-purple-50 dark:group-hover:bg-purple-900/20 transition-colors">
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">Total Value</p>
+                    <p className="font-semibold text-gray-900 dark:text-gray-100">₹{grn.costBreakdown?.totalCost?.toLocaleString() || '0'}</p>
                   </div>
-                  <div className="bg-gray-50 rounded-lg p-4 group-hover:bg-yellow-50 transition-colors">
-                    <p className="text-sm text-gray-500 mb-1">Expected/Received</p>
-                    <p className="font-semibold text-gray-900">
+                  <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 group-hover:bg-yellow-50 dark:group-hover:bg-yellow-900/20 transition-colors">
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">Expected/Received</p>
+                    <p className="font-semibold text-gray-900 dark:text-gray-100">
                       {grn.status === 'received' && grn.receivedAt
                         ? new Date(grn.receivedAt).toLocaleDateString()
                         : grn.expectedAt
@@ -377,10 +440,10 @@ export default function GreyFabricInwardDashboard({ onRefresh }: GreyFabricInwar
                     </p>
                   </div>
                   {grn.greyStockLots && grn.greyStockLots.length > 0 && (
-                    <div className="bg-gray-50 rounded-lg p-4 group-hover:bg-indigo-50 transition-colors">
-                      <p className="text-sm text-gray-500 mb-1">Lots</p>
-                      <p className="font-semibold text-gray-900">{grn.greyStockLots.length} Lots</p>
-                      <p className="text-xs text-gray-600 mt-1">
+                    <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 group-hover:bg-indigo-50 dark:group-hover:bg-indigo-900/20 transition-colors">
+                      <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">Lots</p>
+                      <p className="font-semibold text-gray-900 dark:text-gray-100">{grn.greyStockLots.length} Lots</p>
+                      <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
                         {grn.greyStockLots.map((lot: any, index: number) => (
                           <span key={index}>
                             {lot.lotNumber}
@@ -391,12 +454,12 @@ export default function GreyFabricInwardDashboard({ onRefresh }: GreyFabricInwar
                     </div>
                   )}
                   {grn.stockBalance && (
-                    <div className="bg-gray-50 rounded-lg p-4 group-hover:bg-green-50 transition-colors">
-                      <p className="text-sm text-gray-500 mb-1">Stock Balance</p>
-                      <p className="font-semibold text-gray-900">
+                    <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 group-hover:bg-green-50 dark:group-hover:bg-green-900/20 transition-colors">
+                      <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">Stock Balance</p>
+                      <p className="font-semibold text-gray-900 dark:text-gray-100">
                         {grn.stockBalance.totalMeters || 0}m / {grn.stockBalance.totalYards || 0}y
                       </p>
-                      <p className="text-xs text-gray-600 mt-1">
+                      <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
                         Available: {grn.stockBalance.availableMeters || 0}m
                       </p>
                     </div>
@@ -405,8 +468,8 @@ export default function GreyFabricInwardDashboard({ onRefresh }: GreyFabricInwar
 
                 {grn.remarks && (
                   <div className="mb-4">
-                    <p className="text-sm text-gray-500 mb-1">Remarks</p>
-                    <p className="text-sm text-gray-700">{grn.remarks}</p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">Remarks</p>
+                    <p className="text-sm text-gray-700 dark:text-gray-300">{grn.remarks}</p>
                   </div>
                 )}
 
@@ -419,7 +482,7 @@ export default function GreyFabricInwardDashboard({ onRefresh }: GreyFabricInwar
                         setSelectedGrn(grn);
                         setShowDetails(true);
                       }}
-                      className="flex items-center gap-2 hover:bg-blue-50 hover:border-blue-300 hover:text-blue-600 transition-all duration-200"
+                      className="flex items-center gap-2 hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:border-blue-300 dark:hover:border-blue-600 hover:text-blue-600 dark:hover:text-blue-400 transition-all duration-200 border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300"
                     >
                       <Eye className="h-4 w-4" />
                       View
@@ -432,7 +495,7 @@ export default function GreyFabricInwardDashboard({ onRefresh }: GreyFabricInwar
                           setSelectedGrn(grn);
                           setShowLotDetails(true);
                         }}
-                        className="flex items-center gap-2 hover:bg-purple-50 hover:border-purple-300 hover:text-purple-600 transition-all duration-200"
+                        className="flex items-center gap-2 hover:bg-purple-50 dark:hover:bg-purple-900/20 hover:border-purple-300 dark:hover:border-purple-600 hover:text-purple-600 dark:hover:text-purple-400 transition-all duration-200 border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300"
                       >
                         <Package className="h-4 w-4" />
                         Stock
@@ -445,7 +508,7 @@ export default function GreyFabricInwardDashboard({ onRefresh }: GreyFabricInwar
                         setSelectedGrn(grn);
                         setShowForm(true);
                       }}
-                      className="flex items-center gap-2 hover:bg-green-50 hover:border-green-300 hover:text-green-600 transition-all duration-200"
+                      className="flex items-center gap-2 hover:bg-green-50 dark:hover:bg-green-900/20 hover:border-green-300 dark:hover:border-green-600 hover:text-green-600 dark:hover:text-green-400 transition-all duration-200 border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300"
                     >
                       <Edit className="h-4 w-4" />
                       Edit
@@ -455,7 +518,7 @@ export default function GreyFabricInwardDashboard({ onRefresh }: GreyFabricInwar
                         variant="outline"
                         size="sm"
                         onClick={() => handleMarkAsReceived(grn._id)}
-                        className="flex items-center gap-2 hover:bg-green-50 hover:border-green-300 hover:text-green-600 transition-all duration-200"
+                        className="flex items-center gap-2 hover:bg-green-50 dark:hover:bg-green-900/20 hover:border-green-300 dark:hover:border-green-600 hover:text-green-600 dark:hover:text-green-400 transition-all duration-200 border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300"
                       >
                         <CheckCircle className="h-4 w-4" />
                         Mark Received
@@ -465,7 +528,7 @@ export default function GreyFabricInwardDashboard({ onRefresh }: GreyFabricInwar
                       variant="outline"
                       size="sm"
                       onClick={() => handleDelete(grn._id)}
-                      className="flex items-center gap-2 hover:bg-red-50 hover:border-red-300 hover:text-red-600 transition-all duration-200"
+                      className="flex items-center gap-2 hover:bg-red-50 dark:hover:bg-red-900/20 hover:border-red-300 dark:hover:border-red-600 hover:text-red-600 dark:hover:text-red-400 transition-all duration-200 border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300"
                     >
                       <Trash2 className="h-4 w-4" />
                       Delete
@@ -477,8 +540,8 @@ export default function GreyFabricInwardDashboard({ onRefresh }: GreyFabricInwar
 
             {grnData?.data?.length === 0 && (
               <div className="text-center py-8">
-                <Package className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-500">No GRN entries found</p>
+                <Package className="h-12 w-12 text-gray-400 dark:text-gray-500 mx-auto mb-4" />
+                <p className="text-gray-500 dark:text-gray-400">No GRN entries found</p>
               </div>
             )}
           </div>
@@ -486,7 +549,7 @@ export default function GreyFabricInwardDashboard({ onRefresh }: GreyFabricInwar
           {/* Pagination */}
           {grnData && grnData.totalPages > 1 && (
             <div className="flex items-center justify-between mt-6">
-              <p className="text-sm text-gray-700">
+              <p className="text-sm text-gray-700 dark:text-gray-300">
                 Showing {((page - 1) * limit) + 1} to {Math.min(page * limit, grnData.total)} of {grnData.total} entries
               </p>
               <div className="flex gap-2">
@@ -495,6 +558,7 @@ export default function GreyFabricInwardDashboard({ onRefresh }: GreyFabricInwar
                   size="sm"
                   onClick={() => setPage(prev => Math.max(1, prev - 1))}
                   disabled={page === 1}
+                  className="border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
                 >
                   Previous
                 </Button>
@@ -503,6 +567,7 @@ export default function GreyFabricInwardDashboard({ onRefresh }: GreyFabricInwar
                   size="sm"
                   onClick={() => setPage(prev => Math.min(grnData.totalPages, prev + 1))}
                   disabled={page === grnData.totalPages}
+                  className="border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
                 >
                   Next
                 </Button>

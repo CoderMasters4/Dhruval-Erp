@@ -191,8 +191,7 @@ const CompanyDetailsPage: React.FC<CompanyDetailsPageProps> = ({
             <div className="flex items-center justify-between">
               <div className="min-w-0 flex-1">
                 <p className="text-xs sm:text-sm font-semibold text-gray-600 mb-1 sm:mb-2">Production Units</p>
-                <p className="text-2xl sm:text-3xl font-bold text-black truncate">{Math.floor((company.userCount || 25) * 12) + Math.floor(Math.random() * 80)}</p>
-                <p className="text-xs text-green-600 font-medium">+18% this month</p>
+                <p className="text-2xl sm:text-3xl font-bold text-black truncate">{company.stats?.totalProduction || 0}</p>
               </div>
               <div className="p-2 sm:p-3 bg-green-100 rounded-xl flex-shrink-0 ml-2">
                 <Package className="w-5 h-5 sm:w-6 sm:h-6 text-green-600" />
@@ -204,8 +203,7 @@ const CompanyDetailsPage: React.FC<CompanyDetailsPageProps> = ({
             <div className="flex items-center justify-between">
               <div className="min-w-0 flex-1">
                 <p className="text-xs sm:text-sm font-semibold text-gray-600 mb-1 sm:mb-2">Completed Orders</p>
-                <p className="text-2xl sm:text-3xl font-bold text-black truncate">{Math.floor((company.userCount || 25) * 12) + Math.floor(Math.random() * 60)}</p>
-                <p className="text-xs text-yellow-600 font-medium">+15% this month</p>
+                <p className="text-2xl sm:text-3xl font-bold text-black truncate">{company.stats?.completedOrders || 0}</p>
               </div>
               <div className="p-2 sm:p-3 bg-yellow-100 rounded-xl flex-shrink-0 ml-2">
                 <TrendingUp className="w-5 h-5 sm:w-6 sm:h-6 text-yellow-600" />
@@ -217,8 +215,7 @@ const CompanyDetailsPage: React.FC<CompanyDetailsPageProps> = ({
             <div className="flex items-center justify-between">
               <div className="min-w-0 flex-1">
                 <p className="text-xs sm:text-sm font-semibold text-gray-600 mb-1 sm:mb-2">Monthly Revenue</p>
-                <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-black truncate">₹{(Math.floor((company.userCount || 25) * 45000) + Math.floor(Math.random() * 200000)).toLocaleString()}</p>
-                <p className="text-xs text-green-600 font-medium">+22% this month</p>
+                <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-black truncate">₹{(company.stats?.monthlyRevenue || 0).toLocaleString()}</p>
               </div>
               <div className="p-2 sm:p-3 bg-gray-100 rounded-xl flex-shrink-0 ml-2">
                 <DollarSign className="w-5 h-5 sm:w-6 sm:h-6 text-gray-600" />

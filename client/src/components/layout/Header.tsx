@@ -24,12 +24,13 @@ import {
   selectUnreadNotifications, 
   selectTheme,
   toggleSidebar, 
-  setTheme,
+  toggleTheme,
   markAllNotificationsRead 
 } from '@/lib/features/ui/uiSlice'
 import { useLogoutMutation } from '@/lib/api/authApi'
 import { logout } from '@/lib/features/auth/authSlice'
 import { addNotification } from '@/lib/features/ui/uiSlice'
+import { store } from '@/lib/store'
 import toast from 'react-hot-toast'
 import clsx from 'clsx'
 
@@ -80,8 +81,45 @@ export function Header() {
   }
 
   const handleThemeToggle = () => {
+    console.log('=== HEADER THEME TOGGLE ===')
+    console.log('Current theme from Redux:', theme)
+    console.log('Document has dark class:', document.documentElement.classList.contains('dark'))
+    console.log('localStorage theme:', localStorage.getItem('theme'))
+    
     const newTheme = theme === 'light' ? 'dark' : 'light'
-    dispatch(setTheme(newTheme))
+    console.log('Switching to theme:', newTheme)
+    
+    // Update localStorage first
+    localStorage.setItem('theme', newTheme)
+    console.log('Updated localStorage with theme:', newTheme)
+    
+    // Force immediate DOM update to ensure synchronization
+    if (newTheme === 'dark') {
+      document.documentElement.classList.add('dark')
+      document.body.classList.add('dark')
+      console.log('Added dark class to document and body')
+    } else {
+      document.documentElement.classList.remove('dark')
+      document.body.classList.remove('dark')
+      console.log('Removed dark class from document and body')
+    }
+    
+    // Dispatch the Redux action after DOM update
+    dispatch(toggleTheme())
+    
+    // Update meta theme-color for mobile browsers
+    const metaThemeColor = document.querySelector('meta[name="theme-color"]')
+    if (metaThemeColor) {
+      metaThemeColor.setAttribute('content', newTheme === 'dark' ? '#0f172a' : '#ffffff')
+      console.log('Updated meta theme-color')
+    }
+    
+    // Force a re-render by triggering a custom event
+    window.dispatchEvent(new CustomEvent('themeChanged', { detail: { theme: newTheme } }))
+    
+    console.log('Final document classes:', document.documentElement.className)
+    console.log('Final body classes:', document.body.className)
+    
     toast.success(`${newTheme === 'dark' ? 'Dark' : 'Light'} theme enabled`)
   }
 
@@ -112,17 +150,17 @@ export function Header() {
         {/* Mobile menu button */}
         <button
           onClick={() => dispatch(toggleSidebar())}
-          className="p-2 rounded-lg hover:bg-sky-50 dark:hover:bg-gray-700 border border-sky-200 dark:border-gray-600 transition-all duration-200 lg:hidden group"
+          className="p-2 rounded-lg hover:bg-sky-100 dark:hover:bg-gray-700 border border-sky-300 dark:border-gray-600 transition-all duration-200 lg:hidden group shadow-sm hover:shadow-md"
         >
-          <Menu className="h-5 w-5 text-gray-900 dark:text-white group-hover:text-sky-600 dark:group-hover:text-sky-400 transition-colors" />
+          <Menu className="h-5 w-5 text-sky-600 dark:text-sky-400 group-hover:text-sky-700 dark:group-hover:text-sky-300 transition-colors" />
         </button>
 
         {/* Mobile Search Button */}
         <button
-          className="md:hidden p-2 rounded-lg hover:bg-sky-50 dark:hover:bg-gray-700 border border-sky-200 dark:border-gray-600 transition-all duration-200 group"
+          className="md:hidden p-2 rounded-lg hover:bg-sky-100 dark:hover:bg-gray-700 border border-sky-300 dark:border-gray-600 transition-all duration-200 group shadow-sm hover:shadow-md"
           onClick={() => {/* TODO: Implement mobile search modal */}}
         >
-          <Bell className="h-5 w-5 text-gray-900 dark:text-white group-hover:text-sky-600 dark:group-hover:text-sky-400 transition-colors" />
+          <Bell className="h-5 w-5 text-sky-600 dark:text-sky-400 group-hover:text-sky-700 dark:group-hover:text-sky-300 transition-colors" />
         </button>
 
         {/* Desktop Search */}
@@ -134,7 +172,7 @@ export function Header() {
               placeholder="Search..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 pr-4 py-2 w-48 lg:w-64 border-2 border-sky-500 dark:border-sky-400 rounded-lg focus:outline-none focus:border-sky-600 dark:focus:border-sky-300 focus:ring-2 focus:ring-sky-500/20 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 hover:border-sky-600 dark:hover:border-sky-300"
+              className="pl-10 pr-4 py-2 w-48 lg:w-64 border-2 border-sky-400 dark:border-sky-500 rounded-lg focus:outline-none focus:border-sky-500 dark:focus:border-sky-400 focus:ring-2 focus:ring-sky-500/20 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 hover:border-sky-500 dark:hover:border-sky-400 shadow-sm hover:shadow-md"
             />
           </div>
         </form>
@@ -150,32 +188,66 @@ export function Header() {
 
         {/* Super Admin Badge - Hidden on small screens */}
         {isSuperAdmin && (
-          <div className="hidden md:block px-2 sm:px-3 py-1 bg-gradient-to-r from-sky-500 to-blue-600 text-white text-xs font-medium rounded-full shadow-sm">
+          <div className="hidden md:block px-2 sm:px-3 py-1 bg-gradient-to-r from-sky-500 to-blue-600 text-white text-xs font-medium rounded-full shadow-sm border border-sky-400 dark:border-sky-300">
             <span className="hidden sm:inline">Super Admin</span>
             <span className="sm:hidden">SA</span>
           </div>
         )}
 
+        {/* Theme Debug Info */}
+        <div className="hidden lg:block text-xs text-gray-500 dark:text-gray-400 mr-2">
+          Theme: {theme}
+        </div>
+
         {/* Theme toggle */}
         <button
           onClick={handleThemeToggle}
-          className="p-2 rounded-lg hover:bg-sky-50 dark:hover:bg-gray-700 border border-sky-500 dark:border-sky-400 transition-all duration-300 hover:scale-105 active:scale-95 group shadow-sm"
-          title={`Switch to ${theme === 'light' ? 'dark' : 'light'} theme`}
+          className="relative p-2 rounded-lg transition-all duration-300 hover:scale-105 active:scale-95 group shadow-sm overflow-hidden border-2 border-sky-500/20 hover:border-sky-500/40 dark:border-sky-400/20 dark:hover:border-sky-400/40"
+          title={`Current: ${theme} theme - Click to switch to ${theme === 'light' ? 'dark' : 'light'} theme`}
         >
-          {theme === 'light' ? (
-            <Moon className="h-4 w-4 sm:h-5 sm:w-5 text-gray-900 dark:text-white group-hover:text-sky-600 dark:group-hover:text-sky-400 transition-all duration-300" />
-          ) : (
-            <Sun className="h-4 w-4 sm:h-5 sm:w-5 text-gray-900 dark:text-white group-hover:text-sky-600 dark:group-hover:text-sky-400 transition-all duration-300" />
-          )}
+          {/* Background with theme-aware gradient */}
+          <div className={`absolute inset-0 transition-all duration-300 ${
+            theme === 'light' 
+              ? 'bg-gradient-to-br from-sky-50 to-blue-100 hover:from-sky-100 hover:to-blue-200' 
+              : 'bg-gradient-to-br from-gray-800 to-gray-700 hover:from-gray-700 hover:to-gray-600'
+          }`} />
+          
+          {/* Icon container with enhanced animations */}
+          <div className="relative z-10 transform transition-all duration-500 group-hover:rotate-12 group-active:scale-110">
+            {theme === 'light' ? (
+              <Moon className="h-4 w-4 sm:h-5 sm:w-5 text-sky-600 group-hover:text-sky-700 dark:text-sky-400 dark:group-hover:text-sky-300 transition-all duration-300 drop-shadow-sm" />
+            ) : (
+              <Sun className="h-4 w-4 sm:h-5 sm:w-5 text-yellow-500 group-hover:text-yellow-400 transition-all duration-300 drop-shadow-sm" />
+            )}
+          </div>
+          
+          {/* Animated theme indicator */}
+          <div className={`absolute top-1 right-1 w-2 h-2 rounded-full transition-all duration-300 ${
+            theme === 'light' 
+              ? "bg-sky-500 shadow-lg shadow-sky-500/50" 
+              : "bg-yellow-500 shadow-lg shadow-yellow-500/50"
+          }`} />
+          
+          {/* Pulse effect on hover */}
+          <div className={`absolute inset-0 rounded-lg opacity-0 group-hover:opacity-20 transition-opacity duration-300 ${
+            theme === 'light' ? 'bg-sky-500' : 'bg-yellow-500'
+          }`} />
         </button>
+        
+        {/* Debug info - remove after fixing */}
+        <div className="text-xs text-gray-500 dark:text-gray-400 hidden">
+          Theme: {theme} | Dark: {document.documentElement.classList.contains('dark') ? 'Yes' : 'No'}
+        </div>
+        
+  
 
         {/* Notifications */}
         <div className="relative" ref={notificationsRef}>
           <button
             onClick={() => setShowNotifications(!showNotifications)}
-            className="relative p-2 rounded-lg hover:bg-sky-50 dark:hover:bg-gray-700 border border-sky-200 dark:border-gray-600 transition-all duration-200 group"
+            className="relative p-2 rounded-lg hover:bg-sky-100 dark:hover:bg-gray-700 border border-sky-300 dark:border-gray-600 transition-all duration-200 group shadow-sm hover:shadow-md"
           >
-            <Bell className="h-4 w-4 sm:h-5 sm:w-5 text-gray-900 dark:text-white group-hover:text-sky-600 dark:group-hover:text-sky-400 transition-colors" />
+            <Bell className="h-4 w-4 sm:h-5 sm:w-5 text-sky-600 dark:text-sky-400 group-hover:text-sky-700 dark:group-hover:text-sky-300 transition-colors" />
             {unreadNotifications.length > 0 && (
               <span className="absolute -top-1 -right-1 h-4 w-4 sm:h-5 sm:w-5 bg-gradient-to-r from-red-500 to-pink-500 text-white text-xs rounded-full flex items-center justify-center shadow-sm">
                 {unreadNotifications.length > 9 ? '9+' : unreadNotifications.length}
@@ -257,7 +329,7 @@ export function Header() {
         <div className="relative" ref={userMenuRef}>
           <button
             onClick={() => setShowUserMenu(!showUserMenu)}
-            className="flex items-center space-x-2 sm:space-x-3 p-1 sm:p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-200 group"
+            className="flex items-center space-x-2 sm:space-x-3 p-1 sm:p-2 rounded-lg hover:bg-sky-100 dark:hover:bg-gray-700 transition-all duration-200 group border border-transparent hover:border-sky-200 dark:hover:border-gray-600 shadow-sm hover:shadow-md"
           >
             <div className="flex items-center space-x-1 sm:space-x-2">
               {user?.avatar ? (
@@ -287,8 +359,8 @@ export function Header() {
 
           {/* User dropdown */}
           {showUserMenu && (
-            <div className="absolute right-0 mt-2 w-56 bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-600 z-50 transition-all duration-300 backdrop-blur-sm">
-              <div className="p-4 border-b border-gray-200 dark:border-gray-600 bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-700 dark:to-gray-800">
+            <div className="absolute right-0 mt-2 w-56 bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-sky-200 dark:border-gray-600 z-50 transition-all duration-300 backdrop-blur-sm">
+              <div className="p-4 border-b border-sky-200 dark:border-gray-600 bg-gradient-to-r from-sky-50 to-blue-50 dark:from-gray-700 dark:to-gray-800">
                 <div className="flex items-center space-x-3">
                   {user?.avatar ? (
                     <img

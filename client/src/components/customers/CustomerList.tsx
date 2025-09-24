@@ -49,17 +49,17 @@ export default function CustomerList({
   const getCustomerTypeColor = (type: string) => {
     switch (type) {
       case 'private_limited':
-        return 'bg-blue-100 text-blue-800 border-blue-200'
+        return 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 border-blue-200 dark:border-blue-700'
       case 'public_limited':
-        return 'bg-green-100 text-green-800 border-green-200'
+        return 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 border-green-200 dark:border-green-700'
       case 'proprietorship':
-        return 'bg-purple-100 text-purple-800 border-purple-200'
+        return 'bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-300 border-purple-200 dark:border-purple-700'
       case 'partnership':
-        return 'bg-orange-100 text-orange-800 border-orange-200'
+        return 'bg-orange-100 dark:bg-orange-900/30 text-orange-800 dark:text-orange-300 border-orange-200 dark:border-orange-700'
       case 'individual':
-        return 'bg-indigo-100 text-indigo-800 border-indigo-200'
+        return 'bg-indigo-100 dark:bg-indigo-900/30 text-indigo-800 dark:text-indigo-300 border-indigo-200 dark:border-indigo-700'
       default:
-        return 'bg-gray-100 text-gray-800 border-gray-200'
+        return 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300 border-gray-200 dark:border-gray-600'
     }
   }
 
@@ -81,17 +81,17 @@ export default function CustomerList({
     return (
       <div className="space-y-4">
         {[...Array(6)].map((_, i) => (
-          <div key={i} className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6 animate-pulse">
+          <div key={i} className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6 animate-pulse transition-all duration-300">
             <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-gray-200 rounded-full"></div>
+              <div className="w-12 h-12 bg-gray-200 dark:bg-gray-600 rounded-full"></div>
               <div className="flex-1">
-                <div className="h-4 bg-gray-200 rounded mb-2"></div>
-                <div className="h-3 bg-gray-200 rounded w-2/3"></div>
+                <div className="h-4 bg-gray-200 dark:bg-gray-600 rounded mb-2"></div>
+                <div className="h-3 bg-gray-200 dark:bg-gray-600 rounded w-2/3"></div>
               </div>
               <div className="flex gap-2">
-                <div className="w-8 h-8 bg-gray-200 rounded"></div>
-                <div className="w-8 h-8 bg-gray-200 rounded"></div>
-                <div className="w-8 h-8 bg-gray-200 rounded"></div>
+                <div className="w-8 h-8 bg-gray-200 dark:bg-gray-600 rounded"></div>
+                <div className="w-8 h-8 bg-gray-200 dark:bg-gray-600 rounded"></div>
+                <div className="w-8 h-8 bg-gray-200 dark:bg-gray-600 rounded"></div>
               </div>
             </div>
           </div>
@@ -102,10 +102,10 @@ export default function CustomerList({
 
   if (customers.length === 0) {
     return (
-      <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-12 text-center">
-        <Users className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-        <h3 className="text-lg font-semibold text-gray-900 mb-2">No Customers Found</h3>
-        <p className="text-gray-600">No customers match your current filters. Try adjusting your search criteria.</p>
+      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-12 text-center transition-all duration-300">
+        <Users className="h-16 w-16 text-gray-400 dark:text-gray-500 mx-auto mb-4 transition-colors duration-300" />
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2 transition-colors duration-300">No Customers Found</h3>
+        <p className="text-gray-600 dark:text-gray-300 transition-colors duration-300">No customers match your current filters. Try adjusting your search criteria.</p>
       </div>
     )
   }
@@ -118,7 +118,7 @@ export default function CustomerList({
         return (
           <div
             key={customer._id}
-            className="bg-white rounded-2xl shadow-lg border border-gray-200 hover:shadow-xl hover:border-blue-300 transition-all duration-300 group overflow-hidden"
+            className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 hover:shadow-xl hover:border-blue-300 dark:hover:border-blue-600 transition-all duration-300 group overflow-hidden"
           >
             <div className="p-6">
               <div className="flex items-center justify-between">
@@ -135,12 +135,12 @@ export default function CustomerList({
                   {/* Customer Info */}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-3 mb-2">
-                      <h3 className="text-lg font-bold text-black truncate">
+                      <h3 className="text-lg font-bold text-black dark:text-white truncate transition-colors duration-300">
                         {customer.customerName || customer.displayName || 'Unnamed Customer'}
                       </h3>
                       
                       {customer.customerCode && (
-                        <span className="text-xs font-mono bg-blue-100 text-blue-800 px-2 py-1 rounded-full border border-blue-200 flex-shrink-0">
+                        <span className="text-xs font-mono bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 px-2 py-1 rounded-full border border-blue-200 dark:border-blue-700 flex-shrink-0 transition-all duration-300">
                           {customer.customerCode}
                         </span>
                       )}
@@ -156,17 +156,17 @@ export default function CustomerList({
                       
                       {/* Industry Badge */}
                       {customer.businessInfo?.industry && (
-                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold bg-purple-100 text-purple-800 border border-purple-200">
+                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-300 border border-purple-200 dark:border-purple-700 transition-all duration-300">
                           {customer.businessInfo.industry}
                         </span>
                       )}
 
                       {/* Status Badge */}
                       <div className={clsx(
-                        'inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold border',
+                        'inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold border transition-all duration-300',
                         customer.isActive
-                          ? 'bg-green-100 text-green-800 border-green-200'
-                          : 'bg-red-100 text-red-800 border-red-200'
+                          ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 border-green-200 dark:border-green-700'
+                          : 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300 border-red-200 dark:border-red-700'
                       )}>
                         {customer.isActive ? (
                           <>
@@ -182,7 +182,7 @@ export default function CustomerList({
                       </div>
                     </div>
                     
-                    <div className="flex items-center gap-6 text-sm text-gray-600 mb-3">
+                    <div className="flex items-center gap-6 text-sm text-gray-600 dark:text-gray-300 mb-3 transition-colors duration-300">
                       <div className="flex items-center gap-1">
                         <Mail className="w-4 h-4" />
                         <span className="truncate max-w-xs">{customer.contactInfo?.primaryEmail || 'No email'}</span>
@@ -203,7 +203,7 @@ export default function CustomerList({
                       {customer.company && (
                         <div className="flex items-center gap-1">
                           <Building2 className="w-4 h-4" />
-                          <span className="text-xs font-semibold px-2 py-1 rounded-full bg-blue-100 text-blue-800 border border-blue-200">
+                          <span className="text-xs font-semibold px-2 py-1 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 border border-blue-200 dark:border-blue-700 transition-all duration-300">
                             Company: {customer.company}
                           </span>
                         </div>
@@ -212,7 +212,7 @@ export default function CustomerList({
                       {/* Priority */}
                       {customer.relationship?.priority && (
                         <div className="flex items-center gap-1">
-                          <span className="text-xs font-semibold px-2 py-1 rounded-full bg-orange-100 text-orange-800 border border-orange-200">
+                          <span className="text-xs font-semibold px-2 py-1 rounded-full bg-orange-100 dark:bg-orange-900/30 text-orange-800 dark:text-orange-300 border border-orange-200 dark:border-orange-700 transition-all duration-300">
                             {customer.relationship.priority} Priority
                           </span>
                         </div>
@@ -226,34 +226,34 @@ export default function CustomerList({
 
                     {/* Stats */}
                     <div className="flex items-center gap-6 text-sm">
-                      <div className="flex items-center gap-1 text-purple-600">
+                      <div className="flex items-center gap-1 text-purple-600 dark:text-purple-400">
                         <ShoppingCart className="w-4 h-4" />
-                        <span className="font-semibold text-black">{customer.purchaseHistory?.totalOrders || 0}</span>
-                        <span className="text-gray-600">orders</span>
+                        <span className="font-semibold text-black dark:text-white">{customer.purchaseHistory?.totalOrders || 0}</span>
+                        <span className="text-gray-600 dark:text-gray-300">orders</span>
                       </div>
                       
-                      <div className="flex items-center gap-1 text-green-600">
+                      <div className="flex items-center gap-1 text-green-600 dark:text-green-400">
                         <DollarSign className="w-4 h-4" />
-                        <span className="font-semibold text-black">{formatCurrency(customer.purchaseHistory?.totalOrderValue || 0)}</span>
-                        <span className="text-gray-600">spent</span>
+                        <span className="font-semibold text-black dark:text-white">{formatCurrency(customer.purchaseHistory?.totalOrderValue || 0)}</span>
+                        <span className="text-gray-600 dark:text-gray-300">spent</span>
                       </div>
                       
                       {customer.purchaseHistory?.averageOrderValue && customer.purchaseHistory.averageOrderValue > 0 && (
-                        <div className="flex items-center gap-1 text-yellow-600">
-                          <span className="text-gray-600">Avg:</span>
-                          <span className="font-semibold text-black">{formatCurrency(customer.purchaseHistory.averageOrderValue)}</span>
+                        <div className="flex items-center gap-1 text-yellow-600 dark:text-yellow-400">
+                          <span className="text-gray-600 dark:text-gray-300">Avg:</span>
+                          <span className="font-semibold text-black dark:text-white">{formatCurrency(customer.purchaseHistory.averageOrderValue)}</span>
                         </div>
                       )}
                       
                       {/* KYC Status */}
                       <div className="flex items-center gap-1">
                         <span className={clsx(
-                          'text-xs font-semibold px-2 py-1 rounded-full border',
+                          'text-xs font-semibold px-2 py-1 rounded-full border transition-all duration-300',
                           customer.compliance?.kycStatus === 'completed' 
-                            ? 'bg-green-100 text-green-800 border-green-200'
+                            ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 border-green-200 dark:border-green-700'
                             : customer.compliance?.kycStatus === 'pending'
-                            ? 'bg-yellow-100 text-yellow-800 border-yellow-200'
-                            : 'bg-red-100 text-red-800 border-red-200'
+                            ? 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300 border-yellow-200 dark:border-yellow-700'
+                            : 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300 border-red-200 dark:border-red-700'
                         )}>
                           KYC: {customer.compliance?.kycStatus ? customer.compliance.kycStatus.charAt(0).toUpperCase() + customer.compliance.kycStatus.slice(1) : 'Unknown'}
                         </span>

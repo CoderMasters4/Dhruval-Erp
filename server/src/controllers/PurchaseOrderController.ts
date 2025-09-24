@@ -34,10 +34,10 @@ export class PurchaseOrderController extends BaseController<IPurchaseOrder> {
   async updateOrderStatus(req: Request, res: Response): Promise<void> {
     try {
       const { orderId } = req.params;
-      const { status } = req.body;
+      const { status, notes } = req.body;
       const updatedBy = (req.user?.userId || req.user?._id)?.toString();
 
-      const order = await this.purchaseOrderService.updateOrderStatus(orderId, status, updatedBy);
+      const order = await this.purchaseOrderService.updateOrderStatus(orderId, status, updatedBy, notes);
 
       this.sendSuccess(res, order, 'Purchase order status updated successfully');
     } catch (error) {

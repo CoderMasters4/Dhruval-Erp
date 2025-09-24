@@ -21,7 +21,9 @@ import { useGetAllCompaniesQuery } from '@/lib/features/companies/companiesApi'
 import {
   useCreateCompanyMutation,
   useUpdateCompanyMutation,
-  useDeleteCompanyMutation
+  useDeleteCompanyMutation,
+  useGetCompanyStatsQuery,
+  useGetDashboardStatsQuery
 } from '@/lib/features/companies/companiesApi'
 
 // Lazy load components for better performance
@@ -52,6 +54,14 @@ export default function CompaniesPage() {
 
   // API hooks
   const { data: companiesData, isLoading, error, refetch } = useGetAllCompaniesQuery(undefined, {
+    skip: !isSuperAdmin
+  })
+
+  const { data: companyStatsData } = useGetCompanyStatsQuery(undefined, {
+    skip: !isSuperAdmin
+  })
+
+  const { data: dashboardStatsData } = useGetDashboardStatsQuery(undefined, {
     skip: !isSuperAdmin
   })
 
@@ -92,17 +102,23 @@ export default function CompaniesPage() {
     }
   })
 
-  // Stats calculation
+  // Stats calculation using real API data
   const stats = {
-    totalCompanies: companies.length,
-    activeCompanies: companies.filter((c: any) => c.status === 'active').length,
-    inactiveCompanies: companies.filter((c: any) => c.status === 'inactive').length,
+    totalCompanies: companyStatsData?.totalCompanies || companies.length,
+    activeCompanies: companyStatsData?.activeCompanies || companies.filter((c: any) => c.status === 'active').length,
+    inactiveCompanies: companyStatsData?.inactiveCompanies || companies.filter((c: any) => c.status === 'inactive').length,
     suspendedCompanies: companies.filter((c: any) => c.status === 'suspended').length,
     pendingApproval: companies.filter((c: any) => c.status === 'pending_approval').length,
     underReview: companies.filter((c: any) => c.status === 'under_review').length,
     newThisMonth: companies.filter((c: any) =>
       c.createdAt && new Date(c.createdAt).getMonth() === new Date().getMonth()
-    ).length
+    ).length,
+    // Real stats from dashboard API
+    totalUsers: dashboardStatsData?.totalUsers || 0,
+    totalRevenue: dashboardStatsData?.totalRevenue || 0,
+    totalProduction: dashboardStatsData?.totalProduction || 0,
+    totalOrders: dashboardStatsData?.totalOrders || 0,
+    totalCustomers: dashboardStatsData?.totalCustomers || 0
   }
 
 
@@ -399,6 +415,13 @@ export default function CompaniesPage() {
               onView={handleView}
               onEdit={handleEditCompany}
               onDelete={handleDeleteClick}
+              realStats={{
+                totalUsers: stats.totalUsers,
+                totalRevenue: stats.totalRevenue,
+                totalProduction: stats.totalProduction,
+                totalOrders: stats.totalOrders,
+                totalCustomers: stats.totalCustomers
+              }}
             />
           </Suspense>
         )}

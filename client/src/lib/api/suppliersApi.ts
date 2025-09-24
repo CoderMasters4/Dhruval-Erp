@@ -5,6 +5,7 @@ export interface Supplier {
   _id?: string
   supplierId: string
   supplierName: string
+  legalName?: string
   displayName?: string
   supplierCode: string
   partNumber: string
@@ -23,6 +24,7 @@ export interface Supplier {
   isActive?: boolean
   status: 'active' | 'inactive' | 'blacklisted' | 'pending'
   companyId?: string | { _id: string; companyName: string; companyCode: string }
+  tags?: string[]
   
   // Contact Information
   contactInfo?: {
@@ -30,6 +32,9 @@ export interface Supplier {
     alternateEmail?: string
     primaryPhone?: string
     alternatePhone?: string
+    whatsapp?: string
+    fax?: string
+    tollFree?: string
   }
   
   // Address Information
@@ -46,13 +51,27 @@ export interface Supplier {
   businessInfo?: {
     industry?: string
     businessType?: string
+    subIndustry?: string
+    businessDescription?: string
     website?: string
+    establishedYear?: number
+    employeeCount?: string
+    annualTurnover?: string
+    manufacturingCapacity?: string
   }
   
   // Registration Details
   registrationDetails?: {
     pan?: string
     gstin?: string
+    cin?: string
+    udyogAadhar?: string
+    iecCode?: string
+    registrationNumber?: string
+    vatNumber?: string
+    cstNumber?: string
+    msmeNumber?: string
+    factoryLicense?: string
   }
   
   // Financial Information
@@ -62,6 +81,20 @@ export interface Supplier {
     totalPurchases?: number
     outstandingPayable?: number
     currency?: string
+    securityDeposit?: number
+    advancePaid?: number
+    preferredPaymentMethod?: string
+    taxDeductionRate?: number
+  }
+  
+  // Banking Details
+  bankingDetails?: {
+    bankName?: string
+    branchName?: string
+    accountNumber?: string
+    ifscCode?: string
+    accountHolderName?: string
+    accountType?: string
   }
   
   // Relationship Information
@@ -98,6 +131,8 @@ export interface Supplier {
     vendorApprovalStatus?: 'approved' | 'pending' | 'rejected'
     riskCategory?: string
     blacklisted?: boolean
+    blacklistReason?: string
+    complianceNotes?: string
     environmentalCompliance?: boolean
     laborCompliance?: boolean
     safetyCompliance?: boolean

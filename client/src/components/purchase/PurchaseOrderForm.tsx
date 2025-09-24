@@ -8,6 +8,7 @@ import { useCreatePurchaseOrderMutation, useUpdatePurchaseOrderMutation } from '
 import { useCreateInventoryItemMutation, useCreateStockMovementMutation } from '@/lib/api/inventoryApi'
 import { useSelector } from 'react-redux'
 import { selectCurrentUser, selectIsSuperAdmin } from '@/lib/features/auth/authSlice'
+import { selectTheme } from '@/lib/features/ui/uiSlice'
 import { Save, FileText, DollarSign, Package, Truck, CreditCard } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { PurchaseOrderDetails } from './PurchaseOrderDetails'
@@ -100,6 +101,7 @@ export interface PurchaseOrderFormData {
 export function PurchaseOrderForm({ onSuccess, onCancel, isSubmitting, setIsSubmitting }: PurchaseOrderFormProps) {
   const user = useSelector(selectCurrentUser)
   const isSuperAdmin = useSelector(selectIsSuperAdmin)
+  const theme = useSelector(selectTheme)
   const userCompanyId = user?.companyAccess?.[0]?.companyId
 
   // API hooks
@@ -548,13 +550,14 @@ export function PurchaseOrderForm({ onSuccess, onCancel, isSubmitting, setIsSubm
           variant="outline"
           onClick={onCancel}
           disabled={isSubmitting}
+          className="border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
         >
           Cancel
         </Button>
         <Button
           type="submit"
           disabled={isSubmitting}
-          className="min-w-[120px]"
+          className="min-w-[120px] bg-sky-500 hover:bg-sky-600 text-white"
         >
           {isSubmitting ? (
             <>

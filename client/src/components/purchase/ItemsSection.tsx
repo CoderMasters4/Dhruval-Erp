@@ -10,6 +10,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { useGetInventoryItemsQuery } from '@/lib/api/inventoryApi'
 import { useSelector } from 'react-redux'
 import { selectCurrentUser } from '@/lib/features/auth/authSlice'
+import { selectTheme } from '@/lib/features/ui/uiSlice'
 import { Plus, X, Package } from 'lucide-react'
 import { PurchaseOrderFormData } from './PurchaseOrderForm'
 
@@ -20,6 +21,7 @@ interface ItemsSectionProps {
 
 export function ItemsSection({ formData, updateFormData }: ItemsSectionProps) {
   const user = useSelector(selectCurrentUser)
+  const theme = useSelector(selectTheme)
   const userCompanyId = user?.companyAccess?.[0]?.companyId
 
   // Get inventory items for the selected company
@@ -104,14 +106,20 @@ export function ItemsSection({ formData, updateFormData }: ItemsSectionProps) {
   }
 
   return (
-    <Card>
+    <Card className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 shadow-sm">
       <CardHeader>
-        <CardTitle className="flex items-center justify-between">
+        <CardTitle className="flex items-center justify-between text-gray-900 dark:text-white">
           <div className="flex items-center gap-2">
             <Package className="h-5 w-5" />
             Items
           </div>
-          <Button type="button" onClick={addItem} variant="outline" size="sm">
+          <Button 
+            type="button" 
+            onClick={addItem} 
+            variant="outline" 
+            size="sm"
+            className="border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
+          >
             <Plus className="h-4 w-4 mr-2" />
             Add Item
           </Button>
@@ -119,21 +127,22 @@ export function ItemsSection({ formData, updateFormData }: ItemsSectionProps) {
       </CardHeader>
       <CardContent>
         {formData.items.length === 0 ? (
-          <div className="text-center py-8 text-gray-500">
-            <Package className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+          <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+            <Package className="h-12 w-12 mx-auto mb-4 text-gray-300 dark:text-gray-500" />
             <p>No items added yet. Click "Add Item" to start.</p>
           </div>
         ) : (
           <div className="space-y-4">
             {formData.items.map((item, index) => (
-              <div key={`item-${index}-${item.itemCode || item.itemName || Date.now()}`} className="border rounded-lg p-4 space-y-4">
+              <div key={`item-${index}-${item.itemCode || item.itemName || Date.now()}`} className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 space-y-4 bg-gray-50 dark:bg-gray-700">
                 <div className="flex items-center justify-between">
-                  <h4 className="font-medium">Item {index + 1}</h4>
+                  <h4 className="font-medium text-gray-900 dark:text-white">Item {index + 1}</h4>
                   <Button
                     type="button"
                     onClick={() => removeItem(index)}
                     variant="outline"
                     size="sm"
+                    className="border-red-300 dark:border-red-600 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-800"
                   >
                     <X className="h-4 w-4" />
                   </Button>
@@ -142,17 +151,17 @@ export function ItemsSection({ formData, updateFormData }: ItemsSectionProps) {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {/* Item Selection Type */}
                   <div className="space-y-2">
-                    <Label>Item Type</Label>
+                    <Label className="text-gray-900 dark:text-white">Item Type</Label>
                     <Select 
                       value={item.itemType || 'new'} 
                       onValueChange={(value) => updateItem(index, 'itemType', value)}
                     >
-                      <SelectTrigger>
+                      <SelectTrigger className="bg-white dark:bg-gray-600 border-gray-300 dark:border-gray-500 text-gray-900 dark:text-white">
                         <SelectValue />
                       </SelectTrigger>
-                      <SelectContent className="bg-white border border-gray-200 shadow-lg z-50">
-                        <SelectItem value="new" className="bg-white hover:bg-gray-50">New Item</SelectItem>
-                        <SelectItem value="existing" className="bg-white hover:bg-gray-50">Existing Item</SelectItem>
+                      <SelectContent className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 shadow-lg z-50">
+                        <SelectItem value="new" className="bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-900 dark:text-white">New Item</SelectItem>
+                        <SelectItem value="existing" className="bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-900 dark:text-white">Existing Item</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -160,7 +169,7 @@ export function ItemsSection({ formData, updateFormData }: ItemsSectionProps) {
                   {/* Existing Item Selection */}
                   {item.itemType === 'existing' && (
                     <div className="space-y-2">
-                      <Label>Select Existing Item</Label>
+                      <Label className="text-gray-900 dark:text-white">Select Existing Item</Label>
                       <Select 
                         value={item.selectedInventoryItemId || ''} 
                         onValueChange={(value) => {
@@ -213,25 +222,25 @@ export function ItemsSection({ formData, updateFormData }: ItemsSectionProps) {
                           }
                         }}
                       >
-                        <SelectTrigger className="z-50">
+                        <SelectTrigger className="z-50 bg-white dark:bg-gray-600 border-gray-300 dark:border-gray-500 text-gray-900 dark:text-white">
                           <SelectValue placeholder="Select existing item" />
                         </SelectTrigger>
-                        <SelectContent className="z-50">
+                        <SelectContent className="z-50 bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
                           {inventoryLoading ? (
-                            <SelectItem value="" disabled className="bg-white hover:bg-gray-50">
+                            <SelectItem value="" disabled className="bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-900 dark:text-white">
                               Loading inventory items...
                             </SelectItem>
                           ) : inventoryError ? (
-                            <SelectItem value="" disabled className="bg-white hover:bg-gray-50">
+                            <SelectItem value="" disabled className="bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-900 dark:text-white">
                               Error loading inventory items
                             </SelectItem>
                           ) : inventoryItems.length === 0 ? (
-                            <SelectItem value="" disabled className="bg-white hover:bg-gray-50">
+                            <SelectItem value="" disabled className="bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-900 dark:text-white">
                               No inventory items available for this company
                             </SelectItem>
                           ) : (
                             inventoryItems.map((invItem) => (
-                              <SelectItem key={invItem._id} value={invItem._id} className="bg-white hover:bg-gray-50">
+                              <SelectItem key={invItem._id} value={invItem._id} className="bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-900 dark:text-white">
                                 {invItem.itemName} ({invItem.itemCode}) - Stock: {invItem.stock?.currentStock || 0} {invItem.stock?.unit || 'pcs'} - ₹{invItem.pricing?.costPrice || 0}
                               </SelectItem>
                             ))
@@ -239,7 +248,7 @@ export function ItemsSection({ formData, updateFormData }: ItemsSectionProps) {
                         </SelectContent>
                       </Select>
                       {item.selectedInventoryItemId && (
-                        <div className="text-xs text-green-600 bg-green-50 p-2 rounded">
+                        <div className="text-xs text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900 p-2 rounded">
                           ✓ Item selected: {item.itemName} ({item.itemCode})
                         </div>
                       )}
@@ -247,82 +256,84 @@ export function ItemsSection({ formData, updateFormData }: ItemsSectionProps) {
                   )}
 
                   <div className="space-y-2">
-                    <Label>Item Code *</Label>
+                    <Label className="text-gray-900 dark:text-white">Item Code *</Label>
                     <Input
                       value={item.itemCode}
                       onChange={(e) => updateItem(index, 'itemCode', e.target.value)}
                       placeholder="Item code"
                       required
                       disabled={item.itemType === 'existing'}
-                      className={item.itemType === 'existing' && item.itemCode ? 'bg-green-50 border-green-300' : ''}
+                      className={`bg-white dark:bg-gray-600 border-gray-300 dark:border-gray-500 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 ${item.itemType === 'existing' && item.itemCode ? 'bg-green-50 dark:bg-green-900 border-green-300 dark:border-green-600' : ''}`}
                     />
                     {item.itemType === 'existing' && item.itemCode && (
-                      <p className="text-xs text-green-600">✓ Auto-filled from inventory</p>
+                      <p className="text-xs text-green-600 dark:text-green-400">✓ Auto-filled from inventory</p>
                     )}
                   </div>
 
                   <div className="space-y-2">
-                    <Label>Item Name *</Label>
+                    <Label className="text-gray-900 dark:text-white">Item Name *</Label>
                     <Input
                       value={item.itemName}
                       onChange={(e) => updateItem(index, 'itemName', e.target.value)}
                       placeholder="Item name"
                       required
                       disabled={item.itemType === 'existing'}
-                      className={item.itemType === 'existing' && item.itemName ? 'bg-green-50 border-green-300' : ''}
+                      className={`bg-white dark:bg-gray-600 border-gray-300 dark:border-gray-500 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 ${item.itemType === 'existing' && item.itemName ? 'bg-green-50 dark:bg-green-900 border-green-300 dark:border-green-600' : ''}`}
                     />
                     {item.itemType === 'existing' && item.itemName && (
-                      <p className="text-xs text-green-600">✓ Auto-filled from inventory</p>
+                      <p className="text-xs text-green-600 dark:text-green-400">✓ Auto-filled from inventory</p>
                     )}
                   </div>
 
                   {/* Category Selection - Only for new items */}
                   {item.itemType === 'new' && (
                     <div className="space-y-2 col-span-full">
-                      <Label className="text-sm font-medium text-gray-700 flex items-center gap-2">
-                        <span className="w-2 h-2 bg-purple-500 rounded-full"></span>
+                      <Label className="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center gap-2">
+                        <span className="w-2 h-2 bg-purple-500 dark:bg-purple-400 rounded-full"></span>
                         Category *
                       </Label>
                       <Select 
                         value={item.category || 'raw_material'} 
                         onValueChange={(value) => updateItem(index, 'category', value)}
                       >
-                        <SelectTrigger className="bg-purple-50 border-purple-200 focus:border-purple-500 focus:ring-purple-500 w-full h-10">
+                        <SelectTrigger className="bg-purple-50 dark:bg-purple-900 border-purple-200 dark:border-purple-600 focus:border-purple-500 dark:focus:border-purple-400 focus:ring-purple-500 dark:focus:ring-purple-400 w-full h-10 text-gray-900 dark:text-white">
                           <SelectValue placeholder="Select category" />
                         </SelectTrigger>
-                        <SelectContent className="bg-white border border-gray-200 shadow-lg z-50">
-                          <SelectItem value="raw_material" className="bg-white hover:bg-gray-50">Raw Material</SelectItem>
-                          <SelectItem value="finished_goods" className="bg-white hover:bg-gray-50">Finished Goods</SelectItem>
-                          <SelectItem value="consumables" className="bg-white hover:bg-gray-50">Consumables</SelectItem>
-                          <SelectItem value="services" className="bg-white hover:bg-gray-50">Services</SelectItem>
-                          <SelectItem value="capital_goods" className="bg-white hover:bg-gray-50">Capital Goods</SelectItem>
-                          <SelectItem value="maintenance" className="bg-white hover:bg-gray-50">Maintenance</SelectItem>
-                          <SelectItem value="spare_parts" className="bg-white hover:bg-gray-50">Spare Parts</SelectItem>
+                        <SelectContent className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 shadow-lg z-50">
+                          <SelectItem value="raw_material" className="bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-900 dark:text-white">Raw Material</SelectItem>
+                          <SelectItem value="finished_goods" className="bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-900 dark:text-white">Finished Goods</SelectItem>
+                          <SelectItem value="consumables" className="bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-900 dark:text-white">Consumables</SelectItem>
+                          <SelectItem value="services" className="bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-900 dark:text-white">Services</SelectItem>
+                          <SelectItem value="capital_goods" className="bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-900 dark:text-white">Capital Goods</SelectItem>
+                          <SelectItem value="maintenance" className="bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-900 dark:text-white">Maintenance</SelectItem>
+                          <SelectItem value="spare_parts" className="bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-900 dark:text-white">Spare Parts</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
                   )}
 
                   <div className="space-y-2">
-                    <Label>HSN Code</Label>
+                    <Label className="text-gray-900 dark:text-white">HSN Code</Label>
                     <Input
                       value={item.hsnCode}
                       onChange={(e) => updateItem(index, 'hsnCode', e.target.value)}
                       placeholder="HSN code"
+                      className="bg-white dark:bg-gray-600 border-gray-300 dark:border-gray-500 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <Label>Specifications</Label>
+                    <Label className="text-gray-900 dark:text-white">Specifications</Label>
                     <Input
                       value={item.specifications}
                       onChange={(e) => updateItem(index, 'specifications', e.target.value)}
                       placeholder="Specifications"
+                      className="bg-white dark:bg-gray-600 border-gray-300 dark:border-gray-500 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <Label>Quantity *</Label>
+                    <Label className="text-gray-900 dark:text-white">Quantity *</Label>
                     <Input
                       type="number"
                       value={item.quantity}
@@ -331,52 +342,53 @@ export function ItemsSection({ formData, updateFormData }: ItemsSectionProps) {
                       min="0"
                       step="0.01"
                       required
+                      className="bg-white dark:bg-gray-600 border-gray-300 dark:border-gray-500 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <Label>Unit</Label>
+                    <Label className="text-gray-900 dark:text-white">Unit</Label>
                     <Select value={item.unit} onValueChange={(value) => updateItem(index, 'unit', value)}>
-                      <SelectTrigger>
+                      <SelectTrigger className="bg-white dark:bg-gray-600 border-gray-300 dark:border-gray-500 text-gray-900 dark:text-white">
                         <SelectValue />
                       </SelectTrigger>
-                      <SelectContent className="bg-white border border-gray-200 shadow-lg z-50">
-                        <SelectItem value="pcs" className="bg-white hover:bg-gray-50">Pieces</SelectItem>
-                        <SelectItem value="kg" className="bg-white hover:bg-gray-50">Kilograms</SelectItem>
-                        <SelectItem value="meters" className="bg-white hover:bg-gray-50">Meters</SelectItem>
-                        <SelectItem value="liters" className="bg-white hover:bg-gray-50">Liters</SelectItem>
-                        <SelectItem value="boxes" className="bg-white hover:bg-gray-50">Boxes</SelectItem>
-                        <SelectItem value="sets" className="bg-white hover:bg-gray-50">Sets</SelectItem>
+                      <SelectContent className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 shadow-lg z-50">
+                        <SelectItem value="pcs" className="bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-900 dark:text-white">Pieces</SelectItem>
+                        <SelectItem value="kg" className="bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-900 dark:text-white">Kilograms</SelectItem>
+                        <SelectItem value="meters" className="bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-900 dark:text-white">Meters</SelectItem>
+                        <SelectItem value="liters" className="bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-900 dark:text-white">Liters</SelectItem>
+                        <SelectItem value="boxes" className="bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-900 dark:text-white">Boxes</SelectItem>
+                        <SelectItem value="sets" className="bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-900 dark:text-white">Sets</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
 
                   {/* Stock Information for Existing Items */}
                   {item.itemType === 'existing' && item.currentStock !== undefined && (
-                    <div className="col-span-full p-3 bg-blue-50 rounded-lg">
-                      <h4 className="text-sm font-medium text-gray-700 mb-2">Current Stock Information</h4>
+                    <div className="col-span-full p-3 bg-blue-50 dark:bg-blue-900 rounded-lg">
+                      <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Current Stock Information</h4>
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                         <div>
-                          <span className="text-gray-600">Current Stock:</span>
-                          <span className="ml-1 font-medium text-gray-900">
+                          <span className="text-gray-600 dark:text-gray-400">Current Stock:</span>
+                          <span className="ml-1 font-medium text-gray-900 dark:text-white">
                             {item.currentStock} {item.unit}
                           </span>
                         </div>
                         <div>
-                          <span className="text-gray-600">Available Stock:</span>
-                          <span className="ml-1 font-medium text-gray-900">
+                          <span className="text-gray-600 dark:text-gray-400">Available Stock:</span>
+                          <span className="ml-1 font-medium text-gray-900 dark:text-white">
                             {item.availableStock} {item.unit}
                           </span>
                         </div>
                         <div>
-                          <span className="text-gray-600">Cost Price:</span>
-                          <span className="ml-1 font-medium text-gray-900">
+                          <span className="text-gray-600 dark:text-gray-400">Cost Price:</span>
+                          <span className="ml-1 font-medium text-gray-900 dark:text-white">
                             ₹{item.rate}
                           </span>
                         </div>
                         <div>
-                          <span className="text-gray-600">Item Code:</span>
-                          <span className="ml-1 font-medium text-gray-900">
+                          <span className="text-gray-600 dark:text-gray-400">Item Code:</span>
+                          <span className="ml-1 font-medium text-gray-900 dark:text-white">
                             {item.itemCode}
                           </span>
                         </div>
@@ -385,7 +397,7 @@ export function ItemsSection({ formData, updateFormData }: ItemsSectionProps) {
                   )}
 
                   <div className="space-y-2">
-                    <Label>Rate (₹) *</Label>
+                    <Label className="text-gray-900 dark:text-white">Rate (₹) *</Label>
                     <Input
                       type="number"
                       value={item.rate}
@@ -394,28 +406,28 @@ export function ItemsSection({ formData, updateFormData }: ItemsSectionProps) {
                       min="0"
                       step="0.01"
                       required
-                      className={item.itemType === 'existing' && item.rate > 0 ? 'bg-green-50 border-green-300' : ''}
+                      className={`bg-white dark:bg-gray-600 border-gray-300 dark:border-gray-500 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 ${item.itemType === 'existing' && item.rate > 0 ? 'bg-green-50 dark:bg-green-900 border-green-300 dark:border-green-600' : ''}`}
                     />
                     {item.itemType === 'existing' && item.rate > 0 && (
-                      <p className="text-xs text-green-600">✓ Auto-filled from inventory</p>
+                      <p className="text-xs text-green-600 dark:text-green-400">✓ Auto-filled from inventory</p>
                     )}
                   </div>
 
                   <div className="space-y-2">
-                    <Label>Discount Type</Label>
+                    <Label className="text-gray-900 dark:text-white">Discount Type</Label>
                     <Select value={item.discount.type} onValueChange={(value: any) => updateItem(index, 'discount', { ...item.discount, type: value })}>
-                      <SelectTrigger>
+                      <SelectTrigger className="bg-white dark:bg-gray-600 border-gray-300 dark:border-gray-500 text-gray-900 dark:text-white">
                         <SelectValue />
                       </SelectTrigger>
-                      <SelectContent className="bg-white border border-gray-200 shadow-lg z-50">
-                        <SelectItem value="percentage" className="bg-white hover:bg-gray-50">Percentage (%)</SelectItem>
-                        <SelectItem value="amount" className="bg-white hover:bg-gray-50">Amount (₹)</SelectItem>
+                      <SelectContent className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 shadow-lg z-50">
+                        <SelectItem value="percentage" className="bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-900 dark:text-white">Percentage (%)</SelectItem>
+                        <SelectItem value="amount" className="bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-900 dark:text-white">Amount (₹)</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
 
                   <div className="space-y-2">
-                    <Label>Discount Value</Label>
+                    <Label className="text-gray-900 dark:text-white">Discount Value</Label>
                     <Input
                       type="number"
                       value={item.discount.value}
@@ -423,46 +435,49 @@ export function ItemsSection({ formData, updateFormData }: ItemsSectionProps) {
                       placeholder="0"
                       min="0"
                       step="0.01"
+                      className="bg-white dark:bg-gray-600 border-gray-300 dark:border-gray-500 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <Label>Delivery Date</Label>
+                    <Label className="text-gray-900 dark:text-white">Delivery Date</Label>
                     <Input
                       type="date"
                       value={item.deliveryDate}
                       onChange={(e) => updateItem(index, 'deliveryDate', e.target.value)}
+                      className="bg-white dark:bg-gray-600 border-gray-300 dark:border-gray-500 text-gray-900 dark:text-white"
                     />
                   </div>
                 </div>
 
                 <div className="space-y-2">
-                  <Label>Description</Label>
+                  <Label className="text-gray-900 dark:text-white">Description</Label>
                   <Textarea
                     value={item.description}
                     onChange={(e) => updateItem(index, 'description', e.target.value)}
                     placeholder="Item description..."
                     rows={2}
+                    className="bg-white dark:bg-gray-600 border-gray-300 dark:border-gray-500 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
                   />
                 </div>
 
                 {/* Item Summary */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-3 bg-gray-50 rounded-lg">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-3 bg-gray-50 dark:bg-gray-600 rounded-lg">
                   <div>
-                    <Label className="text-sm font-medium text-gray-600">Subtotal</Label>
-                    <p className="font-medium">{formatCurrency(item.quantity * item.rate)}</p>
+                    <Label className="text-sm font-medium text-gray-600 dark:text-gray-400">Subtotal</Label>
+                    <p className="font-medium text-gray-900 dark:text-white">{formatCurrency(item.quantity * item.rate)}</p>
                   </div>
                   <div>
-                    <Label className="text-sm font-medium text-gray-600">Discount</Label>
-                    <p className="font-medium">{formatCurrency(item.discountAmount)}</p>
+                    <Label className="text-sm font-medium text-gray-600 dark:text-gray-400">Discount</Label>
+                    <p className="font-medium text-gray-900 dark:text-white">{formatCurrency(item.discountAmount)}</p>
                   </div>
                   <div>
-                    <Label className="text-sm font-medium text-gray-600">Tax</Label>
-                    <p className="font-medium">{formatCurrency(item.totalTaxAmount)}</p>
+                    <Label className="text-sm font-medium text-gray-600 dark:text-gray-400">Tax</Label>
+                    <p className="font-medium text-gray-900 dark:text-white">{formatCurrency(item.totalTaxAmount)}</p>
                   </div>
                   <div>
-                    <Label className="text-sm font-medium text-gray-600">Total</Label>
-                    <p className="font-medium text-blue-600">{formatCurrency(item.lineTotal)}</p>
+                    <Label className="text-sm font-medium text-gray-600 dark:text-gray-400">Total</Label>
+                    <p className="font-medium text-blue-600 dark:text-blue-400">{formatCurrency(item.lineTotal)}</p>
                   </div>
                 </div>
               </div>

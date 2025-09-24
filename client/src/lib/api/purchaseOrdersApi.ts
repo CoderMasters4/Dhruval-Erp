@@ -12,7 +12,7 @@ export interface PurchaseOrder {
       phone: string
     }
   }
-  status: 'pending' | 'approved' | 'ordered' | 'received' | 'partial' | 'cancelled'
+  status: 'draft' | 'pending' | 'approved' | 'ordered' | 'partial' | 'received' | 'cancelled'
   orderDate: string
   expectedDeliveryDate?: string
   actualDeliveryDate?: string
@@ -245,6 +245,19 @@ export const purchaseOrdersApi = baseApi.injectEndpoints({
       invalidatesTags: ['PurchaseOrder'],
     }),
 
+    // Update purchase order status
+    updatePurchaseOrderStatus: builder.mutation<
+      { success: boolean; data: PurchaseOrder; message: string },
+      { orderId: string; status: string; notes?: string }
+    >({
+      query: ({ orderId, status, notes }) => ({
+        url: `/purchase-orders/${orderId}/status`,
+        method: 'PUT',
+        body: { status, notes },
+      }),
+      invalidatesTags: ['PurchaseOrder'],
+    }),
+
     // Get purchase orders by supplier
     getPurchaseOrdersBySupplier: builder.query<
       {
@@ -284,5 +297,6 @@ export const {
   useApprovePurchaseOrderMutation,
   useReceivePurchaseOrderMutation,
   useCancelPurchaseOrderMutation,
+  useUpdatePurchaseOrderStatusMutation,
   useGetPurchaseOrdersBySupplierQuery,
 } = purchaseOrdersApi

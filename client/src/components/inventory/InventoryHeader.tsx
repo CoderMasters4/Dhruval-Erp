@@ -26,6 +26,7 @@ interface InventoryHeaderProps {
   onImport: () => void;
   searchTerm: string;
   onSearchChange: (value: string) => void;
+  theme: 'light' | 'dark';
 }
 
 export const InventoryHeader: React.FC<InventoryHeaderProps> = ({
@@ -36,10 +37,15 @@ export const InventoryHeader: React.FC<InventoryHeaderProps> = ({
   onExport,
   onImport,
   searchTerm,
-  onSearchChange
+  onSearchChange,
+  theme
 }) => {
   return (
-    <div className="bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 rounded-xl p-6 text-white shadow-lg">
+    <div className={`rounded-xl p-6 shadow-lg transition-theme ${
+      theme === 'dark' 
+        ? 'bg-gradient-to-r from-blue-800 via-purple-800 to-indigo-800' 
+        : 'bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600'
+    } text-white`}>
       {/* Main Header */}
       <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 mb-6">
         <div>

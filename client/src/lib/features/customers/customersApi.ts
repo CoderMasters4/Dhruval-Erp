@@ -47,15 +47,36 @@ export interface Customer {
   contactInfo?: {
     primaryEmail?: string
     primaryPhone?: string
+    website?: string
   }
-  relationship?: {
-    customerType?: string
-    priority?: string
+  
+  // Multiple addresses support
+  addresses?: Array<{
+    street?: string
+    city?: string
+    state?: string
+    country?: string
+    zipCode?: string
+    addressType?: 'primary' | 'billing' | 'shipping' | 'office'
+    isDefault?: boolean
+  }>
+  
+  // Financial information
+  financialInfo?: {
+    creditLimit?: number
+    paymentTerms?: string
   }
+  
+  // Purchase history
   purchaseHistory?: {
     totalOrders?: number
     totalOrderValue?: number
     averageOrderValue?: number
+    lastOrderDate?: string
+  }
+  relationship?: {
+    customerType?: string
+    priority?: string
   }
   compliance?: {
     kycStatus?: 'pending' | 'completed' | 'failed'

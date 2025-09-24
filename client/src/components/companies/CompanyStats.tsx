@@ -38,13 +38,13 @@ const CompanyStats: React.FC<CompanyStatsProps> = ({ stats, isLoading }) => {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {[...Array(4)].map((_, i) => (
-          <div key={i} className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 animate-pulse">
+          <div key={i} className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 animate-pulse transition-all duration-300">
             <div className="flex items-center justify-between">
               <div className="space-y-3">
-                <div className="h-4 bg-gray-200 rounded w-24"></div>
-                <div className="h-8 bg-gray-200 rounded w-16"></div>
+                <div className="h-4 bg-gray-200 dark:bg-gray-600 rounded w-24"></div>
+                <div className="h-8 bg-gray-200 dark:bg-gray-600 rounded w-16"></div>
               </div>
-              <div className="h-8 w-8 bg-gray-200 rounded"></div>
+              <div className="h-8 w-8 bg-gray-200 dark:bg-gray-600 rounded"></div>
             </div>
           </div>
         ))}
@@ -59,9 +59,7 @@ const CompanyStats: React.FC<CompanyStatsProps> = ({ stats, isLoading }) => {
       icon: Building2,
       bgColor: 'bg-sky-500',
       iconBg: 'bg-sky-400',
-      textColor: 'text-sky-100',
-      change: '+12%',
-      changeType: 'positive' as const
+      textColor: 'text-sky-100'
     },
     {
       title: 'Active Companies',
@@ -69,9 +67,7 @@ const CompanyStats: React.FC<CompanyStatsProps> = ({ stats, isLoading }) => {
       icon: CheckCircle,
       bgColor: 'bg-green-500',
       iconBg: 'bg-green-400',
-      textColor: 'text-green-100',
-      change: '+8%',
-      changeType: 'positive' as const
+      textColor: 'text-green-100'
     },
     {
       title: 'Inactive Companies',
@@ -79,9 +75,7 @@ const CompanyStats: React.FC<CompanyStatsProps> = ({ stats, isLoading }) => {
       icon: XCircle,
       bgColor: 'bg-gray-500',
       iconBg: 'bg-gray-400',
-      textColor: 'text-gray-100',
-      change: '-3%',
-      changeType: 'negative' as const
+      textColor: 'text-gray-100'
     },
     {
       title: 'New This Month',
@@ -89,9 +83,7 @@ const CompanyStats: React.FC<CompanyStatsProps> = ({ stats, isLoading }) => {
       icon: TrendingUp,
       bgColor: 'bg-blue-500',
       iconBg: 'bg-blue-400',
-      textColor: 'text-blue-100',
-      change: '+25%',
-      changeType: 'positive' as const
+      textColor: 'text-blue-100'
     }
   ]
 
@@ -119,12 +111,6 @@ const CompanyStats: React.FC<CompanyStatsProps> = ({ stats, isLoading }) => {
                 <p className="text-3xl font-bold mb-3 text-white">
                   {card.value.toLocaleString()}
                 </p>
-                <div className="flex items-center text-white">
-                  <Activity className="w-4 h-4 mr-2" />
-                  <span className="text-sm font-medium">
-                    {card.change} from last month
-                  </span>
-                </div>
               </div>
               <div className="ml-4">
                 <div className={clsx('p-3 rounded-xl', card.iconBg)}>
@@ -142,46 +128,46 @@ const CompanyStats: React.FC<CompanyStatsProps> = ({ stats, isLoading }) => {
       {(stats.totalUsers || stats.totalRevenue) && (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {stats.totalUsers && (
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 transition-all duration-300">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">Total Users</p>
-                  <p className="text-2xl font-bold text-gray-900 mt-1">
+                  <p className="text-sm font-medium text-gray-600 dark:text-gray-300">Total Users</p>
+                  <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
                     {stats.totalUsers.toLocaleString()}
                   </p>
                 </div>
-                <Users className="w-8 h-8 text-blue-500" />
+                <Users className="w-8 h-8 text-blue-500 dark:text-blue-400" />
               </div>
             </div>
           )}
 
           {stats.totalRevenue && (
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 transition-all duration-300">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">Total Revenue</p>
-                  <p className="text-2xl font-bold text-gray-900 mt-1">
+                  <p className="text-sm font-medium text-gray-600 dark:text-gray-300">Total Revenue</p>
+                  <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
                     ₹{stats.totalRevenue.toLocaleString()}
                   </p>
                 </div>
-                <DollarSign className="w-8 h-8 text-green-500" />
+                <DollarSign className="w-8 h-8 text-green-500 dark:text-green-400" />
               </div>
             </div>
           )}
 
           {stats.topPerformingCompany && (
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 transition-all duration-300">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">Top Performer</p>
-                  <p className="text-lg font-bold text-gray-900 mt-1">
+                  <p className="text-sm font-medium text-gray-600 dark:text-gray-300">Top Performer</p>
+                  <p className="text-lg font-bold text-gray-900 dark:text-white mt-1">
                     {stats.topPerformingCompany.name}
                   </p>
-                  <p className="text-sm text-green-600 font-medium">
+                  <p className="text-sm text-green-600 dark:text-green-400 font-medium">
                     ₹{stats.topPerformingCompany.revenue.toLocaleString()}
                   </p>
                 </div>
-                <Calendar className="w-8 h-8 text-purple-500" />
+                <Calendar className="w-8 h-8 text-purple-500 dark:text-purple-400" />
               </div>
             </div>
           )}

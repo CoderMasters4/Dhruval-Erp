@@ -19,6 +19,7 @@ import { useGetPurchaseOrdersQuery } from '@/lib/api/purchaseOrdersApi';
 import { useGetWarehousesQuery } from '@/lib/api/warehousesApi';
 import { useSelector } from 'react-redux';
 import { selectCurrentUser, selectIsSuperAdmin } from '@/lib/features/auth/authSlice';
+import { selectTheme } from '@/lib/features/ui/uiSlice';
 import { X, Save, Package, AlertCircle, Plus } from 'lucide-react';
 
 interface GreyFabricInwardFormProps {
@@ -31,6 +32,7 @@ export function GreyFabricInwardForm({ grn, onClose, onSuccess }: GreyFabricInwa
   // User and company info
   const user = useSelector(selectCurrentUser);
   const isSuperAdmin = useSelector(selectIsSuperAdmin);
+  const theme = useSelector(selectTheme);
   const userCompanyId = (user as any)?.companyAccess?.[0]?.companyId;
 
   const [formData, setFormData] = useState<CreateGreyFabricInwardRequest>({
@@ -451,15 +453,15 @@ export function GreyFabricInwardForm({ grn, onClose, onSuccess }: GreyFabricInwa
 
   return (
     <Dialog open={true} onOpenChange={onClose}>
-      <DialogContent className="max-w-5xl max-h-[95vh] overflow-y-auto border-0 shadow-2xl">
+      <DialogContent className="max-w-5xl max-h-[95vh] overflow-y-auto border-0 shadow-2xl bg-white dark:bg-gray-800">
         <DialogHeader className="pb-6">
-          <DialogTitle className="flex items-center gap-3 text-2xl font-bold">
-            <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center text-white">
+          <DialogTitle className="flex items-center gap-3 text-2xl font-bold text-gray-900 dark:text-gray-100">
+            <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 dark:from-blue-600 dark:to-purple-700 rounded-lg flex items-center justify-center text-white">
               <Package className="h-5 w-5" />
             </div>
             {isEdit ? 'Edit GRN Entry' : 'Create New GRN Entry'}
           </DialogTitle>
-          <p className="text-gray-600 mt-2">
+          <p className="text-gray-600 dark:text-gray-400 mt-2">
             {isEdit ? 'Update your GRN entry details' : 'Fill in the details to create a new GRN entry'}
           </p>
         </DialogHeader>
@@ -467,19 +469,19 @@ export function GreyFabricInwardForm({ grn, onClose, onSuccess }: GreyFabricInwa
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Help Message */}
           {(ordersError || !purchaseOrders?.data?.length) && (
-            <Card className="border-yellow-200 bg-yellow-50">
+            <Card className="border-yellow-200 dark:border-yellow-600 bg-yellow-50 dark:bg-yellow-900/20">
               <CardContent className="pt-6">
                 <div className="flex items-start gap-3">
-                  <AlertCircle className="h-5 w-5 text-yellow-600 mt-0.5" />
+                  <AlertCircle className="h-5 w-5 text-yellow-600 dark:text-yellow-400 mt-0.5" />
                   <div>
-                    <h4 className="font-medium text-yellow-800">Setup Required</h4>
-                    <p className="text-sm text-yellow-700 mt-1">
+                    <h4 className="font-medium text-yellow-800 dark:text-yellow-200">Setup Required</h4>
+                    <p className="text-sm text-yellow-700 dark:text-yellow-300 mt-1">
                       To create a GRN entry, you need:
                     </p>
-                    <ul className="text-sm text-yellow-700 mt-2 list-disc list-inside space-y-1">
+                    <ul className="text-sm text-yellow-700 dark:text-yellow-300 mt-2 list-disc list-inside space-y-1">
                       <li>At least one Purchase Order</li>
                     </ul>
-                    <p className="text-sm text-yellow-700 mt-2">
+                    <p className="text-sm text-yellow-700 dark:text-yellow-300 mt-2">
                       Please create a purchase order first or contact your administrator.
                     </p>
                   </div>
@@ -489,10 +491,10 @@ export function GreyFabricInwardForm({ grn, onClose, onSuccess }: GreyFabricInwa
           )}
 
           {/* Basic Information */}
-          <Card className="border-0 shadow-lg bg-gradient-to-r from-blue-50 to-purple-50">
+          <Card className="border-0 shadow-lg bg-gradient-to-r from-blue-50 to-purple-50 dark:from-gray-700 dark:to-gray-600">
             <CardHeader className="pb-4">
-              <CardTitle className="flex items-center gap-2 text-lg font-semibold text-gray-800">
-                <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm">1</div>
+              <CardTitle className="flex items-center gap-2 text-lg font-semibold text-gray-800 dark:text-gray-200">
+                <div className="w-6 h-6 bg-blue-500 dark:bg-blue-600 rounded-full flex items-center justify-center text-white text-sm">1</div>
                 Basic Information
               </CardTitle>
             </CardHeader>
@@ -500,23 +502,23 @@ export function GreyFabricInwardForm({ grn, onClose, onSuccess }: GreyFabricInwa
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {/* Entry Type Selection */}
                 <div>
-                  <Label htmlFor="entryType">Entry Type</Label>
+                  <Label htmlFor="entryType" className="text-gray-700 dark:text-gray-300">Entry Type</Label>
                   <Select
                     value={formData.entryType}
                     onValueChange={(value) => handleInputChange('entryType', value)}
                   >
-                    <SelectTrigger>
+                    <SelectTrigger className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-600 text-gray-900 dark:text-gray-100">
                       <SelectValue placeholder="Select Entry Type" />
                     </SelectTrigger>
-                    <SelectContent className="bg-white border border-gray-200 shadow-lg z-50">
-                      <SelectItem value="direct_stock_entry" className="bg-white hover:bg-gray-50">Direct Stock Entry</SelectItem>
-                      <SelectItem value="purchase_order" className="bg-white hover:bg-gray-50">Purchase Order</SelectItem>
-                      <SelectItem value="transfer_in" className="bg-white hover:bg-gray-50">Transfer In</SelectItem>
-                      <SelectItem value="adjustment" className="bg-white hover:bg-gray-50">Adjustment</SelectItem>
+                    <SelectContent className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 shadow-lg z-50">
+                      <SelectItem value="direct_stock_entry" className="bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-900 dark:text-gray-100">Direct Stock Entry</SelectItem>
+                      <SelectItem value="purchase_order" className="bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-900 dark:text-gray-100">Purchase Order</SelectItem>
+                      <SelectItem value="transfer_in" className="bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-900 dark:text-gray-100">Transfer In</SelectItem>
+                      <SelectItem value="adjustment" className="bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-900 dark:text-gray-100">Adjustment</SelectItem>
                     </SelectContent>
                   </Select>
                   {errors.entryType && (
-                    <p className="text-sm text-red-600 mt-1">{errors.entryType}</p>
+                    <p className="text-sm text-red-600 dark:text-red-400 mt-1">{errors.entryType}</p>
                   )}
                 </div>
                 {/* Company Selection - Only for Super Admin */}
@@ -538,9 +540,9 @@ export function GreyFabricInwardForm({ grn, onClose, onSuccess }: GreyFabricInwa
                       <SelectTrigger>
                         <SelectValue placeholder="Select Company" />
                       </SelectTrigger>
-                      <SelectContent className="bg-white border border-gray-200 shadow-lg z-50">
+                      <SelectContent className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 shadow-lg z-50">
                         {companiesData?.data?.map((company) => (
-                          <SelectItem key={company._id} value={company._id} className="bg-white hover:bg-gray-50">
+                          <SelectItem key={company._id} value={company._id} className="bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-900 dark:text-gray-100">
                             {company.companyName}
                           </SelectItem>
                         ))}
@@ -591,30 +593,30 @@ export function GreyFabricInwardForm({ grn, onClose, onSuccess }: GreyFabricInwa
 
           {/* Selected PO Information */}
           {selectedPO && (
-            <Card className="mb-6">
+            <Card className="mb-6 bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-600">
               <CardHeader>
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <Package className="h-5 w-5" />
+                <CardTitle className="text-lg flex items-center gap-2 text-gray-800 dark:text-gray-200">
+                  <Package className="h-5 w-5 text-blue-600 dark:text-blue-400" />
                   Selected Purchase Order Details
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <Label className="text-sm font-medium text-gray-600">PO Number</Label>
-                    <p className="text-sm">{selectedPO.poNumber}</p>
+                    <Label className="text-sm font-medium text-gray-600 dark:text-gray-400">PO Number</Label>
+                    <p className="text-sm text-gray-900 dark:text-gray-100">{selectedPO.poNumber}</p>
                   </div>
                   <div>
-                    <Label className="text-sm font-medium text-gray-600">Supplier</Label>
-                    <p className="text-sm">{selectedPO.supplier?.supplierName || 'N/A'}</p>
+                    <Label className="text-sm font-medium text-gray-600 dark:text-gray-400">Supplier</Label>
+                    <p className="text-sm text-gray-900 dark:text-gray-100">{selectedPO.supplier?.supplierName || 'N/A'}</p>
                   </div>
                   <div>
-                    <Label className="text-sm font-medium text-gray-600">Expected Delivery</Label>
-                    <p className="text-sm">{new Date(selectedPO.expectedDeliveryDate).toLocaleDateString()}</p>
+                    <Label className="text-sm font-medium text-gray-600 dark:text-gray-400">Expected Delivery</Label>
+                    <p className="text-sm text-gray-900 dark:text-gray-100">{new Date(selectedPO.expectedDeliveryDate).toLocaleDateString()}</p>
                   </div>
                   <div>
-                    <Label className="text-sm font-medium text-gray-600">Total Items</Label>
-                    <p className="text-sm">{selectedPO.items?.length || 0}</p>
+                    <Label className="text-sm font-medium text-gray-600 dark:text-gray-400">Total Items</Label>
+                    <p className="text-sm text-gray-900 dark:text-gray-100">{selectedPO.items?.length || 0}</p>
                   </div>
                 </div>
                 
@@ -622,7 +624,7 @@ export function GreyFabricInwardForm({ grn, onClose, onSuccess }: GreyFabricInwa
                 {selectedPO.items && selectedPO.items.length > 0 && (
                   <div className="mt-4">
                     <div className="flex items-center justify-between mb-2">
-                      <Label className="text-sm font-medium text-gray-600">Select Item to Auto-populate</Label>
+                      <Label className="text-sm font-medium text-gray-600 dark:text-gray-400">Select Item to Auto-populate</Label>
                       {selectedPO.items.length > 1 && (
                         <Select
                           value={selectedItemIndex.toString()}
@@ -630,12 +632,12 @@ export function GreyFabricInwardForm({ grn, onClose, onSuccess }: GreyFabricInwa
                             setSelectedItemIndex(parseInt(value));
                           }}
                         >
-                          <SelectTrigger className="w-48">
+                          <SelectTrigger className="w-48 bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-600 text-gray-900 dark:text-gray-100">
                             <SelectValue />
                           </SelectTrigger>
-                          <SelectContent className="bg-white border border-gray-200 shadow-lg z-50">
+                          <SelectContent className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 shadow-lg z-50">
                             {selectedPO.items.map((item: any, index: number) => (
-                              <SelectItem key={index} value={index.toString()} className="bg-white hover:bg-gray-50">
+                              <SelectItem key={index} value={index.toString()} className="bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-900 dark:text-gray-100">
                                 {item.itemName} (Qty: {item.quantity} {item.unit})
                               </SelectItem>
                             ))}
@@ -643,8 +645,8 @@ export function GreyFabricInwardForm({ grn, onClose, onSuccess }: GreyFabricInwa
                         </Select>
                       )}
                     </div>
-                    <div className="bg-gray-50 p-3 rounded-md">
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-2 text-sm">
+                    <div className="bg-gray-50 dark:bg-gray-700 p-3 rounded-md">
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-2 text-sm text-gray-900 dark:text-gray-100">
                         <div>
                           <span className="font-medium">Item:</span> {selectedPO.items[selectedItemIndex]?.itemName}
                         </div>
@@ -656,11 +658,11 @@ export function GreyFabricInwardForm({ grn, onClose, onSuccess }: GreyFabricInwa
                         </div>
                       </div>
                       {selectedPO.items[selectedItemIndex]?.description && (
-                        <div className="mt-2 text-sm">
+                        <div className="mt-2 text-sm text-gray-900 dark:text-gray-100">
                           <span className="font-medium">Description:</span> {selectedPO.items[selectedItemIndex].description}
                         </div>
                       )}
-                      <div className="mt-2 text-xs text-blue-600">
+                      <div className="mt-2 text-xs text-blue-600 dark:text-blue-400">
                         💡 This item's details will be auto-populated in the form below
                       </div>
                     </div>
@@ -671,154 +673,160 @@ export function GreyFabricInwardForm({ grn, onClose, onSuccess }: GreyFabricInwa
           )}
 
           {/* Fabric Details */}
-          <Card className="border-0 shadow-lg bg-gradient-to-r from-green-50 to-blue-50">
+          <Card className="border-0 shadow-lg bg-gradient-to-r from-green-50 to-blue-50 dark:from-gray-700 dark:to-gray-600">
             <CardHeader className="pb-4">
-              <CardTitle className="flex items-center gap-2 text-lg font-semibold text-gray-800">
-                <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center text-white text-sm">2</div>
+              <CardTitle className="flex items-center gap-2 text-lg font-semibold text-gray-800 dark:text-gray-200">
+                <div className="w-6 h-6 bg-green-500 dark:bg-green-600 rounded-full flex items-center justify-center text-white text-sm">2</div>
                 Fabric Details
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="fabricType">Fabric Type *</Label>
+                  <Label htmlFor="fabricType" className="text-gray-700 dark:text-gray-300 font-medium">Fabric Type *</Label>
                   <Select
                     value={formData.fabricType}
                     onValueChange={(value) => handleInputChange('fabricType', value)}
                   >
-                    <SelectTrigger>
+                    <SelectTrigger className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-600 text-gray-900 dark:text-gray-100 hover:border-gray-300 dark:hover:border-gray-500 transition-colors">
                       <SelectValue placeholder="Select Fabric Type" />
                     </SelectTrigger>
-                    <SelectContent className="bg-white border border-gray-200 shadow-lg z-50">
-                      <SelectItem value="cotton" className="bg-white hover:bg-gray-50">Cotton</SelectItem>
-                      <SelectItem value="polyester" className="bg-white hover:bg-gray-50">Polyester</SelectItem>
-                      <SelectItem value="viscose" className="bg-white hover:bg-gray-50">Viscose</SelectItem>
-                      <SelectItem value="blend" className="bg-white hover:bg-gray-50">Blend</SelectItem>
-                      <SelectItem value="other" className="bg-white hover:bg-gray-50">Other</SelectItem>
+                    <SelectContent className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 shadow-lg z-50">
+                      <SelectItem value="cotton" className="bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-900 dark:text-gray-100 focus:bg-gray-50 dark:focus:bg-gray-700">Cotton</SelectItem>
+                      <SelectItem value="polyester" className="bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-900 dark:text-gray-100 focus:bg-gray-50 dark:focus:bg-gray-700">Polyester</SelectItem>
+                      <SelectItem value="viscose" className="bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-900 dark:text-gray-100 focus:bg-gray-50 dark:focus:bg-gray-700">Viscose</SelectItem>
+                      <SelectItem value="blend" className="bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-900 dark:text-gray-100 focus:bg-gray-50 dark:focus:bg-gray-700">Blend</SelectItem>
+                      <SelectItem value="other" className="bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-900 dark:text-gray-100 focus:bg-gray-50 dark:focus:bg-gray-700">Other</SelectItem>
                     </SelectContent>
                   </Select>
                   {errors.fabricType && (
-                    <p className="text-sm text-red-600 mt-1">{errors.fabricType}</p>
+                    <p className="text-sm text-red-600 dark:text-red-400 mt-1">{errors.fabricType}</p>
                   )}
                 </div>
 
                 <div>
-                  <Label htmlFor="fabricColor">Fabric Color *</Label>
+                  <Label htmlFor="fabricColor" className="text-gray-700 dark:text-gray-300 font-medium">Fabric Color *</Label>
                   <Input
                     id="fabricColor"
                     value={formData.fabricColor}
                     onChange={(e) => handleInputChange('fabricColor', e.target.value)}
                     placeholder="e.g., White, Blue, Red"
+                    className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-600 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:border-blue-500 dark:focus:border-blue-400"
                   />
                   {errors.fabricColor && (
-                    <p className="text-sm text-red-600 mt-1">{errors.fabricColor}</p>
+                    <p className="text-sm text-red-600 dark:text-red-400 mt-1">{errors.fabricColor}</p>
                   )}
                 </div>
 
                 <div>
-                  <Label htmlFor="fabricWeight">Fabric Weight (GSM) *</Label>
+                  <Label htmlFor="fabricWeight" className="text-gray-700 dark:text-gray-300 font-medium">Fabric Weight (GSM) *</Label>
                   <Input
                     id="fabricWeight"
                     type="number"
                     value={formData.fabricWeight}
                     onChange={(e) => handleInputChange('fabricWeight', parseFloat(e.target.value) || 0)}
                     placeholder="e.g., 150"
+                    className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-600 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:border-blue-500 dark:focus:border-blue-400"
                   />
                   {errors.fabricWeight && (
-                    <p className="text-sm text-red-600 mt-1">{errors.fabricWeight}</p>
+                    <p className="text-sm text-red-600 dark:text-red-400 mt-1">{errors.fabricWeight}</p>
                   )}
                 </div>
 
                 <div>
-                  <Label htmlFor="fabricWidth">Fabric Width (inches) *</Label>
+                  <Label htmlFor="fabricWidth" className="text-gray-700 dark:text-gray-300 font-medium">Fabric Width (inches) *</Label>
                   <Input
                     id="fabricWidth"
                     type="number"
                     value={formData.fabricWidth}
                     onChange={(e) => handleInputChange('fabricWidth', parseFloat(e.target.value) || 0)}
                     placeholder="e.g., 60"
+                    className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-600 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:border-blue-500 dark:focus:border-blue-400"
                   />
                   {errors.fabricWidth && (
-                    <p className="text-sm text-red-600 mt-1">{errors.fabricWidth}</p>
+                    <p className="text-sm text-red-600 dark:text-red-400 mt-1">{errors.fabricWidth}</p>
                   )}
                 </div>
 
                 <div>
-                  <Label htmlFor="quantity">Quantity *</Label>
+                  <Label htmlFor="quantity" className="text-gray-700 dark:text-gray-300 font-medium">Quantity *</Label>
                   <Input
                     id="quantity"
                     type="number"
                     value={formData.quantity}
                     onChange={(e) => handleInputChange('quantity', parseFloat(e.target.value) || 0)}
                     placeholder="e.g., 1000"
+                    className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-600 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:border-blue-500 dark:focus:border-blue-400"
                   />
                   {errors.quantity && (
-                    <p className="text-sm text-red-600 mt-1">{errors.quantity}</p>
+                    <p className="text-sm text-red-600 dark:text-red-400 mt-1">{errors.quantity}</p>
                   )}
                 </div>
 
                 <div>
-                  <Label htmlFor="unit">Unit *</Label>
+                  <Label htmlFor="unit" className="text-gray-700 dark:text-gray-300 font-medium">Unit *</Label>
                   <Select
                     value={formData.unit}
                     onValueChange={(value) => handleInputChange('unit', value)}
                   >
-                    <SelectTrigger>
+                    <SelectTrigger className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-600 text-gray-900 dark:text-gray-100 hover:border-gray-300 dark:hover:border-gray-500 transition-colors">
                       <SelectValue placeholder="Select Unit" />
                     </SelectTrigger>
-                    <SelectContent className="bg-white border border-gray-200 shadow-lg z-50">
-                      <SelectItem value="meters" className="bg-white hover:bg-gray-50">Meters</SelectItem>
-                      <SelectItem value="yards" className="bg-white hover:bg-gray-50">Yards</SelectItem>
-                      <SelectItem value="pieces" className="bg-white hover:bg-gray-50">Pieces</SelectItem>
+                    <SelectContent className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 shadow-lg z-50">
+                      <SelectItem value="meters" className="bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-900 dark:text-gray-100 focus:bg-gray-50 dark:focus:bg-gray-700">Meters</SelectItem>
+                      <SelectItem value="yards" className="bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-900 dark:text-gray-100 focus:bg-gray-50 dark:focus:bg-gray-700">Yards</SelectItem>
+                      <SelectItem value="pieces" className="bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-900 dark:text-gray-100 focus:bg-gray-50 dark:focus:bg-gray-700">Pieces</SelectItem>
                     </SelectContent>
                   </Select>
                   {errors.unit && (
-                    <p className="text-sm text-red-600 mt-1">{errors.unit}</p>
+                    <p className="text-sm text-red-600 dark:text-red-400 mt-1">{errors.unit}</p>
                   )}
                 </div>
 
                 <div>
-                  <Label htmlFor="quality">Quality Grade *</Label>
+                  <Label htmlFor="quality" className="text-gray-700 dark:text-gray-300 font-medium">Quality Grade *</Label>
                   <Select
                     value={formData.quality}
                     onValueChange={(value) => handleInputChange('quality', value)}
                   >
-                    <SelectTrigger>
+                    <SelectTrigger className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-600 text-gray-900 dark:text-gray-100 hover:border-gray-300 dark:hover:border-gray-500 transition-colors">
                       <SelectValue placeholder="Select Quality" />
                     </SelectTrigger>
-                    <SelectContent className="bg-white border border-gray-200 shadow-lg z-50">
-                      <SelectItem value="A+" className="bg-white hover:bg-gray-50">A+</SelectItem>
-                      <SelectItem value="A" className="bg-white hover:bg-gray-50">A</SelectItem>
-                      <SelectItem value="B+" className="bg-white hover:bg-gray-50">B+</SelectItem>
-                      <SelectItem value="B" className="bg-white hover:bg-gray-50">B</SelectItem>
-                      <SelectItem value="C" className="bg-white hover:bg-gray-50">C</SelectItem>
-                      <SelectItem value="D" className="bg-white hover:bg-gray-50">D</SelectItem>
+                    <SelectContent className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 shadow-lg z-50">
+                      <SelectItem value="A+" className="bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-900 dark:text-gray-100 focus:bg-gray-50 dark:focus:bg-gray-700">A+</SelectItem>
+                      <SelectItem value="A" className="bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-900 dark:text-gray-100 focus:bg-gray-50 dark:focus:bg-gray-700">A</SelectItem>
+                      <SelectItem value="B+" className="bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-900 dark:text-gray-100 focus:bg-gray-50 dark:focus:bg-gray-700">B+</SelectItem>
+                      <SelectItem value="B" className="bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-900 dark:text-gray-100 focus:bg-gray-50 dark:focus:bg-gray-700">B</SelectItem>
+                      <SelectItem value="C" className="bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-900 dark:text-gray-100 focus:bg-gray-50 dark:focus:bg-gray-700">C</SelectItem>
+                      <SelectItem value="D" className="bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-900 dark:text-gray-100 focus:bg-gray-50 dark:focus:bg-gray-700">D</SelectItem>
                     </SelectContent>
                   </Select>
                   {errors.quality && (
-                    <p className="text-sm text-red-600 mt-1">{errors.quality}</p>
+                    <p className="text-sm text-red-600 dark:text-red-400 mt-1">{errors.quality}</p>
                   )}
                 </div>
 
                 <div>
-                  <Label htmlFor="expectedAt">Expected Delivery Date</Label>
+                  <Label htmlFor="expectedAt" className="text-gray-700 dark:text-gray-300 font-medium">Expected Delivery Date</Label>
                   <Input
                     id="expectedAt"
                     type="datetime-local"
                     value={formData.expectedAt}
                     onChange={(e) => handleInputChange('expectedAt', e.target.value)}
+                    className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-600 text-gray-900 dark:text-gray-100 focus:border-blue-500 dark:focus:border-blue-400"
                   />
                 </div>
               </div>
 
               <div>
-                <Label htmlFor="remarks">Remarks</Label>
+                <Label htmlFor="remarks" className="text-gray-700 dark:text-gray-300 font-medium">Remarks</Label>
                 <Textarea
                   id="remarks"
                   value={formData.remarks}
                   onChange={(e) => handleInputChange('remarks', e.target.value)}
                   placeholder="Additional notes or remarks..."
                   rows={3}
+                  className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-600 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:border-blue-500 dark:focus:border-blue-400"
                 />
               </div>
             </CardContent>
@@ -826,17 +834,17 @@ export function GreyFabricInwardForm({ grn, onClose, onSuccess }: GreyFabricInwa
 
           {/* Grey Stock Lots Section */}
           {formData.entryType === 'direct_stock_entry' && (
-            <Card className="border-0 shadow-lg bg-gradient-to-r from-green-50 to-blue-50">
+            <Card className="border-0 shadow-lg bg-gradient-to-r from-green-50 to-blue-50 dark:from-gray-700 dark:to-gray-600">
               <CardHeader className="pb-4">
-                <CardTitle className="flex items-center justify-between text-lg font-semibold text-gray-800">
+                <CardTitle className="flex items-center justify-between text-lg font-semibold text-gray-800 dark:text-gray-200">
                   <div className="flex items-center gap-2">
-                    <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center text-white text-sm">3</div>
+                    <div className="w-6 h-6 bg-green-500 dark:bg-green-600 rounded-full flex items-center justify-center text-white text-sm">3</div>
                     Grey Stock Lots
                   </div>
                   <Button
                     type="button"
                     onClick={() => setShowLotSection(!showLotSection)}
-                    className="bg-green-600 hover:bg-green-700 text-white"
+                    className="bg-green-600 hover:bg-green-700 dark:bg-green-700 dark:hover:bg-green-800 text-white"
                   >
                     <Plus className="h-4 w-4 mr-2" />
                     {showLotSection ? 'Hide' : 'Add'} Lots
@@ -994,54 +1002,57 @@ export function GreyFabricInwardForm({ grn, onClose, onSuccess }: GreyFabricInwa
           )}
 
           {/* Cost Breakdown */}
-          <Card className="border-0 shadow-lg bg-gradient-to-r from-purple-50 to-pink-50">
+          <Card className="border-0 shadow-lg bg-gradient-to-r from-purple-50 to-pink-50 dark:from-gray-700 dark:to-gray-600">
             <CardHeader className="pb-4">
-              <CardTitle className="flex items-center gap-2 text-lg font-semibold text-gray-800">
-                <div className="w-6 h-6 bg-purple-500 rounded-full flex items-center justify-center text-white text-sm">4</div>
+              <CardTitle className="flex items-center gap-2 text-lg font-semibold text-gray-800 dark:text-gray-200">
+                <div className="w-6 h-6 bg-purple-500 dark:bg-purple-600 rounded-full flex items-center justify-center text-white text-sm">4</div>
                 Cost Breakdown
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
-                  <Label htmlFor="fabricCost">Fabric Cost (₹)</Label>
+                  <Label htmlFor="fabricCost" className="text-gray-700 dark:text-gray-300 font-medium">Fabric Cost (₹)</Label>
                   <Input
                     id="fabricCost"
                     type="number"
                     value={formData.costBreakdown?.fabricCost || 0}
                     onChange={(e) => handleCostChange('fabricCost', parseFloat(e.target.value) || 0)}
                     placeholder="0.00"
+                    className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-600 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:border-blue-500 dark:focus:border-blue-400"
                   />
                   {errors.fabricCost && (
-                    <p className="text-sm text-red-600 mt-1">{errors.fabricCost}</p>
+                    <p className="text-sm text-red-600 dark:text-red-400 mt-1">{errors.fabricCost}</p>
                   )}
                 </div>
 
                 <div>
-                  <Label htmlFor="transportationCost">Transportation Cost (₹)</Label>
+                  <Label htmlFor="transportationCost" className="text-gray-700 dark:text-gray-300 font-medium">Transportation Cost (₹)</Label>
                   <Input
                     id="transportationCost"
                     type="number"
                     value={formData.costBreakdown?.transportationCost || 0}
                     onChange={(e) => handleCostChange('transportationCost', parseFloat(e.target.value) || 0)}
                     placeholder="0.00"
+                    className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-600 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:border-blue-500 dark:focus:border-blue-400"
                   />
                   {errors.transportationCost && (
-                    <p className="text-sm text-red-600 mt-1">{errors.transportationCost}</p>
+                    <p className="text-sm text-red-600 dark:text-red-400 mt-1">{errors.transportationCost}</p>
                   )}
                 </div>
 
                 <div>
-                  <Label htmlFor="inspectionCost">Inspection Cost (₹)</Label>
+                  <Label htmlFor="inspectionCost" className="text-gray-700 dark:text-gray-300 font-medium">Inspection Cost (₹)</Label>
                   <Input
                     id="inspectionCost"
                     type="number"
                     value={formData.costBreakdown?.inspectionCost || 0}
                     onChange={(e) => handleCostChange('inspectionCost', parseFloat(e.target.value) || 0)}
                     placeholder="0.00"
+                    className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-600 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:border-blue-500 dark:focus:border-blue-400"
                   />
                   {errors.inspectionCost && (
-                    <p className="text-sm text-red-600 mt-1">{errors.inspectionCost}</p>
+                    <p className="text-sm text-red-600 dark:text-red-400 mt-1">{errors.inspectionCost}</p>
                   )}
                 </div>
               </div>
@@ -1058,12 +1069,12 @@ export function GreyFabricInwardForm({ grn, onClose, onSuccess }: GreyFabricInwa
           </Card>
 
           {/* Enhanced Actions */}
-          <div className="flex justify-end gap-4 pt-6 border-t">
+          <div className="flex justify-end gap-4 pt-6 border-t border-gray-200 dark:border-gray-700">
             <Button 
               type="button" 
               variant="outline" 
               onClick={onClose}
-              className="px-6 py-2 hover:bg-gray-50 transition-all duration-200"
+              className="px-6 py-2 hover:bg-gray-50 dark:hover:bg-gray-700 border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300 transition-all duration-200"
             >
               <X className="h-4 w-4 mr-2" />
               Cancel
@@ -1071,7 +1082,7 @@ export function GreyFabricInwardForm({ grn, onClose, onSuccess }: GreyFabricInwa
             <Button 
               type="submit" 
               disabled={isLoading || isFormDisabled}
-              className="px-8 py-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50"
+              className="px-8 py-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 dark:from-blue-700 dark:to-purple-700 dark:hover:from-blue-800 dark:hover:to-purple-800 text-white shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50"
             >
               <Save className="h-4 w-4 mr-2" />
               {isLoading ? 'Saving...' : isFormDisabled ? 'Setup Required' : isEdit ? 'Update GRN' : 'Create GRN'}

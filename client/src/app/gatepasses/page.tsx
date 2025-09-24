@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { useSelector } from 'react-redux'
+import { useSelector, useDispatch } from 'react-redux'
 import { RootState } from '@/lib/store'
 import { 
   useGetAllGatePassesQuery,
@@ -37,7 +37,13 @@ import {
   XCircle,
   AlertTriangle,
   RefreshCw,
-  Printer
+  Printer,
+  Sun,
+  Moon,
+  ChevronLeft,
+  ChevronRight,
+  ChevronsLeft,
+  ChevronsRight
 } from 'lucide-react'
 import { generateGatePassPDF, generateBulkGatePassPDF, GatePassPDFData } from '@/utils/gatePassPDFSimple'
 import GatePassFormModal from '@/components/gatepasses/modals/GatePassFormModal'
@@ -45,14 +51,18 @@ import AdvancedFilters from '@/components/gatepasses/AdvancedFilters'
 import GatePassStats from '@/components/gatepasses/GatePassStats'
 import GatePassTable from '@/components/gatepasses/GatePassTable'
 import { toast } from 'react-hot-toast'
+import { selectTheme, toggleTheme } from '@/lib/features/ui/uiSlice'
 
 export default function GatePassesPage() {
+  const theme = useSelector(selectTheme)
+  const dispatch = useDispatch()
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
   const [purposeFilter, setPurposeFilter] = useState('all')
   const [dateFrom, setDateFrom] = useState('')
   const [dateTo, setDateTo] = useState('')
   const [currentPage, setCurrentPage] = useState(1)
+  const [pageSize, setPageSize] = useState(20)
   const [selectedGatePass, setSelectedGatePass] = useState<GatePass | null>(null)
   const [isFormModalOpen, setIsFormModalOpen] = useState(false)
   const [isViewModalOpen, setIsViewModalOpen] = useState(false)
@@ -66,7 +76,7 @@ export default function GatePassesPage() {
   // API calls
   const { data: gatePassesResponse, isLoading, refetch, error } = useGetAllGatePassesQuery({
     page: currentPage,
-    limit: 20,
+    limit: pageSize,
     search: searchTerm,
     status: statusFilter !== 'all' ? statusFilter : undefined,
     purpose: purposeFilter !== 'all' ? purposeFilter : undefined,
@@ -100,6 +110,55 @@ export default function GatePassesPage() {
 
   const gatePasses = gatePassesResponse?.data || []
   const totalPages = gatePassesResponse?.totalPages || 1
+  const totalGatePasses = gatePassesResponse?.total || gatePasses.length
+
+  // Theme toggle handler
+  const handleThemeToggle = () => {
+    dispatch(toggleTheme())
+    toast.success(`${theme === 'light' ? 'Dark' : 'Light'} theme enabled`)
+  }
+
+  // Enhanced pagination handlers
+  const handlePageSizeChange = (newPageSize: number) => {
+    setPageSize(newPageSize)
+    setCurrentPage(1)
+  }
+
+  const handlePageChange = (page: number) => {
+    if (page >= 1 && page <= totalPages) {
+      setCurrentPage(page)
+      // Scroll to top when changing pages
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+    }
+  }
+
+  const handleFirstPage = () => {
+    if (totalPages > 0) {
+      setCurrentPage(1)
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+    }
+  }
+
+  const handleLastPage = () => {
+    if (totalPages > 0) {
+      setCurrentPage(totalPages)
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+    }
+  }
+
+  const handlePreviousPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1)
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+    }
+  }
+
+  const handleNextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1)
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+    }
+  }
 
   // Debug logging
   console.log('GatePasses Response:', gatePassesResponse)
@@ -347,22 +406,24 @@ export default function GatePassesPage() {
     <AppLayout>
       <div className="space-y-6">
         {/* Header */}
-        <div className="flex justify-between items-center">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Gate Passes</h1>
-            <p className="text-gray-600">Manage vehicle gate passes and access control</p>
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100">Gate Passes</h1>
+            <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400">Manage vehicle gate passes and access control</p>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             {selectedGatePasses.length > 0 && (
-              <div className="flex items-center gap-2 mr-4">
-                <span className="text-sm text-gray-600">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3 w-full sm:w-auto">
+                <span className="text-sm text-gray-600 dark:text-gray-400 font-medium">
                   {selectedGatePasses.length} selected
                 </span>
+                <div className="flex flex-wrap gap-2">
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={handleBulkComplete}
                   disabled={isCompleting}
+                    className="border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 text-xs sm:text-sm"
                 >
                   Complete All
                 </Button>
@@ -371,6 +432,7 @@ export default function GatePassesPage() {
                   size="sm"
                   onClick={handleBulkCancel}
                   disabled={isCancelling}
+                    className="border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 text-xs sm:text-sm"
                 >
                   Cancel All
                 </Button>
@@ -379,41 +441,76 @@ export default function GatePassesPage() {
                   size="sm"
                   onClick={() => handleBulkPrint()}
                   disabled={isPrinting}
-                  className="text-blue-600 hover:text-blue-700"
+                    className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 border-blue-300 dark:border-blue-600 text-xs sm:text-sm"
                 >
-                  <Printer className="w-4 h-4 mr-1" />
-                  Print Selected
+                    <Printer className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
+                    <span className="hidden sm:inline">Print Selected</span>
+                    <span className="sm:hidden">Print</span>
                 </Button>
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={handleBulkDelete}
                   disabled={isDeleting}
-                  className="text-red-600 hover:text-red-700"
+                    className="text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 border-red-300 dark:border-red-600 text-xs sm:text-sm"
                 >
-                  Delete All
+                    <Trash2 className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
+                    <span className="hidden sm:inline">Delete Selected</span>
+                    <span className="sm:hidden">Delete</span>
                 </Button>
+                </div>
               </div>
             )}
+            <div className="flex flex-wrap items-center gap-2">
             <Button
+                onClick={handleThemeToggle}
               variant="outline"
+                size="sm"
+                className="border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 p-2"
+                title={`Switch to ${theme === 'light' ? 'dark' : 'light'} theme`}
+              >
+                {theme === 'light' ? (
+                  <Moon className="w-4 h-4" />
+                ) : (
+                  <Sun className="w-4 h-4" />
+                )}
+              </Button>
+              
+              <Button
+                onClick={() => refetch()}
+                variant="outline"
+                size="sm"
+                className="border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
+                disabled={isLoading}
+              >
+                <RefreshCw className={`w-4 h-4 mr-1 sm:mr-2 ${isLoading ? 'animate-spin' : ''}`} />
+                <span className="hidden sm:inline">Refresh</span>
+              </Button>
+              
+              <Button
+                variant="outline"
+                size="sm"
               onClick={() => setIsExportModalOpen(true)}
-              className="flex items-center gap-2"
+                className="flex items-center gap-1 sm:gap-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
             >
               <Download className="w-4 h-4" />
-              Export
+                <span className="hidden sm:inline">Export</span>
             </Button>
+              
             <Button
               variant="outline"
+                size="sm"
               onClick={handlePrintAll}
-              className="flex items-center gap-2"
+                className="flex items-center gap-1 sm:gap-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
               disabled={isPrinting || gatePasses.length === 0}
             >
               <Printer className="w-4 h-4" />
-              Print All
+                <span className="hidden sm:inline">Print All</span>
             </Button>
+              
             <Button
               variant="outline"
+                size="sm"
               onClick={() => {
                 if (gatePasses.length === 0) {
                   toast.error('No gate passes to download')
@@ -427,16 +524,22 @@ export default function GatePassesPage() {
                   toast.error('Failed to generate PDF')
                 }
               }}
-              className="flex items-center gap-2"
+                className="flex items-center gap-1 sm:gap-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
               disabled={gatePasses.length === 0}
             >
               <Download className="w-4 h-4" />
-              Download PDF
+                <span className="hidden sm:inline">Download PDF</span>
             </Button>
-            <Button onClick={handleCreateGatePass} className="flex items-center gap-2">
+              
+              <Button 
+                onClick={handleCreateGatePass} 
+                className="flex items-center gap-1 sm:gap-2 bg-blue-600 hover:bg-blue-700 text-white text-sm sm:text-base"
+              >
               <Plus className="w-4 h-4" />
-              Create Gate Pass
+                <span className="hidden sm:inline">Create Gate Pass</span>
+                <span className="sm:hidden">Create</span>
             </Button>
+            </div>
           </div>
         </div>
 
@@ -460,11 +563,11 @@ export default function GatePassesPage() {
         />
 
         {/* Gate Passes Table */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Gate Passes</CardTitle>
+        <Card className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
+          <CardHeader className="bg-gray-50 dark:bg-gray-700">
+            <CardTitle className="text-gray-900 dark:text-gray-100">Gate Passes</CardTitle>
             {error && (
-              <div className="text-red-600 text-sm mt-2">
+              <div className="text-red-600 dark:text-red-400 text-sm mt-2">
                 Error loading gate passes: {
                   'message' in error 
                     ? error.message 
@@ -475,7 +578,7 @@ export default function GatePassesPage() {
               </div>
             )}
           </CardHeader>
-          <CardContent>
+          <CardContent className="bg-white dark:bg-gray-800">
             <GatePassTable
               gatePasses={gatePasses}
               selectedGatePasses={selectedGatePasses}
@@ -496,28 +599,257 @@ export default function GatePassesPage() {
           </CardContent>
         </Card>
 
-        {/* Pagination */}
+        {/* Enhanced Pagination Controls */}
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-3 sm:p-4">
+          <div className="flex flex-col space-y-4">
+            {/* Mobile: Stack everything vertically */}
+            <div className="flex flex-col sm:hidden space-y-3">
+              {/* Page Size Selector */}
+              <div className="flex items-center justify-between">
+                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Show:
+                </label>
+                <select
+                  value={pageSize}
+                  onChange={(e) => handlePageSizeChange(Number(e.target.value))}
+                  disabled={isLoading}
+                  className="px-3 py-1 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <option value={10}>10 per page</option>
+                  <option value={20}>20 per page</option>
+                  <option value={50}>50 per page</option>
+                  <option value={100}>100 per page</option>
+                </select>
+              </div>
+
+              {/* Pagination Info */}
+              <div className="text-sm text-gray-700 dark:text-gray-300 text-center">
+                {isLoading ? (
+                  <div className="flex items-center justify-center">
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 mr-2"></div>
+                    Loading...
+                  </div>
+                ) : (
+                  `Showing ${((currentPage - 1) * pageSize) + 1} to ${Math.min(currentPage * pageSize, totalGatePasses)} of ${totalGatePasses} gate passes`
+                )}
+              </div>
+
+              {/* Mobile Pagination Controls */}
         {totalPages > 1 && (
-          <div className="flex justify-center items-center gap-2">
+                <div className="flex items-center justify-center space-x-2">
             <Button
+                    onClick={handleFirstPage}
+                    disabled={currentPage === 1 || isLoading}
               variant="outline"
-              onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-              disabled={currentPage === 1}
+                    size="sm"
+                    className="p-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50"
+                    title="First page"
             >
-              Previous
+                    <ChevronsLeft className="w-4 h-4" />
             </Button>
-            <span className="px-4 py-2 text-sm text-gray-600">
-              Page {currentPage} of {totalPages}
+
+                  <Button
+                    onClick={handlePreviousPage}
+                    disabled={currentPage === 1 || isLoading}
+                    variant="outline"
+                    size="sm"
+                    className="p-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50"
+                    title="Previous page"
+                  >
+                    <ChevronLeft className="w-4 h-4" />
+                  </Button>
+
+                  <span className="px-3 py-1 text-sm text-gray-700 dark:text-gray-300">
+                    {currentPage} / {totalPages}
             </span>
+
             <Button
+                    onClick={handleNextPage}
+                    disabled={currentPage === totalPages || isLoading}
               variant="outline"
-              onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-              disabled={currentPage === totalPages}
-            >
-              Next
-            </Button>
+                    size="sm"
+                    className="p-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50"
+                    title="Next page"
+                  >
+                    <ChevronRight className="w-4 h-4" />
+                  </Button>
+
+                  <Button
+                    onClick={handleLastPage}
+                    disabled={currentPage === totalPages || isLoading}
+                    variant="outline"
+                    size="sm"
+                    className="p-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50"
+                    title="Last page"
+                  >
+                    <ChevronsRight className="w-4 h-4" />
+                  </Button>
+                </div>
+              )}
+            </div>
+
+            {/* Desktop: Horizontal layout */}
+            <div className="hidden sm:flex items-center justify-between gap-4">
+              {/* Page Size Selector */}
+              <div className="flex items-center space-x-3">
+                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Show:
+                </label>
+                <select
+                  value={pageSize}
+                  onChange={(e) => handlePageSizeChange(Number(e.target.value))}
+                  disabled={isLoading}
+                  className="px-3 py-1 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <option value={10}>10 per page</option>
+                  <option value={20}>20 per page</option>
+                  <option value={50}>50 per page</option>
+                  <option value={100}>100 per page</option>
+                </select>
+              </div>
+
+              {/* Pagination Info */}
+              <div className="text-sm text-gray-700 dark:text-gray-300">
+                {isLoading ? (
+                  <div className="flex items-center">
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 mr-2"></div>
+                    Loading...
+                  </div>
+                ) : (
+                  `Showing ${((currentPage - 1) * pageSize) + 1} to ${Math.min(currentPage * pageSize, totalGatePasses)} of ${totalGatePasses} gate passes`
+                )}
+              </div>
+
+              {/* Pagination Controls */}
+              {totalPages > 1 && (
+                <div className="flex items-center space-x-1">
+                  {/* First Page */}
+                  <Button
+                    onClick={handleFirstPage}
+                    disabled={currentPage === 1 || isLoading}
+                    variant="outline"
+                    size="sm"
+                    className="p-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50"
+                    title="First page"
+                  >
+                    <ChevronsLeft className="w-4 h-4" />
+                  </Button>
+
+                  {/* Previous Page */}
+                  <Button
+                    onClick={handlePreviousPage}
+                    disabled={currentPage === 1 || isLoading}
+                    variant="outline"
+                    size="sm"
+                    className="p-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50"
+                    title="Previous page"
+                  >
+                    <ChevronLeft className="w-4 h-4" />
+                  </Button>
+
+                  {/* Page Numbers */}
+                  <div className="flex items-center space-x-1">
+                    {(() => {
+                      const pages = []
+                      const maxVisiblePages = 5
+                      let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2))
+                      let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1)
+                      
+                      if (endPage - startPage + 1 < maxVisiblePages) {
+                        startPage = Math.max(1, endPage - maxVisiblePages + 1)
+                      }
+
+                      // Add first page and ellipsis if needed
+                      if (startPage > 1) {
+                        pages.push(
+                          <Button
+                            key={1}
+                            onClick={() => handlePageChange(1)}
+                            variant={currentPage === 1 ? "default" : "outline"}
+                            size="sm"
+                            className={`w-8 h-8 p-0 ${currentPage === 1 ? '' : 'border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'}`}
+                          >
+                            1
+                          </Button>
+                        )
+                        if (startPage > 2) {
+                          pages.push(
+                            <span key="ellipsis1" className="text-gray-500 dark:text-gray-400 px-2">
+                              ...
+                            </span>
+                          )
+                        }
+                      }
+
+                      // Add visible page numbers
+                      for (let i = startPage; i <= endPage; i++) {
+                        pages.push(
+                          <Button
+                            key={i}
+                            onClick={() => handlePageChange(i)}
+                            variant={currentPage === i ? "default" : "outline"}
+                            size="sm"
+                            className={`w-8 h-8 p-0 ${currentPage === i ? '' : 'border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'}`}
+                          >
+                            {i}
+                          </Button>
+                        )
+                      }
+
+                      // Add last page and ellipsis if needed
+                      if (endPage < totalPages) {
+                        if (endPage < totalPages - 1) {
+                          pages.push(
+                            <span key="ellipsis2" className="text-gray-500 dark:text-gray-400 px-2">
+                              ...
+                            </span>
+                          )
+                        }
+                        pages.push(
+                          <Button
+                            key={totalPages}
+                            onClick={() => handlePageChange(totalPages)}
+                            variant={currentPage === totalPages ? "default" : "outline"}
+                            size="sm"
+                            className={`w-8 h-8 p-0 ${currentPage === totalPages ? '' : 'border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'}`}
+                          >
+                            {totalPages}
+                          </Button>
+                        )
+                      }
+
+                      return pages
+                    })()}
+                  </div>
+
+                  {/* Next Page */}
+                  <Button
+                    onClick={handleNextPage}
+                    disabled={currentPage === totalPages || isLoading}
+                    variant="outline"
+                    size="sm"
+                    className="p-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50"
+                    title="Next page"
+                  >
+                    <ChevronRight className="w-4 h-4" />
+                  </Button>
+
+                  {/* Last Page */}
+                  <Button
+                    onClick={handleLastPage}
+                    disabled={currentPage === totalPages || isLoading}
+                    variant="outline"
+                    size="sm"
+                    className="p-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50"
+                    title="Last page"
+                  >
+                    <ChevronsRight className="w-4 h-4" />
+                  </Button>
           </div>
         )}
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Form Modal */}

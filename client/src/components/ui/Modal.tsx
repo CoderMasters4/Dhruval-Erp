@@ -7,7 +7,7 @@ import clsx from 'clsx'
 interface ModalProps {
   isOpen: boolean
   onClose: () => void
-  title?: string
+  title?: string | React.ReactNode
   subtitle?: string
   children: React.ReactNode
   size?: 'sm' | 'md' | 'lg' | 'xl' | 'full'
@@ -74,7 +74,7 @@ export function Modal({
       {/* Modal */}
       <div
         className={clsx(
-          'relative bg-white rounded-2xl shadow-2xl w-full max-h-[90vh] overflow-hidden border border-sky-200',
+          'relative bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-h-[90vh] overflow-hidden border border-sky-200 dark:border-sky-700 transition-all duration-300',
           sizeClasses[size],
           className
         )}
@@ -139,7 +139,7 @@ export function ModalContent({ children, className }: { children: React.ReactNod
 
 export function ModalFooter({ children, className }: { children: React.ReactNode; className?: string }) {
   return (
-    <div className={clsx('px-6 py-4 bg-gray-50 border-t border-gray-200 flex items-center justify-end gap-3', className)}>
+    <div className={clsx('px-6 py-4 bg-gray-50 dark:bg-gray-700 border-t border-gray-200 dark:border-gray-600 flex items-center justify-end gap-3 transition-all duration-300', className)}>
       {children}
     </div>
   )

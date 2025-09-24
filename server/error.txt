@@ -1,510 +1,90 @@
-ib/query.js:4604:80) {
-  stringValue: `"{ '$gte': 2025-09-14T23:08:57.102Z, '$lte': 2025-09-21T18:29:59.999Z }"`,
-  messageFormat: undefined,
-  kind: 'date',
-  value: {
-    '$gte': 2025-09-14T23:08:57.102Z,
-    '$lte': 2025-09-21T18:29:59.999Z
-  },
-  path: 'createdAt',
-  reason: AssertionError [ERR_ASSERTION]: The expression evaluated to a falsy value:
-  
-    assert.ok(false)
-  
-      at castDate (/Users/rajat/Downloads/projects/erp/server/node_modules/.pnpm/mongoose@8.16.4/node_modules/mongoose/lib/cast/date.js:40:10)
-      at SchemaDate.cast (/Users/rajat/Downloads/projects/erp/server/node_modules/.pnpm/mongoose@8.16.4/node_modules/mongoose/lib/schema/date.js:375:12)
-      at SchemaDate.SchemaType.applySetters (/Users/rajat/Downloads/projects/erp/server/node_modules/.pnpm/mongoose@8.16.4/node_modules/mongoose/lib/schemaType.js:1258:12)
-      at SchemaDate.castForQuery (/Users/rajat/Downloads/projects/erp/server/node_modules/.pnpm/mongoose@8.16.4/node_modules/mongoose/lib/schema/date.js:416:19)
-      at SchemaDate.handleSingle (/Users/rajat/Downloads/projects/erp/server/node_modules/.pnpm/mongoose@8.16.4/node_modules/mongoose/lib/schemaType.js:1605:15)
-      at SchemaDate.castForQuery (/Users/rajat/Downloads/projects/erp/server/node_modules/.pnpm/mongoose@8.16.4/node_modules/mongoose/lib/schema/date.js:431:18)
-      at cast (/Users/rajat/Downloads/projects/erp/server/node_modules/.pnpm/mongoose@8.16.4/node_modules/mongoose/lib/cast.js:367:39)
-      at model.Query.Query.cast (/Users/rajat/Downloads/projects/erp/server/node_modules/.pnpm/mongoose@8.16.4/node_modules/mongoose/lib/query.js:5055:12)
-      at model.Query.Query._castConditions (/Users/rajat/Downloads/projects/erp/server/node_modules/.pnpm/mongoose@8.16.4/node_modules/mongoose/lib/query.js:2351:10)
-      at model.Query._find (/Users/rajat/Downloads/projects/erp/server/node_modules/.pnpm/mongoose@8.16.4/node_modules/mongoose/lib/query.js:2378:8) {
-    generatedMessage: true,
-    code: 'ERR_ASSERTION',
-    actual: false,
-    expected: true,
-    operator: '=='
-  },
-  valueType: 'Object'
-}
-Error in getFinancialData: CastError: Cast to date failed for value "{ '$gte': 2025-09-14T23:08:57.102Z, '$lte': 2025-09-21T18:29:59.999Z }" (type Object) at path "createdAt" for model "FinancialTransaction"
-    at SchemaDate.cast (/Users/rajat/Downloads/projects/erp/server/node_modules/.pnpm/mongoose@8.16.4/node_modules/mongoose/lib/schema/date.js:377:11)
-    at SchemaDate.SchemaType.applySetters (/Users/rajat/Downloads/projects/erp/server/node_modules/.pnpm/mongoose@8.16.4/node_modules/mongoose/lib/schemaType.js:1258:12)
-    at SchemaDate.castForQuery (/Users/rajat/Downloads/projects/erp/server/node_modules/.pnpm/mongoose@8.16.4/node_modules/mongoose/lib/schema/date.js:416:19)
-    at SchemaDate.handleSingle (/Users/rajat/Downloads/projects/erp/server/node_modules/.pnpm/mongoose@8.16.4/node_modules/mongoose/lib/schemaType.js:1605:15)
-    at SchemaDate.castForQuery (/Users/rajat/Downloads/projects/erp/server/node_modules/.pnpm/mongoose@8.16.4/node_modules/mongoose/lib/schema/date.js:431:18)
-    at cast (/Users/rajat/Downloads/projects/erp/server/node_modules/.pnpm/mongoose@8.16.4/node_modules/mongoose/lib/cast.js:367:39)
-    at model.Query.Query.cast (/Users/rajat/Downloads/projects/erp/server/node_modules/.pnpm/mongoose@8.16.4/node_modules/mongoose/lib/query.js:5055:12)
-    at model.Query.Query._castConditions (/Users/rajat/Downloads/projects/erp/server/node_modules/.pnpm/mongoose@8.16.4/node_modules/mongoose/lib/query.js:2351:10)
-    at model.Query._find (/Users/rajat/Downloads/projects/erp/server/node_modules/.pnpm/mongoose@8.16.4/node_modules/mongoose/lib/query.js:2378:8)
-    at model.Query.exec (/Users/rajat/Downloads/projects/erp/server/node_modules/.pnpm/mongoose@8.16.4/node_modules/mongoose/lib/query.js:4604:80) {
-  stringValue: `"{ '$gte': 2025-09-14T23:08:57.102Z, '$lte': 2025-09-21T18:29:59.999Z }"`,
-  messageFormat: undefined,
-  kind: 'date',
-  value: {
-    '$gte': 2025-09-14T23:08:57.102Z,
-    '$lte': 2025-09-21T18:29:59.999Z
-  },
-  path: 'createdAt',
-  reason: AssertionError [ERR_ASSERTION]: The expression evaluated to a falsy value:
-  
-    assert.ok(false)
-  
-      at castDate (/Users/rajat/Downloads/projects/erp/server/node_modules/.pnpm/mongoose@8.16.4/node_modules/mongoose/lib/cast/date.js:40:10)
-      at SchemaDate.cast (/Users/rajat/Downloads/projects/erp/server/node_modules/.pnpm/mongoose@8.16.4/node_modules/mongoose/lib/schema/date.js:375:12)
-      at SchemaDate.SchemaType.applySetters (/Users/rajat/Downloads/projects/erp/server/node_modules/.pnpm/mongoose@8.16.4/node_modules/mongoose/lib/schemaType.js:1258:12)
-      at SchemaDate.castForQuery (/Users/rajat/Downloads/projects/erp/server/node_modules/.pnpm/mongoose@8.16.4/node_modules/mongoose/lib/schema/date.js:416:19)
-      at SchemaDate.handleSingle (/Users/rajat/Downloads/projects/erp/server/node_modules/.pnpm/mongoose@8.16.4/node_modules/mongoose/lib/schemaType.js:1605:15)
-      at SchemaDate.castForQuery (/Users/rajat/Downloads/projects/erp/server/node_modules/.pnpm/mongoose@8.16.4/node_modules/mongoose/lib/schema/date.js:431:18)
-      at cast (/Users/rajat/Downloads/projects/erp/server/node_modules/.pnpm/mongoose@8.16.4/node_modules/mongoose/lib/cast.js:367:39)
-      at model.Query.Query.cast (/Users/rajat/Downloads/projects/erp/server/node_modules/.pnpm/mongoose@8.16.4/node_modules/mongoose/lib/query.js:5055:12)
-      at model.Query.Query._castConditions (/Users/rajat/Downloads/projects/erp/server/node_modules/.pnpm/mongoose@8.16.4/node_modules/mongoose/lib/query.js:2351:10)
-      at model.Query._find (/Users/rajat/Downloads/projects/erp/server/node_modules/.pnpm/mongoose@8.16.4/node_modules/mongoose/lib/query.js:2378:8) {
-    generatedMessage: true,
-    code: 'ERR_ASSERTION',
-    actual: false,
-    expected: true,
-    operator: '=='
-  },
-  valueType: 'Object'
-}
-Found 0 employees for company 68aed30c8d1ce6852fdc5e07
-Found 22 customers for company 68aed30c8d1ce6852fdc5e07
-Found 39 inventory items for company 68aed30c8d1ce6852fdc5e07
-Found 39 inventory items for company 68aed30c8d1ce6852fdc5e07
-2025-09-18 04:38:57:3857 info: Outgoing response  
-{
-  "requestId": "req_1758150536575_a0ug19k42",
-  "method": "GET",
-  "path": "/reports/weekly",
-  "statusCode": 200,
-  "duration": 620
-}
-2025-09-18 04:38:57:3857 info: Outgoing response  
-{
-  "requestId": "req_1758150536555_xtmf6lqqr",
-  "method": "GET",
-  "path": "/reports/custom",
-  "statusCode": 200,
-  "duration": 685
-}
-Found 0 suppliers for company 68aed30c8d1ce6852fdc5e07
-Data fetched successfully: {
-  orders: 0,
-  inventory: 39,
-  production: 0,
-  financial: 0,
-  employees: 0,
-  customers: 22,
-  suppliers: 0,
-  visitors: 0
-}
-Dashboard data result: {
-  kpiData: {
-    totalOrders: 0,
-    totalRevenue: 0,
-    productionOrders: 0,
-    completedProduction: 0,
-    totalInventory: 39,
-    totalEmployees: 0,
-    totalCustomers: 22,
-    totalSuppliers: 0,
-    totalVisitors: 0
-  },
-  revenueDataTotal: 0,
-  revenueBreakdownLength: 0,
-  departmentDataLength: 0,
-  inventoryDistributionLength: 39
-}
-2025-09-18 04:38:57:3857 info: Outgoing response  
-{
-  "requestId": "req_1758150536563_c39i2tw2x",
-  "method": "GET",
-  "path": "/dashboard",
-  "statusCode": 200,
-  "duration": 709
-}
-[nodemon] restarting due to changes...
-[nodemon] starting `ts-node -r dotenv/config src/server.ts dotenv_config_path=.env.local`
-Server: Starting imports...
-Server: Basic imports completed
-Server: About to import configurations...
-Server: Configurations imported successfully
-Server: About to import API routes...
-[nodemon] restarting due to changes...
-[nodemon] starting `ts-node -r dotenv/config src/server.ts dotenv_config_path=.env.local`
-Server: Starting imports...
-Server: Basic imports completed
-Server: About to import configurations...
-Server: Configurations imported successfully
-Server: About to import API routes...
-2025-09-18 04:42:04:424 info: 📦 Simple Cache Manager initialized (no Redis required)  
-2025-09-18 04:42:04:424 info: 📦 LRU-cache loaded successfully  
-2025-09-18 04:42:04:424 info: 📦 Advanced LRU cache initialized successfully  
-(node:79359) [MONGOOSE] Warning: Duplicate schema index on {"employeeId":1} found. This is often due to declaring an index using both "index: true" and "schema.index()". Please remove the duplicate index definition.
-(Use `node --trace-warnings ...` to show where the warning was created)
-(node:79359) [MONGOOSE] Warning: Duplicate schema index on {"personalInfo.email":1} found. This is often due to declaring an index using both "index: true" and "schema.index()". Please remove the duplicate index definition.
-2025-09-18 04:42:07:427 info: 🚫 Redis disabled for development - using in-memory cache only  
-[nodemon] restarting due to changes...
-[nodemon] starting `ts-node -r dotenv/config src/server.ts dotenv_config_path=.env.local`
-[nodemon] restarting due to changes...
-[nodemon] starting `ts-node -r dotenv/config src/server.ts dotenv_config_path=.env.local`
-Server: Starting imports...
-Server: Basic imports completed
-Server: About to import configurations...
-Server: Configurations imported successfully
-Server: About to import API routes...
-2025-09-18 04:42:46:4246 info: 📦 Simple Cache Manager initialized (no Redis required)  
-2025-09-18 04:42:46:4246 info: 📦 LRU-cache loaded successfully  
-2025-09-18 04:42:46:4246 info: 📦 Advanced LRU cache initialized successfully  
-Server: API routes imported successfully
-Server: Express app initialized
-Server: Body parsing middleware configured
-Server: Cookie parser configured with secret: true
-Server: Cookie secret length: 68
-Server: API routes mounted at: /api/v1
-Server: Available routes: [
-  'POST /api/v1/auth/login',
-  'POST /api/v1/auth/register',
-  'POST /api/v1/auth/logout',
-  'POST /api/v1/auth/refresh-token',
-  'GET /api/v1/health',
-  'GET /api/v1/debug/cookies'
-]
-🚀 Starting Factory ERP Server...
-Server: Environment: development
-Server: Port: 4000
-Server: API Prefix: /api/v1
-Server: CORS Origin: [
-  'http://localhost:3000',
-  'http://localhost:3001',
-  'http://localhost:5173'
-]
-Server: Cookie SameSite: strict
-Server: JWT Secret configured: true
-Server: JWT Refresh Secret configured: true
-Server: JWT Issuer: factory-erp
-Server: JWT Audience: factory-erp-users
-Server: Cookie Secret configured: true
-📊 Attempting database connection...
-2025-09-18 04:42:50:4250 info: Connecting to MongoDB...  
-{
-  "uri": "mongodb+srv://***:***@erp.h5jya9a.mongodb.net/erp?retryWrites=true&w=majority&appName=erp",
-  "environment": "development",
-  "options": {
-    "maxPoolSize": 20,
-    "serverSelectionTimeoutMS": 10000,
-    "connectTimeoutMS": 10000
-  }
-}
-2025-09-18 04:42:50:4250 debug: About to call mongoose.connect...  
-(node:79976) [MONGOOSE] Warning: Duplicate schema index on {"employeeId":1} found. This is often due to declaring an index using both "index: true" and "schema.index()". Please remove the duplicate index definition.
-(Use `node --trace-warnings ...` to show where the warning was created)
-(node:79976) [MONGOOSE] Warning: Duplicate schema index on {"personalInfo.email":1} found. This is often due to declaring an index using both "index: true" and "schema.index()". Please remove the duplicate index definition.
-(node:79976) [MONGOOSE] Warning: Duplicate schema index on {"batchNumber":1} found. This is often due to declaring an index using both "index: true" and "schema.index()". Please remove the duplicate index definition.
-(node:79976) [MONGOOSE] Warning: Duplicate schema index on {"batchNumber":1} found. This is often due to declaring an index using both "index: true" and "schema.index()". Please remove the duplicate index definition.
-(node:79976) [MONGOOSE] Warning: Duplicate schema index on {"batchNumber":1} found. This is often due to declaring an index using both "index: true" and "schema.index()". Please remove the duplicate index definition.
-(node:79976) [MONGOOSE] Warning: Duplicate schema index on {"batchNumber":1} found. This is often due to declaring an index using both "index: true" and "schema.index()". Please remove the duplicate index definition.
-(node:79976) [MONGOOSE] Warning: Duplicate schema index on {"batchNumber":1} found. This is often due to declaring an index using both "index: true" and "schema.index()". Please remove the duplicate index definition.
-(node:79976) [MONGOOSE] Warning: Duplicate schema index on {"status":1} found. This is often due to declaring an index using both "index: true" and "schema.index()". Please remove the duplicate index definition.
-(node:79976) [MONGOOSE] Warning: Duplicate schema index on {"timestamp":1} found. This is often due to declaring an index using both "index: true" and "schema.index()". Please remove the duplicate index definition.
-2025-09-18 04:42:50:4250 info: 🚫 Redis disabled for development - using in-memory cache only  
-2025-09-18 04:42:51:4251 debug: mongoose.connect completed successfully  
-2025-09-18 04:42:51:4251 info: MongoDB connected successfully  
-{
-  "host": "ac-mlwf7mg-shard-00-00.h5jya9a.mongodb.net",
-  "port": 27017,
-  "database": "erp",
-  "readyState": 1
-}
-2025-09-18 04:42:51:4251 info: Setting up database indexes...  
-2025-09-18 04:42:51:4251 info: ⚠️ Skipping model imports temporarily to debug server hanging issue  
-2025-09-18 04:42:51:4251 info: ✅ Database indexes setup completed successfully (using schema-defined indexes only)  
-✅ Database connected successfully!
-🚀 Factory ERP Server started successfully {
-  port: 4000,
-  environment: 'development',
-  version: '2.0.0',
-  database: {
-    isConnected: true,
-    readyState: 1,
-    host: 'ac-mlwf7mg-shard-00-00.h5jya9a.mongodb.net',
-    port: 27017,
-    database: 'erp'
-  },
-  websockets: true,
-  cors: [
-    'http://localhost:3000',
-    'http://localhost:3001',
-    'http://localhost:5173'
-  ],
-  apiPrefix: '/api/v1'
-}
-📊 Available endpoints:
-  - POST /api/v1/auth/login
-  - POST /api/v1/auth/register
-  - POST /api/v1/auth/logout
-  - POST /api/v1/auth/refresh-token
-  - GET /api/v1/health
-  - GET /api/v1/debug/cookies
-[nodemon] restarting due to changes...
-[nodemon] starting `ts-node -r dotenv/config src/server.ts dotenv_config_path=.env.local`
-Server: Starting imports...
-Server: Basic imports completed
-Server: About to import configurations...
-Server: Configurations imported successfully
-Server: About to import API routes...
-2025-09-18 04:43:26:4326 info: 📦 Simple Cache Manager initialized (no Redis required)  
-2025-09-18 04:43:26:4326 info: 📦 LRU-cache loaded successfully  
-2025-09-18 04:43:26:4326 info: 📦 Advanced LRU cache initialized successfully  
-Server: API routes imported successfully
-Server: Express app initialized
-Server: Body parsing middleware configured
-Server: Cookie parser configured with secret: true
-Server: Cookie secret length: 68
-Server: API routes mounted at: /api/v1
-Server: Available routes: [
-  'POST /api/v1/auth/login',
-  'POST /api/v1/auth/register',
-  'POST /api/v1/auth/logout',
-  'POST /api/v1/auth/refresh-token',
-  'GET /api/v1/health',
-  'GET /api/v1/debug/cookies'
-]
-🚀 Starting Factory ERP Server...
-Server: Environment: development
-Server: Port: 4000
-Server: API Prefix: /api/v1
-Server: CORS Origin: [
-  'http://localhost:3000',
-  'http://localhost:3001',
-  'http://localhost:5173'
-]
-Server: Cookie SameSite: strict
-Server: JWT Secret configured: true
-Server: JWT Refresh Secret configured: true
-Server: JWT Issuer: factory-erp
-Server: JWT Audience: factory-erp-users
-Server: Cookie Secret configured: true
-📊 Attempting database connection...
-2025-09-18 04:43:33:4333 info: Connecting to MongoDB...  
-{
-  "uri": "mongodb+srv://***:***@erp.h5jya9a.mongodb.net/erp?retryWrites=true&w=majority&appName=erp",
-  "environment": "development",
-  "options": {
-    "maxPoolSize": 20,
-    "serverSelectionTimeoutMS": 10000,
-    "connectTimeoutMS": 10000
-  }
-}
-2025-09-18 04:43:33:4333 debug: About to call mongoose.connect...  
-(node:80498) [MONGOOSE] Warning: Duplicate schema index on {"employeeId":1} found. This is often due to declaring an index using both "index: true" and "schema.index()". Please remove the duplicate index definition.
-(Use `node --trace-warnings ...` to show where the warning was created)
-(node:80498) [MONGOOSE] Warning: Duplicate schema index on {"personalInfo.email":1} found. This is often due to declaring an index using both "index: true" and "schema.index()". Please remove the duplicate index definition.
-(node:80498) [MONGOOSE] Warning: Duplicate schema index on {"batchNumber":1} found. This is often due to declaring an index using both "index: true" and "schema.index()". Please remove the duplicate index definition.
-(node:80498) [MONGOOSE] Warning: Duplicate schema index on {"batchNumber":1} found. This is often due to declaring an index using both "index: true" and "schema.index()". Please remove the duplicate index definition.
-(node:80498) [MONGOOSE] Warning: Duplicate schema index on {"batchNumber":1} found. This is often due to declaring an index using both "index: true" and "schema.index()". Please remove the duplicate index definition.
-(node:80498) [MONGOOSE] Warning: Duplicate schema index on {"batchNumber":1} found. This is often due to declaring an index using both "index: true" and "schema.index()". Please remove the duplicate index definition.
-(node:80498) [MONGOOSE] Warning: Duplicate schema index on {"batchNumber":1} found. This is often due to declaring an index using both "index: true" and "schema.index()". Please remove the duplicate index definition.
-(node:80498) [MONGOOSE] Warning: Duplicate schema index on {"status":1} found. This is often due to declaring an index using both "index: true" and "schema.index()". Please remove the duplicate index definition.
-(node:80498) [MONGOOSE] Warning: Duplicate schema index on {"timestamp":1} found. This is often due to declaring an index using both "index: true" and "schema.index()". Please remove the duplicate index definition.
-2025-09-18 04:43:33:4333 info: 🚫 Redis disabled for development - using in-memory cache only  
-2025-09-18 04:43:33:4333 debug: mongoose.connect completed successfully  
-2025-09-18 04:43:33:4333 info: MongoDB connected successfully  
-{
-  "host": "ac-mlwf7mg-shard-00-02.h5jya9a.mongodb.net",
-  "port": 27017,
-  "database": "erp",
-  "readyState": 1
-}
-2025-09-18 04:43:33:4333 info: Setting up database indexes...  
-2025-09-18 04:43:33:4333 info: ⚠️ Skipping model imports temporarily to debug server hanging issue  
-2025-09-18 04:43:33:4333 info: ✅ Database indexes setup completed successfully (using schema-defined indexes only)  
-✅ Database connected successfully!
-🚀 Factory ERP Server started successfully {
-  port: 4000,
-  environment: 'development',
-  version: '2.0.0',
-  database: {
-    isConnected: true,
-    readyState: 1,
-    host: 'ac-mlwf7mg-shard-00-02.h5jya9a.mongodb.net',
-    port: 27017,
-    database: 'erp'
-  },
-  websockets: true,
-  cors: [
-    'http://localhost:3000',
-    'http://localhost:3001',
-    'http://localhost:5173'
-  ],
-  apiPrefix: '/api/v1'
-}
-📊 Available endpoints:
-  - POST /api/v1/auth/login
-  - POST /api/v1/auth/register
-  - POST /api/v1/auth/logout
-  - POST /api/v1/auth/refresh-token
-  - GET /api/v1/health
-  - GET /api/v1/debug/cookies
-[nodemon] restarting due to changes...
-[nodemon] starting `ts-node -r dotenv/config src/server.ts dotenv_config_path=.env.local`
-Server: Starting imports...
-Server: Basic imports completed
-Server: About to import configurations...
-Server: Configurations imported successfully
-Server: About to import API routes...
-2025-09-18 04:43:51:4351 info: 📦 Simple Cache Manager initialized (no Redis required)  
-2025-09-18 04:43:51:4351 info: 📦 LRU-cache loaded successfully  
-2025-09-18 04:43:51:4351 info: 📦 Advanced LRU cache initialized successfully  
-(node:80892) [MONGOOSE] Warning: Duplicate schema index on {"employeeId":1} found. This is often due to declaring an index using both "index: true" and "schema.index()". Please remove the duplicate index definition.
-(Use `node --trace-warnings ...` to show where the warning was created)
-(node:80892) [MONGOOSE] Warning: Duplicate schema index on {"personalInfo.email":1} found. This is often due to declaring an index using both "index: true" and "schema.index()". Please remove the duplicate index definition.
-2025-09-18 04:43:53:4353 info: 🚫 Redis disabled for development - using in-memory cache only  
-[nodemon] restarting due to changes...
-[nodemon] starting `ts-node -r dotenv/config src/server.ts dotenv_config_path=.env.local`
-Server: Starting imports...
-Server: Basic imports completed
-Server: About to import configurations...
-Server: Configurations imported successfully
-Server: About to import API routes...
-2025-09-18 04:44:01:441 info: 📦 Simple Cache Manager initialized (no Redis required)  
-2025-09-18 04:44:01:441 info: 📦 LRU-cache loaded successfully  
-2025-09-18 04:44:01:441 info: 📦 Advanced LRU cache initialized successfully  
-(node:81071) [MONGOOSE] Warning: Duplicate schema index on {"employeeId":1} found. This is often due to declaring an index using both "index: true" and "schema.index()". Please remove the duplicate index definition.
-(Use `node --trace-warnings ...` to show where the warning was created)
-(node:81071) [MONGOOSE] Warning: Duplicate schema index on {"personalInfo.email":1} found. This is often due to declaring an index using both "index: true" and "schema.index()". Please remove the duplicate index definition.
-2025-09-18 04:44:03:443 info: 🚫 Redis disabled for development - using in-memory cache only  
-[nodemon] restarting due to changes...
-[nodemon] starting `ts-node -r dotenv/config src/server.ts dotenv_config_path=.env.local`
-Server: Starting imports...
-Server: Basic imports completed
-Server: About to import configurations...
-Server: Configurations imported successfully
-Server: About to import API routes...
-2025-09-18 04:44:24:4424 info: 📦 Simple Cache Manager initialized (no Redis required)  
-2025-09-18 04:44:24:4424 info: 📦 LRU-cache loaded successfully  
-2025-09-18 04:44:24:4424 info: 📦 Advanced LRU cache initialized successfully  
-(node:81409) [MONGOOSE] Warning: Duplicate schema index on {"employeeId":1} found. This is often due to declaring an index using both "index: true" and "schema.index()". Please remove the duplicate index definition.
-(Use `node --trace-warnings ...` to show where the warning was created)
-(node:81409) [MONGOOSE] Warning: Duplicate schema index on {"personalInfo.email":1} found. This is often due to declaring an index using both "index: true" and "schema.index()". Please remove the duplicate index definition.
-2025-09-18 04:44:27:4427 info: 🚫 Redis disabled for development - using in-memory cache only  
-[nodemon] restarting due to changes...
-[nodemon] starting `ts-node -r dotenv/config src/server.ts dotenv_config_path=.env.local`
-Server: Starting imports...
-Server: Basic imports completed
-Server: About to import configurations...
-Server: Configurations imported successfully
-Server: About to import API routes...
-2025-09-18 04:44:48:4448 info: 📦 Simple Cache Manager initialized (no Redis required)  
-2025-09-18 04:44:48:4448 info: 📦 LRU-cache loaded successfully  
-2025-09-18 04:44:48:4448 info: 📦 Advanced LRU cache initialized successfully  
-(node:81808) [MONGOOSE] Warning: Duplicate schema index on {"employeeId":1} found. This is often due to declaring an index using both "index: true" and "schema.index()". Please remove the duplicate index definition.
-(Use `node --trace-warnings ...` to show where the warning was created)
-(node:81808) [MONGOOSE] Warning: Duplicate schema index on {"personalInfo.email":1} found. This is often due to declaring an index using both "index: true" and "schema.index()". Please remove the duplicate index definition.
-2025-09-18 04:44:50:4450 info: 🚫 Redis disabled for development - using in-memory cache only  
-^C%                                       
-rajat@Rajats-MacBook-Pro server % 
-rajat@Rajats-MacBook-Pro server % pnpm err
-or
+rajat@Mac server % pnpm error
 
 > factory-erp-server@1.0.0 error /Users/rajat/Downloads/projects/erp/server
 > npx tsc --noEmit --skipLibCheck
 
-src/services/AnalyticsService.ts:521:86 - error TS2367: This comparison appears to be unintentional because the types '"draft" | "completed" | "cancelled" | "confirmed" | "in_production" | "ready_to_dispatch" | "delivered" | "returned"' and '"shipped"' have no overlap.
+src/models/PurchaseOrder.ts:249:3 - error TS2353: Object literal may only specify known properties, and 'approvedAt' does not exist in type '{ id?: SchemaDefinitionProperty<any, IPurchaseOrder, Document<unknown, {}, FlatRecord<IPurchaseOrder>, {}> & FlatRecord<IPurchaseOrder> & Required<...> & { ...; }>; ... 48 more ...; departmentName?: SchemaDefinitionProperty<...>; }'.
 
-521     const dispatchedOrders = orders.filter(order => order.status === 'dispatched' || order.status === 'shipped');
-                                                                                         ~~~~~~~~~~~~~~~~~~~~~~~~~~
+249   approvedAt: { type: Date },
+      ~~~~~~~~~~
 
-src/services/AnalyticsService.ts:522:60 - error TS2367: This comparison appears to be unintentional because the types '"approved" | "draft" | "in_progress" | "completed" | "cancelled" | "on_hold" | "partially_completed"' and '"dispatched"' have no overlap.
+src/models/PurchaseOrder.ts:332:13 - error TS2339: Property 'financialYear' does not exist on type 'IfAny<FlatRecord<DocType>, any, TVirtuals & TInstanceMethods extends Record<string, never> ? Document<unknown, {}, FlatRecord<...>, TVirtuals> & Default__v<...> : IfAny<...>>'.
 
-522     const dispatchedProduction = production.filter(prod => prod.status === 'dispatched' || prod.status === 'shipped');
-                                                               ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+332   if (!this.financialYear) {
+                ~~~~~~~~~~~~~
 
-src/services/AnalyticsService.ts:522:92 - error TS2367: This comparison appears to be unintentional because the types '"approved" | "draft" | "in_progress" | "completed" | "cancelled" | "on_hold" | "partially_completed"' and '"shipped"' have no overlap.
+src/models/PurchaseOrder.ts:333:25 - error TS2339: Property 'poDate' does not exist on type 'IfAny<FlatRecord<DocType>, any, TVirtuals & TInstanceMethods extends Record<string, never> ? Document<unknown, {}, FlatRecord<...>, TVirtuals> & Default__v<...> : IfAny<...>>'.
 
-522     const dispatchedProduction = production.filter(prod => prod.status === 'dispatched' || prod.status === 'shipped');
-                                                                                               ~~~~~~~~~~~~~~~~~~~~~~~~~
+333     const poYear = this.poDate.getFullYear();
+                            ~~~~~~
 
-src/services/AnalyticsService.ts:529:74 - error TS2339: Property 'totalAmount' does not exist on type 'FlattenMaps<IProductionOrder> & Required<{ _id: ObjectId; }> & { __v: number; }'.
+src/models/PurchaseOrder.ts:334:26 - error TS2339: Property 'poDate' does not exist on type 'IfAny<FlatRecord<DocType>, any, TVirtuals & TInstanceMethods extends Record<string, never> ? Document<unknown, {}, FlatRecord<...>, TVirtuals> & Default__v<...> : IfAny<...>>'.
 
-529                   dispatchedProduction.reduce((sum, prod) => sum + (prod.totalAmount || 0), 0),
-                                                                             ~~~~~~~~~~~
+334     const poMonth = this.poDate.getMonth() + 1; // 0-based month
+                             ~~~~~~
 
-src/services/AnalyticsService.ts:547:31 - error TS2339: Property 'dispatchedAt' does not exist on type 'FlattenMaps<ICustomerOrder> & Required<{ _id: ObjectId; }> & { __v: number; }'.
+src/models/PurchaseOrder.ts:337:12 - error TS2339: Property 'financialYear' does not exist on type 'IfAny<FlatRecord<DocType>, any, TVirtuals & TInstanceMethods extends Record<string, never> ? Document<unknown, {}, FlatRecord<...>, TVirtuals> & Default__v<...> : IfAny<...>>'.
 
-547           dispatchedAt: order.dispatchedAt || order.updatedAt,
-                                  ~~~~~~~~~~~~
+337       this.financialYear = `${poYear}-${poYear + 1}`;
+               ~~~~~~~~~~~~~
 
-src/services/AnalyticsService.ts:556:30 - error TS2339: Property 'dispatchedAt' does not exist on type 'FlattenMaps<IProductionOrder> & Required<{ _id: ObjectId; }> & { __v: number; }'.
+src/models/PurchaseOrder.ts:339:12 - error TS2339: Property 'financialYear' does not exist on type 'IfAny<FlatRecord<DocType>, any, TVirtuals & TInstanceMethods extends Record<string, never> ? Document<unknown, {}, FlatRecord<...>, TVirtuals> & Default__v<...> : IfAny<...>>'.
 
-556           dispatchedAt: prod.dispatchedAt || prod.updatedAt,
-                                 ~~~~~~~~~~~~
+339       this.financialYear = `${poYear - 1}-${poYear}`;
+               ~~~~~~~~~~~~~
 
-src/services/AnalyticsService.ts:580:82 - error TS2367: This comparison appears to be unintentional because the types '"draft" | "completed" | "cancelled" | "confirmed" | "in_production" | "ready_to_dispatch" | "dispatched" | "delivered"' and '"refunded"' have no overlap.
+src/models/PurchaseOrder.ts:344:8 - error TS2339: Property 'items' does not exist on type 'IfAny<FlatRecord<DocType>, any, TVirtuals & TInstanceMethods extends Record<string, never> ? Document<unknown, {}, FlatRecord<...>, TVirtuals> & Default__v<...> : IfAny<...>>'.
 
-580     const returnedOrders = orders.filter(order => order.status === 'returned' || order.status === 'refunded');
-                                                                                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+344   this.items.forEach(item => {
+           ~~~~~
 
-src/services/AnalyticsService.ts:581:58 - error TS2367: This comparison appears to be unintentional because the types '"approved" | "draft" | "in_progress" | "completed" | "cancelled" | "on_hold" | "partially_completed"' and '"returned"' have no overlap.
+src/models/PurchaseOrder.ts:349:8 - error TS2339: Property 'totalPending' does not exist on type 'IfAny<FlatRecord<DocType>, any, TVirtuals & TInstanceMethods extends Record<string, never> ? Document<unknown, {}, FlatRecord<...>, TVirtuals> & Default__v<...> : IfAny<...>>'.
 
-581     const returnedProduction = production.filter(prod => prod.status === 'returned' || prod.status === 'rejected');
-                                                             ~~~~~~~~~~~~~~~~~~~~~~~~~~
+349   this.totalPending = this.items.reduce((sum, item) => sum + item.pendingQuantity, 0);
+           ~~~~~~~~~~~~
 
-src/services/AnalyticsService.ts:581:88 - error TS2367: This comparison appears to be unintentional because the types '"approved" | "draft" | "in_progress" | "completed" | "cancelled" | "on_hold" | "partially_completed"' and '"rejected"' have no overlap.
+src/models/PurchaseOrder.ts:349:28 - error TS2339: Property 'items' does not exist on type 'IfAny<FlatRecord<DocType>, any, TVirtuals & TInstanceMethods extends Record<string, never> ? Document<unknown, {}, FlatRecord<...>, TVirtuals> & Default__v<...> : IfAny<...>>'.
 
-581     const returnedProduction = production.filter(prod => prod.status === 'returned' || prod.status === 'rejected');
-                                                                                           ~~~~~~~~~~~~~~~~~~~~~~~~~~
+349   this.totalPending = this.items.reduce((sum, item) => sum + item.pendingQuantity, 0);
+                               ~~~~~
 
-src/services/AnalyticsService.ts:588:77 - error TS2339: Property 'totalAmount' does not exist on type 'FlattenMaps<IProductionOrder> & Required<{ _id: ObjectId; }> & { __v: number; }'.
+src/models/PurchaseOrder.ts:350:8 - error TS2339: Property 'totalReceived' does not exist on type 'IfAny<FlatRecord<DocType>, any, TVirtuals & TInstanceMethods extends Record<string, never> ? Document<unknown, {}, FlatRecord<...>, TVirtuals> & Default__v<...> : IfAny<...>>'.
 
-588                        returnedProduction.reduce((sum, prod) => sum + (prod.totalAmount || 0), 0),
-                                                                                ~~~~~~~~~~~
+350   this.totalReceived = this.items.reduce((sum, item) => sum + item.receivedQuantity, 0);
+           ~~~~~~~~~~~~~
 
-src/services/AnalyticsService.ts:606:31 - error TS2339: Property 'returnReason' does not exist on type 'FlattenMaps<ICustomerOrder> & Required<{ _id: ObjectId; }> & { __v: number; }'.
+src/models/PurchaseOrder.ts:350:29 - error TS2339: Property 'items' does not exist on type 'IfAny<FlatRecord<DocType>, any, TVirtuals & TInstanceMethods extends Record<string, never> ? Document<unknown, {}, FlatRecord<...>, TVirtuals> & Default__v<...> : IfAny<...>>'.
 
-606           returnReason: order.returnReason || 'Not specified',
-                                  ~~~~~~~~~~~~
+350   this.totalReceived = this.items.reduce((sum, item) => sum + item.receivedQuantity, 0);
+                                ~~~~~
 
-src/services/AnalyticsService.ts:607:29 - error TS2339: Property 'returnedAt' does not exist on type 'FlattenMaps<ICustomerOrder> & Required<{ _id: ObjectId; }> & { __v: number; }'.
+src/models/PurchaseOrder.ts:353:12 - error TS2339: Property 'totalReceived' does not exist on type 'IfAny<FlatRecord<DocType>, any, TVirtuals & TInstanceMethods extends Record<string, never> ? Document<unknown, {}, FlatRecord<...>, TVirtuals> & Default__v<...> : IfAny<...>>'.
 
-607           returnedAt: order.returnedAt || order.updatedAt,
-                                ~~~~~~~~~~
+353   if (this.totalReceived === 0) {
+               ~~~~~~~~~~~~~
 
-src/services/AnalyticsService.ts:616:30 - error TS2339: Property 'returnReason' does not exist on type 'FlattenMaps<IProductionOrder> & Required<{ _id: ObjectId; }> & { __v: number; }'.
+src/models/PurchaseOrder.ts:354:10 - error TS2339: Property 'receivingStatus' does not exist on type 'IfAny<FlatRecord<DocType>, any, TVirtuals & TInstanceMethods extends Record<string, never> ? Document<unknown, {}, FlatRecord<...>, TVirtuals> & Default__v<...> : IfAny<...>>'.
 
-616           returnReason: prod.returnReason || 'Not specified',
-                                 ~~~~~~~~~~~~
+354     this.receivingStatus = 'pending';
+             ~~~~~~~~~~~~~~~
 
-src/services/AnalyticsService.ts:617:28 - error TS2339: Property 'returnedAt' does not exist on type 'FlattenMaps<IProductionOrder> & Required<{ _id: ObjectId; }> & { __v: number; }'.
+src/models/PurchaseOrder.ts:355:19 - error TS2339: Property 'totalPending' does not exist on type 'IfAny<FlatRecord<DocType>, any, TVirtuals & TInstanceMethods extends Record<string, never> ? Document<unknown, {}, FlatRecord<...>, TVirtuals> & Default__v<...> : IfAny<...>>'.
 
-617           returnedAt: prod.returnedAt || prod.updatedAt,
-                               ~~~~~~~~~~
+355   } else if (this.totalPending > 0) {
+                      ~~~~~~~~~~~~
 
-src/services/AnalyticsService.ts:642:90 - error TS2367: This comparison appears to be unintentional because the types '"approved" | "draft" | "in_progress" | "cancelled" | "on_hold" | "partially_completed"' and '"delivered"' have no overlap.
+src/models/PurchaseOrder.ts:356:10 - error TS2339: Property 'receivingStatus' does not exist on type 'IfAny<FlatRecord<DocType>, any, TVirtuals & TInstanceMethods extends Record<string, never> ? Document<unknown, {}, FlatRecord<...>, TVirtuals> & Default__v<...> : IfAny<...>>'.
 
-642     const completedProduction = production.filter(prod => prod.status === 'completed' || prod.status === 'delivered');
-                                                                                             ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+356     this.receivingStatus = 'partial';
+             ~~~~~~~~~~~~~~~
 
-src/services/AnalyticsService.ts:649:72 - error TS2339: Property 'totalAmount' does not exist on type 'FlattenMaps<IProductionOrder> & Required<{ _id: ObjectId; }> & { __v: number; }'.
+src/models/PurchaseOrder.ts:358:10 - error TS2339: Property 'receivingStatus' does not exist on type 'IfAny<FlatRecord<DocType>, any, TVirtuals & TInstanceMethods extends Record<string, never> ? Document<unknown, {}, FlatRecord<...>, TVirtuals> & Default__v<...> : IfAny<...>>'.
 
-649                  completedProduction.reduce((sum, prod) => sum + (prod.totalAmount || 0), 0),
-                                                                           ~~~~~~~~~~~
-
-src/services/AnalyticsService.ts:668:30 - error TS2339: Property 'completedAt' does not exist on type 'FlattenMaps<ICustomerOrder> & Required<{ _id: ObjectId; }> & { __v: number; }'.
-
-668           completedAt: order.completedAt || order.updatedAt,
-                                 ~~~~~~~~~~~
-
-src/services/AnalyticsService.ts:677:29 - error TS2339: Property 'completedAt' does not exist on type 'FlattenMaps<IProductionOrder> & Required<{ _id: ObjectId; }> & { __v: number; }'.
-
-677           completedAt: prod.completedAt || prod.updatedAt,
-                                ~~~~~~~~~~~
+358     this.receivingStatus = 'completed';
+             ~~~~~~~~~~~~~~~
 
 
-Found 18 errors in the same file, starting at: src/services/AnalyticsService.ts:521
+Found 16 errors in the same file, starting at: src/models/PurchaseOrder.ts:249
 
  ELIFECYCLE  Command failed with exit code 2.
-rajat@Rajats-MacBook-Pro server % 
+rajat@Mac server % 

@@ -65,7 +65,7 @@ export class PurchaseOrderService extends BaseService<IPurchaseOrder> {
   /**
    * Update order status
    */
-  async updateOrderStatus(orderId: string, status: string, updatedBy?: string): Promise<IPurchaseOrder | null> {
+  async updateOrderStatus(orderId: string, status: string, updatedBy?: string, notes?: string): Promise<IPurchaseOrder | null> {
     try {
       const order = await this.findById(orderId);
       if (!order) {
@@ -77,17 +77,36 @@ export class PurchaseOrderService extends BaseService<IPurchaseOrder> {
 
       const updateData: any = { status };
 
+      // Add notes if provided
+      if (notes) {
+        updateData.notes = notes;
+      }
+
       // Set specific dates based on status
+      if (status === 'approved') {
+        updateData.approvedAt = new Date();
+        updateData.approvedBy = updatedBy;
+      } else if (status === 'ordered') {
+        updateData.orderedAt = new Date();
+        updateData.orderedBy = updatedBy;
+      } else if (status === 'partial') {
+        updateData.lastReceivedDate = new Date();
+      } else if (status === 'received') {
+        updateData.lastReceivedDate = new Date();
+        updateData.receivedAt = new Date();
+        updateData.receivedBy = updatedBy;
+      } else if (status === 'cancelled') {
+        updateData.cancelledAt = new Date();
+        updateData.cancelledBy = updatedBy;
+      }
+      
+      // Legacy status support
       if (status === 'sent') {
         updateData.sentAt = new Date();
       } else if (status === 'acknowledged') {
         updateData.acknowledgedAt = new Date();
       } else if (status === 'partially_received') {
         updateData.lastReceivedDate = new Date();
-      } else if (status === 'received') {
-        updateData.lastReceivedDate = new Date();
-      } else if (status === 'cancelled') {
-        // cancelledAt is not part of IPurchaseOrder interface
       }
 
       const updatedOrder = await this.update(orderId, updateData, updatedBy);
@@ -535,12 +554,17 @@ export class PurchaseOrderService extends BaseService<IPurchaseOrder> {
    */
   private validateStatusTransition(currentStatus: string, newStatus: string): void {
     const validTransitions: { [key: string]: string[] } = {
-      'draft': ['sent', 'cancelled'],
+      'draft': ['pending', 'cancelled'],
+      'pending': ['approved', 'cancelled'],
+      'approved': ['ordered', 'cancelled'],
+      'ordered': ['partial', 'received', 'cancelled'],
+      'partial': ['received', 'cancelled'],
+      'received': [],
+      'cancelled': [],
+      // Legacy status support
       'sent': ['acknowledged', 'cancelled'],
       'acknowledged': ['partially_received', 'received', 'cancelled'],
-      'partially_received': ['received', 'cancelled'],
-      'received': [],
-      'cancelled': []
+      'partially_received': ['received', 'cancelled']
     };
 
     if (!validTransitions[currentStatus]?.includes(newStatus)) {

@@ -20,12 +20,12 @@ const WarehouseAddressSchema = new Schema({
 }, { _id: false });
 
 const ContactPhoneSchema = new Schema({
-  type: { type: String, required: true },
+  type: { type: String, required: false },
   label: { type: String }
 }, { _id: false });
 
 const ContactEmailSchema = new Schema({
-  type: { type: String, required: true },
+  type: { type: String, required: false },
   label: { type: String }
 }, { _id: false });
 
@@ -72,7 +72,7 @@ const CompanySchema = new Schema<ICompany>({
   },
   legalName: { 
     type: String, 
-    required: true,
+    required: false,
     trim: true,
     maxlength: 255
   },
@@ -81,14 +81,15 @@ const CompanySchema = new Schema<ICompany>({
   registrationDetails: {
     gstin: { 
       type: String, 
-      required: true, 
+      required: false, 
       unique: true,
+      sparse: true,
       uppercase: true,
       match: /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/
     },
     pan: { 
       type: String, 
-      required: true,
+      required: false,
       uppercase: true,
       match: /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/
     },
@@ -110,11 +111,11 @@ const CompanySchema = new Schema<ICompany>({
   addresses: {
     registeredOffice: {
       type: AddressSchema,
-      required: true
+      required: false
     },
     factoryAddress: {
       type: AddressSchema,
-      required: true
+      required: false
     },
     warehouseAddresses: [WarehouseAddressSchema]
   },
@@ -139,23 +140,23 @@ const CompanySchema = new Schema<ICompany>({
 
   // Business Configuration
   businessConfig: {
-    currency: { type: String, default: 'INR' },
-    timezone: { type: String, default: 'Asia/Kolkata' },
-    fiscalYearStart: { type: String, default: '04-01' },
+    currency: { type: String },
+    timezone: { type: String },
+    fiscalYearStart: { type: String },
     workingDays: [{ 
       type: String, 
       enum: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'] 
     }],
     workingHours: {
-      start: { type: String, default: '09:00' },
-      end: { type: String, default: '18:00' },
-      breakStart: { type: String, default: '13:00' },
-      breakEnd: { type: String, default: '14:00' }
+      start: { type: String },
+      end: { type: String },
+      breakStart: { type: String },
+      breakEnd: { type: String }
     },
     gstRates: {
-      defaultRate: { type: Number, default: 18 },
-      rawMaterialRate: { type: Number, default: 5 },
-      finishedGoodsRate: { type: Number, default: 18 }
+      defaultRate: { type: Number },
+      rawMaterialRate: { type: Number },
+      finishedGoodsRate: { type: Number }
     }
   },
 

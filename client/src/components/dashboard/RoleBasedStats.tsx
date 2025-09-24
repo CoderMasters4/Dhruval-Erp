@@ -38,36 +38,36 @@ const StatCard: React.FC<StatCardProps> = ({
 }) => {
   if (loading) {
     return (
-      <div className="bg-white rounded-xl border-2 border-sky-500 p-6 animate-pulse">
+      <div className="bg-white dark:bg-gray-800 rounded-xl border-2 border-sky-500 dark:border-sky-400 p-6 animate-pulse">
         <div className="flex items-center justify-between">
           <div className="space-y-2">
-            <div className="h-4 bg-sky-200 rounded w-24"></div>
-            <div className="h-8 bg-sky-200 rounded w-16"></div>
-            <div className="h-4 bg-sky-200 rounded w-20"></div>
+            <div className="h-4 bg-sky-200 dark:bg-gray-600 rounded w-24"></div>
+            <div className="h-8 bg-sky-200 dark:bg-gray-600 rounded w-16"></div>
+            <div className="h-4 bg-sky-200 dark:bg-gray-600 rounded w-20"></div>
           </div>
-          <div className="h-12 w-12 bg-sky-200 rounded-xl"></div>
+          <div className="h-12 w-12 bg-sky-200 dark:bg-gray-600 rounded-xl"></div>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="bg-white rounded-xl border-2 border-sky-500 p-4 sm:p-6 hover:border-black transition-colors">
+    <div className="bg-white dark:bg-gray-800 rounded-xl border-2 border-sky-500 dark:border-sky-400 p-4 sm:p-6 hover:border-black dark:hover:border-gray-300 transition-colors">
       <div className="flex items-center justify-between">
         <div className="flex-1 min-w-0">
-          <p className="text-xs sm:text-sm font-medium text-black mb-1 truncate">{title}</p>
-          <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-black">{value}</p>
+          <p className="text-xs sm:text-sm font-medium text-black dark:text-white mb-1 truncate">{title}</p>
+          <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-black dark:text-white">{value}</p>
           {change && (
             <div className="flex items-center mt-1 sm:mt-2">
-              <TrendingUp className={`h-3 w-3 sm:h-4 sm:w-4 mr-1 ${changeType === 'increase' ? 'text-sky-500' : 'text-black'}`} />
-              <span className={`text-xs sm:text-sm font-medium ${changeType === 'increase' ? 'text-sky-500' : 'text-black'}`}>
+              <TrendingUp className={`h-3 w-3 sm:h-4 sm:w-4 mr-1 ${changeType === 'increase' ? 'text-sky-500 dark:text-sky-400' : 'text-black dark:text-white'}`} />
+              <span className={`text-xs sm:text-sm font-medium ${changeType === 'increase' ? 'text-sky-500 dark:text-sky-400' : 'text-black dark:text-white'}`}>
                 {change}
               </span>
-              <span className="text-xs sm:text-sm text-black ml-1 hidden sm:inline">vs last month</span>
+              <span className="text-xs sm:text-sm text-black dark:text-white ml-1 hidden sm:inline">vs last month</span>
             </div>
           )}
         </div>
-        <div className={`p-2 sm:p-3 rounded-xl flex-shrink-0 ${color === 'sky' ? 'bg-sky-500' : 'bg-black'}`}>
+        <div className={`p-2 sm:p-3 rounded-xl flex-shrink-0 ${color === 'sky' ? 'bg-sky-500 dark:bg-sky-600' : 'bg-black dark:bg-gray-700'}`}>
           <Icon className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
         </div>
       </div>

@@ -24,6 +24,7 @@ import {
 import { AppLayout } from '@/components/layout/AppLayout'
 import { Button } from '@/components/ui/Button'
 import { selectCurrentUser, selectIsSuperAdmin } from '@/lib/features/auth/authSlice'
+import { selectTheme } from '@/lib/features/ui/uiSlice'
 import { 
   useGetInventoryMovementsQuery, 
   useGetInventoryStatsQuery,
@@ -75,6 +76,7 @@ interface Pagination {
 export default function InventoryMovementsPage() {
   const user = useSelector(selectCurrentUser)
   const isSuperAdmin = useSelector(selectIsSuperAdmin)
+  const theme = useSelector(selectTheme)
   const [searchTerm, setSearchTerm] = useState('')
   const [typeFilter, setTypeFilter] = useState('all')
   const [statusFilter, setStatusFilter] = useState('all')
@@ -296,41 +298,71 @@ export default function InventoryMovementsPage() {
     <AppLayout>
       {!isClient ? (
         // Show loading state during SSR to prevent hydration mismatch
-        <div className="p-3 sm:p-4 lg:p-6 space-y-4 sm:space-y-6 bg-gradient-to-br from-sky-50 via-white to-blue-50 min-h-screen">
-          <div className="bg-white rounded-2xl border border-sky-200 shadow-lg p-4 sm:p-6">
+        <div className={`p-3 sm:p-4 lg:p-6 space-y-4 sm:space-y-6 min-h-screen transition-theme ${
+          theme === 'dark' 
+            ? 'bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900' 
+            : 'bg-gradient-to-br from-sky-50 via-white to-blue-50'
+        }`}>
+          <div className={`rounded-2xl border shadow-lg p-4 sm:p-6 transition-theme ${
+            theme === 'dark' 
+              ? 'bg-gray-800 border-gray-700' 
+              : 'bg-white border-sky-200'
+          }`}>
             <div className="flex items-center space-x-4">
               <div className="h-12 w-12 bg-gradient-to-br from-sky-500 to-blue-600 rounded-xl flex items-center justify-center shadow-lg">
                 <ArrowUpDown className="h-6 w-6 text-white" />
               </div>
               <div>
-                <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-sky-600 to-blue-600 bg-clip-text text-transparent">
+                <h1 className={`text-2xl sm:text-3xl font-bold bg-gradient-to-r from-sky-600 to-blue-600 bg-clip-text text-transparent ${
+                  theme === 'dark' ? 'text-gray-100' : ''
+                }`}>
                   Inventory Movements
                 </h1>
-                <p className="text-gray-600 mt-1">Loading...</p>
+                <p className={`mt-1 ${
+                  theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
+                }`}>Loading...</p>
               </div>
             </div>
           </div>
-          <div className="bg-white rounded-xl border border-sky-200 shadow-lg p-8">
+          <div className={`rounded-xl border shadow-lg p-8 transition-theme ${
+            theme === 'dark' 
+              ? 'bg-gray-800 border-gray-700' 
+              : 'bg-white border-sky-200'
+          }`}>
             <div className="text-center">
               <Loader2 className="h-8 w-8 animate-spin text-sky-500 mx-auto mb-4" />
-              <p className="text-gray-600">Loading movements...</p>
+              <p className={`${
+                theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
+              }`}>Loading movements...</p>
             </div>
           </div>
         </div>
       ) : (
-        <div className="p-3 sm:p-4 lg:p-6 space-y-4 sm:space-y-6 bg-gradient-to-br from-sky-50 via-white to-blue-50 min-h-screen">
+        <div className={`p-3 sm:p-4 lg:p-6 space-y-4 sm:space-y-6 min-h-screen transition-theme ${
+          theme === 'dark' 
+            ? 'bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900' 
+            : 'bg-gradient-to-br from-sky-50 via-white to-blue-50'
+        }`}>
           {/* Header */}
-          <div className="bg-white rounded-2xl border border-sky-200 shadow-lg p-4 sm:p-6">
+          <div className={`rounded-2xl border shadow-lg p-4 sm:p-6 transition-theme ${
+            theme === 'dark' 
+              ? 'bg-gray-800 border-gray-700' 
+              : 'bg-white border-sky-200'
+          }`}>
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
               <div className="flex items-center space-x-4">
                 <div className="h-12 w-12 bg-gradient-to-br from-sky-500 to-blue-600 rounded-xl flex items-center justify-center shadow-lg">
                   <ArrowUpDown className="h-6 w-6 text-white" />
                 </div>
                 <div>
-                  <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-sky-600 to-blue-600 bg-clip-text text-transparent">
+                  <h1 className={`text-2xl sm:text-3xl font-bold bg-gradient-to-r from-sky-600 to-blue-600 bg-clip-text text-transparent ${
+                    theme === 'dark' ? 'text-gray-100' : ''
+                  }`}>
                     Inventory Movements
                   </h1>
-                  <p className="text-gray-600 mt-1">
+                  <p className={`mt-1 ${
+                    theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
+                  }`}>
                     Track all stock movements and transfers ({movements.length} movements)
                   </p>
                 </div>
@@ -347,12 +379,22 @@ export default function InventoryMovementsPage() {
 
           {/* Stats Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-            <div className="bg-white rounded-xl border border-sky-200 shadow-lg p-6 hover:shadow-xl transition-shadow">
+            <div className={`rounded-xl border shadow-lg p-6 hover:shadow-xl transition-shadow ${
+              theme === 'dark' 
+                ? 'bg-gray-800 border-gray-700' 
+                : 'bg-white border-sky-200'
+            }`}>
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">Total Movements</p>
-                  <p className="text-3xl font-bold text-gray-900">{movements.length || 0}</p>
-                  <p className="text-sm text-green-600 mt-1">+{movements.filter((m) => {
+                  <p className={`text-sm font-medium ${
+                    theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
+                  }`}>Total Movements</p>
+                  <p className={`text-3xl font-bold ${
+                    theme === 'dark' ? 'text-gray-100' : 'text-gray-900'
+                  }`}>{movements.length || 0}</p>
+                  <p className={`text-sm mt-1 ${
+                    theme === 'dark' ? 'text-green-400' : 'text-green-600'
+                  }`}>+{movements.filter((m) => {
                     const today = new Date().toDateString()
                     const movementDate = new Date(m.movementDate || m.timestamp || m.createdAt).toDateString()
                     return today === movementDate
@@ -364,12 +406,22 @@ export default function InventoryMovementsPage() {
               </div>
             </div>
             
-            <div className="bg-white rounded-xl border border-sky-200 shadow-lg p-6 hover:shadow-xl transition-shadow">
+            <div className={`rounded-xl border shadow-lg p-6 hover:shadow-xl transition-shadow ${
+              theme === 'dark' 
+                ? 'bg-gray-800 border-gray-700' 
+                : 'bg-white border-sky-200'
+            }`}>
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">Inbound</p>
-                  <p className="text-3xl font-bold text-green-600">{movements.filter((m) => m.movementType === 'inward').length || 0}</p>
-                  <p className="text-sm text-gray-500 mt-1">Stock received</p>
+                  <p className={`text-sm font-medium ${
+                    theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
+                  }`}>Inbound</p>
+                  <p className={`text-3xl font-bold ${
+                    theme === 'dark' ? 'text-green-400' : 'text-green-600'
+                  }`}>{movements.filter((m) => m.movementType === 'inward').length || 0}</p>
+                  <p className={`text-sm mt-1 ${
+                    theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
+                  }`}>Stock received</p>
                 </div>
                 <div className="h-12 w-12 bg-gradient-to-br from-green-100 to-emerald-100 rounded-xl flex items-center justify-center">
                   <ArrowDown className="h-6 w-6 text-green-600" />
@@ -377,12 +429,22 @@ export default function InventoryMovementsPage() {
               </div>
             </div>
             
-            <div className="bg-white rounded-xl border border-sky-200 shadow-lg p-6 hover:shadow-xl transition-shadow">
+            <div className={`rounded-xl border shadow-lg p-6 hover:shadow-xl transition-shadow ${
+              theme === 'dark' 
+                ? 'bg-gray-800 border-gray-700' 
+                : 'bg-white border-sky-200'
+            }`}>
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">Outbound</p>
-                  <p className="text-3xl font-bold text-red-600">{movements.filter((m) => m.movementType === 'outward').length || 0}</p>
-                  <p className="text-sm text-gray-500 mt-1">Stock issued</p>
+                  <p className={`text-sm font-medium ${
+                    theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
+                  }`}>Outbound</p>
+                  <p className={`text-3xl font-bold ${
+                    theme === 'dark' ? 'text-red-400' : 'text-red-600'
+                  }`}>{movements.filter((m) => m.movementType === 'outward').length || 0}</p>
+                  <p className={`text-sm mt-1 ${
+                    theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
+                  }`}>Stock issued</p>
                 </div>
                 <div className="h-12 w-12 bg-gradient-to-br from-red-100 to-pink-100 rounded-xl flex items-center justify-center">
                   <ArrowUp className="h-6 w-6 text-red-600" />
@@ -390,12 +452,22 @@ export default function InventoryMovementsPage() {
               </div>
             </div>
             
-            <div className="bg-white rounded-xl border border-sky-200 shadow-lg p-6 hover:shadow-xl transition-shadow">
+            <div className={`rounded-xl border shadow-lg p-6 hover:shadow-xl transition-shadow ${
+              theme === 'dark' 
+                ? 'bg-gray-800 border-gray-700' 
+                : 'bg-white border-sky-200'
+            }`}>
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">Pending</p>
-                  <p className="text-3xl font-bold text-yellow-600">{movements.filter((m) => m.status === 'pending').length || 0}</p>
-                  <p className="text-sm text-yellow-600 mt-1">Need approval</p>
+                  <p className={`text-sm font-medium ${
+                    theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
+                  }`}>Pending</p>
+                  <p className={`text-3xl font-bold ${
+                    theme === 'dark' ? 'text-yellow-400' : 'text-yellow-600'
+                  }`}>{movements.filter((m) => m.status === 'pending').length || 0}</p>
+                  <p className={`text-sm mt-1 ${
+                    theme === 'dark' ? 'text-yellow-400' : 'text-yellow-600'
+                  }`}>Need approval</p>
                 </div>
                 <div className="h-12 w-12 bg-gradient-to-br from-yellow-100 to-orange-100 rounded-xl flex items-center justify-center">
                   <Calendar className="h-6 w-6 text-yellow-600" />
@@ -405,18 +477,28 @@ export default function InventoryMovementsPage() {
           </div>
 
           {/* Filters */}
-          <div className="bg-white rounded-xl border border-sky-200 shadow-lg p-4 sm:p-6">
+          <div className={`rounded-xl border shadow-lg p-4 sm:p-6 transition-theme ${
+            theme === 'dark' 
+              ? 'bg-gray-800 border-gray-700' 
+              : 'bg-white border-sky-200'
+          }`}>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               {/* Search */}
               <div className="lg:col-span-2">
                 <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                  <Search className={`absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 ${
+                    theme === 'dark' ? 'text-gray-400' : 'text-gray-400'
+                  }`} />
                   <input
                     type="text"
                     placeholder="Search movements..."
                     value={searchTerm}
                     onChange={(e) => handleSearchChange(e.target.value)}
-                    className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent bg-gray-50 text-gray-900 placeholder-gray-500"
+                    className={`w-full pl-10 pr-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent transition-theme ${
+                      theme === 'dark'
+                        ? 'border-gray-600 bg-gray-700 text-gray-100 placeholder-gray-400'
+                        : 'border-gray-200 bg-gray-50 text-gray-900 placeholder-gray-500'
+                    }`}
                   />
                 </div>
               </div>
@@ -426,7 +508,11 @@ export default function InventoryMovementsPage() {
                 <select
                   value={typeFilter}
                   onChange={(e) => handleTypeFilterChange(e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent bg-gray-50 text-gray-900"
+                  className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent transition-theme ${
+                    theme === 'dark'
+                      ? 'border-gray-600 bg-gray-700 text-gray-100'
+                      : 'border-gray-200 bg-gray-50 text-gray-900'
+                  }`}
                 >
                   <option value="all">All Types</option>
                   <option value="inward">Inward</option>
@@ -441,7 +527,11 @@ export default function InventoryMovementsPage() {
                 <select
                   value={statusFilter}
                   onChange={(e) => handleStatusFilterChange(e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent bg-gray-50 text-gray-900"
+                  className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent transition-theme ${
+                    theme === 'dark'
+                      ? 'border-gray-600 bg-gray-700 text-gray-100'
+                      : 'border-gray-200 bg-gray-50 text-gray-900'
+                  }`}
                 >
                   <option value="all">All Status</option>
                   <option value="completed">Completed</option>
@@ -454,18 +544,34 @@ export default function InventoryMovementsPage() {
 
           {/* Movements Table */}
           {isLoading ? (
-            <div className="bg-white rounded-xl border border-sky-200 shadow-lg p-8">
+            <div className={`rounded-xl border shadow-lg p-8 transition-theme ${
+              theme === 'dark' 
+                ? 'bg-gray-800 border-gray-700' 
+                : 'bg-white border-sky-200'
+            }`}>
               <div className="text-center">
                 <Loader2 className="h-8 w-8 animate-spin text-sky-500 mx-auto mb-4" />
-                <p className="text-gray-600">Loading movements...</p>
+                <p className={`${
+                  theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
+                }`}>Loading movements...</p>
               </div>
             </div>
           ) : movements.length === 0 ? (
-            <div className="bg-white rounded-xl border border-sky-200 shadow-lg p-8">
+            <div className={`rounded-xl border shadow-lg p-8 transition-theme ${
+              theme === 'dark' 
+                ? 'bg-gray-800 border-gray-700' 
+                : 'bg-white border-sky-200'
+            }`}>
               <div className="text-center">
-                <Package className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 mb-2">No stock movements found</h3>
-                <p className="text-gray-600 mb-4">
+                <Package className={`h-16 w-16 mx-auto mb-4 ${
+                  theme === 'dark' ? 'text-gray-600' : 'text-gray-300'
+                }`} />
+                <h3 className={`text-lg font-medium mb-2 ${
+                  theme === 'dark' ? 'text-gray-100' : 'text-gray-900'
+                }`}>No stock movements found</h3>
+                <p className={`mb-4 ${
+                  theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
+                }`}>
                   {searchTerm || typeFilter !== 'all' || statusFilter !== 'all' 
                     ? 'Try adjusting your filters or search terms.'
                     : 'Get started by creating your first stock movement.'
@@ -480,40 +586,66 @@ export default function InventoryMovementsPage() {
               </div>
             </div>
           ) : (
-            <div className="bg-white rounded-xl border border-sky-200 shadow-lg overflow-hidden">
+            <div className={`rounded-xl border shadow-lg overflow-hidden transition-theme ${
+              theme === 'dark' 
+                ? 'bg-gray-800 border-gray-700' 
+                : 'bg-white border-sky-200'
+            }`}>
               <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
+                <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                  <thead className={`${
+                    theme === 'dark' ? 'bg-gray-700' : 'bg-gray-50'
+                  }`}>
                     <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className={`px-6 py-3 text-left text-xs font-medium uppercase tracking-wider ${
+                        theme === 'dark' ? 'text-gray-300' : 'text-gray-500'
+                      }`}>
                         Type
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className={`px-6 py-3 text-left text-xs font-medium uppercase tracking-wider ${
+                        theme === 'dark' ? 'text-gray-300' : 'text-gray-500'
+                      }`}>
                         Item
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className={`px-6 py-3 text-left text-xs font-medium uppercase tracking-wider ${
+                        theme === 'dark' ? 'text-gray-300' : 'text-gray-500'
+                      }`}>
                         Quantity
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className={`px-6 py-3 text-left text-xs font-medium uppercase tracking-wider ${
+                        theme === 'dark' ? 'text-gray-300' : 'text-gray-500'
+                      }`}>
                         From/To
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className={`px-6 py-3 text-left text-xs font-medium uppercase tracking-wider ${
+                        theme === 'dark' ? 'text-gray-300' : 'text-gray-500'
+                      }`}>
                         Performed By
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className={`px-6 py-3 text-left text-xs font-medium uppercase tracking-wider ${
+                        theme === 'dark' ? 'text-gray-300' : 'text-gray-500'
+                      }`}>
                         Status
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className={`px-6 py-3 text-left text-xs font-medium uppercase tracking-wider ${
+                        theme === 'dark' ? 'text-gray-300' : 'text-gray-500'
+                      }`}>
                         Date
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className={`px-6 py-3 text-left text-xs font-medium uppercase tracking-wider ${
+                        theme === 'dark' ? 'text-gray-300' : 'text-gray-500'
+                      }`}>
                         Actions
                       </th>
                     </tr>
                   </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
+                  <tbody className={`divide-y divide-gray-200 dark:divide-gray-700 ${
+                    theme === 'dark' ? 'bg-gray-800' : 'bg-white'
+                  }`}>
                     {movements.map((movement) => (
-                      <tr key={movement._id} className="hover:bg-gray-50">
+                      <tr key={movement._id} className={`transition-colors ${
+                        theme === 'dark' ? 'hover:bg-gray-700' : 'hover:bg-gray-50'
+                      }`}>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="flex items-center space-x-3">
                             <span className={getMovementBadge(movement.movementType)}>
@@ -524,13 +656,19 @@ export default function InventoryMovementsPage() {
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div>
-                            <div className="text-sm font-medium text-gray-900">
+                            <div className={`text-sm font-medium ${
+                              theme === 'dark' ? 'text-gray-100' : 'text-gray-900'
+                            }`}>
                               {movement.itemId?.itemName || movement.itemName || 'Unknown Item'}
                             </div>
-                            <div className="text-sm text-gray-500">
+                            <div className={`text-sm ${
+                              theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
+                            }`}>
                               {movement.itemId?.itemCode || movement.companyItemCode || movement.itemCode || 'N/A'}
                             </div>
-                            <div className="text-xs text-gray-400 capitalize">
+                            <div className={`text-xs capitalize ${
+                              theme === 'dark' ? 'text-gray-500' : 'text-gray-400'
+                            }`}>
                               {movement.itemId?.category?.primary || 'N/A'}
                             </div>
                           </div>
@@ -620,14 +758,22 @@ export default function InventoryMovementsPage() {
 
           {/* Pagination */}
           {pagination && pagination.pages > 1 && (
-            <div className="bg-white rounded-xl border border-sky-200 shadow-lg p-4">
+            <div className={`rounded-xl border shadow-lg p-4 transition-theme ${
+              theme === 'dark' 
+                ? 'bg-gray-800 border-gray-700' 
+                : 'bg-white border-sky-200'
+            }`}>
               <div className="flex flex-col sm:flex-row items-center justify-between space-y-4 sm:space-y-0">
                 <div className="flex flex-col sm:flex-row items-center space-y-2 sm:space-y-0 sm:space-x-4">
-                  <div className="text-sm text-gray-600">
+                  <div className={`text-sm ${
+                    theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
+                  }`}>
                     Showing {((pagination.page - 1) * pagination.limit) + 1} to {Math.min(pagination.page * pagination.limit, pagination.total)} of {pagination.total} movements
                   </div>
                   <div className="flex items-center space-x-2">
-                    <span className="text-sm text-gray-600">Show:</span>
+                    <span className={`text-sm ${
+                      theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
+                    }`}>Show:</span>
                     <select
                       value={pageSize}
                       onChange={(e) => {
@@ -635,21 +781,31 @@ export default function InventoryMovementsPage() {
                         setPageSize(newSize)
                         setPage(1) // Reset to first page when changing page size
                       }}
-                      className="px-2 py-1 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
+                      className={`px-2 py-1 text-sm border rounded focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-theme ${
+                        theme === 'dark'
+                          ? 'border-gray-600 bg-gray-700 text-gray-100'
+                          : 'border-gray-300 bg-white text-gray-900'
+                      }`}
                     >
                       <option value={10}>10</option>
                       <option value={20}>20</option>
                       <option value={50}>50</option>
                       <option value={100}>100</option>
                     </select>
-                    <span className="text-sm text-gray-600">per page</span>
+                    <span className={`text-sm ${
+                      theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
+                    }`}>per page</span>
                   </div>
                 </div>
                 <div className="flex items-center space-x-2">
                   <button
                     onClick={() => setPage(1)}
                     disabled={page <= 1}
-                    className="px-3 py-2 text-sm bg-white border border-sky-300 rounded-lg hover:bg-sky-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    className={`px-3 py-2 text-sm border rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors ${
+                      theme === 'dark'
+                        ? 'border-gray-600 bg-gray-700 text-gray-100 hover:bg-gray-600'
+                        : 'border-sky-300 bg-white text-gray-900 hover:bg-sky-50'
+                    }`}
                     title="First Page"
                   >
                     «
@@ -657,24 +813,38 @@ export default function InventoryMovementsPage() {
                   <button
                     onClick={() => setPage(page - 1)}
                     disabled={page <= 1}
-                    className="px-4 py-2 text-sm bg-white border border-sky-300 rounded-lg hover:bg-sky-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    className={`px-4 py-2 text-sm border rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors ${
+                      theme === 'dark'
+                        ? 'border-gray-600 bg-gray-700 text-gray-100 hover:bg-gray-600'
+                        : 'border-sky-300 bg-white text-gray-900 hover:bg-sky-50'
+                    }`}
                   >
                     Previous
                   </button>
-                  <span className="text-sm text-gray-600 px-4">
+                  <span className={`text-sm px-4 ${
+                    theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
+                  }`}>
                     Page {pagination.page} of {pagination.pages}
                   </span>
                   <button
                     onClick={() => setPage(page + 1)}
                     disabled={page >= pagination.pages}
-                    className="px-4 py-2 text-sm bg-white border border-sky-300 rounded-lg hover:bg-sky-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    className={`px-4 py-2 text-sm border rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors ${
+                      theme === 'dark'
+                        ? 'border-gray-600 bg-gray-700 text-gray-100 hover:bg-gray-600'
+                        : 'border-sky-300 bg-white text-gray-900 hover:bg-sky-50'
+                    }`}
                   >
                     Next
                   </button>
                   <button
                     onClick={() => setPage(pagination.pages)}
                     disabled={page >= pagination.pages}
-                    className="px-3 py-2 text-sm bg-white border border-sky-300 rounded-lg hover:bg-sky-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    className={`px-3 py-2 text-sm border rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors ${
+                      theme === 'dark'
+                        ? 'border-gray-600 bg-gray-700 text-gray-100 hover:bg-gray-600'
+                        : 'border-sky-300 bg-white text-gray-900 hover:bg-sky-50'
+                    }`}
                     title="Last Page"
                   >
                     »
@@ -691,6 +861,7 @@ export default function InventoryMovementsPage() {
               onClose={closeModals}
               onSubmit={handleCreateMovement}
               isLoading={createLoading}
+              theme={theme}
             />
           )}
 
@@ -701,6 +872,7 @@ export default function InventoryMovementsPage() {
               onClose={closeModals}
               onSubmit={handleEditMovement}
               isLoading={updateLoading}
+              theme={theme}
             />
           )}
 
@@ -719,19 +891,28 @@ export default function InventoryMovementsPage() {
               }}
               canEdit={true}
               canDelete={true}
+              theme={theme}
             />
           )}
 
           {/* Delete Confirmation Modal */}
           {showDeleteConfirm && selectedMovement && (
-            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-              <div className="bg-white rounded-xl shadow-2xl max-w-md w-full p-6">
+            <div className={`fixed inset-0 flex items-center justify-center z-50 p-4 transition-theme ${
+              theme === 'dark' ? 'bg-black/70' : 'bg-black bg-opacity-50'
+            }`}>
+              <div className={`rounded-xl shadow-2xl max-w-md w-full p-6 transition-theme ${
+                theme === 'dark' ? 'bg-gray-800' : 'bg-white'
+              }`}>
                 <div className="text-center">
                   <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
                     <Trash2 className="w-8 h-8 text-red-600" />
                   </div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">Delete Stock Movement</h3>
-                  <p className="text-gray-600 mb-6">
+                  <h3 className={`text-lg font-semibold mb-2 ${
+                    theme === 'dark' ? 'text-gray-100' : 'text-gray-900'
+                  }`}>Delete Stock Movement</h3>
+                  <p className={`mb-6 ${
+                    theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
+                  }`}>
                     Are you sure you want to delete movement #{selectedMovement.movementNumber}? 
                     This action cannot be undone.
                   </p>
@@ -740,6 +921,11 @@ export default function InventoryMovementsPage() {
                       onClick={closeModals}
                       variant="outline"
                       disabled={deleteLoading}
+                      className={`transition-theme ${
+                        theme === 'dark' 
+                          ? 'border-gray-600 text-gray-300 hover:bg-gray-700' 
+                          : 'border-gray-300 text-gray-700 hover:bg-gray-50'
+                      }`}
                     >
                       Cancel
                     </Button>

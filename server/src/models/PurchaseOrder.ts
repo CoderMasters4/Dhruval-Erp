@@ -1,4 +1,4 @@
-import { Schema, model } from 'mongoose';
+import { Schema, model, Query } from 'mongoose';
 import { IPurchaseOrder, IPurchaseOrderItem, IDeliverySchedule } from '@/types/models';
 
 const PurchaseOrderItemSchema = new Schema<IPurchaseOrderItem>({
@@ -223,7 +223,7 @@ const PurchaseOrderSchema = new Schema<IPurchaseOrder>({
   // Status & Workflow
   status: {
     type: String,
-    enum: ['draft', 'pending_approval', 'approved', 'sent', 'acknowledged', 'in_progress', 'partially_received', 'completed', 'cancelled', 'closed'],
+    enum: ['draft', 'pending', 'approved', 'ordered', 'partial', 'received', 'cancelled', 'pending_approval', 'sent', 'acknowledged', 'in_progress', 'partially_received', 'completed', 'closed'],
     default: 'draft',
     index: true
   },
@@ -238,13 +238,22 @@ const PurchaseOrderSchema = new Schema<IPurchaseOrder>({
     approverId: { type: Schema.Types.ObjectId, ref: 'User' },
     approverName: { type: String },
     status: { type: String, enum: ['pending', 'approved', 'rejected'], default: 'pending' },
-    approvedAt: { type: Date },
     comments: { type: String }
   }],
   sentAt: { type: Date },
   sentBy: { type: Schema.Types.ObjectId, ref: 'User' },
   acknowledgedAt: { type: Date },
   acknowledgedBy: { type: String }, // Supplier acknowledgment
+  
+  // Status-specific timestamps
+  approvedAt: { type: Date },
+  approvedBy: { type: Schema.Types.ObjectId, ref: 'User' },
+  orderedAt: { type: Date },
+  orderedBy: { type: Schema.Types.ObjectId, ref: 'User' },
+  receivedAt: { type: Date },
+  receivedBy: { type: Schema.Types.ObjectId, ref: 'User' },
+  cancelledAt: { type: Date },
+  cancelledBy: { type: Schema.Types.ObjectId, ref: 'User' },
 
   // Receiving Status
   receivingStatus: {
@@ -318,7 +327,7 @@ PurchaseOrderSchema.index({
 });
 
 // Pre-save middleware
-PurchaseOrderSchema.pre('save', function(next) {
+PurchaseOrderSchema.pre<IPurchaseOrder>('save', function(next) {
   // Set financial year based on PO date
   if (!this.financialYear) {
     const poYear = this.poDate.getFullYear();
@@ -353,20 +362,20 @@ PurchaseOrderSchema.pre('save', function(next) {
 });
 
 // Instance methods
-PurchaseOrderSchema.methods.isOverdue = function(): boolean {
+PurchaseOrderSchema.methods.isOverdue = function(this: IPurchaseOrder): boolean {
   return this.status !== 'completed' && 
          this.status !== 'cancelled' && 
          this.expectedDeliveryDate < new Date();
 };
 
-PurchaseOrderSchema.methods.getDaysOverdue = function(): number {
+PurchaseOrderSchema.methods.getDaysOverdue = function(this: IPurchaseOrder): number {
   if (!this.isOverdue()) return 0;
   const today = new Date();
   const diffTime = today.getTime() - this.expectedDeliveryDate.getTime();
   return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 };
 
-PurchaseOrderSchema.methods.calculateTotals = function() {
+PurchaseOrderSchema.methods.calculateTotals = function(this: IPurchaseOrder) {
   // Calculate subtotal
   this.amounts.subtotal = this.items.reduce((sum, item) => sum + (item.quantity * item.rate), 0);
   
@@ -390,7 +399,7 @@ PurchaseOrderSchema.methods.calculateTotals = function() {
   return this;
 };
 
-PurchaseOrderSchema.methods.addReceiving = function(itemId: string, receivedQuantity: number, rejectedQuantity: number = 0) {
+PurchaseOrderSchema.methods.addReceiving = function(this: IPurchaseOrder, itemId: string, receivedQuantity: number, rejectedQuantity: number = 0) {
   const item = this.items.find(item => item.itemId.toString() === itemId);
   if (item) {
     item.receivedQuantity += receivedQuantity;
@@ -401,11 +410,11 @@ PurchaseOrderSchema.methods.addReceiving = function(itemId: string, receivedQuan
 };
 
 // Static methods
-PurchaseOrderSchema.statics.findByCompany = function(companyId: string) {
+PurchaseOrderSchema.statics.findByCompany = function(companyId: string): Query<IPurchaseOrder[], IPurchaseOrder> {
   return this.find({ companyId, isActive: true }).sort({ poDate: -1 });
 };
 
-PurchaseOrderSchema.statics.findOverduePOs = function(companyId: string) {
+PurchaseOrderSchema.statics.findOverduePOs = function(companyId: string): Query<IPurchaseOrder[], IPurchaseOrder> {
   return this.find({
     companyId,
     status: { $nin: ['completed', 'cancelled', 'closed'] },
@@ -414,7 +423,7 @@ PurchaseOrderSchema.statics.findOverduePOs = function(companyId: string) {
   }).sort({ expectedDeliveryDate: 1 });
 };
 
-PurchaseOrderSchema.statics.findBySupplier = function(companyId: string, supplierId: string) {
+PurchaseOrderSchema.statics.findBySupplier = function(companyId: string, supplierId: string): Query<IPurchaseOrder[], IPurchaseOrder> {
   return this.find({
     companyId,
     'supplier.supplierId': supplierId,

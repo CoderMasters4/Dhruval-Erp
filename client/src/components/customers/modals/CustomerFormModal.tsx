@@ -286,8 +286,8 @@ export default function CustomerFormModal({ isOpen, onClose, onSuccess, customer
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 bg-white/30 backdrop-blur-md flex items-center justify-center z-[60] p-4">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden border border-gray-200">
+    <div className="fixed inset-0 bg-white/30 dark:bg-black/50 backdrop-blur-md flex items-center justify-center z-[60] p-4 transition-all duration-300">
+      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden border border-gray-200 dark:border-gray-700 transition-all duration-300">
         {/* Header */}
         <div className="bg-blue-500 p-6 relative overflow-hidden">
           <div className="absolute -top-4 -right-4 w-20 h-20 bg-white/20 rounded-full"></div>
@@ -321,15 +321,15 @@ export default function CustomerFormModal({ isOpen, onClose, onSuccess, customer
         <form onSubmit={handleSubmit} className="p-6 overflow-y-auto max-h-[calc(90vh-200px)]">
           <div className="space-y-6">
             {/* Basic Information */}
-            <div className="bg-blue-50 rounded-xl p-6 border border-blue-200">
-              <h3 className="text-lg font-semibold text-black mb-4 flex items-center">
-                <User className="w-5 h-5 mr-2 text-blue-600" />
+            <div className="bg-blue-50 dark:bg-blue-900/20 rounded-xl p-6 border border-blue-200 dark:border-blue-700 transition-all duration-300">
+              <h3 className="text-lg font-semibold text-black dark:text-white mb-4 flex items-center transition-colors duration-300">
+                <User className="w-5 h-5 mr-2 text-blue-600 dark:text-blue-400 transition-colors duration-300" />
                 Basic Information
               </h3>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-semibold text-black mb-2">
+                  <label className="block text-sm font-semibold text-black dark:text-white mb-2 transition-colors duration-300">
                     Customer Name *
                   </label>
                   <input
@@ -338,68 +338,68 @@ export default function CustomerFormModal({ isOpen, onClose, onSuccess, customer
                     value={formData.name}
                     onChange={(e) => updateFormData({ name: e.target.value })}
                     className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 ${
-                      errors.name ? 'border-red-300 bg-red-50' : 'border-gray-300 bg-white'
-                    }`}
+                      errors.name ? 'border-red-300 dark:border-red-600 bg-red-50 dark:bg-red-900/20' : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700'
+                    } text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400`}
                     placeholder="Enter customer name"
                   />
                   {errors.name && (
-                    <p className="mt-1 text-sm text-red-600 font-medium">{errors.name}</p>
+                    <p className="mt-1 text-sm text-red-600 dark:text-red-400 font-medium transition-colors duration-300">{errors.name}</p>
                   )}
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-black mb-2">
+                  <label className="block text-sm font-semibold text-black dark:text-white mb-2 transition-colors duration-300">
                     Email Address *
                   </label>
                   <div className="relative">
-                    <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                    <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400 dark:text-gray-500 transition-colors duration-300" />
                     <input
                       type="email"
                       required
                       value={formData.email}
                       onChange={(e) => updateFormData({ email: e.target.value })}
                       className={`w-full pl-10 pr-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 ${
-                        errors.email ? 'border-red-300 bg-red-50' : 'border-gray-300 bg-white'
-                      }`}
+                        errors.email ? 'border-red-300 dark:border-red-600 bg-red-50 dark:bg-red-900/20' : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700'
+                      } text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400`}
                       placeholder="Enter email address"
                     />
                   </div>
                   {errors.email && (
-                    <p className="mt-1 text-sm text-red-600 font-medium">{errors.email}</p>
+                    <p className="mt-1 text-sm text-red-600 dark:text-red-400 font-medium transition-colors duration-300">{errors.email}</p>
                   )}
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-black mb-2">
+                  <label className="block text-sm font-semibold text-black dark:text-white mb-2 transition-colors duration-300">
                     Phone Number *
                   </label>
                   <div className="relative">
-                    <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                    <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400 dark:text-gray-500 transition-colors duration-300" />
                     <input
                       type="tel"
                       required
                       value={formData.phone}
                       onChange={(e) => updateFormData({ phone: e.target.value })}
                       className={`w-full pl-10 pr-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 ${
-                        errors.phone ? 'border-red-300 bg-red-50' : 'border-gray-300 bg-white'
-                      }`}
+                        errors.phone ? 'border-red-300 dark:border-red-600 bg-red-50 dark:bg-red-900/20' : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700'
+                      } text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400`}
                       placeholder="Enter phone number"
                     />
                   </div>
                   {errors.phone && (
-                    <p className="mt-1 text-sm text-red-600 font-medium">{errors.phone}</p>
+                    <p className="mt-1 text-sm text-red-600 dark:text-red-400 font-medium transition-colors duration-300">{errors.phone}</p>
                   )}
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-black mb-2">
+                  <label className="block text-sm font-semibold text-black dark:text-white mb-2 transition-colors duration-300">
                     Customer Type *
                   </label>
                   <select
                     required
                     value={formData.customerType}
                     onChange={(e) => updateFormData({ customerType: e.target.value as 'individual' | 'business' })}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white"
+                    className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                   >
                     <option value="individual">Individual</option>
                     <option value="business">Business</option>
@@ -408,7 +408,7 @@ export default function CustomerFormModal({ isOpen, onClose, onSuccess, customer
 
                 {isSuperAdmin ? (
                   <div>
-                    <label className="block text-sm font-semibold text-black mb-2">
+                    <label className="block text-sm font-semibold text-black dark:text-white mb-2 transition-colors duration-300">
                       Company *
                     </label>
                     <select
@@ -417,8 +417,8 @@ export default function CustomerFormModal({ isOpen, onClose, onSuccess, customer
                       value={formData.company}
                       onChange={(e) => updateFormData({ company: e.target.value })}
                       className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 ${
-                        errors.company ? 'border-red-300 bg-red-50' : 'border-gray-300 bg-white'
-                      } ${isLoadingCompanies ? 'opacity-50 cursor-not-allowed' : ''}`}
+                        errors.company ? 'border-red-300 dark:border-red-600 bg-red-50 dark:bg-red-900/20' : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700'
+                      } ${isLoadingCompanies ? 'opacity-50 cursor-not-allowed' : ''} text-gray-900 dark:text-white`}
                     >
                       <option value="">
                         {isLoadingCompanies ? 'Loading companies...' : 'Select Company'}
@@ -430,18 +430,18 @@ export default function CustomerFormModal({ isOpen, onClose, onSuccess, customer
                       ))}
                     </select>
                     {errors.company && (
-                      <p className="mt-1 text-sm text-red-600 font-medium">{errors.company}</p>
+                      <p className="mt-1 text-sm text-red-600 dark:text-red-400 font-medium transition-colors duration-300">{errors.company}</p>
                     )}
                   </div>
                 ) : (
                   <div>
-                    <label className="block text-sm font-semibold text-black mb-2">
+                    <label className="block text-sm font-semibold text-black dark:text-white mb-2 transition-colors duration-300">
                       Company
                     </label>
-                    <div className="w-full px-4 py-3 border border-gray-300 rounded-xl bg-gray-50 text-gray-600">
+                    <div className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl bg-gray-50 dark:bg-gray-700 text-gray-600 dark:text-gray-300 transition-all duration-300">
                       {companies.find(c => c._id === user?.currentCompanyId)?.companyName || 'Your Company'}
                     </div>
-                    <p className="mt-1 text-sm text-gray-500">
+                    <p className="mt-1 text-sm text-gray-500 dark:text-gray-400 transition-colors duration-300">
                       Customer will be created under your company
                     </p>
                   </div>
@@ -451,63 +451,63 @@ export default function CustomerFormModal({ isOpen, onClose, onSuccess, customer
 
             {/* Business Information (if business type) */}
             {formData.customerType === 'business' && (
-              <div className="bg-green-50 rounded-xl p-6 border border-green-200">
-                <h3 className="text-lg font-semibold text-black mb-4 flex items-center">
-                  <Building2 className="w-5 h-5 mr-2 text-green-600" />
+              <div className="bg-green-50 dark:bg-green-900/20 rounded-xl p-6 border border-green-200 dark:border-green-700 transition-all duration-300">
+                <h3 className="text-lg font-semibold text-black dark:text-white mb-4 flex items-center transition-colors duration-300">
+                  <Building2 className="w-5 h-5 mr-2 text-green-600 dark:text-green-400 transition-colors duration-300" />
                   Business Information
                 </h3>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-semibold text-black mb-2">
+                    <label className="block text-sm font-semibold text-black dark:text-white mb-2 transition-colors duration-300">
                       Company Name
                     </label>
                     <input
                       type="text"
                       value={formData.company}
                       onChange={(e) => updateFormData({ company: e.target.value })}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white"
+                      className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
                       placeholder="Enter company name"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-semibold text-black mb-2">
+                    <label className="block text-sm font-semibold text-black dark:text-white mb-2 transition-colors duration-300">
                       Contact Person
                     </label>
                     <input
                       type="text"
                       value={formData.contactPerson}
                       onChange={(e) => updateFormData({ contactPerson: e.target.value })}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white"
+                      className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
                       placeholder="Enter contact person name"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-semibold text-black mb-2">
+                    <label className="block text-sm font-semibold text-black dark:text-white mb-2 transition-colors duration-300">
                       Tax ID
                     </label>
                     <input
                       type="text"
                       value={formData.taxId}
                       onChange={(e) => updateFormData({ taxId: e.target.value })}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white"
+                      className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
                       placeholder="Enter tax ID"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-semibold text-black mb-2">
+                    <label className="block text-sm font-semibold text-black dark:text-white mb-2 transition-colors duration-300">
                       Website
                     </label>
                     <div className="relative">
-                      <Globe className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                      <Globe className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400 dark:text-gray-500 transition-colors duration-300" />
                       <input
                         type="url"
                         value={formData.website}
                         onChange={(e) => updateFormData({ website: e.target.value })}
-                        className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white"
+                        className="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
                         placeholder="Enter website URL"
                       />
                     </div>
@@ -517,74 +517,74 @@ export default function CustomerFormModal({ isOpen, onClose, onSuccess, customer
             )}
 
             {/* Address Information */}
-            <div className="bg-yellow-50 rounded-xl p-6 border border-yellow-200">
-              <h3 className="text-lg font-semibold text-black mb-4 flex items-center">
-                <MapPin className="w-5 h-5 mr-2 text-yellow-600" />
+            <div className="bg-yellow-50 dark:bg-yellow-900/20 rounded-xl p-6 border border-yellow-200 dark:border-yellow-700 transition-all duration-300">
+              <h3 className="text-lg font-semibold text-black dark:text-white mb-4 flex items-center transition-colors duration-300">
+                <MapPin className="w-5 h-5 mr-2 text-yellow-600 dark:text-yellow-400 transition-colors duration-300" />
                 Address Information
               </h3>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="md:col-span-2">
-                  <label className="block text-sm font-semibold text-black mb-2">
+                  <label className="block text-sm font-semibold text-black dark:text-white mb-2 transition-colors duration-300">
                     Street Address
                   </label>
                   <input
                     type="text"
                     value={formData.address.street}
                     onChange={(e) => updateAddressField('street', e.target.value)}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white"
+                    className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
                     placeholder="Enter street address"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-black mb-2">
+                  <label className="block text-sm font-semibold text-black dark:text-white mb-2 transition-colors duration-300">
                     City
                   </label>
                   <input
                     type="text"
                     value={formData.address.city}
                     onChange={(e) => updateAddressField('city', e.target.value)}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white"
+                    className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
                     placeholder="Enter city"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-black mb-2">
+                  <label className="block text-sm font-semibold text-black dark:text-white mb-2 transition-colors duration-300">
                     State
                   </label>
                   <input
                     type="text"
                     value={formData.address.state}
                     onChange={(e) => updateAddressField('state', e.target.value)}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white"
+                    className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
                     placeholder="Enter state"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-black mb-2">
+                  <label className="block text-sm font-semibold text-black dark:text-white mb-2 transition-colors duration-300">
                     ZIP Code
                   </label>
                   <input
                     type="text"
                     value={formData.address.zipCode}
                     onChange={(e) => updateAddressField('zipCode', e.target.value)}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white"
+                    className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
                     placeholder="Enter ZIP code"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-black mb-2">
+                  <label className="block text-sm font-semibold text-black dark:text-white mb-2 transition-colors duration-300">
                     Country
                   </label>
                   <input
                     type="text"
                     value={formData.address.country}
                     onChange={(e) => updateAddressField('country', e.target.value)}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white"
+                    className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
                     placeholder="Enter country"
                   />
                 </div>
@@ -607,7 +607,7 @@ export default function CustomerFormModal({ isOpen, onClose, onSuccess, customer
                     }}
                     className="mr-2 text-blue-600 focus:ring-blue-500"
                   />
-                  <span className="text-sm font-medium text-gray-700">
+                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300 transition-colors duration-300">
                     Billing address is same as above
                   </span>
                 </label>
@@ -615,35 +615,35 @@ export default function CustomerFormModal({ isOpen, onClose, onSuccess, customer
             </div>
 
             {/* Additional Information */}
-            <div className="bg-gray-50 rounded-xl p-6 border border-gray-200">
-              <h3 className="text-lg font-semibold text-black mb-4 flex items-center">
-                <FileText className="w-5 h-5 mr-2 text-gray-600" />
+            <div className="bg-gray-50 dark:bg-gray-700/50 rounded-xl p-6 border border-gray-200 dark:border-gray-600 transition-all duration-300">
+              <h3 className="text-lg font-semibold text-black dark:text-white mb-4 flex items-center transition-colors duration-300">
+                <FileText className="w-5 h-5 mr-2 text-gray-600 dark:text-gray-400 transition-colors duration-300" />
                 Additional Information
               </h3>
               
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-semibold text-black mb-2">
+                  <label className="block text-sm font-semibold text-black dark:text-white mb-2 transition-colors duration-300">
                     Notes
                   </label>
                   <textarea
                     value={formData.notes}
                     onChange={(e) => updateFormData({ notes: e.target.value })}
                     rows={3}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white text-gray-900 font-medium placeholder:text-gray-500"
+                    className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white dark:bg-gray-700 text-gray-900 dark:text-white font-medium placeholder:text-gray-500 dark:placeholder:text-gray-400"
                     placeholder="Enter any additional notes"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-black mb-2">
+                  <label className="block text-sm font-semibold text-black dark:text-white mb-2 transition-colors duration-300">
                     Tags (comma separated)
                   </label>
                   <input
                     type="text"
                     value={formData.tags}
                     onChange={(e) => updateFormData({ tags: e.target.value })}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white"
+                    className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
                     placeholder="e.g. VIP, Regular, Wholesale"
                   />
                 </div>
@@ -652,12 +652,12 @@ export default function CustomerFormModal({ isOpen, onClose, onSuccess, customer
           </div>
 
           {/* Actions */}
-          <div className="flex items-center justify-end gap-4 mt-8 pt-6 border-t border-gray-200">
+          <div className="flex items-center justify-end gap-4 mt-8 pt-6 border-t border-gray-200 dark:border-gray-600 transition-colors duration-300">
             <Button
               type="button"
               onClick={onClose}
               disabled={isLoading}
-              className="px-6 py-3 border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 font-semibold transition-colors"
+              className="px-6 py-3 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 font-semibold transition-all duration-300"
             >
               Cancel
             </Button>

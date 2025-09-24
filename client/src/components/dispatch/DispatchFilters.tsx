@@ -197,23 +197,23 @@ export const DispatchFilters = ({
 
           {/* Quick Sales Order ID Examples */}
           <div className="mt-3">
-            <p className="text-xs text-gray-500 mb-2">💡 Quick examples: SO-2024-123456, ORDER-2024-123456, or just paste the ID</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">💡 Quick examples: SO-2024-123456, ORDER-2024-123456, or just paste the ID</p>
             <div className="flex flex-wrap gap-2">
               <button
                 onClick={() => handleSearchChange('SO-2024-123456')}
-                className="text-xs px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                className="text-xs px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors text-gray-700 dark:text-gray-300"
               >
                 SO-2024-123456
               </button>
               <button
                 onClick={() => handleSearchChange('ORDER-2024-123456')}
-                className="text-xs px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                className="text-xs px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors text-gray-700 dark:text-gray-300"
               >
                 ORDER-2024-123456
               </button>
               <button
                 onClick={() => handleSearchChange('123456789')}
-                className="text-xs px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                className="text-xs px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors text-gray-700 dark:text-gray-300"
               >
                 123456789
               </button>

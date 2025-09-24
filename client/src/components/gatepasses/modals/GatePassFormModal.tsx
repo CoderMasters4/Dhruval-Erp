@@ -24,6 +24,7 @@ import { useGetAllVehiclesQuery } from '@/lib/features/vehicles/vehiclesApi'
 import { useGetAllCompaniesQuery } from '@/lib/features/companies/companiesApi'
 import { useSelector } from 'react-redux'
 import { selectCurrentUser } from '@/lib/features/auth/authSlice'
+import { selectTheme } from '@/lib/features/ui/uiSlice'
 
 interface GatePassFormModalProps {
   isOpen: boolean
@@ -71,6 +72,7 @@ const getInitialFormData = (): FormData => ({
 })
 
 export default function GatePassFormModal({ isOpen, onClose, onSuccess, gatePass }: GatePassFormModalProps) {
+  const theme = useSelector(selectTheme)
   const [formData, setFormData] = useState<FormData>(getInitialFormData())
   const [errors, setErrors] = useState<Partial<FormData>>({})
   const [selectedImages, setSelectedImages] = useState<File[]>([])
@@ -308,19 +310,19 @@ export default function GatePassFormModal({ isOpen, onClose, onSuccess, gatePass
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 bg-white/30 backdrop-blur-md flex items-center justify-center z-[60] p-4">
-      <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
+    <div className="fixed inset-0 bg-white/30 dark:bg-black/30 backdrop-blur-md flex items-center justify-center z-[60] p-2 sm:p-4">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-4xl w-full max-h-[95vh] sm:max-h-[90vh] overflow-hidden border border-gray-200 dark:border-gray-700">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-200">
-          <div className="flex items-center space-x-3">
-            <div className="p-2 bg-blue-100 rounded-lg">
-              <FileText className="w-6 h-6 text-blue-600" />
+        <div className="flex items-center justify-between p-4 sm:p-6 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700">
+          <div className="flex items-center space-x-2 sm:space-x-3 min-w-0 flex-1">
+            <div className="p-2 bg-blue-100 dark:bg-blue-900 rounded-lg flex-shrink-0">
+              <FileText className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600 dark:text-blue-400" />
             </div>
-            <div>
-              <h2 className="text-xl font-semibold text-gray-900">
+            <div className="min-w-0 flex-1">
+              <h2 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-gray-100 truncate">
                 {isEditing ? 'Edit Gate Pass' : 'Create New Gate Pass'}
               </h2>
-              <p className="text-sm text-gray-500">
+              <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 truncate">
                 {isEditing ? 'Update gate pass information' : 'Generate a new gate pass for vehicle entry'}
               </p>
             </div>
@@ -329,24 +331,24 @@ export default function GatePassFormModal({ isOpen, onClose, onSuccess, gatePass
             onClick={onClose}
             variant="ghost"
             size="sm"
-            className="text-gray-400 hover:text-gray-600"
+            className="text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 flex-shrink-0 p-2"
           >
             <X className="w-5 h-5" />
           </Button>
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-6 overflow-y-auto max-h-[calc(90vh-140px)]">
+        <form onSubmit={handleSubmit} className="p-3 sm:p-6 space-y-4 sm:space-y-6 overflow-y-auto max-h-[calc(95vh-120px)] sm:max-h-[calc(90vh-140px)]">
           {/* Company Selection */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Select Company *
             </label>
             <select
               value={formData.companyId}
               onChange={(e) => updateFormData({ companyId: e.target.value })}
-              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                errors.companyId ? 'border-red-300' : 'border-gray-300'
+              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 ${
+                errors.companyId ? 'border-red-300 dark:border-red-600' : 'border-gray-300 dark:border-gray-600'
               }`}
             >
               <option value="">Select a company</option>
@@ -357,22 +359,22 @@ export default function GatePassFormModal({ isOpen, onClose, onSuccess, gatePass
               ))}
             </select>
             {errors.companyId && (
-              <p className="mt-1 text-sm text-red-600">{errors.companyId}</p>
+              <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.companyId}</p>
             )}
           </div>
 
           {/* Vehicle Selection */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Select Vehicle *
               </label>
               <select
                 value={formData.vehicleId}
                 onChange={(e) => handleVehicleSelect(e.target.value)}
                 disabled={isLoadingVehicles}
-                className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                  errors.vehicleId ? 'border-red-300' : 'border-gray-300'
+                className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 ${
+                  errors.vehicleId ? 'border-red-300 dark:border-red-600' : 'border-gray-300 dark:border-gray-600'
                 } ${isLoadingVehicles ? 'opacity-50 cursor-not-allowed' : ''}`}
               >
                 <option value="">
@@ -388,29 +390,29 @@ export default function GatePassFormModal({ isOpen, onClose, onSuccess, gatePass
                 })}
               </select>
               {errors.vehicleId && (
-                <p className="mt-1 text-sm text-red-600">{errors.vehicleId}</p>
+                <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.vehicleId}</p>
               )}
               {vehiclesError && (
-                <p className="mt-1 text-sm text-red-600">
+                <p className="mt-1 text-sm text-red-600 dark:text-red-400">
                   Error loading vehicles: {'message' in vehiclesError ? vehiclesError.message : 'Unknown error'}
                 </p>
               )}
               {formData.companyId && !isLoadingVehicles && vehicles.length === 0 && (
-                <p className="mt-1 text-sm text-yellow-600">
+                <p className="mt-1 text-sm text-yellow-600 dark:text-yellow-400">
                   No vehicles found for this company with status 'in'
                 </p>
               )}
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Vehicle Number
               </label>
               <input
                 type="text"
                 value={formData.vehicleNumber}
                 onChange={(e) => updateFormData({ vehicleNumber: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                 readOnly
               />
             </div>
@@ -418,32 +420,32 @@ export default function GatePassFormModal({ isOpen, onClose, onSuccess, gatePass
 
           {/* Today's Vehicles for Selected Company */}
           {formData.companyId && (
-            <div className="bg-yellow-50 rounded-xl p-4 border border-yellow-200">
-              <h3 className="text-lg font-semibold text-gray-900 mb-3 flex items-center">
-                <Car className="w-5 h-5 mr-2 text-yellow-600" />
+            <div className="bg-yellow-50 dark:bg-yellow-900/20 rounded-xl p-4 border border-yellow-200 dark:border-yellow-800">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3 flex items-center">
+                <Car className="w-5 h-5 mr-2 text-yellow-600 dark:text-yellow-400" />
                 Today's Vehicles ({todayVehicles.length})
-                {isLoadingTodayVehicles && <span className="ml-2 text-sm text-gray-500">(Loading...)</span>}
+                {isLoadingTodayVehicles && <span className="ml-2 text-sm text-gray-500 dark:text-gray-400">(Loading...)</span>}
               </h3>
               
               {isLoadingTodayVehicles ? (
-                <div className="text-center py-4 text-gray-500">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-yellow-600 mx-auto mb-2"></div>
+                <div className="text-center py-4 text-gray-500 dark:text-gray-400">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-yellow-600 dark:border-yellow-400 mx-auto mb-2"></div>
                   <p>Loading today's vehicles...</p>
                 </div>
               ) : todayVehiclesError ? (
-                <div className="text-center py-4 text-red-500">
+                <div className="text-center py-4 text-red-500 dark:text-red-400">
                   <p>Error loading vehicles: {'message' in todayVehiclesError ? todayVehiclesError.message : 'Unknown error'}</p>
                 </div>
               ) : todayVehicles.length > 0 ? (
                 <div className="space-y-2">
-                  <div className="text-sm text-gray-600 mb-3">
+                  <div className="text-sm text-gray-600 dark:text-gray-400 mb-3">
                     Click on a vehicle to auto-fill the form
                   </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                     {todayVehicles.map((vehicle) => (
                       <div
                         key={vehicle._id}
-                        className="bg-white p-3 rounded-lg border border-gray-200 hover:border-yellow-300 transition-colors cursor-pointer"
+                        className="bg-white dark:bg-gray-800 p-3 rounded-lg border border-gray-200 dark:border-gray-700 hover:border-yellow-300 dark:hover:border-yellow-600 transition-colors cursor-pointer"
                         onClick={() => {
                           setFormData(prev => ({
                             ...prev,
@@ -457,16 +459,16 @@ export default function GatePassFormModal({ isOpen, onClose, onSuccess, gatePass
                         }}
                       >
                         <div className="flex items-center justify-between mb-2">
-                          <span className="font-semibold text-gray-900">{vehicle.vehicleNumber}</span>
+                          <span className="font-semibold text-gray-900 dark:text-gray-100">{vehicle.vehicleNumber}</span>
                           <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                            vehicle.status === 'in' ? 'bg-green-100 text-green-800' :
-                            vehicle.status === 'out' ? 'bg-red-100 text-red-800' :
-                            'bg-yellow-100 text-yellow-800'
+                            vehicle.status === 'in' ? 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200' :
+                            vehicle.status === 'out' ? 'bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200' :
+                            'bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200'
                           }`}>
                             {vehicle.status}
                           </span>
                         </div>
-                        <div className="text-sm text-gray-600">
+                        <div className="text-sm text-gray-600 dark:text-gray-400">
                           <div>Driver: {vehicle.driverName}</div>
                           <div>Phone: {vehicle.driverPhone}</div>
                           <div>Purpose: {vehicle.purpose}</div>
@@ -477,8 +479,8 @@ export default function GatePassFormModal({ isOpen, onClose, onSuccess, gatePass
                   </div>
                 </div>
               ) : (
-                <div className="text-center py-4 text-gray-500">
-                  <Car className="w-8 h-8 mx-auto mb-2 text-gray-300" />
+                <div className="text-center py-4 text-gray-500 dark:text-gray-400">
+                  <Car className="w-8 h-8 mx-auto mb-2 text-gray-300 dark:text-gray-500" />
                   <p>No vehicles entered today for this company</p>
                 </div>
               )}

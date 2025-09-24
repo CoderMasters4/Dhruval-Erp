@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { useSelector } from 'react-redux';
 import { 
   useGetInventoryItemsQuery, 
   useGetInventoryStatsQuery, 
@@ -11,6 +12,7 @@ import {
 } from '@/lib/api/inventoryApi';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Activity } from 'lucide-react';
+import { selectTheme } from '@/lib/features/ui/uiSlice';
 import { 
   InventoryHeader,
   InventoryFilters,
@@ -23,6 +25,7 @@ import {
 } from '@/components/inventory';
 
 const EnhancedInventoryPage = () => {
+  const theme = useSelector(selectTheme);
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
@@ -239,7 +242,7 @@ const EnhancedInventoryPage = () => {
 
   return (
     <AppLayout>
-      <div className="space-y-6">
+      <div className={`space-y-6 transition-theme ${theme === 'dark' ? 'bg-gray-900' : 'bg-gray-50'}`}>
         {/* Header */}
         <InventoryHeader
           totalItems={totalItems}
@@ -250,6 +253,7 @@ const EnhancedInventoryPage = () => {
           onImport={() => console.log('Import clicked')}
           searchTerm={searchTerm}
           onSearchChange={setSearchTerm}
+          theme={theme}
         />
 
         {/* Filters */}
@@ -262,23 +266,36 @@ const EnhancedInventoryPage = () => {
               setCategoryFilter('');
               setStatusFilter('');
             }}
+            theme={theme}
           />
 
           {/* Alerts Section - Show on all views */}
           {alerts && alerts.length > 0 && (
-            <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
+            <div className={`rounded-lg p-4 transition-theme ${
+              theme === 'dark' 
+                ? 'bg-orange-900/20 border border-orange-800' 
+                : 'bg-orange-50 border border-orange-200'
+            }`}>
               <div className="flex items-center justify-between mb-3">
-                <h3 className="text-lg font-semibold text-orange-800 flex items-center">
+                <h3 className={`text-lg font-semibold flex items-center ${
+                  theme === 'dark' ? 'text-orange-200' : 'text-orange-800'
+                }`}>
                   <Activity className="w-5 h-5 mr-2" />
                   Inventory Alerts ({alerts.length})
                 </h3>
-                <span className="text-sm text-orange-600">
+                <span className={`text-sm ${
+                  theme === 'dark' ? 'text-orange-300' : 'text-orange-600'
+                }`}>
                   {viewMode === 'analytics' ? 'Viewing in Analytics' : 'Switch to Analytics for detailed view'}
                 </span>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                 {alerts.slice(0, 3).map((alert: any, index: number) => (
-                  <div key={alert.id || index} className="bg-white p-3 rounded-lg border border-orange-300">
+                  <div key={alert.id || index} className={`p-3 rounded-lg border transition-theme ${
+                    theme === 'dark' 
+                      ? 'bg-gray-800 border-orange-700' 
+                      : 'bg-white border-orange-300'
+                  }`}>
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-1">
@@ -287,12 +304,18 @@ const EnhancedInventoryPage = () => {
                             alert.severity === 'warning' ? 'bg-orange-500' : 
                             'bg-blue-500'
                           }`}></div>
-                          <span className="text-xs font-medium text-gray-600 uppercase">
+                          <span className={`text-xs font-medium uppercase ${
+                            theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
+                          }`}>
                             {alert.type?.replace('_', ' ')}
                           </span>
                         </div>
-                        <p className="text-sm font-medium text-gray-900 mb-1">{alert.message}</p>
-                        <p className="text-xs text-gray-500">Item: {alert.itemCode}</p>
+                        <p className={`text-sm font-medium mb-1 ${
+                          theme === 'dark' ? 'text-gray-100' : 'text-gray-900'
+                        }`}>{alert.message}</p>
+                        <p className={`text-xs ${
+                          theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
+                        }`}>Item: {alert.itemCode}</p>
                       </div>
                     </div>
                   </div>
@@ -303,13 +326,19 @@ const EnhancedInventoryPage = () => {
 
           {/* View Mode Toggle */}
         <div className="flex justify-center">
-            <div className="flex bg-gray-100 rounded-lg p-1">
+            <div className={`flex rounded-lg p-1 transition-theme ${
+              theme === 'dark' ? 'bg-gray-800' : 'bg-gray-100'
+            }`}>
             <button
                 onClick={() => setViewMode('list')}
               className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
                 viewMode === 'list' 
-                  ? 'bg-white text-gray-900 shadow-sm' 
-                  : 'text-gray-600 hover:text-gray-900'
+                  ? theme === 'dark'
+                    ? 'bg-gray-700 text-gray-100 shadow-sm'
+                    : 'bg-white text-gray-900 shadow-sm'
+                  : theme === 'dark'
+                    ? 'text-gray-400 hover:text-gray-200'
+                    : 'text-gray-600 hover:text-gray-900'
               }`}
             >
               List View
@@ -318,8 +347,12 @@ const EnhancedInventoryPage = () => {
                 onClick={() => setViewMode('grid')}
               className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
                 viewMode === 'grid' 
-                  ? 'bg-white text-gray-900 shadow-sm' 
-                  : 'text-gray-600 hover:text-gray-900'
+                  ? theme === 'dark'
+                    ? 'bg-gray-700 text-gray-100 shadow-sm'
+                    : 'bg-white text-gray-900 shadow-sm'
+                  : theme === 'dark'
+                    ? 'text-gray-400 hover:text-gray-200'
+                    : 'text-gray-600 hover:text-gray-900'
               }`}
             >
               Grid View
@@ -328,8 +361,12 @@ const EnhancedInventoryPage = () => {
                 onClick={() => setViewMode('analytics')}
               className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
                 viewMode === 'analytics' 
-                  ? 'bg-white text-gray-900 shadow-sm' 
-                  : 'text-gray-600 hover:text-gray-900'
+                  ? theme === 'dark'
+                    ? 'bg-gray-700 text-gray-100 shadow-sm'
+                    : 'bg-white text-gray-900 shadow-sm'
+                  : theme === 'dark'
+                    ? 'text-gray-400 hover:text-gray-200'
+                    : 'text-gray-600 hover:text-gray-900'
               }`}
               >
                 Analytics
@@ -339,13 +376,14 @@ const EnhancedInventoryPage = () => {
 
         {/* Main Content */}
         {viewMode === 'analytics' ? (
-          <InventoryAnalytics stats={stats} alerts={alerts} />
+          <InventoryAnalytics stats={stats} alerts={alerts} theme={theme} />
         ) : viewMode === 'grid' ? (
           <InventoryGrid
             items={filteredItems}
             onViewDetails={handleViewDetails}
             onEditItem={handleEditItem}
             onDeleteItem={handleDeleteItem}
+            theme={theme}
           />
         ) : (
           <InventoryList
@@ -353,21 +391,32 @@ const EnhancedInventoryPage = () => {
             onViewDetails={handleViewDetails}
             onEditItem={handleEditItem}
             onDeleteItem={handleDeleteItem}
+            theme={theme}
           />
         )}
 
         {/* Pagination Controls */}
         {totalItems > 0 && (
-          <div className="bg-white rounded-lg border border-gray-200 p-4">
+          <div className={`rounded-lg border p-4 transition-theme ${
+            theme === 'dark' 
+              ? 'bg-gray-800 border-gray-700' 
+              : 'bg-white border-gray-200'
+          }`}>
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-4">
-                <span className="text-sm text-gray-700">
+                <span className={`text-sm ${
+                  theme === 'dark' ? 'text-gray-300' : 'text-gray-700'
+                }`}>
                   Showing {((currentPage - 1) * pageSize) + 1} to {Math.min(currentPage * pageSize, totalItems)} of {totalItems} items
                 </span>
                 <select
                   value={pageSize}
                   onChange={(e) => handlePageSizeChange(Number(e.target.value))}
-                  className="px-3 py-1 border border-gray-300 rounded-md text-sm"
+                  className={`px-3 py-1 border rounded-md text-sm transition-theme ${
+                    theme === 'dark'
+                      ? 'border-gray-600 bg-gray-700 text-gray-100'
+                      : 'border-gray-300 bg-white text-gray-900'
+                  }`}
                 >
                   <option value={10}>10 per page</option>
                   <option value={25}>25 per page</option>
@@ -380,7 +429,11 @@ const EnhancedInventoryPage = () => {
                 <button
                   onClick={() => handlePageChange(currentPage - 1)}
                   disabled={!hasPrevPage}
-                  className="px-3 py-1 text-sm border border-gray-300 rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+                  className={`px-3 py-1 text-sm border rounded-md disabled:opacity-50 disabled:cursor-not-allowed transition-theme ${
+                    theme === 'dark'
+                      ? 'border-gray-600 bg-gray-700 text-gray-100 hover:bg-gray-600'
+                      : 'border-gray-300 bg-white text-gray-900 hover:bg-gray-50'
+                  }`}
                 >
                   Previous
                 </button>
@@ -402,10 +455,14 @@ const EnhancedInventoryPage = () => {
                       <button
                         key={pageNum}
                         onClick={() => handlePageChange(pageNum)}
-                        className={`px-3 py-1 text-sm border rounded-md ${
+                        className={`px-3 py-1 text-sm border rounded-md transition-theme ${
                           currentPage === pageNum
-                            ? 'bg-blue-500 text-white border-blue-500'
-                            : 'border-gray-300 hover:bg-gray-50'
+                            ? theme === 'dark'
+                              ? 'bg-blue-600 text-white border-blue-600'
+                              : 'bg-blue-500 text-white border-blue-500'
+                            : theme === 'dark'
+                              ? 'border-gray-600 bg-gray-700 text-gray-100 hover:bg-gray-600'
+                              : 'border-gray-300 bg-white text-gray-900 hover:bg-gray-50'
                         }`}
                       >
                         {pageNum}
@@ -417,7 +474,11 @@ const EnhancedInventoryPage = () => {
                 <button
                   onClick={() => handlePageChange(currentPage + 1)}
                   disabled={!hasNextPage}
-                  className="px-3 py-1 text-sm border border-gray-300 rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+                  className={`px-3 py-1 text-sm border rounded-md disabled:opacity-50 disabled:cursor-not-allowed transition-theme ${
+                    theme === 'dark'
+                      ? 'border-gray-600 bg-gray-700 text-gray-100 hover:bg-gray-600'
+                      : 'border-gray-300 bg-white text-gray-900 hover:bg-gray-50'
+                  }`}
                 >
                   Next
                 </button>
@@ -428,27 +489,38 @@ const EnhancedInventoryPage = () => {
 
         {/* Create/Edit Modal */}
         {showCreateModal && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999]">
-            <div className="bg-white rounded-lg p-6 max-w-4xl mx-4 max-h-[90vh] overflow-y-auto border-4 border-red-500">
+          <div className="fixed inset-0 bg-black bg-opacity-50 dark:bg-black dark:bg-opacity-70 flex items-center justify-center z-[9999] transition-theme">
+            <div className={`rounded-lg p-6 max-w-4xl mx-4 max-h-[90vh] overflow-y-auto border-4 border-red-500 transition-theme ${
+              theme === 'dark' ? 'bg-gray-800' : 'bg-white'
+            }`}>
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-semibold text-gray-900">
+                <h2 className={`text-xl font-semibold ${
+                  theme === 'dark' ? 'text-gray-100' : 'text-gray-900'
+                }`}>
                   {selectedItem ? 'Edit Inventory Item' : 'Create New Inventory Item'}
                 </h2>
                 <button
                   onClick={handleFormClose}
-                  className="text-gray-400 hover:text-gray-600 text-2xl"
+                  className={`text-2xl transition-colors ${
+                    theme === 'dark' ? 'text-gray-400 hover:text-gray-200' : 'text-gray-400 hover:text-gray-600'
+                  }`}
                 >
                   ✕
                 </button>
               </div>
-              <div className="bg-yellow-100 p-4 mb-4 rounded">
-                <p className="text-yellow-800">Modal is open! showCreateModal: {showCreateModal.toString()}</p>
+              <div className={`p-4 mb-4 rounded transition-theme ${
+                theme === 'dark' ? 'bg-yellow-900/20' : 'bg-yellow-100'
+              }`}>
+                <p className={`${
+                  theme === 'dark' ? 'text-yellow-200' : 'text-yellow-800'
+                }`}>Modal is open! showCreateModal: {showCreateModal.toString()}</p>
               </div>
               <InventoryItemForm
                 key={selectedItem?._id || 'new'}
                 item={selectedItem}
                 onSubmit={handleFormSubmit}
                 onCancel={handleFormClose}
+                theme={theme}
               />
             </div>
           </div>
@@ -461,6 +533,7 @@ const EnhancedInventoryPage = () => {
             onClose={() => setViewDetails(null)}
             onEdit={handleEditItem}
             onDelete={handleDeleteItem}
+            theme={theme}
           />
       )}
       </div>

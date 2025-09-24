@@ -64,6 +64,7 @@ export interface CreateDispatchRequest {
 
 export interface UpdateDispatchRequest {
   id: string
+  companyId?: string
   dispatchNumber?: string
   dispatchDate?: string
   dispatchType?: string
@@ -137,6 +138,18 @@ export const enhancedDispatchApi = baseApi.injectEndpoints({
         url: `/enhanced-dispatch/${id}`,
         method: 'PUT',
         body: updateData,
+      }),
+      invalidatesTags: (result, error, { id }) => [
+        { type: 'Dispatch', id },
+        'Dispatch',
+      ],
+    }),
+
+    quickUpdateDispatchStatus: builder.mutation<Dispatch, { id: string; status: string; priority?: string }>({
+      query: ({ id, status, priority }) => ({
+        url: `/enhanced-dispatch/${id}`,
+        method: 'PUT',
+        body: { status, priority },
       }),
       invalidatesTags: (result, error, { id }) => [
         { type: 'Dispatch', id },
@@ -273,6 +286,7 @@ export const {
   useGetDispatchByIdQuery,
   useCreateDispatchMutation,
   useUpdateDispatchMutation,
+  useQuickUpdateDispatchStatusMutation,
   useDeleteDispatchMutation,
   useGetCompaniesQuery,
   useGetUsersQuery,

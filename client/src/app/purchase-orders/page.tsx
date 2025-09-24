@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useSelector } from 'react-redux'
+import { selectTheme } from '@/lib/features/ui/uiSlice'
 import {
   ShoppingCart,
   Plus,
@@ -23,16 +24,23 @@ import { AppLayout } from '@/components/layout/AppLayout'
 import { PurchaseHeader } from '@/components/ui/PageHeader'
 import { selectCurrentUser, selectIsSuperAdmin } from '@/lib/features/auth/authSlice'
 import { useGetPurchaseOrdersQuery, useGetPurchaseOrderStatsQuery } from '@/lib/api/purchaseOrdersApi'
+import { PurchaseOrderViewModal } from '@/components/purchase/PurchaseOrderViewModal'
+import { PurchaseOrderEditModal } from '@/components/purchase/PurchaseOrderEditModal'
+import { QuickStatusUpdate } from '@/components/purchase/QuickStatusUpdate'
 import clsx from 'clsx'
 
 export default function PurchaseOrdersPage() {
   const user = useSelector(selectCurrentUser)
   const isSuperAdmin = useSelector(selectIsSuperAdmin)
+  const theme = useSelector(selectTheme)
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
   const [supplierFilter, setSupplierFilter] = useState('all')
   const [page, setPage] = useState(1)
   const [showCreateModal, setShowCreateModal] = useState(false)
+  const [selectedOrder, setSelectedOrder] = useState(null)
+  const [showViewModal, setShowViewModal] = useState(false)
+  const [showEditModal, setShowEditModal] = useState(false)
 
   // Fetch purchase orders data
   const { data: ordersData, isLoading, error } = useGetPurchaseOrdersQuery({
@@ -81,19 +89,19 @@ export default function PurchaseOrdersPage() {
     const baseClasses = "px-2 py-1 text-xs font-medium rounded-full"
     switch (status) {
       case 'pending':
-        return `${baseClasses} bg-yellow-100 text-yellow-600`
+        return `${baseClasses} bg-yellow-100 dark:bg-yellow-900 text-yellow-600 dark:text-yellow-400`
       case 'approved':
-        return `${baseClasses} bg-blue-100 text-blue-600`
+        return `${baseClasses} bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-400`
       case 'ordered':
-        return `${baseClasses} bg-purple-100 text-purple-600`
+        return `${baseClasses} bg-purple-100 dark:bg-purple-900 text-purple-600 dark:text-purple-400`
       case 'received':
-        return `${baseClasses} bg-green-100 text-green-600`
+        return `${baseClasses} bg-green-100 dark:bg-green-900 text-green-600 dark:text-green-400`
       case 'cancelled':
-        return `${baseClasses} bg-red-100 text-red-600`
+        return `${baseClasses} bg-red-100 dark:bg-red-900 text-red-600 dark:text-red-400`
       case 'partial':
-        return `${baseClasses} bg-orange-100 text-orange-600`
+        return `${baseClasses} bg-orange-100 dark:bg-orange-900 text-orange-600 dark:text-orange-400`
       default:
-        return `${baseClasses} bg-gray-100 text-gray-600`
+        return `${baseClasses} bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400`
     }
   }
 
@@ -116,6 +124,30 @@ export default function PurchaseOrdersPage() {
     }
   }
 
+  // Handler functions for modals
+  const handleViewOrder = (order: any) => {
+    setSelectedOrder(order)
+    setShowViewModal(true)
+  }
+
+  const handleEditOrder = (order: any) => {
+    setSelectedOrder(order)
+    setShowEditModal(true)
+  }
+
+  const handleDeleteOrder = (order: any) => {
+    if (confirm('Are you sure you want to delete this purchase order?')) {
+      // Implement delete functionality
+      console.log('Delete order:', order._id)
+    }
+  }
+
+  const handleQuickStatusUpdate = async (orderId: string, newStatus: string) => {
+    // This function is now handled by the QuickStatusUpdate component
+    // The API call is made directly in the component
+    console.log('Status update completed for order:', orderId, 'to status:', newStatus)
+  }
+
   return (
     <AppLayout>
       <div className="p-3 sm:p-4 lg:p-6 space-y-4 sm:space-y-6">
@@ -128,8 +160,8 @@ export default function PurchaseOrdersPage() {
           onRefresh={() => window.location.reload()}
         >
           <button
-            onClick={() => setShowCreateModal(true)}
-            className="flex items-center px-4 py-2 bg-white text-emerald-600 rounded-lg hover:bg-emerald-50 border border-white transition-colors"
+            onClick={() => window.location.href = '/purchase/create'}
+            className="flex items-center px-4 py-2 bg-white dark:bg-gray-800 text-emerald-600 dark:text-emerald-400 rounded-lg hover:bg-emerald-50 dark:hover:bg-emerald-900 border border-white dark:border-gray-700 transition-colors shadow-sm hover:shadow-md"
           >
             <Plus className="h-4 w-4 mr-2" />
             Create Purchase Order
@@ -138,62 +170,62 @@ export default function PurchaseOrdersPage() {
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="bg-white rounded-xl border-2 border-sky-500 p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-xl border-2 border-sky-500 dark:border-sky-400 p-4 shadow-sm hover:shadow-md transition-shadow duration-200">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-black">Total Orders</p>
-                <p className="text-2xl font-bold text-black">{orderStats?.data?.totalOrders || 0}</p>
+                <p className="text-sm font-medium text-gray-900 dark:text-white">Total Orders</p>
+                <p className="text-2xl font-bold text-gray-900 dark:text-white">{orderStats?.data?.totalOrders || 0}</p>
               </div>
-              <ShoppingCart className="h-8 w-8 text-sky-500" />
+              <ShoppingCart className="h-8 w-8 text-sky-500 dark:text-sky-400" />
             </div>
           </div>
           
-          <div className="bg-white rounded-xl border-2 border-sky-500 p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-xl border-2 border-sky-500 dark:border-sky-400 p-4 shadow-sm hover:shadow-md transition-shadow duration-200">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-black">Pending Orders</p>
-                <p className="text-2xl font-bold text-yellow-600">{orderStats?.data?.pendingOrders || 0}</p>
+                <p className="text-sm font-medium text-gray-900 dark:text-white">Pending Orders</p>
+                <p className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">{orderStats?.data?.pendingOrders || 0}</p>
               </div>
-              <Clock className="h-8 w-8 text-yellow-500" />
+              <Clock className="h-8 w-8 text-yellow-500 dark:text-yellow-400" />
             </div>
           </div>
           
-          <div className="bg-white rounded-xl border-2 border-sky-500 p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-xl border-2 border-sky-500 dark:border-sky-400 p-4 shadow-sm hover:shadow-md transition-shadow duration-200">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-black">Total Value</p>
-                <p className="text-2xl font-bold text-green-600">
+                <p className="text-sm font-medium text-gray-900 dark:text-white">Total Value</p>
+                <p className="text-2xl font-bold text-green-600 dark:text-green-400">
                   {formatCurrency(orderStats?.data?.totalValue || 0)}
                 </p>
               </div>
-              <DollarSign className="h-8 w-8 text-green-500" />
+              <DollarSign className="h-8 w-8 text-green-500 dark:text-green-400" />
             </div>
           </div>
           
-          <div className="bg-white rounded-xl border-2 border-sky-500 p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-xl border-2 border-sky-500 dark:border-sky-400 p-4 shadow-sm hover:shadow-md transition-shadow duration-200">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-black">This Month</p>
-                <p className="text-2xl font-bold text-blue-600">{orderStats?.data?.thisMonthOrders || 0}</p>
+                <p className="text-sm font-medium text-gray-900 dark:text-white">This Month</p>
+                <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">{orderStats?.data?.thisMonthOrders || 0}</p>
               </div>
-              <Calendar className="h-8 w-8 text-blue-500" />
+              <Calendar className="h-8 w-8 text-blue-500 dark:text-blue-400" />
             </div>
           </div>
         </div>
 
         {/* Filters */}
-        <div className="bg-white rounded-xl border-2 border-sky-500 p-4 sm:p-6">
+        <div className="bg-white dark:bg-gray-800 rounded-xl border-2 border-sky-500 dark:border-sky-400 p-4 sm:p-6 shadow-sm hover:shadow-md transition-shadow duration-200">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {/* Search */}
             <div className="lg:col-span-2">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-sky-500" />
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-sky-500 dark:text-sky-400" />
                 <input
                   type="text"
                   placeholder="Search purchase orders..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 border-2 border-sky-200 rounded-lg focus:outline-none focus:border-sky-500 bg-white text-black"
+                  className="w-full pl-10 pr-4 py-2 border-2 border-sky-200 dark:border-sky-600 rounded-lg focus:outline-none focus:border-sky-500 dark:focus:border-sky-400 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
                 />
               </div>
             </div>
@@ -203,7 +235,7 @@ export default function PurchaseOrdersPage() {
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
-                className="w-full px-3 py-2 border-2 border-sky-200 rounded-lg focus:outline-none focus:border-sky-500 bg-white text-black"
+                className="w-full px-3 py-2 border-2 border-sky-200 dark:border-sky-600 rounded-lg focus:outline-none focus:border-sky-500 dark:focus:border-sky-400 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
               >
                 <option value="all">All Status</option>
                 <option value="pending">Pending</option>
@@ -220,7 +252,7 @@ export default function PurchaseOrdersPage() {
               <select
                 value={supplierFilter}
                 onChange={(e) => setSupplierFilter(e.target.value)}
-                className="w-full px-3 py-2 border-2 border-sky-200 rounded-lg focus:outline-none focus:border-sky-500 bg-white text-black"
+                className="w-full px-3 py-2 border-2 border-sky-200 dark:border-sky-600 rounded-lg focus:outline-none focus:border-sky-500 dark:focus:border-sky-400 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
               >
                 <option value="all">All Suppliers</option>
                 {/* Supplier options will be populated from API */}
@@ -231,119 +263,129 @@ export default function PurchaseOrdersPage() {
 
         {/* Purchase Orders Table */}
         {isLoading ? (
-          <div className="bg-white rounded-xl border-2 border-sky-500 p-6">
+          <div className="bg-white dark:bg-gray-800 rounded-xl border-2 border-sky-500 dark:border-sky-400 p-6 shadow-sm">
             <div className="animate-pulse space-y-4">
               {[...Array(5)].map((_, index) => (
                 <div key={index} className="flex items-center space-x-4">
-                  <div className="h-4 bg-sky-200 rounded w-1/4"></div>
-                  <div className="h-4 bg-sky-200 rounded w-1/4"></div>
-                  <div className="h-4 bg-sky-200 rounded w-1/4"></div>
-                  <div className="h-4 bg-sky-200 rounded w-1/4"></div>
+                  <div className="h-4 bg-sky-200 dark:bg-sky-800 rounded w-1/4"></div>
+                  <div className="h-4 bg-sky-200 dark:bg-sky-800 rounded w-1/4"></div>
+                  <div className="h-4 bg-sky-200 dark:bg-sky-800 rounded w-1/4"></div>
+                  <div className="h-4 bg-sky-200 dark:bg-sky-800 rounded w-1/4"></div>
                 </div>
               ))}
             </div>
           </div>
         ) : error ? (
-          <div className="bg-white rounded-xl border-2 border-red-500 p-6 text-center">
-            <ShoppingCart className="h-12 w-12 text-red-500 mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-black mb-2">Error Loading Purchase Orders</h3>
-            <p className="text-red-600">Failed to load purchase orders. Please try again.</p>
+          <div className="bg-white dark:bg-gray-800 rounded-xl border-2 border-red-500 dark:border-red-400 p-6 text-center shadow-sm">
+            <ShoppingCart className="h-12 w-12 text-red-500 dark:text-red-400 mx-auto mb-4" />
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">Error Loading Purchase Orders</h3>
+            <p className="text-red-600 dark:text-red-400">Failed to load purchase orders. Please try again.</p>
           </div>
         ) : !Array.isArray(orders) ? (
-          <div className="bg-white rounded-xl border-2 border-red-500 p-6 text-center">
-            <ShoppingCart className="h-12 w-12 text-red-500 mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-black mb-2">Invalid Data Format</h3>
-            <p className="text-red-600">
+          <div className="bg-white dark:bg-gray-800 rounded-xl border-2 border-red-500 dark:border-red-400 p-6 text-center shadow-sm">
+            <ShoppingCart className="h-12 w-12 text-red-500 dark:text-red-400 mx-auto mb-4" />
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">Invalid Data Format</h3>
+            <p className="text-red-600 dark:text-red-400">
               The API returned invalid data format. Expected an array of orders.
             </p>
-            <p className="text-xs text-gray-500 mt-2">
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
               Data type: {typeof ordersData?.data}, Is Array: {Array.isArray(ordersData?.data) ? 'Yes' : 'No'}
             </p>
           </div>
         ) : orders.length === 0 ? (
-          <div className="bg-white rounded-xl border-2 border-sky-500 p-6 text-center">
-            <ShoppingCart className="h-12 w-12 text-sky-500 mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-black mb-2">No Purchase Orders Found</h3>
-            <p className="text-black opacity-75">
+          <div className="bg-white dark:bg-gray-800 rounded-xl border-2 border-sky-500 dark:border-sky-400 p-6 text-center shadow-sm">
+            <ShoppingCart className="h-12 w-12 text-sky-500 dark:text-sky-400 mx-auto mb-4" />
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">No Purchase Orders Found</h3>
+            <p className="text-gray-600 dark:text-gray-400">
               {searchTerm || statusFilter !== 'all' || supplierFilter !== 'all'
                 ? 'No purchase orders match your search criteria.'
                 : 'No purchase orders have been created yet.'}
             </p>
           </div>
         ) : (
-          <div className="bg-white rounded-xl border-2 border-sky-500 overflow-hidden">
+          <div className="bg-white dark:bg-gray-800 rounded-xl border-2 border-sky-500 dark:border-sky-400 overflow-hidden shadow-sm">
             <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-sky-200">
-                <thead className="bg-sky-50">
+              <table className="min-w-full divide-y divide-sky-200 dark:divide-sky-700">
+                <thead className="bg-sky-50 dark:bg-sky-900">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-black uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 dark:text-white uppercase tracking-wider">
                       Order Details
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-black uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 dark:text-white uppercase tracking-wider">
                       Supplier
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-black uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 dark:text-white uppercase tracking-wider">
                       Status
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-black uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 dark:text-white uppercase tracking-wider">
                       Amount
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-black uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 dark:text-white uppercase tracking-wider">
                       Expected Date
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-black uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 dark:text-white uppercase tracking-wider">
                       Actions
                     </th>
                   </tr>
                 </thead>
-                <tbody className="bg-white divide-y divide-sky-200">
+                <tbody className="bg-white dark:bg-gray-800 divide-y divide-sky-200 dark:divide-sky-700">
                   {orders.map((order) => (
-                    <tr key={order._id} className="hover:bg-sky-50">
+                    <tr key={order._id} className="hover:bg-sky-50 dark:hover:bg-sky-900">
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div>
-                          <div className="text-sm font-medium text-black">
+                          <div className="text-sm font-medium text-gray-900 dark:text-white">
                             {order.orderNumber}
                           </div>
-                          <div className="text-sm text-sky-600">
+                          <div className="text-sm text-sky-600 dark:text-sky-400">
                             {order.items?.length || 0} items
                           </div>
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm font-medium text-black">
+                        <div className="text-sm font-medium text-gray-900 dark:text-white">
                           {order.supplier?.supplierName || 'N/A'}
                         </div>
-                        <div className="text-sm text-sky-600">
+                        <div className="text-sm text-sky-600 dark:text-sky-400">
                           {order.supplier?.supplierCode || 'N/A'}
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex items-center space-x-2">
-                          {getStatusIcon(order.status)}
-                          <span className={getStatusBadge(order.status)}>
-                            {order.status}
-                          </span>
-                        </div>
+                        <QuickStatusUpdate 
+                          order={order} 
+                          onStatusUpdate={handleQuickStatusUpdate}
+                        />
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm font-medium text-black">
+                        <div className="text-sm font-medium text-gray-900 dark:text-white">
                           {formatCurrency(order.totalAmount || 0)}
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-black">
+                        <div className="text-sm text-gray-900 dark:text-white">
                           {order.expectedDeliveryDate ? formatDate(order.expectedDeliveryDate) : 'N/A'}
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                         <div className="flex space-x-2">
-                          <button className="text-sky-500 hover:text-black p-1 rounded hover:bg-sky-50">
+                          <button 
+                            onClick={() => handleViewOrder(order)}
+                            className="text-sky-500 dark:text-sky-400 hover:text-sky-700 dark:hover:text-sky-300 p-1 rounded hover:bg-sky-50 dark:hover:bg-sky-800"
+                            title="View Details"
+                          >
                             <Eye className="h-4 w-4" />
                           </button>
-                          <button className="text-sky-500 hover:text-black p-1 rounded hover:bg-sky-50">
+                          <button 
+                            onClick={() => handleEditOrder(order)}
+                            className="text-sky-500 dark:text-sky-400 hover:text-sky-700 dark:hover:text-sky-300 p-1 rounded hover:bg-sky-50 dark:hover:bg-sky-800"
+                            title="Edit Order"
+                          >
                             <Edit className="h-4 w-4" />
                           </button>
-                          <button className="text-red-500 hover:text-red-700 p-1 rounded hover:bg-red-50">
+                          <button 
+                            onClick={() => handleDeleteOrder(order)}
+                            className="text-red-500 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 p-1 rounded hover:bg-red-50 dark:hover:bg-red-800"
+                            title="Delete Order"
+                          >
                             <Trash2 className="h-4 w-4" />
                           </button>
                         </div>
@@ -358,26 +400,26 @@ export default function PurchaseOrdersPage() {
 
         {/* Pagination */}
         {pagination && pagination.pages > 1 && (
-          <div className="bg-white rounded-xl border-2 border-sky-500 p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-xl border-2 border-sky-500 dark:border-sky-400 p-4 shadow-sm">
             <div className="flex items-center justify-between">
-              <div className="text-sm text-black">
+              <div className="text-sm text-gray-900 dark:text-white">
                 Showing {((pagination.page - 1) * pagination.limit) + 1} to {Math.min(pagination.page * pagination.limit, pagination.total)} of {pagination.total} orders
               </div>
               <div className="flex items-center space-x-2">
                 <button
                   onClick={() => setPage(page - 1)}
                   disabled={page <= 1}
-                  className="px-3 py-1 text-sm bg-white border border-sky-300 rounded hover:bg-sky-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-3 py-1 text-sm bg-white dark:bg-gray-700 border border-sky-300 dark:border-sky-600 rounded hover:bg-sky-50 dark:hover:bg-sky-800 disabled:opacity-50 disabled:cursor-not-allowed text-gray-900 dark:text-white"
                 >
                   Previous
                 </button>
-                <span className="text-sm text-black">
+                <span className="text-sm text-gray-900 dark:text-white">
                   Page {pagination.page} of {pagination.pages}
                 </span>
                 <button
                   onClick={() => setPage(page + 1)}
                   disabled={page >= pagination.pages}
-                  className="px-3 py-1 text-sm bg-white border border-sky-300 rounded hover:bg-sky-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-3 py-1 text-sm bg-white dark:bg-gray-700 border border-sky-300 dark:border-sky-600 rounded hover:bg-sky-50 dark:hover:bg-sky-800 disabled:opacity-50 disabled:cursor-not-allowed text-gray-900 dark:text-white"
                 >
                   Next
                 </button>
@@ -386,6 +428,30 @@ export default function PurchaseOrdersPage() {
           </div>
         )}
       </div>
+
+      {/* Modals */}
+      <PurchaseOrderViewModal
+        order={selectedOrder}
+        isOpen={showViewModal}
+        onClose={() => {
+          setShowViewModal(false)
+          setSelectedOrder(null)
+        }}
+      />
+
+      <PurchaseOrderEditModal
+        order={selectedOrder}
+        isOpen={showEditModal}
+        onClose={() => {
+          setShowEditModal(false)
+          setSelectedOrder(null)
+        }}
+        onSave={(updatedOrder) => {
+          // Handle save logic here - the API call will automatically refresh the data
+          console.log('Updated order:', updatedOrder)
+          // No need to reload the page as RTK Query will automatically invalidate and refetch
+        }}
+      />
     </AppLayout>
   )
 }

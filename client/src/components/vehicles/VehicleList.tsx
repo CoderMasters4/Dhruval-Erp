@@ -94,9 +94,9 @@ export default function VehicleList({
 
   const getStatusBadge = (status: Vehicle['status']) => {
     const statusConfig = {
-      in: { color: 'bg-green-100 text-green-800', icon: CheckCircle, label: 'In' },
-      out: { color: 'bg-gray-100 text-gray-800', icon: XCircle, label: 'Out' },
-      pending: { color: 'bg-yellow-100 text-yellow-800', icon: Clock, label: 'Pending' }
+      in: { color: 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200', icon: CheckCircle, label: 'In' },
+      out: { color: 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200', icon: XCircle, label: 'Out' },
+      pending: { color: 'bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200', icon: Clock, label: 'Pending' }
     }
 
     const config = statusConfig[status]
@@ -112,10 +112,10 @@ export default function VehicleList({
 
   const getPurposeBadge = (purpose: Vehicle['purpose']) => {
     const purposeConfig = {
-      delivery: { color: 'bg-blue-100 text-blue-800', label: 'Delivery' },
-      pickup: { color: 'bg-purple-100 text-purple-800', label: 'Pickup' },
-      maintenance: { color: 'bg-orange-100 text-orange-800', label: 'Maintenance' },
-      other: { color: 'bg-gray-100 text-gray-800', label: 'Other' }
+      delivery: { color: 'bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200', label: 'Delivery' },
+      pickup: { color: 'bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200', label: 'Pickup' },
+      maintenance: { color: 'bg-orange-100 dark:bg-orange-900 text-orange-800 dark:text-orange-200', label: 'Maintenance' },
+      other: { color: 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200', label: 'Other' }
     }
 
     const config = purposeConfig[purpose]
@@ -129,17 +129,17 @@ export default function VehicleList({
 
   if (isLoading) {
     return (
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
         <div className="p-6">
           <div className="animate-pulse space-y-4">
             {[...Array(5)].map((_, i) => (
               <div key={i} className="flex items-center space-x-4">
-                <div className="w-12 h-12 bg-gray-200 rounded-lg"></div>
+                <div className="w-12 h-12 bg-gray-200 dark:bg-gray-600 rounded-lg"></div>
                 <div className="flex-1 space-y-2">
-                  <div className="h-4 bg-gray-200 rounded w-1/4"></div>
-                  <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+                  <div className="h-4 bg-gray-200 dark:bg-gray-600 rounded w-1/4"></div>
+                  <div className="h-3 bg-gray-200 dark:bg-gray-600 rounded w-1/2"></div>
                 </div>
-                <div className="w-20 h-8 bg-gray-200 rounded"></div>
+                <div className="w-20 h-8 bg-gray-200 dark:bg-gray-600 rounded"></div>
               </div>
             ))}
           </div>
@@ -150,14 +150,14 @@ export default function VehicleList({
 
   if (vehicles.length === 0) {
     return (
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
         <div className="p-12 text-center">
-          <Car className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-gray-900 mb-2">No vehicles found</h3>
-          <p className="text-gray-500 mb-4">
+          <Car className="w-12 h-12 text-gray-400 dark:text-gray-500 mx-auto mb-4" />
+          <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">No vehicles found</h3>
+          <p className="text-gray-500 dark:text-gray-400 mb-4">
             No vehicles match your current search and filter criteria.
           </p>
-          <Button onClick={onRefresh} variant="outline">
+          <Button onClick={onRefresh} variant="outline" className="border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700">
             <RefreshCw className="w-4 h-4 mr-2" />
             Refresh
           </Button>
@@ -168,14 +168,14 @@ export default function VehicleList({
 
   return (
     <>
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
         {/* Header */}
-        <div className="px-6 py-4 border-b border-gray-200">
+        <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
           <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-gray-900">
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
               Vehicles ({totalVehicles})
             </h2>
-            <Button onClick={onRefresh} variant="outline" size="sm">
+            <Button onClick={onRefresh} variant="outline" size="sm" className="border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700">
               <RefreshCw className="w-4 h-4 mr-2" />
               Refresh
             </Button>
@@ -183,27 +183,27 @@ export default function VehicleList({
         </div>
 
         {/* Vehicle List */}
-        <div className="divide-y divide-gray-200">
+        <div className="divide-y divide-gray-200 dark:divide-gray-700">
           {vehicles.map((vehicle) => (
-            <div key={vehicle._id} className="p-6 hover:bg-gray-50 transition-colors">
+            <div key={vehicle._id} className="p-6 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-4">
                   <div className="flex-shrink-0">
-                    <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                      <Car className="w-6 h-6 text-blue-600" />
+                    <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900 rounded-lg flex items-center justify-center">
+                      <Car className="w-6 h-6 text-blue-600 dark:text-blue-400" />
                     </div>
                   </div>
 
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center space-x-3 mb-1">
-                      <h3 className="text-lg font-semibold text-gray-900">
+                      <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
                         {vehicle.vehicleNumber}
                       </h3>
                       {getStatusBadge(vehicle.status || vehicle.currentStatus || 'in')}
                       {getPurposeBadge(vehicle.purpose)}
                     </div>
 
-                    <div className="flex items-center space-x-4 text-sm text-gray-500">
+                    <div className="flex items-center space-x-4 text-sm text-gray-500 dark:text-gray-400">
                       <div className="flex items-center">
                         <User className="w-4 h-4 mr-1" />
                         {vehicle.driverName}
@@ -217,7 +217,7 @@ export default function VehicleList({
                         {vehicle.timeIn ? formatDistanceToNow(new Date(vehicle.timeIn), { addSuffix: true }) : 'No time recorded'}
                       </div>
                       {vehicle.timeOut && (
-                        <div className="flex items-center text-orange-600">
+                        <div className="flex items-center text-orange-600 dark:text-orange-400">
                           <Clock className="w-4 h-4 mr-1" />
                           Out: {formatDistanceToNow(new Date(vehicle.timeOut), { addSuffix: true })}
                         </div>
@@ -225,13 +225,13 @@ export default function VehicleList({
                     </div>
 
                     {vehicle.gatePassNumber && (
-                      <div className="mt-1 text-sm text-gray-600">
+                      <div className="mt-1 text-sm text-gray-600 dark:text-gray-400">
                         Gate Pass: <span className="font-medium">{vehicle.gatePassNumber}</span>
                       </div>
                     )}
 
                     {vehicle.reason && (
-                      <div className="mt-1 text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
+                      <div className="mt-1 text-xs text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded">
                         {vehicle.reason}
                       </div>
                     )}
@@ -243,6 +243,7 @@ export default function VehicleList({
                     onClick={() => handleView(vehicle)}
                     variant="outline"
                     size="sm"
+                    className="border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
                   >
                     <Eye className="w-4 h-4" />
                   </Button>
@@ -251,6 +252,7 @@ export default function VehicleList({
                     onClick={() => handleEdit(vehicle)}
                     variant="outline"
                     size="sm"
+                    className="border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
                   >
                     <Edit className="w-4 h-4" />
                   </Button>
@@ -267,7 +269,7 @@ export default function VehicleList({
                   )}
                   
                   {(vehicle.status === 'out' || vehicle.currentStatus === 'out' || vehicle.timeOut) && (
-                    <div className="text-sm text-gray-500 px-3 py-1 bg-gray-100 rounded">
+                    <div className="text-sm text-gray-500 dark:text-gray-400 px-3 py-1 bg-gray-100 dark:bg-gray-700 rounded">
                       Checked Out
                     </div>
                   )}
@@ -277,7 +279,7 @@ export default function VehicleList({
                     disabled={isDeleting}
                     variant="outline"
                     size="sm"
-                    className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                    className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:text-red-300 dark:hover:bg-red-900/20 border-red-300 dark:border-red-600"
                   >
                     <Trash2 className="w-4 h-4" />
                   </Button>
@@ -286,72 +288,6 @@ export default function VehicleList({
             </div>
           ))}
         </div>
-
-        {/* Pagination */}
-        {totalPages > 1 && (
-          <div className="px-6 py-4 border-t border-gray-200 bg-gray-50">
-            <div className="flex items-center justify-between">
-              <div className="text-sm text-gray-700">
-                Showing {((page - 1) * 10) + 1} to {Math.min(page * 10, totalVehicles)} of {totalVehicles} vehicles
-              </div>
-
-              <div className="flex items-center space-x-2">
-                <Button
-                  onClick={() => onPageChange(page - 1)}
-                  disabled={page <= 1}
-                  variant="outline"
-                  size="sm"
-                  className="flex items-center"
-                >
-                  <ChevronLeft className="w-4 h-4 mr-1" />
-                  Previous
-                </Button>
-
-                <div className="flex items-center space-x-1">
-                  {/* Page numbers */}
-                  {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                    const pageNum = i + 1
-                    return (
-                      <Button
-                        key={pageNum}
-                        onClick={() => onPageChange(pageNum)}
-                        variant={page === pageNum ? "default" : "outline"}
-                        size="sm"
-                        className="w-8 h-8 p-0"
-                      >
-                        {pageNum}
-                      </Button>
-                    )
-                  })}
-                  {totalPages > 5 && (
-                    <>
-                      <span className="text-gray-500">...</span>
-                      <Button
-                        onClick={() => onPageChange(totalPages)}
-                        variant={page === totalPages ? "default" : "outline"}
-                        size="sm"
-                        className="w-8 h-8 p-0"
-                      >
-                        {totalPages}
-                      </Button>
-                    </>
-                  )}
-                </div>
-
-                <Button
-                  onClick={() => onPageChange(page + 1)}
-                  disabled={page >= totalPages}
-                  variant="outline"
-                  size="sm"
-                  className="flex items-center"
-                >
-                  Next
-                  <ChevronRight className="w-4 h-4 ml-1" />
-                </Button>
-              </div>
-            </div>
-          </div>
-        )}
       </div>
 
       {/* Edit Modal */}

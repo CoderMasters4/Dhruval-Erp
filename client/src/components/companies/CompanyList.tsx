@@ -23,12 +23,69 @@ import {
 } from 'lucide-react'
 import clsx from 'clsx'
 import { Button } from '@/components/ui/Button'
+import { useGetCompanyDetailedStatsQuery, useGetBatchCompanyStatsQuery } from '@/lib/features/companies/companiesApi'
 interface CompanyListProps {
   companies: any[]
   isLoading?: boolean
   onView: (company: any) => void
   onEdit: (company: any) => void
   onDelete: (company: any) => void
+  realStats?: {
+    totalUsers: number
+    totalRevenue: number
+    totalProduction: number
+    totalOrders: number
+    totalCustomers: number
+  }
+}
+
+// Component to display individual company stats
+const CompanyStatsCard: React.FC<{ companyId: string; company: any; batchStats?: any }> = ({ companyId, company, batchStats }) => {
+  const { data: statsData, isLoading: statsLoading } = useGetCompanyDetailedStatsQuery(companyId)
+  
+  if (statsLoading) {
+    return (
+      <div className="flex flex-wrap items-center gap-2">
+        {[...Array(5)].map((_, i) => (
+          <div key={i} className="h-6 bg-gray-200 dark:bg-gray-600 rounded-full w-12 animate-pulse"></div>
+        ))}
+      </div>
+    )
+  }
+
+  // Use batch stats if available, otherwise fall back to individual API call
+  const stats = batchStats || statsData?.data || {
+    totalUsers: 0,
+    totalOrders: 0,
+    totalRevenue: 0,
+    totalProduction: 0,
+    totalInventory: 0
+  }
+
+  return (
+    <div className="flex flex-wrap items-center gap-2 text-xs">
+      <div className="flex items-center gap-1 px-2 py-1 bg-blue-50 dark:bg-blue-900/20 rounded-full">
+        <Users className="w-3 h-3 text-blue-500" />
+        <span className="font-medium text-blue-700 dark:text-blue-300">{stats.totalUsers}</span>
+      </div>
+      <div className="flex items-center gap-1 px-2 py-1 bg-green-50 dark:bg-green-900/20 rounded-full">
+        <Package className="w-3 h-3 text-green-500" />
+        <span className="font-medium text-green-700 dark:text-green-300">{stats.totalProduction}</span>
+      </div>
+      <div className="flex items-center gap-1 px-2 py-1 bg-yellow-50 dark:bg-yellow-900/20 rounded-full">
+        <TrendingUp className="w-3 h-3 text-yellow-500" />
+        <span className="font-medium text-yellow-700 dark:text-yellow-300">{stats.totalOrders}</span>
+      </div>
+      <div className="flex items-center gap-1 px-2 py-1 bg-orange-50 dark:bg-orange-900/20 rounded-full">
+        <Package className="w-3 h-3 text-orange-500" />
+        <span className="font-medium text-orange-700 dark:text-orange-300">{stats.totalInventory}</span>
+      </div>
+      <div className="flex items-center gap-1 px-2 py-1 bg-purple-50 dark:bg-purple-900/20 rounded-full">
+        <DollarSign className="w-3 h-3 text-purple-500" />
+        <span className="font-medium text-purple-700 dark:text-purple-300">₹{(stats.totalRevenue || 0).toLocaleString()}</span>
+      </div>
+    </div>
+  )
 }
 
 const CompanyList: React.FC<CompanyListProps> = ({
@@ -36,8 +93,22 @@ const CompanyList: React.FC<CompanyListProps> = ({
   isLoading = false,
   onView,
   onEdit,
-  onDelete
+  onDelete,
+  realStats
 }) => {
+  // Get company IDs for batch stats
+  const companyIds = companies.map(company => company._id)
+  
+  // Fetch batch stats for all companies
+  const { data: batchStatsData, isLoading: batchStatsLoading } = useGetBatchCompanyStatsQuery(companyIds, {
+    skip: companyIds.length === 0
+  })
+  
+  // Create a map of company stats for easy lookup
+  const statsMap = batchStatsData?.data?.reduce((acc, item) => {
+    acc[item.companyId] = item.stats
+    return acc
+  }, {} as Record<string, any>) || {}
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('list')
 
   const formatDate = (dateString?: string) => {
@@ -70,27 +141,27 @@ const CompanyList: React.FC<CompanyListProps> = ({
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {[...Array(6)].map((_, i) => (
-          <div key={i} className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 animate-pulse">
+          <div key={i} className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 animate-pulse transition-all duration-300">
             <div className="flex items-start justify-between mb-4">
               <div className="flex-1 space-y-3">
-                <div className="h-6 bg-gray-200 rounded w-3/4"></div>
-                <div className="h-4 bg-gray-200 rounded w-1/2"></div>
-                <div className="h-6 bg-gray-200 rounded-full w-20"></div>
+                <div className="h-6 bg-gray-200 dark:bg-gray-600 rounded w-3/4"></div>
+                <div className="h-4 bg-gray-200 dark:bg-gray-600 rounded w-1/2"></div>
+                <div className="h-6 bg-gray-200 dark:bg-gray-600 rounded-full w-20"></div>
               </div>
               <div className="flex gap-2">
-                <div className="h-8 w-8 bg-gray-200 rounded"></div>
-                <div className="h-8 w-8 bg-gray-200 rounded"></div>
-                <div className="h-8 w-8 bg-gray-200 rounded"></div>
+                <div className="h-8 w-8 bg-gray-200 dark:bg-gray-600 rounded"></div>
+                <div className="h-8 w-8 bg-gray-200 dark:bg-gray-600 rounded"></div>
+                <div className="h-8 w-8 bg-gray-200 dark:bg-gray-600 rounded"></div>
               </div>
             </div>
             <div className="space-y-3">
               <div className="flex items-center gap-3">
-                <div className="h-4 w-4 bg-gray-200 rounded"></div>
-                <div className="h-4 bg-gray-200 rounded w-2/3"></div>
+                <div className="h-4 w-4 bg-gray-200 dark:bg-gray-600 rounded"></div>
+                <div className="h-4 bg-gray-200 dark:bg-gray-600 rounded w-2/3"></div>
               </div>
               <div className="flex items-center gap-3">
-                <div className="h-4 w-4 bg-gray-200 rounded"></div>
-                <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+                <div className="h-4 w-4 bg-gray-200 dark:bg-gray-600 rounded"></div>
+                <div className="h-4 bg-gray-200 dark:bg-gray-600 rounded w-1/2"></div>
               </div>
             </div>
           </div>
@@ -102,12 +173,12 @@ const CompanyList: React.FC<CompanyListProps> = ({
   return (
     <div className="space-y-6">
       {/* View Toggle Header */}
-      <div className="flex items-center justify-between bg-white rounded-2xl shadow-lg border border-sky-200 p-4">
+      <div className="flex items-center justify-between bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-sky-200 dark:border-sky-700 p-4 transition-all duration-300">
         <div className="flex items-center gap-4">
-          <h3 className="text-lg font-semibold text-black">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
             {companies.length} {companies.length === 1 ? 'Company' : 'Companies'}
           </h3>
-          <div className="text-sm text-gray-600">
+          <div className="text-sm text-gray-600 dark:text-gray-300">
             {companies.filter(c => c.isActive).length} active
           </div>
         </div>
@@ -120,7 +191,7 @@ const CompanyList: React.FC<CompanyListProps> = ({
               'px-4 py-2 rounded-xl',
               viewMode === 'grid'
                 ? 'bg-sky-500 text-white'
-                : 'border-gray-300 text-gray-600 hover:bg-gray-50'
+                : 'border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
             )}
           >
             <Grid3X3 className="w-4 h-4" />
@@ -132,7 +203,7 @@ const CompanyList: React.FC<CompanyListProps> = ({
               'px-4 py-2 rounded-xl',
               viewMode === 'list'
                 ? 'bg-sky-500 text-white'
-                : 'border-gray-300 text-gray-600 hover:bg-gray-50'
+                : 'border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
             )}
           >
             <List className="w-4 h-4" />
@@ -149,24 +220,23 @@ const CompanyList: React.FC<CompanyListProps> = ({
         {companies.map((company) => {
           const completionPercentage = getCompletionPercentage(company)
 
-          // Add realistic stats based on company data
-          const baseMultiplier = company.userCount || 20
-          const stats = company.stats || {
-            totalUsers: company.userCount || baseMultiplier,
-            totalProducts: Math.floor(baseMultiplier * 8) + Math.floor(Math.random() * 50),
-            totalOrders: Math.floor(baseMultiplier * 15) + Math.floor(Math.random() * 100),
-            monthlyRevenue: Math.floor(baseMultiplier * 45000) + Math.floor(Math.random() * 200000),
-            totalProduction: Math.floor(baseMultiplier * 12) + Math.floor(Math.random() * 80),
-            activeProjects: Math.floor(baseMultiplier * 0.8) + Math.floor(Math.random() * 10),
-            completedOrders: Math.floor(baseMultiplier * 12) + Math.floor(Math.random() * 60),
-            pendingOrders: Math.floor(baseMultiplier * 3) + Math.floor(Math.random() * 20)
+          // Use real stats from API or fallback to company data
+          const stats = {
+            totalUsers: realStats?.totalUsers || company.userCount || 0,
+            totalProducts: 0,
+            totalOrders: realStats?.totalOrders || 0,
+            monthlyRevenue: realStats?.totalRevenue || 0,
+            totalProduction: realStats?.totalProduction || 0,
+            activeProjects: 0,
+            completedOrders: 0,
+            pendingOrders: 0
           }
 
           if (viewMode === 'list') {
             return (
               <div
                 key={company._id}
-                className="bg-white rounded-2xl shadow-lg border border-sky-200 hover:shadow-xl hover:border-sky-300 transition-all duration-300 group p-4 lg:p-6"
+                className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-sky-200 dark:border-sky-700 hover:shadow-xl hover:border-sky-300 dark:hover:border-sky-600 transition-all duration-300 group p-4 lg:p-6"
               >
                 {/* Mobile Layout */}
                 <div className="block lg:hidden">
@@ -175,18 +245,18 @@ const CompanyList: React.FC<CompanyListProps> = ({
                       <Building2 className="w-6 h-6 text-white" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <h3 className="text-lg font-bold text-black truncate mb-1">
+                      <h3 className="text-lg font-bold text-gray-900 dark:text-white truncate mb-1">
                         {company.companyName}
                       </h3>
                       <div className="flex items-center gap-2 mb-2">
-                        <span className="text-xs font-mono bg-sky-100 text-sky-800 px-2 py-1 rounded-full">
+                        <span className="text-xs font-mono bg-sky-100 dark:bg-sky-900/30 text-sky-800 dark:text-sky-200 px-2 py-1 rounded-full">
                           {company.companyCode}
                         </span>
                         <div className={clsx(
                           'inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold',
                           company.isActive
-                            ? 'bg-green-100 text-green-700'
-                            : 'bg-gray-100 text-gray-700'
+                            ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-200'
+                            : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
                         )}>
                           {company.isActive ? (
                             <>
@@ -203,16 +273,16 @@ const CompanyList: React.FC<CompanyListProps> = ({
                       </div>
 
                       {/* Mobile Info */}
-                      <div className="space-y-1 text-sm text-gray-600">
+                      <div className="space-y-1 text-sm text-gray-600 dark:text-gray-300">
                         {company.legalName && (
                           <div className="flex items-center gap-2">
-                            <FileText className="w-3 h-3 text-sky-600 flex-shrink-0" />
+                            <FileText className="w-3 h-3 text-sky-600 dark:text-sky-400 flex-shrink-0" />
                             <span className="truncate">{company.legalName}</span>
                           </div>
                         )}
                         {company.addresses?.registeredOffice?.city && (
                           <div className="flex items-center gap-2">
-                            <MapPin className="w-3 h-3 text-yellow-600 flex-shrink-0" />
+                            <MapPin className="w-3 h-3 text-yellow-600 dark:text-yellow-400 flex-shrink-0" />
                             <span className="truncate">{company.addresses.registeredOffice.city}, {company.addresses.registeredOffice.state}</span>
                           </div>
                         )}
@@ -222,26 +292,26 @@ const CompanyList: React.FC<CompanyListProps> = ({
 
                   {/* Mobile Stats */}
                   <div className="grid grid-cols-2 gap-3 mb-4">
-                    <div className="text-center p-2 bg-sky-50 rounded-lg">
-                      <div className="flex items-center justify-center gap-1 text-sky-600 mb-1">
+                    <div className="text-center p-2 bg-sky-50 dark:bg-sky-900/20 rounded-lg">
+                      <div className="flex items-center justify-center gap-1 text-sky-600 dark:text-sky-400 mb-1">
                         <Users className="w-3 h-3" />
-                        <span className="text-sm font-bold text-black">{stats.totalUsers}</span>
+                        <span className="text-sm font-bold text-gray-900 dark:text-white">{stats.totalUsers}</span>
                       </div>
-                      <p className="text-xs text-gray-600">Users</p>
+                      <p className="text-xs text-gray-600 dark:text-gray-300">Users</p>
                     </div>
-                    <div className="text-center p-2 bg-green-50 rounded-lg">
-                      <div className="flex items-center justify-center gap-1 text-green-600 mb-1">
+                    <div className="text-center p-2 bg-green-50 dark:bg-green-900/20 rounded-lg">
+                      <div className="flex items-center justify-center gap-1 text-green-600 dark:text-green-400 mb-1">
                         <Package className="w-3 h-3" />
-                        <span className="text-sm font-bold text-black">{stats.totalProducts}</span>
+                        <span className="text-sm font-bold text-gray-900 dark:text-white">{stats.totalProducts}</span>
                       </div>
-                      <p className="text-xs text-gray-600">Products</p>
+                      <p className="text-xs text-gray-600 dark:text-gray-300">Products</p>
                     </div>
                   </div>
 
                   {/* Mobile Actions */}
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <div className="w-12 bg-gray-200 rounded-full h-2">
+                      <div className="w-12 bg-gray-200 dark:bg-gray-600 rounded-full h-2">
                         <div
                           className={clsx(
                             'h-2 rounded-full transition-all duration-500',
@@ -252,7 +322,7 @@ const CompanyList: React.FC<CompanyListProps> = ({
                           style={{ width: `${completionPercentage}%` }}
                         />
                       </div>
-                      <span className="text-xs font-semibold text-black">
+                      <span className="text-xs font-semibold text-gray-900 dark:text-white">
                         {completionPercentage}%
                       </span>
                     </div>
@@ -294,10 +364,10 @@ const CompanyList: React.FC<CompanyListProps> = ({
                       {/* Company Info */}
                       <div className="flex-1 min-w-0 max-w-md">
                         <div className="flex items-center gap-3 mb-1">
-                          <h3 className="text-lg font-bold text-black truncate">
+                          <h3 className="text-lg font-bold text-gray-900 dark:text-white truncate">
                             {company.companyName}
                           </h3>
-                          <span className="text-xs font-mono bg-sky-100 text-sky-800 px-2 py-1 rounded-full border border-sky-200 flex-shrink-0">
+                          <span className="text-xs font-mono bg-sky-100 dark:bg-sky-900/30 text-sky-800 dark:text-sky-200 px-2 py-1 rounded-full border border-sky-200 dark:border-sky-700 flex-shrink-0">
                             {company.companyCode}
                           </span>
                         </div>
@@ -306,8 +376,8 @@ const CompanyList: React.FC<CompanyListProps> = ({
                           <div className={clsx(
                             'inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold',
                             company.isActive
-                              ? 'bg-green-100 text-green-700 border border-green-200'
-                              : 'bg-gray-100 text-gray-700 border border-gray-200'
+                              ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-200 border border-green-200 dark:border-green-700'
+                              : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-600'
                           )}>
                             {company.isActive ? (
                               <>
@@ -324,11 +394,11 @@ const CompanyList: React.FC<CompanyListProps> = ({
                           {company.status && (
                             <div className={clsx(
                               'inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold',
-                              company.status === 'active' ? 'bg-blue-100 text-blue-700 border border-blue-200' :
-                              company.status === 'suspended' ? 'bg-red-100 text-red-700 border border-red-200' :
-                              company.status === 'pending_approval' ? 'bg-yellow-100 text-yellow-700 border border-yellow-200' :
-                              company.status === 'under_review' ? 'bg-purple-100 text-purple-700 border border-purple-200' :
-                              'bg-gray-100 text-gray-700 border border-gray-200'
+                              company.status === 'active' ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-200 border border-blue-200 dark:border-blue-700' :
+                              company.status === 'suspended' ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-200 border border-red-200 dark:border-red-700' :
+                              company.status === 'pending_approval' ? 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-200 border border-yellow-200 dark:border-yellow-700' :
+                              company.status === 'under_review' ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-200 border border-purple-200 dark:border-purple-700' :
+                              'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-600'
                             )}>
                               {company.status === 'active' ? 'Active' :
                                company.status === 'suspended' ? 'Suspended' :
@@ -337,27 +407,29 @@ const CompanyList: React.FC<CompanyListProps> = ({
                                'Inactive'}
                             </div>
                           )}
-                          <span className="text-xs text-gray-600">
-                            {company.userCount || 0} users
-                          </span>
+                          <CompanyStatsCard 
+                            companyId={company._id} 
+                            company={company} 
+                            batchStats={statsMap[company._id]}
+                          />
                         </div>
 
-                        <div className="flex items-center gap-4 text-xs text-gray-600">
+                        <div className="flex items-center gap-4 text-xs text-gray-600 dark:text-gray-300">
                           {company.contactInfo?.emails?.[0]?.type && (
                             <div className="flex items-center gap-1">
-                              <Mail className="w-3 h-3 text-gray-600" />
+                              <Mail className="w-3 h-3 text-gray-600 dark:text-gray-400" />
                               <span className="truncate max-w-[150px]">{company.contactInfo.emails[0].type}</span>
                             </div>
                           )}
                           {company.contactInfo?.phones?.[0]?.type && (
                             <div className="flex items-center gap-1">
-                              <Phone className="w-3 h-3 text-gray-600" />
+                              <Phone className="w-3 h-3 text-gray-600 dark:text-gray-400" />
                               <span className="truncate">{company.contactInfo.phones[0].type}</span>
                             </div>
                           )}
                           {company.contactInfo?.website && (
                             <div className="flex items-center gap-1">
-                              <Globe className="w-3 h-3 text-gray-600" />
+                              <Globe className="w-3 h-3 text-gray-600 dark:text-gray-400" />
                               <span className="truncate max-w-[100px]">Website</span>
                             </div>
                           )}
@@ -367,38 +439,31 @@ const CompanyList: React.FC<CompanyListProps> = ({
                       {/* Stats */}
                       <div className="flex items-center gap-6 flex-shrink-0">
                         <div className="text-center">
-                          <div className="flex items-center gap-1 text-sky-600 mb-1">
+                          <div className="flex items-center gap-1 text-sky-600 dark:text-sky-400 mb-1">
                             <Users className="w-4 h-4" />
-                            <span className="text-base font-bold text-black">{company.userCount || stats.totalUsers}</span>
+                            <span className="text-base font-bold text-gray-900 dark:text-white">{company.userCount || stats.totalUsers}</span>
                           </div>
-                          <p className="text-xs text-gray-600">Users</p>
+                          <p className="text-xs text-gray-600 dark:text-gray-300">Users</p>
                         </div>
                         <div className="text-center">
-                          <div className="flex items-center gap-1 text-green-600 mb-1">
+                          <div className="flex items-center gap-1 text-green-600 dark:text-green-400 mb-1">
                             <Package className="w-4 h-4" />
-                            <span className="text-base font-bold text-black">{stats.totalProduction}</span>
+                            <span className="text-base font-bold text-gray-900 dark:text-white">{stats.totalProduction}</span>
                           </div>
-                          <p className="text-xs text-gray-600">Production</p>
+                          <p className="text-xs text-gray-600 dark:text-gray-300">Production</p>
                         </div>
                         <div className="text-center">
-                          <div className="flex items-center gap-1 text-yellow-600 mb-1">
+                          <div className="flex items-center gap-1 text-yellow-600 dark:text-yellow-400 mb-1">
                             <TrendingUp className="w-4 h-4" />
-                            <span className="text-base font-bold text-black">{stats.completedOrders}</span>
+                            <span className="text-base font-bold text-gray-900 dark:text-white">{stats.completedOrders}</span>
                           </div>
-                          <p className="text-xs text-gray-600">Completed</p>
-                        </div>
-                        <div className="text-center">
-                          <div className="flex items-center gap-1 text-gray-600 mb-1">
-                            <DollarSign className="w-4 h-4" />
-                            <span className="text-base font-bold text-black">₹{stats.monthlyRevenue.toLocaleString()}</span>
-                          </div>
-                          <p className="text-xs text-gray-600">Revenue</p>
+                          <p className="text-xs text-gray-600 dark:text-gray-300">Completed</p>
                         </div>
                       </div>
 
                       {/* Completion */}
                       <div className="text-center min-w-[80px] flex-shrink-0">
-                        <div className="w-12 bg-gray-200 rounded-full h-2 mx-auto mb-1">
+                        <div className="w-12 bg-gray-200 dark:bg-gray-600 rounded-full h-2 mx-auto mb-1">
                           <div
                             className={clsx(
                               'h-2 rounded-full transition-all duration-500',
@@ -409,7 +474,7 @@ const CompanyList: React.FC<CompanyListProps> = ({
                             style={{ width: `${completionPercentage}%` }}
                           />
                         </div>
-                        <span className="text-xs font-semibold text-black">
+                        <span className="text-xs font-semibold text-gray-900 dark:text-white">
                           {completionPercentage}%
                         </span>
                       </div>
@@ -449,7 +514,7 @@ const CompanyList: React.FC<CompanyListProps> = ({
           return (
             <div
               key={company._id}
-              className="bg-white rounded-2xl shadow-lg border border-sky-200 hover:shadow-xl hover:border-sky-300 transition-all duration-300 group overflow-hidden transform hover:-translate-y-1"
+              className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-sky-200 dark:border-sky-700 hover:shadow-xl hover:border-sky-300 dark:hover:border-sky-600 transition-all duration-300 group overflow-hidden transform hover:-translate-y-1"
             >
             {/* Header with sky blue background */}
             <div className="bg-sky-500 p-6 relative overflow-hidden">
@@ -504,8 +569,8 @@ const CompanyList: React.FC<CompanyListProps> = ({
                 <div className={clsx(
                   'inline-flex items-center px-4 py-2 rounded-full text-sm font-semibold shadow-sm',
                   company.isActive
-                    ? 'bg-green-100 text-green-700 border border-green-200'
-                    : 'bg-gray-100 text-gray-700 border border-gray-200'
+                    ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-200 border border-green-200 dark:border-green-700'
+                    : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-600'
                 )}>
                   {company.isActive ? (
                     <>
@@ -521,7 +586,7 @@ const CompanyList: React.FC<CompanyListProps> = ({
                 </div>
 
                 <div className="flex items-center gap-3">
-                  <div className="w-20 bg-gray-200 rounded-full h-3">
+                  <div className="w-20 bg-gray-200 dark:bg-gray-600 rounded-full h-3">
                     <div
                       className={clsx(
                         'h-3 rounded-full transition-all duration-500',
@@ -532,54 +597,39 @@ const CompanyList: React.FC<CompanyListProps> = ({
                       style={{ width: `${completionPercentage}%` }}
                     />
                   </div>
-                  <span className="text-sm font-semibold text-black min-w-[3rem]">
+                  <span className="text-sm font-semibold text-gray-900 dark:text-white min-w-[3rem]">
                     {completionPercentage}%
                   </span>
                 </div>
               </div>
 
               {/* Company Stats */}
-              <div className="grid grid-cols-2 gap-4 mb-6">
-                <div className="p-4 bg-sky-50 rounded-xl border border-sky-100 text-center">
-                  <Users className="h-6 w-6 text-sky-600 mx-auto mb-2" />
-                  <p className="text-xl font-bold text-black">{company.userCount || stats.totalUsers}</p>
-                  <p className="text-xs font-medium text-sky-600">Active Users</p>
-                </div>
-                <div className="p-4 bg-green-50 rounded-xl border border-green-100 text-center">
-                  <Package className="h-6 w-6 text-green-600 mx-auto mb-2" />
-                  <p className="text-xl font-bold text-black">{stats.totalProduction}</p>
-                  <p className="text-xs font-medium text-green-600">Production</p>
-                </div>
-                <div className="p-4 bg-yellow-50 rounded-xl border border-yellow-100 text-center">
-                  <TrendingUp className="h-6 w-6 text-yellow-600 mx-auto mb-2" />
-                  <p className="text-xl font-bold text-black">{stats.completedOrders}</p>
-                  <p className="text-xs font-medium text-yellow-600">Completed</p>
-                </div>
-                <div className="p-4 bg-gray-50 rounded-xl border border-gray-100 text-center">
-                  <DollarSign className="h-6 w-6 text-gray-600 mx-auto mb-2" />
-                  <p className="text-xl font-bold text-black">₹{stats.monthlyRevenue.toLocaleString()}</p>
-                  <p className="text-xs font-medium text-gray-600">Revenue</p>
-                </div>
+              <div className="mb-6">
+                <CompanyStatsCard 
+                  companyId={company._id} 
+                  company={company} 
+                  batchStats={statsMap[company._id]}
+                />
               </div>
 
               {/* Company Details */}
               <div className="space-y-3">
                 {company.legalName && (
-                  <div className="flex items-center gap-3 p-2 bg-sky-50 rounded-lg">
-                    <FileText className="h-4 w-4 text-sky-600 flex-shrink-0" />
+                  <div className="flex items-center gap-3 p-2 bg-sky-50 dark:bg-sky-900/20 rounded-lg">
+                    <FileText className="h-4 w-4 text-sky-600 dark:text-sky-400 flex-shrink-0" />
                     <div className="min-w-0 flex-1">
-                      <p className="text-xs font-medium text-sky-600 mb-1">Legal Name</p>
-                      <p className="font-semibold text-black text-sm truncate">{company.legalName}</p>
+                      <p className="text-xs font-medium text-sky-600 dark:text-sky-400 mb-1">Legal Name</p>
+                      <p className="font-semibold text-gray-900 dark:text-white text-sm truncate">{company.legalName}</p>
                     </div>
                   </div>
                 )}
 
                 {company.registrationDetails?.gstin && (
-                  <div className="flex items-center gap-3 p-2 bg-green-50 rounded-lg">
-                    <Building2 className="h-4 w-4 text-green-600 flex-shrink-0" />
+                  <div className="flex items-center gap-3 p-2 bg-green-50 dark:bg-green-900/20 rounded-lg">
+                    <Building2 className="h-4 w-4 text-green-600 dark:text-green-400 flex-shrink-0" />
                     <div className="min-w-0 flex-1">
-                      <p className="text-xs font-medium text-green-600 mb-1">GSTIN</p>
-                      <p className="font-mono font-semibold text-black text-xs truncate">
+                      <p className="text-xs font-medium text-green-600 dark:text-green-400 mb-1">GSTIN</p>
+                      <p className="font-mono font-semibold text-gray-900 dark:text-white text-xs truncate">
                         {company.registrationDetails.gstin}
                       </p>
                     </div>
@@ -587,11 +637,11 @@ const CompanyList: React.FC<CompanyListProps> = ({
                 )}
 
                 {company.addresses?.registeredOffice?.city && (
-                  <div className="flex items-center gap-3 p-2 bg-yellow-50 rounded-lg">
-                    <MapPin className="h-4 w-4 text-yellow-600 flex-shrink-0" />
+                  <div className="flex items-center gap-3 p-2 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg">
+                    <MapPin className="h-4 w-4 text-yellow-600 dark:text-yellow-400 flex-shrink-0" />
                     <div className="min-w-0 flex-1">
-                      <p className="text-xs font-medium text-yellow-600 mb-1">Location</p>
-                      <p className="font-semibold text-black text-sm truncate">
+                      <p className="text-xs font-medium text-yellow-600 dark:text-yellow-400 mb-1">Location</p>
+                      <p className="font-semibold text-gray-900 dark:text-white text-sm truncate">
                         {company.addresses.registeredOffice.city}, {company.addresses.registeredOffice.state}
                       </p>
                     </div>
@@ -599,11 +649,11 @@ const CompanyList: React.FC<CompanyListProps> = ({
                 )}
 
                 {company.contactInfo?.emails?.[0]?.email && (
-                  <div className="flex items-center gap-3 p-2 bg-gray-50 rounded-lg">
-                    <Mail className="h-4 w-4 text-gray-600 flex-shrink-0" />
+                  <div className="flex items-center gap-3 p-2 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                    <Mail className="h-4 w-4 text-gray-600 dark:text-gray-400 flex-shrink-0" />
                     <div className="min-w-0 flex-1">
-                      <p className="text-xs font-medium text-gray-600 mb-1">Email</p>
-                      <p className="font-semibold text-black text-sm truncate">
+                      <p className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Email</p>
+                      <p className="font-semibold text-gray-900 dark:text-white text-sm truncate">
                         {company.contactInfo.emails[0].email}
                       </p>
                     </div>
@@ -611,11 +661,11 @@ const CompanyList: React.FC<CompanyListProps> = ({
                 )}
 
                 {company.contactInfo?.phones?.[0]?.number && (
-                  <div className="flex items-center gap-3 p-2 bg-sky-50 rounded-lg">
-                    <Phone className="h-4 w-4 text-sky-600 flex-shrink-0" />
+                  <div className="flex items-center gap-3 p-2 bg-sky-50 dark:bg-sky-900/20 rounded-lg">
+                    <Phone className="h-4 w-4 text-sky-600 dark:text-sky-400 flex-shrink-0" />
                     <div className="min-w-0 flex-1">
-                      <p className="text-xs font-medium text-sky-600 mb-1">Phone</p>
-                      <p className="font-semibold text-black text-sm">
+                      <p className="text-xs font-medium text-sky-600 dark:text-sky-400 mb-1">Phone</p>
+                      <p className="font-semibold text-gray-900 dark:text-white text-sm">
                         {company.contactInfo.phones[0].number || company.contactInfo.phones[0].phone}
                       </p>
                     </div>
@@ -623,54 +673,54 @@ const CompanyList: React.FC<CompanyListProps> = ({
                 )}
 
                 {company.contactInfo?.website && (
-                  <div className="flex items-center gap-3 p-2 bg-green-50 rounded-lg">
-                    <Globe className="h-4 w-4 text-green-600 flex-shrink-0" />
+                  <div className="flex items-center gap-3 p-2 bg-green-50 dark:bg-green-900/20 rounded-lg">
+                    <Globe className="h-4 w-4 text-green-600 dark:text-green-400 flex-shrink-0" />
                     <div className="min-w-0 flex-1">
-                      <p className="text-xs font-medium text-green-600 mb-1">Website</p>
-                      <p className="font-semibold text-black text-sm truncate">
+                      <p className="text-xs font-medium text-green-600 dark:text-green-400 mb-1">Website</p>
+                      <p className="font-semibold text-gray-900 dark:text-white text-sm truncate">
                         {company.contactInfo.website}
                       </p>
                     </div>
                   </div>
                 )}
 
-                <div className="flex items-center gap-3 p-2 bg-gray-50 rounded-lg">
-                  <Calendar className="h-4 w-4 text-gray-600 flex-shrink-0" />
+                <div className="flex items-center gap-3 p-2 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                  <Calendar className="h-4 w-4 text-gray-600 dark:text-gray-400 flex-shrink-0" />
                   <div className="min-w-0 flex-1">
-                    <p className="text-xs font-medium text-gray-600 mb-1">Created</p>
-                    <p className="font-semibold text-black text-sm">{formatDate(company.createdAt)}</p>
+                    <p className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Created</p>
+                    <p className="font-semibold text-gray-900 dark:text-white text-sm">{formatDate(company.createdAt)}</p>
                   </div>
                 </div>
               </div>
 
               {/* Stats (if available) */}
               {company.stats && (
-                <div className="mt-4 pt-4 border-t border-gray-200">
+                <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
                   <div className="grid grid-cols-3 gap-4 text-center">
                     <div>
                       <div className="flex items-center justify-center mb-1">
-                        <Users className="h-4 w-4 text-blue-500" />
+                        <Users className="h-4 w-4 text-blue-500 dark:text-blue-400" />
                       </div>
-                      <p className="text-xs text-gray-600">Users</p>
-                      <p className="text-sm font-bold text-gray-900">
+                      <p className="text-xs text-gray-600 dark:text-gray-300">Users</p>
+                      <p className="text-sm font-bold text-gray-900 dark:text-white">
                         {company.stats.totalUsers || 0}
                       </p>
                     </div>
                     <div>
                       <div className="flex items-center justify-center mb-1">
-                        <TrendingUp className="h-4 w-4 text-green-500" />
+                        <TrendingUp className="h-4 w-4 text-green-500 dark:text-green-400" />
                       </div>
-                      <p className="text-xs text-gray-600">Revenue</p>
-                      <p className="text-sm font-bold text-gray-900">
+                      <p className="text-xs text-gray-600 dark:text-gray-300">Revenue</p>
+                      <p className="text-sm font-bold text-gray-900 dark:text-white">
                         ₹{(company.stats.monthlyRevenue || 0).toLocaleString()}
                       </p>
                     </div>
                     <div>
                       <div className="flex items-center justify-center mb-1">
-                        <FileText className="h-4 w-4 text-purple-500" />
+                        <FileText className="h-4 w-4 text-purple-500 dark:text-purple-400" />
                       </div>
-                      <p className="text-xs text-gray-600">Orders</p>
-                      <p className="text-sm font-bold text-gray-900">
+                      <p className="text-xs text-gray-600 dark:text-gray-300">Orders</p>
+                      <p className="text-sm font-bold text-gray-900 dark:text-white">
                         {company.stats.totalOrders || 0}
                       </p>
                     </div>
@@ -679,12 +729,12 @@ const CompanyList: React.FC<CompanyListProps> = ({
               )}
 
               {/* Footer */}
-              <div className="mt-6 pt-4 border-t border-gray-200">
+              <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
                 <div className="flex items-center justify-between">
-                  <div className="text-xs text-gray-400 font-mono">
+                  <div className="text-xs text-gray-400 dark:text-gray-500 font-mono">
                     ID: {company._id.slice(-8).toUpperCase()}
                   </div>
-                  <div className="text-xs text-gray-500">
+                  <div className="text-xs text-gray-500 dark:text-gray-400">
                     Updated {formatDate(company.updatedAt)}
                   </div>
                 </div>

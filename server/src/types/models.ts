@@ -3212,13 +3212,21 @@ export interface IPurchaseOrder extends AuditableDocument {
   lastPaymentDate?: Date;
   lastPaymentAmount?: number;
   deliverySchedules: IDeliverySchedule[];
-  status: 'draft' | 'pending_approval' | 'approved' | 'sent' | 'acknowledged' | 'in_progress' | 'partially_received' | 'completed' | 'cancelled' | 'closed';
+  status: 'draft' | 'pending' | 'approved' | 'ordered' | 'partial' | 'received' | 'cancelled' | 'pending_approval' | 'sent' | 'acknowledged' | 'in_progress' | 'partially_received' | 'completed' | 'closed';
   approvalStatus: 'pending' | 'approved' | 'rejected';
   approvalWorkflow: IPOApprovalWorkflow[];
   sentAt?: Date;
   sentBy?: Types.ObjectId;
   acknowledgedAt?: Date;
   acknowledgedBy?: string;
+  approvedAt?: Date;
+  approvedBy?: Types.ObjectId;
+  orderedAt?: Date;
+  orderedBy?: Types.ObjectId;
+  receivedAt?: Date;
+  receivedBy?: Types.ObjectId;
+  cancelledAt?: Date;
+  cancelledBy?: Types.ObjectId;
   receivingStatus: 'pending' | 'partial' | 'completed' | 'over_received';
   totalReceived: number;
   totalPending: number;
@@ -3237,6 +3245,12 @@ export interface IPurchaseOrder extends AuditableDocument {
   departmentId?: Types.ObjectId;
   departmentName?: string;
   isActive: boolean;
+  
+  // Instance methods
+  isOverdue(): boolean;
+  getDaysOverdue(): number;
+  calculateTotals(): IPurchaseOrder;
+  addReceiving(itemId: string, receivedQuantity: number, rejectedQuantity?: number): Promise<IPurchaseOrder>;
 }
 
 export interface IPOSupplier {

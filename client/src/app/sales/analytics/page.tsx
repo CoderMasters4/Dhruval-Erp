@@ -117,15 +117,15 @@ export default function SalesAnalyticsPage() {
   }
 
   const getGrowthColor = (growth: number) => {
-    if (growth > 0) return 'text-green-600'
-    if (growth < 0) return 'text-red-600'
-    return 'text-gray-600'
+    if (growth > 0) return 'text-green-600 dark:text-green-400'
+    if (growth < 0) return 'text-red-600 dark:text-red-400'
+    return 'text-gray-600 dark:text-gray-400'
   }
 
   if (analyticsLoading) {
     return (
       <AppLayout>
-        <div className="flex items-center justify-center h-64">
+        <div className="flex items-center justify-center h-64 bg-gray-50 dark:bg-gray-900 transition-colors duration-300">
           <LoadingSpinner />
         </div>
       </AppLayout>

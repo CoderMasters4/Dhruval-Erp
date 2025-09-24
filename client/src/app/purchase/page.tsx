@@ -14,6 +14,8 @@ import { LoadingSpinner } from '@/components/ui/LoadingSpinner'
 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { useSelector } from 'react-redux'
+import { selectTheme } from '@/lib/features/ui/uiSlice'
 import {
   useGetPurchaseStatsQuery,
   useGetPurchaseOrdersQuery,
@@ -24,7 +26,6 @@ import {
   useExportPurchaseDataMutation,
   useCreatePurchaseOrderMutation
 } from '@/lib/api/purchaseApi'
-import { useSelector } from 'react-redux'
 import { selectCurrentUser, selectIsSuperAdmin } from '@/lib/features/auth/authSlice'
 import {
   ShoppingCart,
@@ -65,6 +66,7 @@ function PurchasePageContent() {
 
   const user = useSelector(selectCurrentUser)
   const isSuperAdmin = useSelector(selectIsSuperAdmin)
+  const theme = useSelector(selectTheme)
 
   // Get user's company ID
   const userCompanyId = user?.companyAccess?.[0]?.companyId
@@ -257,11 +259,11 @@ function PurchasePageContent() {
             <div className="flex gap-2">
               {isSuperAdmin && (
                 <Select value={selectedCompanyId} onValueChange={setSelectedCompanyId}>
-                  <SelectTrigger className="w-48">
+                  <SelectTrigger className="w-48 bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white">
                     <SelectValue placeholder="Select Company" />
                   </SelectTrigger>
-                  <SelectContent className="bg-white border border-gray-200 shadow-lg z-50">
-                    <SelectItem value="all" className="bg-white hover:bg-gray-50">All Companies</SelectItem>
+                  <SelectContent className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 shadow-lg z-50">
+                    <SelectItem value="all" className="bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-900 dark:text-white">All Companies</SelectItem>
                     {/* Add company options here */}
                   </SelectContent>
                 </Select>
@@ -269,11 +271,17 @@ function PurchasePageContent() {
               <Button 
                 onClick={() => window.location.href = '/purchase/create'} 
                 size="sm"
+                className="bg-sky-500 hover:bg-sky-600 text-white"
               >
                 <Plus className="h-4 w-4 mr-2" />
                 Create Purchase Order
               </Button>
-              <Button onClick={handleRefresh} variant="outline" size="sm">
+              <Button 
+                onClick={handleRefresh} 
+                variant="outline" 
+                size="sm"
+                className="border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
+              >
                 <RefreshCw className="h-4 w-4 mr-2" />
                 Refresh
               </Button>
@@ -283,68 +291,83 @@ function PurchasePageContent() {
 
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="analytics">Analytics</TabsTrigger>
-            <TabsTrigger value="orders">Orders</TabsTrigger>
+          <TabsList className={`grid w-full grid-cols-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-sm`}>
+            <TabsTrigger 
+              value="overview" 
+              className={`data-[state=active]:bg-sky-500 data-[state=active]:text-white data-[state=inactive]:text-gray-600 dark:data-[state=inactive]:text-gray-300 hover:text-sky-600 dark:hover:text-sky-400 transition-all duration-200`}
+            >
+              Overview
+            </TabsTrigger>
+            <TabsTrigger 
+              value="analytics"
+              className={`data-[state=active]:bg-sky-500 data-[state=active]:text-white data-[state=inactive]:text-gray-600 dark:data-[state=inactive]:text-gray-300 hover:text-sky-600 dark:hover:text-sky-400 transition-all duration-200`}
+            >
+              Analytics
+            </TabsTrigger>
+            <TabsTrigger 
+              value="orders"
+              className={`data-[state=active]:bg-sky-500 data-[state=active]:text-white data-[state=inactive]:text-gray-600 dark:data-[state=inactive]:text-gray-300 hover:text-sky-600 dark:hover:text-sky-400 transition-all duration-200`}
+            >
+              Orders
+            </TabsTrigger>
           </TabsList>
 
           {/* Overview Tab */}
           <TabsContent value="overview" className="space-y-6">
             {/* Stats Cards */}
             <ResponsiveGrid cols={{ default: 1, sm: 2, lg: 4 }} gap="md">
-              <Card>
+              <Card className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-md transition-shadow duration-200">
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm font-medium text-gray-600">Total Purchases</p>
-                      <p className="text-2xl font-bold text-gray-900">
+                      <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Total Purchases</p>
+                      <p className="text-2xl font-bold text-gray-900 dark:text-white">
                         {stats ? formatCurrency(stats.totalPurchases) : '₹0'}
                       </p>
                     </div>
-                    <Package className="h-8 w-8 text-blue-600" />
+                    <Package className="h-8 w-8 text-blue-600 dark:text-blue-400" />
                   </div>
                 </CardContent>
               </Card>
 
-              <Card>
+              <Card className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-md transition-shadow duration-200">
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm font-medium text-gray-600">Monthly Spend</p>
-                      <p className="text-2xl font-bold text-orange-600">
+                      <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Monthly Spend</p>
+                      <p className="text-2xl font-bold text-orange-600 dark:text-orange-400">
                         {stats ? formatCurrency(stats.monthlySpend) : '₹0'}
                       </p>
                     </div>
-                    <TrendingDown className="h-8 w-8 text-orange-600" />
+                    <TrendingDown className="h-8 w-8 text-orange-600 dark:text-orange-400" />
                   </div>
                 </CardContent>
               </Card>
 
-              <Card>
+              <Card className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-md transition-shadow duration-200">
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm font-medium text-gray-600">Total Suppliers</p>
-                      <p className="text-2xl font-bold text-green-600">
+                      <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Total Suppliers</p>
+                      <p className="text-2xl font-bold text-green-600 dark:text-green-400">
                         {stats ? stats.totalSuppliers : 0}
                       </p>
                     </div>
-                    <Users className="h-8 w-8 text-green-600" />
+                    <Users className="h-8 w-8 text-green-600 dark:text-green-400" />
                   </div>
                 </CardContent>
               </Card>
 
-              <Card>
+              <Card className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-md transition-shadow duration-200">
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm font-medium text-gray-600">Pending Orders</p>
-                      <p className="text-2xl font-bold text-red-600">
+                      <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Pending Orders</p>
+                      <p className="text-2xl font-bold text-red-600 dark:text-red-400">
                         {stats ? stats.pendingOrders : 0}
                       </p>
                     </div>
-                    <AlertTriangle className="h-8 w-8 text-red-600" />
+                    <AlertTriangle className="h-8 w-8 text-red-600 dark:text-red-400" />
                   </div>
                 </CardContent>
               </Card>
@@ -353,9 +376,9 @@ function PurchasePageContent() {
             {/* Charts Grid */}
             <ResponsiveGrid cols={{ default: 1, lg: 2 }} gap="lg">
               {/* Category-wise Spend */}
-              <Card>
+              <Card className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-md transition-shadow duration-200">
                 <CardHeader>
-                  <CardTitle>Category-wise Spend</CardTitle>
+                  <CardTitle className="text-gray-900 dark:text-white">Category-wise Spend</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3">
@@ -365,8 +388,8 @@ function PurchasePageContent() {
                       </div>
                     ) : categorySpend.length === 0 ? (
                       <div className="text-center py-8">
-                        <Package className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                        <p className="text-gray-500">No category data found</p>
+                        <Package className="h-12 w-12 text-gray-400 dark:text-gray-500 mx-auto mb-4" />
+                        <p className="text-gray-500 dark:text-gray-400">No category data found</p>
                       </div>
                     ) : (
                       <>
@@ -376,15 +399,15 @@ function PurchasePageContent() {
                               <div className="flex justify-between items-center">
                                 <div className="flex items-center space-x-2">
                                   {getCategoryIcon(category.category)}
-                                  <span className="text-sm font-medium">{category.category?.replace('_', ' ') || 'Unknown Category'}</span>
+                                  <span className="text-sm font-medium text-gray-900 dark:text-white">{category.category?.replace('_', ' ') || 'Unknown Category'}</span>
                                 </div>
-                                <span className="text-sm text-gray-600">
+                                <span className="text-sm text-gray-600 dark:text-gray-400">
                                   {formatCurrency(category.amount)} ({category.percentage.toFixed(1)}%)
                                 </span>
                               </div>
-                              <div className="w-full bg-gray-200 rounded-full h-2">
+                              <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
                                 <div
-                                  className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                                  className="bg-blue-600 dark:bg-blue-500 h-2 rounded-full transition-all duration-300"
                                   style={{ width: `${category.percentage}%` }}
                                 ></div>
                               </div>
@@ -419,9 +442,9 @@ function PurchasePageContent() {
               </Card>
 
               {/* Top Suppliers */}
-              <Card>
+              <Card className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-md transition-shadow duration-200">
                 <CardHeader>
-                  <CardTitle>Top Suppliers</CardTitle>
+                  <CardTitle className="text-gray-900 dark:text-white">Top Suppliers</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3">
@@ -431,26 +454,26 @@ function PurchasePageContent() {
                       </div>
                     ) : supplierReport.length === 0 ? (
                       <div className="text-center py-8">
-                        <Truck className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                        <p className="text-gray-500">No supplier data found</p>
+                        <Truck className="h-12 w-12 text-gray-400 dark:text-gray-500 mx-auto mb-4" />
+                        <p className="text-gray-500 dark:text-gray-400">No supplier data found</p>
                       </div>
                     ) : (
                       <>
                         <div className="space-y-3">
                           {supplierReport.slice(0, 5).map((supplier) => (
-                            <div key={supplier.supplierId} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                            <div key={supplier.supplierId} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
                               <div className="flex items-center space-x-3">
-                                <div className="p-2 bg-blue-100 rounded-full">
-                                  <Truck className="h-4 w-4 text-blue-600" />
+                                <div className="p-2 bg-blue-100 dark:bg-blue-900 rounded-full">
+                                  <Truck className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                                 </div>
                                 <div>
-                                  <p className="font-medium text-sm">{supplier.supplierName}</p>
-                                  <p className="text-xs text-gray-500">{supplier.category}</p>
+                                  <p className="font-medium text-sm text-gray-900 dark:text-white">{supplier.supplierName}</p>
+                                  <p className="text-xs text-gray-500 dark:text-gray-400">{supplier.category}</p>
                                 </div>
                               </div>
                               <div className="text-right">
-                                <p className="font-medium text-sm">{formatCurrency(supplier.totalPurchases)}</p>
-                                <p className="text-xs text-gray-500">{supplier.totalOrders} orders</p>
+                                <p className="font-medium text-sm text-gray-900 dark:text-white">{formatCurrency(supplier.totalPurchases)}</p>
+                                <p className="text-xs text-gray-500 dark:text-gray-400">{supplier.totalOrders} orders</p>
                               </div>
                             </div>
                           ))}
@@ -479,14 +502,14 @@ function PurchasePageContent() {
             {/* Analytics Controls */}
             <div className="flex gap-4 items-center">
               <Select value={selectedPeriod} onValueChange={(value: any) => setSelectedPeriod(value)}>
-                <SelectTrigger className="w-32">
+                <SelectTrigger className="w-32 bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent className="bg-white border border-gray-200 shadow-lg z-50">
-                  <SelectItem value="week" className="bg-white hover:bg-gray-50">Week</SelectItem>
-                  <SelectItem value="month" className="bg-white hover:bg-gray-50">Month</SelectItem>
-                  <SelectItem value="quarter" className="bg-white hover:bg-gray-50">Quarter</SelectItem>
-                  <SelectItem value="year" className="bg-white hover:bg-gray-50">Year</SelectItem>
+                <SelectContent className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 shadow-lg z-50">
+                  <SelectItem value="week" className="bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-900 dark:text-white">Week</SelectItem>
+                  <SelectItem value="month" className="bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-900 dark:text-white">Month</SelectItem>
+                  <SelectItem value="quarter" className="bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-900 dark:text-white">Quarter</SelectItem>
+                  <SelectItem value="year" className="bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-900 dark:text-white">Year</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -494,9 +517,9 @@ function PurchasePageContent() {
             {/* Analytics Charts */}
             <ResponsiveGrid cols={{ default: 1, lg: 2 }} gap="lg">
               {/* Purchase Trends */}
-              <Card>
+              <Card className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-md transition-shadow duration-200">
                 <CardHeader>
-                  <CardTitle>Purchase Trends</CardTitle>
+                  <CardTitle className="text-gray-900 dark:text-white">Purchase Trends</CardTitle>
                 </CardHeader>
                 <CardContent>
                   {analyticsLoading ? (
@@ -505,8 +528,8 @@ function PurchasePageContent() {
                     </div>
                   ) : analytics?.dailyPurchases?.length === 0 ? (
                     <div className="text-center py-8">
-                      <TrendingUp className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                      <p className="text-gray-500">No trend data available</p>
+                      <TrendingUp className="h-12 w-12 text-gray-400 dark:text-gray-500 mx-auto mb-4" />
+                      <p className="text-gray-500 dark:text-gray-400">No trend data available</p>
                     </div>
                   ) : (
                     <RechartsContainer width="100%" height={300}>
@@ -523,9 +546,9 @@ function PurchasePageContent() {
               </Card>
 
               {/* Monthly Comparison */}
-              <Card>
+              <Card className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-md transition-shadow duration-200">
                 <CardHeader>
-                  <CardTitle>Monthly Comparison</CardTitle>
+                  <CardTitle className="text-gray-900 dark:text-white">Monthly Comparison</CardTitle>
                 </CardHeader>
                 <CardContent>
                   {analyticsLoading ? (
@@ -534,8 +557,8 @@ function PurchasePageContent() {
                     </div>
                   ) : analytics?.monthlyPurchases?.length === 0 ? (
                     <div className="text-center py-8">
-                      <Calendar className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                      <p className="text-gray-500">No monthly data available</p>
+                      <Calendar className="h-12 w-12 text-gray-400 dark:text-gray-500 mx-auto mb-4" />
+                      <p className="text-gray-500 dark:text-gray-400">No monthly data available</p>
                     </div>
                   ) : (
                     <RechartsContainer width="100%" height={300}>
@@ -553,9 +576,9 @@ function PurchasePageContent() {
             </ResponsiveGrid>
 
             {/* Purchase Trends Table */}
-            <Card>
+            <Card className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-md transition-shadow duration-200">
               <CardHeader>
-                <CardTitle>Purchase Growth Trends</CardTitle>
+                <CardTitle className="text-gray-900 dark:text-white">Purchase Growth Trends</CardTitle>
               </CardHeader>
               <CardContent>
                 {analyticsLoading ? (
@@ -564,26 +587,26 @@ function PurchasePageContent() {
                   </div>
                 ) : analytics?.purchaseTrends?.length === 0 ? (
                   <div className="text-center py-8">
-                    <TrendingUp className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                    <p className="text-gray-500">No trend data available</p>
+                    <TrendingUp className="h-12 w-12 text-gray-400 dark:text-gray-500 mx-auto mb-4" />
+                    <p className="text-gray-500 dark:text-gray-400">No trend data available</p>
                   </div>
                 ) : (
                   <div className="overflow-x-auto">
                     <table className="w-full">
                       <thead>
-                        <tr className="border-b">
-                          <th className="text-left p-2">Period</th>
-                          <th className="text-left p-2">Amount</th>
-                          <th className="text-left p-2">Growth</th>
+                        <tr className="border-b border-gray-200 dark:border-gray-700">
+                          <th className="text-left p-2 text-gray-900 dark:text-white">Period</th>
+                          <th className="text-left p-2 text-gray-900 dark:text-white">Amount</th>
+                          <th className="text-left p-2 text-gray-900 dark:text-white">Growth</th>
                         </tr>
                       </thead>
                       <tbody>
                         {analytics?.purchaseTrends?.map((trend, index) => (
-                          <tr key={index} className="border-b">
-                            <td className="p-2">{trend.period}</td>
-                            <td className="p-2">{formatCurrency(trend.amount)}</td>
+                          <tr key={index} className="border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700">
+                            <td className="p-2 text-gray-900 dark:text-white">{trend.period}</td>
+                            <td className="p-2 text-gray-900 dark:text-white">{formatCurrency(trend.amount)}</td>
                             <td className="p-2">
-                              <span className={`font-medium ${trend.growth >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                              <span className={`font-medium ${trend.growth >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
                                 {trend.growth >= 0 ? '+' : ''}{trend.growth.toFixed(1)}%
                               </span>
                             </td>
@@ -606,36 +629,46 @@ function PurchasePageContent() {
                   placeholder="Search orders..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="max-w-sm"
+                  className="max-w-sm bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
                 />
               </div>
               <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                <SelectTrigger className="w-40">
+                <SelectTrigger className="w-40 bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white">
                   <SelectValue placeholder="Category" />
                 </SelectTrigger>
-                <SelectContent className="bg-white border border-gray-200 shadow-lg z-50">
-                  <SelectItem value="all" className="bg-white hover:bg-gray-50">All Categories</SelectItem>
-                  <SelectItem value="chemicals" className="bg-white hover:bg-gray-50">Chemicals</SelectItem>
-                  <SelectItem value="grey_fabric" className="bg-white hover:bg-gray-50">Grey Fabric</SelectItem>
-                  <SelectItem value="colors" className="bg-white hover:bg-gray-50">Colors</SelectItem>
-                  <SelectItem value="packing_material" className="bg-white hover:bg-gray-50">Packing Material</SelectItem>
-                  <SelectItem value="other" className="bg-white hover:bg-gray-50">Other</SelectItem>
+                <SelectContent className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 shadow-lg z-50">
+                  <SelectItem value="all" className="bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-900 dark:text-white">All Categories</SelectItem>
+                  <SelectItem value="chemicals" className="bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-900 dark:text-white">Chemicals</SelectItem>
+                  <SelectItem value="grey_fabric" className="bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-900 dark:text-white">Grey Fabric</SelectItem>
+                  <SelectItem value="colors" className="bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-900 dark:text-white">Colors</SelectItem>
+                  <SelectItem value="packing_material" className="bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-900 dark:text-white">Packing Material</SelectItem>
+                  <SelectItem value="other" className="bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-900 dark:text-white">Other</SelectItem>
                 </SelectContent>
               </Select>
-              <Button onClick={() => handleExport('csv')} variant="outline" size="sm">
+              <Button 
+                onClick={() => handleExport('csv')} 
+                variant="outline" 
+                size="sm"
+                className="border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
+              >
                 <Download className="h-4 w-4 mr-2" />
                 Export CSV
               </Button>
-              <Button onClick={() => handleExport('excel')} variant="outline" size="sm">
+              <Button 
+                onClick={() => handleExport('excel')} 
+                variant="outline" 
+                size="sm"
+                className="border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
+              >
                 <Download className="h-4 w-4 mr-2" />
                 Export Excel
               </Button>
             </div>
 
             {/* Orders Table */}
-            <Card>
+            <Card className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-md transition-shadow duration-200">
               <CardHeader>
-                <CardTitle>Purchase Orders</CardTitle>
+                <CardTitle className="text-gray-900 dark:text-white">Purchase Orders</CardTitle>
               </CardHeader>
               <CardContent>
                 {ordersLoading ? (
@@ -644,38 +677,39 @@ function PurchasePageContent() {
                   </div>
                 ) : orders.length === 0 ? (
                   <div className="text-center py-8">
-                    <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                    <p className="text-gray-500">No purchase orders found</p>
+                    <FileText className="h-12 w-12 text-gray-400 dark:text-gray-500 mx-auto mb-4" />
+                    <p className="text-gray-500 dark:text-gray-400">No purchase orders found</p>
                   </div>
                 ) : (
                   <div className="overflow-x-auto">
                     <table className="w-full">
                       <thead>
-                        <tr className="border-b">
-                          <th className="text-left p-2">Order ID</th>
-                          <th className="text-left p-2">Supplier</th>
-                          <th className="text-left p-2">Amount</th>
-                          <th className="text-left p-2">Status</th>
-                          <th className="text-left p-2">Payment</th>
-                          <th className="text-left p-2">Date</th>
-                          <th className="text-left p-2">Actions</th>
+                        <tr className="border-b border-gray-200 dark:border-gray-700">
+                          <th className="text-left p-2 text-gray-900 dark:text-white">Order ID</th>
+                          <th className="text-left p-2 text-gray-900 dark:text-white">Supplier</th>
+                          <th className="text-left p-2 text-gray-900 dark:text-white">Amount</th>
+                          <th className="text-left p-2 text-gray-900 dark:text-white">Status</th>
+                          <th className="text-left p-2 text-gray-900 dark:text-white">Payment</th>
+                          <th className="text-left p-2 text-gray-900 dark:text-white">Date</th>
+                          <th className="text-left p-2 text-gray-900 dark:text-white">Actions</th>
                         </tr>
                       </thead>
                       <tbody>
                         {orders.map((order: any) => (
-                          <tr key={order._id} className="border-b hover:bg-gray-50">
-                            <td className="p-2 font-medium">{order.poNumber}</td>
-                            <td className="p-2">{order.supplier?.supplierName || 'N/A'}</td>
-                            <td className="p-2">{formatCurrency(order.amounts?.grandTotal || 0)}</td>
+                          <tr key={order._id} className="border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700">
+                            <td className="p-2 font-medium text-gray-900 dark:text-white">{order.poNumber}</td>
+                            <td className="p-2 text-gray-900 dark:text-white">{order.supplier?.supplierName || 'N/A'}</td>
+                            <td className="p-2 text-gray-900 dark:text-white">{formatCurrency(order.amounts?.grandTotal || 0)}</td>
                             <td className="p-2">{getStatusBadge(order.status)}</td>
                             <td className="p-2">{getPaymentStatusBadge(order.paymentTerms?.termType || 'pending')}</td>
-                            <td className="p-2">{new Date(order.poDate).toLocaleDateString()}</td>
+                            <td className="p-2 text-gray-900 dark:text-white">{new Date(order.poDate).toLocaleDateString()}</td>
                             <td className="p-2">
                               <div className="flex gap-2">
                                 <Button
                                   onClick={() => handlePaymentStatusUpdate(order._id, 'paid')}
                                   variant="outline"
                                   size="sm"
+                                  className="border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
                                 >
                                   <CreditCard className="h-3 w-3 mr-1" />
                                   Mark Paid
@@ -685,13 +719,17 @@ function PurchasePageContent() {
                                     onClick={() => handleReceiveOrder(order)}
                                     variant="outline"
                                     size="sm"
-                                    className="text-green-600 hover:text-green-700"
+                                    className="text-green-600 hover:text-green-700 dark:text-green-400 dark:hover:text-green-300 border-green-300 dark:border-green-600"
                                   >
                                     <Package className="h-3 w-3 mr-1" />
                                     Receive
                                   </Button>
                                 )}
-                                <Button variant="outline" size="sm">
+                                <Button 
+                                  variant="outline" 
+                                  size="sm"
+                                  className="border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
+                                >
                                   <Eye className="h-3 w-3 mr-1" />
                                   View
                                 </Button>
@@ -709,8 +747,8 @@ function PurchasePageContent() {
             {/* Pagination */}
             {ordersData?.data?.pagination && (
               <div className="flex justify-between items-center">
-                <p className="text-sm text-gray-600">
-                                      Showing {((currentPage - 1) * 10) + 1} to {Math.min(currentPage * 10, ordersData.data.pagination.total)} of {ordersData.data.pagination.total} results
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  Showing {((currentPage - 1) * 10) + 1} to {Math.min(currentPage * 10, ordersData.data.pagination.total)} of {ordersData.data.pagination.total} results
                 </p>
                 <div className="flex gap-2">
                   <Button
@@ -718,6 +756,7 @@ function PurchasePageContent() {
                     disabled={currentPage === 1}
                     variant="outline"
                     size="sm"
+                    className="border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50"
                   >
                     Previous
                   </Button>
@@ -726,6 +765,7 @@ function PurchasePageContent() {
                     disabled={currentPage >= ordersData.data.pagination.pages}
                     variant="outline"
                     size="sm"
+                    className="border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50"
                   >
                     Next
                   </Button>

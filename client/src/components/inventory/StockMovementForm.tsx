@@ -26,9 +26,10 @@ interface StockMovementFormProps {
   onClose: () => void
   onSubmit: (data: any) => void
   isLoading?: boolean
+  theme?: 'light' | 'dark'
 }
 
-export function StockMovementForm({ movement, onClose, onSubmit, isLoading = false }: StockMovementFormProps) {
+export function StockMovementForm({ movement, onClose, onSubmit, isLoading = false, theme = 'light' }: StockMovementFormProps) {
   const user = useSelector(selectCurrentUser)
   const currentCompany = useSelector(selectCurrentCompany)
   

@@ -704,17 +704,17 @@ export default function UserFormModal({ isOpen, onClose, onSuccess, user }: User
         <form id="user-form" onSubmit={handleSubmit}>
           {/* Success Message Display */}
           {showSuccess && (
-            <div className="mb-6 bg-green-50 border border-green-200 rounded-xl p-4">
+            <div className="mb-6 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700 rounded-xl p-4 transition-all duration-300">
               <div className="flex items-start justify-between">
                 <div className="flex items-start flex-1">
-                  <svg className="w-5 h-5 text-green-500 mt-0.5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-5 h-5 text-green-500 dark:text-green-400 mt-0.5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
                   <div className="flex-1">
-                    <h4 className="text-sm font-semibold text-green-800 mb-1">
+                    <h4 className="text-sm font-semibold text-green-800 dark:text-green-200 mb-1">
                       Success!
                     </h4>
-                    <p className="text-sm text-green-700 font-medium">
+                    <p className="text-sm text-green-700 dark:text-green-300 font-medium">
                       User {isEditing ? 'updated' : 'created'} successfully. Closing modal...
                     </p>
                   </div>
@@ -725,17 +725,17 @@ export default function UserFormModal({ isOpen, onClose, onSuccess, user }: User
 
           {/* Server Status Indicator */}
           {!isServerReachable && (
-            <div className="mb-6 bg-orange-50 border border-orange-200 rounded-xl p-4">
+            <div className="mb-6 bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-700 rounded-xl p-4 transition-all duration-300">
               <div className="flex items-start justify-between">
                 <div className="flex items-start flex-1">
-                  <svg className="w-5 h-5 text-orange-500 mt-0.5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-5 h-5 text-orange-500 dark:text-orange-400 mt-0.5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
                   </svg>
                   <div className="flex-1">
-                    <h4 className="text-sm font-semibold text-orange-800 mb-1">
+                    <h4 className="text-sm font-semibold text-orange-800 dark:text-orange-200 mb-1">
                       Server Connection Issue
                     </h4>
-                    <p className="text-sm text-orange-700 font-medium">
+                    <p className="text-sm text-orange-700 dark:text-orange-300 font-medium">
                       Unable to reach the server. Please check if the server is running and try again.
                     </p>
                     <div className="mt-3">
@@ -750,7 +750,7 @@ export default function UserFormModal({ isOpen, onClose, onSuccess, user }: User
                             toast.error('Server still unreachable')
                           }
                         }}
-                        className="px-3 py-1 text-xs bg-orange-100 text-orange-700 rounded border border-orange-300 hover:bg-orange-200 transition-colors"
+                        className="px-3 py-1 text-xs bg-orange-100 dark:bg-orange-800 text-orange-700 dark:text-orange-200 rounded border border-orange-300 dark:border-orange-600 hover:bg-orange-200 dark:hover:bg-orange-700 transition-colors"
                       >
                         Test Connection
                       </button>
@@ -763,17 +763,17 @@ export default function UserFormModal({ isOpen, onClose, onSuccess, user }: User
 
           {/* API Errors Display */}
           {apiErrors.length > 0 && (
-            <div className="mb-6 bg-red-50 border border-red-200 rounded-xl p-4">
+            <div className="mb-6 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 rounded-xl p-4 transition-all duration-300">
               <div className="flex items-start justify-between">
                 <div className="flex items-start flex-1">
-                  <AlertCircle className="w-5 h-5 text-red-500 mt-0.5 mr-3 flex-shrink-0" />
+                  <AlertCircle className="w-5 h-5 text-red-500 dark:text-red-400 mt-0.5 mr-3 flex-shrink-0" />
                   <div className="flex-1">
-                    <h4 className="text-sm font-semibold text-red-800 mb-2">
+                    <h4 className="text-sm font-semibold text-red-800 dark:text-red-200 mb-2">
                       {apiErrors.length === 1 ? 'Error occurred:' : `${apiErrors.length} errors occurred:`}
                     </h4>
                     <ul className="space-y-1">
                       {apiErrors.map((error, index) => (
-                        <li key={index} className="text-sm text-red-700 font-medium">
+                        <li key={index} className="text-sm text-red-700 dark:text-red-300 font-medium">
                           • {error}
                         </li>
                       ))}
@@ -782,7 +782,7 @@ export default function UserFormModal({ isOpen, onClose, onSuccess, user }: User
                       <button
                         type="button"
                         onClick={() => setApiErrors([])}
-                        className="px-3 py-1 text-xs bg-red-100 text-red-700 rounded border border-red-300 hover:bg-red-200 transition-colors"
+                        className="px-3 py-1 text-xs bg-red-100 dark:bg-red-800 text-red-700 dark:text-red-200 rounded border border-red-300 dark:border-red-600 hover:bg-red-200 dark:hover:bg-red-700 transition-colors"
                       >
                         Dismiss
                       </button>
@@ -792,7 +792,7 @@ export default function UserFormModal({ isOpen, onClose, onSuccess, user }: User
                           setApiErrors([])
                           handleSubmit(new Event('submit') as any)
                         }}
-                        className="px-3 py-1 text-xs bg-blue-100 text-blue-700 rounded border border-blue-300 hover:bg-blue-200 transition-colors"
+                        className="px-3 py-1 text-xs bg-blue-100 dark:bg-blue-800 text-blue-700 dark:text-blue-200 rounded border border-blue-300 dark:border-blue-600 hover:bg-blue-200 dark:hover:bg-blue-700 transition-colors"
                       >
                         Retry
                       </button>
@@ -802,7 +802,7 @@ export default function UserFormModal({ isOpen, onClose, onSuccess, user }: User
                 <button
                   type="button"
                   onClick={() => setApiErrors([])}
-                  className="ml-4 text-red-500 hover:text-red-700 transition-colors"
+                  className="ml-4 text-red-500 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 transition-colors"
                   title="Dismiss errors"
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -815,29 +815,29 @@ export default function UserFormModal({ isOpen, onClose, onSuccess, user }: User
           
           <div className="space-y-6">
             {/* Basic Information */}
-            <div className="bg-sky-50 rounded-xl p-6 border border-sky-200">
-              <h3 className="text-lg font-semibold text-black mb-4 flex items-center">
-                <User className="w-5 h-5 mr-2 text-sky-600" />
+            <div className="bg-sky-50 dark:bg-sky-900/20 rounded-xl p-6 border border-sky-200 dark:border-sky-700 transition-all duration-300">
+              <h3 className="text-lg font-semibold text-black dark:text-white mb-4 flex items-center">
+                <User className="w-5 h-5 mr-2 text-sky-600 dark:text-sky-400" />
                 Basic Information
               </h3>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-semibold text-black mb-2">
+                  <label className="block text-sm font-semibold text-black dark:text-white mb-2">
                     Generated Username
                   </label>
-                  <div className="w-full px-4 py-3 border border-gray-300 bg-gray-50 rounded-xl text-gray-700 font-medium">
+                  <div className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 rounded-xl text-gray-700 dark:text-gray-300 font-medium transition-all duration-300">
                     {isEditing ? (user?.username || 'N/A') : (generatedUsername || 'Will be generated based on first name')}
                   </div>
                   {!isEditing && (
-                    <p className="mt-1 text-sm text-gray-500">
+                    <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
                       Username will be automatically generated based on first name and email
                     </p>
                   )}
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-black mb-2">
+                  <label className="block text-sm font-semibold text-black dark:text-white mb-2">
                     First Name *
                   </label>
                   <input
@@ -845,18 +845,18 @@ export default function UserFormModal({ isOpen, onClose, onSuccess, user }: User
                     required
                     value={formData.firstName}
                     onChange={(e) => updateFormData({ firstName: e.target.value })}
-                    className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-all duration-200 text-gray-900 font-medium placeholder:text-gray-500 ${
-                      errors.firstName ? 'border-red-300 bg-red-50' : 'border-gray-300 bg-white'
+                    className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-all duration-200 text-gray-900 dark:text-white font-medium placeholder:text-gray-500 dark:placeholder:text-gray-400 ${
+                      errors.firstName ? 'border-red-300 dark:border-red-600 bg-red-50 dark:bg-red-900/20' : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800'
                     }`}
                     placeholder="Enter first name"
                   />
                   {errors.firstName && (
-                    <p className="mt-1 text-sm text-red-600 font-medium">{errors.firstName}</p>
+                    <p className="mt-1 text-sm text-red-600 dark:text-red-400 font-medium">{errors.firstName}</p>
                   )}
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-black mb-2">
+                  <label className="block text-sm font-semibold text-black dark:text-white mb-2">
                     Last Name *
                   </label>
                   <input
@@ -864,69 +864,69 @@ export default function UserFormModal({ isOpen, onClose, onSuccess, user }: User
                     required
                     value={formData.lastName}
                     onChange={(e) => updateFormData({ lastName: e.target.value })}
-                    className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-all duration-200 text-gray-900 font-medium placeholder:text-gray-500 ${
-                      errors.lastName ? 'border-red-300 bg-red-50' : 'border-gray-300 bg-white'
+                    className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-all duration-200 text-gray-900 dark:text-white font-medium placeholder:text-gray-500 dark:placeholder:text-gray-400 ${
+                      errors.lastName ? 'border-red-300 dark:border-red-600 bg-red-50 dark:bg-red-900/20' : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800'
                     }`}
                     placeholder="Enter last name"
                   />
                   {errors.lastName && (
-                    <p className="mt-1 text-sm text-red-600 font-medium">{errors.lastName}</p>
+                    <p className="mt-1 text-sm text-red-600 dark:text-red-400 font-medium">{errors.lastName}</p>
                   )}
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-black mb-2">
-                    Email Address <span className="text-gray-500 font-normal">(Optional)</span>
+                  <label className="block text-sm font-semibold text-black dark:text-white mb-2">
+                    Email Address <span className="text-gray-500 dark:text-gray-400 font-normal">(Optional)</span>
                   </label>
                   <div className="relative">
-                    <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                    <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400 dark:text-gray-500" />
                     <input
                       type="email"
                       value={formData.email}
                       onChange={(e) => updateFormData({ email: e.target.value.toLowerCase() })}
-                      className={`w-full pl-10 pr-4 py-3 border rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-all duration-200 text-gray-900 font-medium placeholder:text-gray-500 ${
-                        errors.email ? 'border-red-300 bg-red-50' : 'border-gray-300 bg-white'
+                      className={`w-full pl-10 pr-4 py-3 border rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-all duration-200 text-gray-900 dark:text-white font-medium placeholder:text-gray-500 dark:placeholder:text-gray-400 ${
+                        errors.email ? 'border-red-300 dark:border-red-600 bg-red-50 dark:bg-red-900/20' : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800'
                       }`}
                       placeholder="Enter email address (optional)"
                     />
                   </div>
                   {errors.email && (
-                    <p className="mt-1 text-sm text-red-600 font-medium">{errors.email}</p>
+                    <p className="mt-1 text-sm text-red-600 dark:text-red-400 font-medium">{errors.email}</p>
                   )}
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-black mb-2">
+                  <label className="block text-sm font-semibold text-black dark:text-white mb-2">
                     Phone Number *
                   </label>
                   <div className="relative">
-                    <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                    <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400 dark:text-gray-500" />
                     <input
                       type="tel"
                       required
                       value={formData.phone}
                       onChange={(e) => updateFormData({ phone: e.target.value })}
-                      className={`w-full pl-10 pr-4 py-3 border rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-all duration-200 text-gray-900 font-medium placeholder:text-gray-500 ${
-                        errors.phone ? 'border-red-300 bg-red-50' : 'border-gray-300 bg-white'
+                      className={`w-full pl-10 pr-4 py-3 border rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-all duration-200 text-gray-900 dark:text-white font-medium placeholder:text-gray-500 dark:placeholder:text-gray-400 ${
+                        errors.phone ? 'border-red-300 dark:border-red-600 bg-red-50 dark:bg-red-900/20' : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800'
                       }`}
                       placeholder="Enter phone number"
                     />
                   </div>
                   {errors.phone && (
-                    <p className="mt-1 text-sm text-red-600 font-medium">{errors.phone}</p>
+                    <p className="mt-1 text-sm text-red-600 dark:text-red-400 font-medium">{errors.phone}</p>
                   )}
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-black mb-2">
+                  <label className="block text-sm font-semibold text-black dark:text-white mb-2">
                     Department
                   </label>
                   <div className="relative">
-                    <Building2 className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                    <Building2 className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400 dark:text-gray-500" />
                     <select
                       value={formData.department}
                       onChange={(e) => updateFormData({ department: e.target.value })}
-                      className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-all duration-200 bg-white text-gray-900 font-medium appearance-none"
+                      className="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-all duration-200 bg-white dark:bg-gray-800 text-gray-900 dark:text-white font-medium appearance-none"
                     >
                       <option value="">Select Department</option>
                       {DEPARTMENTS.map((dept) => (
@@ -939,14 +939,14 @@ export default function UserFormModal({ isOpen, onClose, onSuccess, user }: User
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-black mb-2">
+                  <label className="block text-sm font-semibold text-black dark:text-white mb-2">
                     Designation
                   </label>
                   <input
                     type="text"
                     value={formData.designation}
                     onChange={(e) => updateFormData({ designation: e.target.value })}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-all duration-200 bg-white text-gray-900 font-medium placeholder:text-gray-500"
+                    className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-all duration-200 bg-white dark:bg-gray-800 text-gray-900 dark:text-white font-medium placeholder:text-gray-500 dark:placeholder:text-gray-400"
                     placeholder="Enter designation"
                   />
                 </div>
@@ -954,23 +954,23 @@ export default function UserFormModal({ isOpen, onClose, onSuccess, user }: User
             </div>
 
             {/* Company Assignment */}
-            <div className="bg-purple-50 rounded-xl p-6 border border-purple-200">
-              <h3 className="text-lg font-semibold text-black mb-4 flex items-center">
-                <Building2 className="w-5 h-5 mr-2 text-purple-600" />
+            <div className="bg-purple-50 dark:bg-purple-900/20 rounded-xl p-6 border border-purple-200 dark:border-purple-700 transition-all duration-300">
+              <h3 className="text-lg font-semibold text-black dark:text-white mb-4 flex items-center">
+                <Building2 className="w-5 h-5 mr-2 text-purple-600 dark:text-purple-400" />
                 Company Assignment
               </h3>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-semibold text-black mb-2">
+                  <label className="block text-sm font-semibold text-black dark:text-white mb-2">
                     Primary Company *
                   </label>
                   <select
                     required
                     value={formData.primaryCompanyId}
                     onChange={(e) => updateFormData({ primaryCompanyId: e.target.value })}
-                    className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-all duration-200 bg-white text-gray-900 font-medium ${
-                      errors.primaryCompanyId ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                    className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-all duration-200 bg-white dark:bg-gray-800 text-gray-900 dark:text-white font-medium ${
+                      errors.primaryCompanyId ? 'border-red-300 dark:border-red-600 bg-red-50 dark:bg-red-900/20' : 'border-gray-300 dark:border-gray-600'
                     }`}
                     disabled={companiesLoading}
                   >
@@ -985,21 +985,21 @@ export default function UserFormModal({ isOpen, onClose, onSuccess, user }: User
                       ))}
                   </select>
                   {errors.primaryCompanyId && (
-                    <p className="mt-1 text-sm text-red-600 font-medium">{errors.primaryCompanyId}</p>
+                    <p className="mt-1 text-sm text-red-600 dark:text-red-400 font-medium">{errors.primaryCompanyId}</p>
                   )}
                   {companiesLoading && (
-                    <p className="mt-1 text-xs text-gray-500">Loading companies...</p>
+                    <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">Loading companies...</p>
                   )}
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-black mb-2">
+                  <label className="block text-sm font-semibold text-black dark:text-white mb-2">
                     Gender
                   </label>
                   <select
                     value={formData.gender}
                     onChange={(e) => updateFormData({ gender: e.target.value as 'Male' | 'Female' | 'Other' | '' })}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-all duration-200 bg-white text-gray-900 font-medium"
+                    className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-all duration-200 bg-white dark:bg-gray-800 text-gray-900 dark:text-white font-medium"
                   >
                     <option value="">Select Gender</option>
                     <option value="Male">Male</option>
@@ -1011,15 +1011,15 @@ export default function UserFormModal({ isOpen, onClose, onSuccess, user }: User
             </div>
 
             {/* Role & Status */}
-            <div className="bg-green-50 rounded-xl p-6 border border-green-200">
-              <h3 className="text-lg font-semibold text-black mb-4 flex items-center">
-                <Shield className="w-5 h-5 mr-2 text-green-600" />
+            <div className="bg-green-50 dark:bg-green-900/20 rounded-xl p-6 border border-green-200 dark:border-green-700 transition-all duration-300">
+              <h3 className="text-lg font-semibold text-black dark:text-white mb-4 flex items-center">
+                <Shield className="w-5 h-5 mr-2 text-green-600 dark:text-green-400" />
                 Role & Status
               </h3>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-semibold text-black mb-2">
+                  <label className="block text-sm font-semibold text-black dark:text-white mb-2">
                     Role *
                   </label>
                   <select
@@ -1030,7 +1030,7 @@ export default function UserFormModal({ isOpen, onClose, onSuccess, user }: User
                       updateFormData({ role: newRole as UserType['role'] })
                       updatePermissionsForRole(newRole)
                     }}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-all duration-200 bg-white text-gray-900 font-medium"
+                    className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-all duration-200 bg-white dark:bg-gray-800 text-gray-900 dark:text-white font-medium"
                   >
                     {ROLES.map((role) => (
                       <option key={role.value} value={role.value}>
@@ -1038,14 +1038,14 @@ export default function UserFormModal({ isOpen, onClose, onSuccess, user }: User
                       </option>
                     ))}
                   </select>
-                  <p className="mt-1 text-xs text-gray-500">
+                  <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
                     {ROLES.find(r => r.value === formData.role)?.description}
                   </p>
                 </div>
 
                 {isEditing && (
                   <div>
-                    <label className="block text-sm font-semibold text-black mb-2">
+                    <label className="block text-sm font-semibold text-black dark:text-white mb-2">
                       Status
                     </label>
                     <div className="flex items-center space-x-4 pt-3">
@@ -1055,9 +1055,9 @@ export default function UserFormModal({ isOpen, onClose, onSuccess, user }: User
                           name="status"
                           checked={formData.isActive}
                           onChange={() => updateFormData({ isActive: true })}
-                          className="mr-2 text-green-600 focus:ring-green-500"
+                          className="mr-2 text-green-600 dark:text-green-400 focus:ring-green-500 dark:focus:ring-green-400"
                         />
-                        <span className="text-sm font-medium text-green-700">Active</span>
+                        <span className="text-sm font-medium text-green-700 dark:text-green-300">Active</span>
                       </label>
                       <label className="flex items-center">
                         <input
@@ -1065,9 +1065,9 @@ export default function UserFormModal({ isOpen, onClose, onSuccess, user }: User
                           name="status"
                           checked={!formData.isActive}
                           onChange={() => updateFormData({ isActive: false })}
-                          className="mr-2 text-red-600 focus:ring-red-500"
+                          className="mr-2 text-red-600 dark:text-red-400 focus:ring-red-500 dark:focus:ring-red-400"
                         />
-                        <span className="text-sm font-medium text-red-700">Inactive</span>
+                        <span className="text-sm font-medium text-red-700 dark:text-red-300">Inactive</span>
                       </label>
                     </div>
                   </div>
@@ -1075,7 +1075,7 @@ export default function UserFormModal({ isOpen, onClose, onSuccess, user }: User
 
                 {/* Super Admin Toggle */}
                 <div>
-                  <label className="block text-sm font-semibold text-black mb-2">
+                  <label className="block text-sm font-semibold text-black dark:text-white mb-2">
                     Super Admin Privileges
                   </label>
                   <div className="flex items-center space-x-3">
@@ -1084,14 +1084,14 @@ export default function UserFormModal({ isOpen, onClose, onSuccess, user }: User
                         type="checkbox"
                         checked={formData.isSuperAdmin}
                         onChange={(e) => updateFormData({ isSuperAdmin: e.target.checked })}
-                        className="mr-2 w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
+                        className="mr-2 w-4 h-4 text-purple-600 dark:text-purple-400 border-gray-300 dark:border-gray-600 rounded focus:ring-purple-500 dark:focus:ring-purple-400"
                       />
-                      <span className="text-sm font-medium text-gray-700">
+                      <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
                         Grant Super Admin Access
                       </span>
                     </label>
                   </div>
-                  <p className="mt-1 text-xs text-gray-500">
+                  <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
                     Super Admin users have full access to all companies and system settings
                   </p>
                 </div>
@@ -1099,17 +1099,17 @@ export default function UserFormModal({ isOpen, onClose, onSuccess, user }: User
             </div>
 
             {/* Permissions Section */}
-            <div className="bg-green-50 rounded-xl p-6 border border-green-200">
-              <h3 className="text-lg font-semibold text-black mb-4 flex items-center">
-                <Shield className="w-5 h-5 mr-2 text-green-600" />
+            <div className="bg-green-50 dark:bg-green-900/20 rounded-xl p-6 border border-green-200 dark:border-green-700 transition-all duration-300">
+              <h3 className="text-lg font-semibold text-black dark:text-white mb-4 flex items-center">
+                <Shield className="w-5 h-5 mr-2 text-green-600 dark:text-green-400" />
                 Access & Permissions
               </h3>
               
               <div className="space-y-6">
                 {/* Role-based Permission Presets */}
-                <div className="bg-white p-4 rounded-lg border border-green-200">
-                  <h4 className="text-md font-semibold text-gray-800 mb-3">Role Preset</h4>
-                  <p className="text-sm text-gray-600 mb-3">
+                <div className="bg-white dark:bg-gray-800 p-4 rounded-lg border border-green-200 dark:border-green-700 transition-all duration-300">
+                  <h4 className="text-md font-semibold text-gray-800 dark:text-gray-200 mb-3">Role Preset</h4>
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
                     Select a role to automatically apply permission presets, or customize individual permissions below.
                   </p>
                   <select
@@ -1119,7 +1119,7 @@ export default function UserFormModal({ isOpen, onClose, onSuccess, user }: User
                       updateFormData({ role: newRole as UserType['role'] })
                       updatePermissionsForRole(newRole)
                     }}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 dark:focus:ring-green-400 focus:border-green-500 dark:focus:border-green-400 bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-all duration-300"
                   >
                     {ROLES.map((role) => (
                       <option key={role.value} value={role.value}>
@@ -1129,50 +1129,50 @@ export default function UserFormModal({ isOpen, onClose, onSuccess, user }: User
                   </select>
                   
                   {/* Permission Summary */}
-                  <div className="mt-3 p-3 bg-gray-50 rounded-lg">
-                    <h5 className="text-sm font-medium text-gray-700 mb-2">Permission Summary:</h5>
+                  <div className="mt-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg transition-all duration-300">
+                    <h5 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Permission Summary:</h5>
                     <div className="grid grid-cols-2 gap-2 text-xs">
                       <div className="flex items-center space-x-2">
-                        <span className={`w-2 h-2 rounded-full ${formData.permissions.inventory.view ? 'bg-green-500' : 'bg-gray-300'}`}></span>
-                        <span>Inventory: {formData.permissions.inventory.view ? 'View' : 'No Access'}</span>
+                        <span className={`w-2 h-2 rounded-full ${formData.permissions.inventory.view ? 'bg-green-500 dark:bg-green-400' : 'bg-gray-300 dark:bg-gray-600'}`}></span>
+                        <span className="text-gray-700 dark:text-gray-300">Inventory: {formData.permissions.inventory.view ? 'View' : 'No Access'}</span>
                       </div>
                       <div className="flex items-center space-x-2">
-                        <span className={`w-2 h-2 rounded-full ${formData.permissions.production.view ? 'bg-green-500' : 'bg-gray-300'}`}></span>
-                        <span>Production: {formData.permissions.production.view ? 'View' : 'No Access'}</span>
+                        <span className={`w-2 h-2 rounded-full ${formData.permissions.production.view ? 'bg-green-500 dark:bg-green-400' : 'bg-gray-300 dark:bg-gray-600'}`}></span>
+                        <span className="text-gray-700 dark:text-gray-300">Production: {formData.permissions.production.view ? 'View' : 'No Access'}</span>
                       </div>
                       <div className="flex items-center space-x-2">
-                        <span className={`w-2 h-2 rounded-full ${formData.permissions.orders.view ? 'bg-green-500' : 'bg-gray-300'}`}></span>
-                        <span>Orders: {formData.permissions.orders.view ? 'View' : 'No Access'}</span>
+                        <span className={`w-2 h-2 rounded-full ${formData.permissions.orders.view ? 'bg-green-500 dark:bg-green-400' : 'bg-gray-300 dark:bg-gray-600'}`}></span>
+                        <span className="text-gray-700 dark:text-gray-300">Orders: {formData.permissions.orders.view ? 'View' : 'No Access'}</span>
                       </div>
                       <div className="flex items-center space-x-2">
-                        <span className={`w-2 h-2 rounded-full ${formData.permissions.hr.viewEmployees ? 'bg-green-500' : 'bg-gray-300'}`}></span>
-                        <span>HR: {formData.permissions.hr.viewEmployees ? 'View' : 'No Access'}</span>
+                        <span className={`w-2 h-2 rounded-full ${formData.permissions.hr.viewEmployees ? 'bg-green-500 dark:bg-green-400' : 'bg-gray-300 dark:bg-gray-600'}`}></span>
+                        <span className="text-gray-700 dark:text-gray-300">HR: {formData.permissions.hr.viewEmployees ? 'View' : 'No Access'}</span>
                       </div>
                     </div>
                   </div>
                   
                   {/* Quick Actions */}
-                  <div className="mt-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
-                    <h5 className="text-sm font-medium text-blue-700 mb-2">Quick Actions:</h5>
+                  <div className="mt-3 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-700 transition-all duration-300">
+                    <h5 className="text-sm font-medium text-blue-700 dark:text-blue-300 mb-2">Quick Actions:</h5>
                     <div className="flex flex-wrap gap-2">
                       <button
                         type="button"
                         onClick={() => updateFormData({ permissions: PERMISSION_PRESETS.helper })}
-                        className="px-2 py-1 text-xs bg-blue-100 text-blue-700 rounded border border-blue-300 hover:bg-blue-200 transition-colors"
+                        className="px-2 py-1 text-xs bg-blue-100 dark:bg-blue-800 text-blue-700 dark:text-blue-200 rounded border border-blue-300 dark:border-blue-600 hover:bg-blue-200 dark:hover:bg-blue-700 transition-colors"
                       >
                         Reset to Helper
                       </button>
                       <button
                         type="button"
                         onClick={() => updateFormData({ permissions: PERMISSION_PRESETS.manager })}
-                        className="px-2 py-1 text-xs bg-blue-100 text-blue-700 rounded border border-blue-300 hover:bg-blue-200 transition-colors"
+                        className="px-2 py-1 text-xs bg-blue-100 dark:bg-blue-800 text-blue-700 dark:text-blue-200 rounded border border-blue-300 dark:border-blue-600 hover:bg-blue-200 dark:hover:bg-blue-700 transition-colors"
                       >
                         Set Manager
                       </button>
                       <button
                         type="button"
                         onClick={() => updateFormData({ permissions: PERMISSION_PRESETS.owner })}
-                        className="px-2 py-1 text-xs bg-blue-100 text-blue-700 rounded border border-blue-300 hover:bg-blue-200 transition-colors"
+                        className="px-2 py-1 text-xs bg-blue-100 dark:bg-blue-800 text-blue-700 dark:text-blue-200 rounded border border-blue-300 dark:border-blue-600 hover:bg-blue-200 dark:hover:bg-blue-700 transition-colors"
                       >
                         Set Owner
                       </button>
@@ -1190,7 +1190,7 @@ export default function UserFormModal({ isOpen, onClose, onSuccess, user }: User
                           }
                           updateFormData({ permissions: allPermissions })
                         }}
-                        className="px-2 py-1 text-xs bg-green-100 text-green-700 rounded border border-green-300 hover:bg-green-200 transition-colors"
+                        className="px-2 py-1 text-xs bg-green-100 dark:bg-green-800 text-green-700 dark:text-green-200 rounded border border-green-300 dark:border-green-600 hover:bg-green-200 dark:hover:bg-green-700 transition-colors"
                       >
                         All Permissions
                       </button>
@@ -1199,10 +1199,10 @@ export default function UserFormModal({ isOpen, onClose, onSuccess, user }: User
                 </div>
 
                 {/* Inventory Permissions */}
-                <div className="bg-white p-4 rounded-lg border border-green-200">
-                  <h4 className="text-md font-semibold text-gray-800 mb-3">Inventory Management</h4>
+                <div className="bg-white dark:bg-gray-800 p-4 rounded-lg border border-green-200 dark:border-green-700 transition-all duration-300">
+                  <h4 className="text-md font-semibold text-gray-800 dark:text-gray-200 mb-3">Inventory Management</h4>
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                    <label className="flex items-center space-x-2">
+                    <label className="flex items-center space-x-2 cursor-pointer">
                       <input
                         type="checkbox"
                         checked={formData.permissions.inventory.view}
@@ -1212,11 +1212,11 @@ export default function UserFormModal({ isOpen, onClose, onSuccess, user }: User
                             inventory: { ...formData.permissions.inventory, view: e.target.checked }
                           }
                         })}
-                        className="rounded border-gray-300 text-green-600 focus:ring-green-500"
+                        className="rounded border-gray-300 dark:border-gray-600 text-green-600 dark:text-green-400 focus:ring-green-500 dark:focus:ring-green-400 bg-white dark:bg-gray-700 transition-all duration-300"
                       />
-                      <span className="text-sm">View</span>
+                      <span className="text-sm text-gray-700 dark:text-gray-300">View</span>
                     </label>
-                    <label className="flex items-center space-x-2">
+                    <label className="flex items-center space-x-2 cursor-pointer">
                       <input
                         type="checkbox"
                         checked={formData.permissions.inventory.create}
@@ -1226,11 +1226,11 @@ export default function UserFormModal({ isOpen, onClose, onSuccess, user }: User
                             inventory: { ...formData.permissions.inventory, create: e.target.checked }
                           }
                         })}
-                        className="rounded border-gray-300 text-green-600 focus:ring-green-500"
+                        className="rounded border-gray-300 dark:border-gray-600 text-green-600 dark:text-green-400 focus:ring-green-500 dark:focus:ring-green-400 bg-white dark:bg-gray-700 transition-all duration-300"
                       />
-                      <span className="text-sm">Create</span>
+                      <span className="text-sm text-gray-700 dark:text-gray-300">Create</span>
                     </label>
-                    <label className="flex items-center space-x-2">
+                    <label className="flex items-center space-x-2 cursor-pointer">
                       <input
                         type="checkbox"
                         checked={formData.permissions.inventory.edit}
@@ -1240,11 +1240,11 @@ export default function UserFormModal({ isOpen, onClose, onSuccess, user }: User
                             inventory: { ...formData.permissions.inventory, edit: e.target.checked }
                           }
                         })}
-                        className="rounded border-gray-300 text-green-600 focus:ring-green-500"
+                        className="rounded border-gray-300 dark:border-gray-600 text-green-600 dark:text-green-400 focus:ring-green-500 dark:focus:ring-green-400 bg-white dark:bg-gray-700 transition-all duration-300"
                       />
-                      <span className="text-sm">Edit</span>
+                      <span className="text-sm text-gray-700 dark:text-gray-300">Edit</span>
                     </label>
-                    <label className="flex items-center space-x-2">
+                    <label className="flex items-center space-x-2 cursor-pointer">
                       <input
                         type="checkbox"
                         checked={formData.permissions.inventory.delete}
@@ -1254,11 +1254,11 @@ export default function UserFormModal({ isOpen, onClose, onSuccess, user }: User
                             inventory: { ...formData.permissions.inventory, delete: e.target.checked }
                           }
                         })}
-                        className="rounded border-gray-300 text-green-600 focus:ring-green-500"
+                        className="rounded border-gray-300 dark:border-gray-600 text-green-600 dark:text-green-400 focus:ring-green-500 dark:focus:ring-green-400 bg-white dark:bg-gray-700 transition-all duration-300"
                       />
-                      <span className="text-sm">Delete</span>
+                      <span className="text-sm text-gray-700 dark:text-gray-300">Delete</span>
                     </label>
-                    <label className="flex items-center space-x-2">
+                    <label className="flex items-center space-x-2 cursor-pointer">
                       <input
                         type="checkbox"
                         checked={formData.permissions.inventory.approve}
@@ -1268,11 +1268,11 @@ export default function UserFormModal({ isOpen, onClose, onSuccess, user }: User
                             inventory: { ...formData.permissions.inventory, approve: e.target.checked }
                           }
                         })}
-                        className="rounded border-gray-300 text-green-600 focus:ring-green-500"
+                        className="rounded border-gray-300 dark:border-gray-600 text-green-600 dark:text-green-400 focus:ring-green-500 dark:focus:ring-green-400 bg-white dark:bg-gray-700 transition-all duration-300"
                       />
-                      <span className="text-sm">Approve</span>
+                      <span className="text-sm text-gray-700 dark:text-gray-300">Approve</span>
                     </label>
-                    <label className="flex items-center space-x-2">
+                    <label className="flex items-center space-x-2 cursor-pointer">
                       <input
                         type="checkbox"
                         checked={formData.permissions.inventory.viewReports}
@@ -1282,18 +1282,18 @@ export default function UserFormModal({ isOpen, onClose, onSuccess, user }: User
                             inventory: { ...formData.permissions.inventory, viewReports: e.target.checked }
                           }
                         })}
-                        className="rounded border-gray-300 text-green-600 focus:ring-green-500"
+                        className="rounded border-gray-300 dark:border-gray-600 text-green-600 dark:text-green-400 focus:ring-green-500 dark:focus:ring-green-400 bg-white dark:bg-gray-700 transition-all duration-300"
                       />
-                      <span className="text-sm">Reports</span>
+                      <span className="text-sm text-gray-700 dark:text-gray-300">Reports</span>
                     </label>
                   </div>
                 </div>
 
                 {/* Production Permissions */}
-                <div className="bg-white p-4 rounded-lg border border-green-200">
-                  <h4 className="text-md font-semibold text-gray-800 mb-3">Production Management</h4>
+                <div className="bg-white dark:bg-gray-800 p-4 rounded-lg border border-green-200 dark:border-green-700 transition-all duration-300">
+                  <h4 className="text-md font-semibold text-gray-800 dark:text-gray-200 mb-3">Production Management</h4>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                    <label className="flex items-center space-x-2">
+                    <label className="flex items-center space-x-2 cursor-pointer">
                       <input
                         type="checkbox"
                         checked={formData.permissions.production.view}
@@ -1303,11 +1303,11 @@ export default function UserFormModal({ isOpen, onClose, onSuccess, user }: User
                             production: { ...formData.permissions.production, view: e.target.checked }
                           }
                         })}
-                        className="rounded border-gray-300 text-green-600 focus:ring-green-500"
+                        className="rounded border-gray-300 dark:border-gray-600 text-green-600 dark:text-green-400 focus:ring-green-500 dark:focus:ring-green-400 bg-white dark:bg-gray-700 transition-all duration-300"
                       />
-                      <span className="text-sm">View</span>
+                      <span className="text-sm text-gray-700 dark:text-gray-300">View</span>
                     </label>
-                    <label className="flex items-center space-x-2">
+                    <label className="flex items-center space-x-2 cursor-pointer">
                       <input
                         type="checkbox"
                         checked={formData.permissions.production.create}
@@ -1317,11 +1317,11 @@ export default function UserFormModal({ isOpen, onClose, onSuccess, user }: User
                             production: { ...formData.permissions.production, create: e.target.checked }
                           }
                         })}
-                        className="rounded border-gray-300 text-green-600 focus:ring-green-500"
+                        className="rounded border-gray-300 dark:border-gray-600 text-green-600 dark:text-green-400 focus:ring-green-500 dark:focus:ring-green-400 bg-white dark:bg-gray-700 transition-all duration-300"
                       />
-                      <span className="text-sm">Create</span>
+                      <span className="text-sm text-gray-700 dark:text-gray-300">Create</span>
                     </label>
-                    <label className="flex items-center space-x-2">
+                    <label className="flex items-center space-x-2 cursor-pointer">
                       <input
                         type="checkbox"
                         checked={formData.permissions.production.startProcess}
@@ -1331,11 +1331,11 @@ export default function UserFormModal({ isOpen, onClose, onSuccess, user }: User
                             production: { ...formData.permissions.production, startProcess: e.target.checked }
                           }
                         })}
-                        className="rounded border-gray-300 text-green-600 focus:ring-green-500"
+                        className="rounded border-gray-300 dark:border-gray-600 text-green-600 dark:text-green-400 focus:ring-green-500 dark:focus:ring-green-400 bg-white dark:bg-gray-700 transition-all duration-300"
                       />
-                      <span className="text-sm">Start Process</span>
+                      <span className="text-sm text-gray-700 dark:text-gray-300">Start Process</span>
                     </label>
-                    <label className="flex items-center space-x-2">
+                    <label className="flex items-center space-x-2 cursor-pointer">
                       <input
                         type="checkbox"
                         checked={formData.permissions.production.qualityCheck}
@@ -1345,18 +1345,207 @@ export default function UserFormModal({ isOpen, onClose, onSuccess, user }: User
                             production: { ...formData.permissions.production, qualityCheck: e.target.checked }
                           }
                         })}
-                        className="rounded border-gray-300 text-green-600 focus:ring-green-500"
+                        className="rounded border-gray-300 dark:border-gray-600 text-green-600 dark:text-green-400 focus:ring-green-500 dark:focus:ring-green-400 bg-white dark:bg-gray-700 transition-all duration-300"
                       />
-                      <span className="text-sm">Quality Check</span>
+                      <span className="text-sm text-gray-700 dark:text-gray-300">Quality Check</span>
+                    </label>
+                  </div>
+                </div>
+
+                {/* Orders Permissions */}
+                <div className="bg-white dark:bg-gray-800 p-4 rounded-lg border border-green-200 dark:border-green-700 transition-all duration-300">
+                  <h4 className="text-md font-semibold text-gray-800 dark:text-gray-200 mb-3">Orders Management</h4>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    <label className="flex items-center space-x-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={formData.permissions.orders.view}
+                        onChange={(e) => updateFormData({
+                          permissions: {
+                            ...formData.permissions,
+                            orders: { ...formData.permissions.orders, view: e.target.checked }
+                          }
+                        })}
+                        className="rounded border-gray-300 dark:border-gray-600 text-green-600 dark:text-green-400 focus:ring-green-500 dark:focus:ring-green-400 bg-white dark:bg-gray-700 transition-all duration-300"
+                      />
+                      <span className="text-sm text-gray-700 dark:text-gray-300">View</span>
+                    </label>
+                    <label className="flex items-center space-x-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={formData.permissions.orders.create}
+                        onChange={(e) => updateFormData({
+                          permissions: {
+                            ...formData.permissions,
+                            orders: { ...formData.permissions.orders, create: e.target.checked }
+                          }
+                        })}
+                        className="rounded border-gray-300 dark:border-gray-600 text-green-600 dark:text-green-400 focus:ring-green-500 dark:focus:ring-green-400 bg-white dark:bg-gray-700 transition-all duration-300"
+                      />
+                      <span className="text-sm text-gray-700 dark:text-gray-300">Create</span>
+                    </label>
+                    <label className="flex items-center space-x-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={formData.permissions.orders.edit}
+                        onChange={(e) => updateFormData({
+                          permissions: {
+                            ...formData.permissions,
+                            orders: { ...formData.permissions.orders, edit: e.target.checked }
+                          }
+                        })}
+                        className="rounded border-gray-300 dark:border-gray-600 text-green-600 dark:text-green-400 focus:ring-green-500 dark:focus:ring-green-400 bg-white dark:bg-gray-700 transition-all duration-300"
+                      />
+                      <span className="text-sm text-gray-700 dark:text-gray-300">Edit</span>
+                    </label>
+                    <label className="flex items-center space-x-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={formData.permissions.orders.dispatch}
+                        onChange={(e) => updateFormData({
+                          permissions: {
+                            ...formData.permissions,
+                            orders: { ...formData.permissions.orders, dispatch: e.target.checked }
+                          }
+                        })}
+                        className="rounded border-gray-300 dark:border-gray-600 text-green-600 dark:text-green-400 focus:ring-green-500 dark:focus:ring-green-400 bg-white dark:bg-gray-700 transition-all duration-300"
+                      />
+                      <span className="text-sm text-gray-700 dark:text-gray-300">Dispatch</span>
+                    </label>
+                  </div>
+                </div>
+
+                {/* Financial Permissions */}
+                <div className="bg-white dark:bg-gray-800 p-4 rounded-lg border border-green-200 dark:border-green-700 transition-all duration-300">
+                  <h4 className="text-md font-semibold text-gray-800 dark:text-gray-200 mb-3">Financial Management</h4>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                    <label className="flex items-center space-x-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={formData.permissions.financial.view}
+                        onChange={(e) => updateFormData({
+                          permissions: {
+                            ...formData.permissions,
+                            financial: { ...formData.permissions.financial, view: e.target.checked }
+                          }
+                        })}
+                        className="rounded border-gray-300 dark:border-gray-600 text-green-600 dark:text-green-400 focus:ring-green-500 dark:focus:ring-green-400 bg-white dark:bg-gray-700 transition-all duration-300"
+                      />
+                      <span className="text-sm text-gray-700 dark:text-gray-300">View</span>
+                    </label>
+                    <label className="flex items-center space-x-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={formData.permissions.financial.create}
+                        onChange={(e) => updateFormData({
+                          permissions: {
+                            ...formData.permissions,
+                            financial: { ...formData.permissions.financial, create: e.target.checked }
+                          }
+                        })}
+                        className="rounded border-gray-300 dark:border-gray-600 text-green-600 dark:text-green-400 focus:ring-green-500 dark:focus:ring-green-400 bg-white dark:bg-gray-700 transition-all duration-300"
+                      />
+                      <span className="text-sm text-gray-700 dark:text-gray-300">Create</span>
+                    </label>
+                    <label className="flex items-center space-x-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={formData.permissions.financial.bankTransactions}
+                        onChange={(e) => updateFormData({
+                          permissions: {
+                            ...formData.permissions,
+                            financial: { ...formData.permissions.financial, bankTransactions: e.target.checked }
+                          }
+                        })}
+                        className="rounded border-gray-300 dark:border-gray-600 text-green-600 dark:text-green-400 focus:ring-green-500 dark:focus:ring-green-400 bg-white dark:bg-gray-700 transition-all duration-300"
+                      />
+                      <span className="text-sm text-gray-700 dark:text-gray-300">Bank Transactions</span>
+                    </label>
+                  </div>
+                </div>
+
+                {/* Security Permissions */}
+                <div className="bg-white dark:bg-gray-800 p-4 rounded-lg border border-green-200 dark:border-green-700 transition-all duration-300">
+                  <h4 className="text-md font-semibold text-gray-800 dark:text-gray-200 mb-3">Security Management</h4>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                    <label className="flex items-center space-x-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={formData.permissions.security.gateManagement}
+                        onChange={(e) => updateFormData({
+                          permissions: {
+                            ...formData.permissions,
+                            security: { ...formData.permissions.security, gateManagement: e.target.checked }
+                          }
+                        })}
+                        className="rounded border-gray-300 dark:border-gray-600 text-green-600 dark:text-green-400 focus:ring-green-500 dark:focus:ring-green-400 bg-white dark:bg-gray-700 transition-all duration-300"
+                      />
+                      <span className="text-sm text-gray-700 dark:text-gray-300">Gate Management</span>
+                    </label>
+                    <label className="flex items-center space-x-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={formData.permissions.security.visitorManagement}
+                        onChange={(e) => updateFormData({
+                          permissions: {
+                            ...formData.permissions,
+                            security: { ...formData.permissions.security, visitorManagement: e.target.checked }
+                          }
+                        })}
+                        className="rounded border-gray-300 dark:border-gray-600 text-green-600 dark:text-green-400 focus:ring-green-500 dark:focus:ring-green-400 bg-white dark:bg-gray-700 transition-all duration-300"
+                      />
+                      <span className="text-sm text-gray-700 dark:text-gray-300">Visitor Management</span>
+                    </label>
+                    <label className="flex items-center space-x-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={formData.permissions.security.vehicleTracking}
+                        onChange={(e) => updateFormData({
+                          permissions: {
+                            ...formData.permissions,
+                            security: { ...formData.permissions.security, vehicleTracking: e.target.checked }
+                          }
+                        })}
+                        className="rounded border-gray-300 dark:border-gray-600 text-green-600 dark:text-green-400 focus:ring-green-500 dark:focus:ring-green-400 bg-white dark:bg-gray-700 transition-all duration-300"
+                      />
+                      <span className="text-sm text-gray-700 dark:text-gray-300">Vehicle Tracking</span>
+                    </label>
+                    <label className="flex items-center space-x-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={formData.permissions.security.cctvAccess}
+                        onChange={(e) => updateFormData({
+                          permissions: {
+                            ...formData.permissions,
+                            security: { ...formData.permissions.security, cctvAccess: e.target.checked }
+                          }
+                        })}
+                        className="rounded border-gray-300 dark:border-gray-600 text-green-600 dark:text-green-400 focus:ring-green-500 dark:focus:ring-green-400 bg-white dark:bg-gray-700 transition-all duration-300"
+                      />
+                      <span className="text-sm text-gray-700 dark:text-gray-300">CCTV Access</span>
+                    </label>
+                    <label className="flex items-center space-x-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={formData.permissions.security.emergencyResponse}
+                        onChange={(e) => updateFormData({
+                          permissions: {
+                            ...formData.permissions,
+                            security: { ...formData.permissions.security, emergencyResponse: e.target.checked }
+                          }
+                        })}
+                        className="rounded border-gray-300 dark:border-gray-600 text-green-600 dark:text-green-400 focus:ring-green-500 dark:focus:ring-green-400 bg-white dark:bg-gray-700 transition-all duration-300"
+                      />
+                      <span className="text-sm text-gray-700 dark:text-gray-300">Emergency Response</span>
                     </label>
                   </div>
                 </div>
 
                 {/* HR Permissions */}
-                <div className="bg-white p-4 rounded-lg border border-green-200">
-                  <h4 className="text-md font-semibold text-gray-800 mb-3">Human Resources</h4>
+                <div className="bg-white dark:bg-gray-800 p-4 rounded-lg border border-green-200 dark:border-green-700 transition-all duration-300">
+                  <h4 className="text-md font-semibold text-gray-800 dark:text-gray-200 mb-3">Human Resources</h4>
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                    <label className="flex items-center space-x-2">
+                    <label className="flex items-center space-x-2 cursor-pointer">
                       <input
                         type="checkbox"
                         checked={formData.permissions.hr.viewEmployees}
@@ -1366,11 +1555,11 @@ export default function UserFormModal({ isOpen, onClose, onSuccess, user }: User
                             hr: { ...formData.permissions.hr, viewEmployees: e.target.checked }
                           }
                         })}
-                        className="rounded border-gray-300 text-green-600 focus:ring-green-500"
+                        className="rounded border-gray-300 dark:border-gray-600 text-green-600 dark:text-green-400 focus:ring-green-500 dark:focus:ring-green-400 bg-white dark:bg-gray-700 transition-all duration-300"
                       />
-                      <span className="text-sm">View Employees</span>
+                      <span className="text-sm text-gray-700 dark:text-gray-300">View Employees</span>
                     </label>
-                    <label className="flex items-center space-x-2">
+                    <label className="flex items-center space-x-2 cursor-pointer">
                       <input
                         type="checkbox"
                         checked={formData.permissions.hr.manageAttendance}
@@ -1380,11 +1569,11 @@ export default function UserFormModal({ isOpen, onClose, onSuccess, user }: User
                             hr: { ...formData.permissions.hr, manageAttendance: e.target.checked }
                           }
                         })}
-                        className="rounded border-gray-300 text-green-600 focus:ring-green-500"
+                        className="rounded border-gray-300 dark:border-gray-600 text-green-600 dark:text-green-400 focus:ring-green-500 dark:focus:ring-green-400 bg-white dark:bg-gray-700 transition-all duration-300"
                       />
-                      <span className="text-sm">Manage Attendance</span>
+                      <span className="text-sm text-gray-700 dark:text-gray-300">Manage Attendance</span>
                     </label>
-                    <label className="flex items-center space-x-2">
+                    <label className="flex items-center space-x-2 cursor-pointer">
                       <input
                         type="checkbox"
                         checked={formData.permissions.hr.viewReports}
@@ -1394,18 +1583,18 @@ export default function UserFormModal({ isOpen, onClose, onSuccess, user }: User
                             hr: { ...formData.permissions.hr, viewReports: e.target.checked }
                           }
                         })}
-                        className="rounded border-gray-300 text-green-600 focus:ring-green-500"
+                        className="rounded border-gray-300 dark:border-gray-600 text-green-600 dark:text-green-400 focus:ring-green-500 dark:focus:ring-green-400 bg-white dark:bg-gray-700 transition-all duration-300"
                       />
-                      <span className="text-sm">View Reports</span>
+                      <span className="text-sm text-gray-700 dark:text-gray-300">View Reports</span>
                     </label>
                   </div>
                 </div>
 
                 {/* Admin Permissions */}
-                <div className="bg-white p-4 rounded-lg border border-green-200">
-                  <h4 className="text-md font-semibold text-gray-800 mb-3">System Administration</h4>
+                <div className="bg-white dark:bg-gray-800 p-4 rounded-lg border border-green-200 dark:border-green-700 transition-all duration-300">
+                  <h4 className="text-md font-semibold text-gray-800 dark:text-gray-200 mb-3">System Administration</h4>
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                    <label className="flex items-center space-x-2">
+                    <label className="flex items-center space-x-2 cursor-pointer">
                       <input
                         type="checkbox"
                         checked={formData.permissions.admin.userManagement}
@@ -1415,11 +1604,11 @@ export default function UserFormModal({ isOpen, onClose, onSuccess, user }: User
                             admin: { ...formData.permissions.admin, userManagement: e.target.checked }
                           }
                         })}
-                        className="rounded border-gray-300 text-green-600 focus:ring-green-500"
+                        className="rounded border-gray-300 dark:border-gray-600 text-green-600 dark:text-green-400 focus:ring-green-500 dark:focus:ring-green-400 bg-white dark:bg-gray-700 transition-all duration-300"
                       />
-                      <span className="text-sm">User Management</span>
+                      <span className="text-sm text-gray-700 dark:text-gray-300">User Management</span>
                     </label>
-                    <label className="flex items-center space-x-2">
+                    <label className="flex items-center space-x-2 cursor-pointer">
                       <input
                         type="checkbox"
                         checked={formData.permissions.admin.systemSettings}
@@ -1429,11 +1618,11 @@ export default function UserFormModal({ isOpen, onClose, onSuccess, user }: User
                             admin: { ...formData.permissions.admin, systemSettings: e.target.checked }
                           }
                         })}
-                        className="rounded border-gray-300 text-green-600 focus:ring-green-500"
+                        className="rounded border-gray-300 dark:border-gray-600 text-green-600 dark:text-green-400 focus:ring-green-500 dark:focus:ring-green-400 bg-white dark:bg-gray-700 transition-all duration-300"
                       />
-                      <span className="text-sm">System Settings</span>
+                      <span className="text-sm text-gray-700 dark:text-gray-300">System Settings</span>
                     </label>
-                    <label className="flex items-center space-x-2">
+                    <label className="flex items-center space-x-2 cursor-pointer">
                       <input
                         type="checkbox"
                         checked={formData.permissions.admin.auditLogs}
@@ -1443,9 +1632,9 @@ export default function UserFormModal({ isOpen, onClose, onSuccess, user }: User
                             admin: { ...formData.permissions.admin, auditLogs: e.target.checked }
                           }
                         })}
-                        className="rounded border-gray-300 text-green-600 focus:ring-green-500"
+                        className="rounded border-gray-300 dark:border-gray-600 text-green-600 dark:text-green-400 focus:ring-green-500 dark:focus:ring-green-400 bg-white dark:bg-gray-700 transition-all duration-300"
                       />
-                      <span className="text-sm">Audit Logs</span>
+                      <span className="text-sm text-gray-700 dark:text-gray-300">Audit Logs</span>
                     </label>
                   </div>
                 </div>
@@ -1454,15 +1643,15 @@ export default function UserFormModal({ isOpen, onClose, onSuccess, user }: User
 
             {/* Password Section (only for new users) */}
             {!isEditing && (
-              <div className="bg-yellow-50 rounded-xl p-6 border border-yellow-200">
-                <h3 className="text-lg font-semibold text-black mb-4 flex items-center">
-                  <Shield className="w-5 h-5 mr-2 text-yellow-600" />
+              <div className="bg-yellow-50 dark:bg-yellow-900/20 rounded-xl p-6 border border-yellow-200 dark:border-yellow-700 transition-all duration-300">
+                <h3 className="text-lg font-semibold text-black dark:text-white mb-4 flex items-center">
+                  <Shield className="w-5 h-5 mr-2 text-yellow-600 dark:text-yellow-400" />
                   Security
                 </h3>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-semibold text-black mb-2">
+                    <label className="block text-sm font-semibold text-black dark:text-white mb-2">
                       Password *
                     </label>
                     <div className="relative">
@@ -1471,26 +1660,26 @@ export default function UserFormModal({ isOpen, onClose, onSuccess, user }: User
                         required
                         value={formData.password}
                         onChange={(e) => updateFormData({ password: e.target.value })}
-                        className={`w-full px-4 py-3 pr-12 border rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-all duration-200 text-gray-900 font-medium placeholder:text-gray-500 ${
-                          errors.password ? 'border-red-300 bg-red-50' : 'border-gray-300 bg-white'
+                        className={`w-full px-4 py-3 pr-12 border rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-all duration-200 text-gray-900 dark:text-white font-medium placeholder:text-gray-500 dark:placeholder:text-gray-400 ${
+                          errors.password ? 'border-red-300 dark:border-red-600 bg-red-50 dark:bg-red-900/20' : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800'
                         }`}
                         placeholder="Enter password"
                       />
                       <button
                         type="button"
                         onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
                       >
                         {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                       </button>
                     </div>
                     {errors.password && (
-                      <p className="mt-1 text-sm text-red-600 font-medium">{errors.password}</p>
+                      <p className="mt-1 text-sm text-red-600 dark:text-red-400 font-medium">{errors.password}</p>
                     )}
                   </div>
 
                   <div>
-                    <label className="block text-sm font-semibold text-black mb-2">
+                    <label className="block text-sm font-semibold text-black dark:text-white mb-2">
                       Confirm Password *
                     </label>
                     <div className="relative">
@@ -1499,21 +1688,21 @@ export default function UserFormModal({ isOpen, onClose, onSuccess, user }: User
                         required
                         value={formData.confirmPassword}
                         onChange={(e) => updateFormData({ confirmPassword: e.target.value })}
-                        className={`w-full px-4 py-3 pr-12 border rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-all duration-200 text-gray-900 font-medium placeholder:text-gray-500 ${
-                          errors.confirmPassword ? 'border-red-300 bg-red-50' : 'border-gray-300 bg-white'
+                        className={`w-full px-4 py-3 pr-12 border rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-all duration-200 text-gray-900 dark:text-white font-medium placeholder:text-gray-500 dark:placeholder:text-gray-400 ${
+                          errors.confirmPassword ? 'border-red-300 dark:border-red-600 bg-red-50 dark:bg-red-900/20' : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800'
                         }`}
                         placeholder="Confirm password"
                       />
                       <button
                         type="button"
                         onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
                       >
                         {showConfirmPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                       </button>
                     </div>
                     {errors.confirmPassword && (
-                      <p className="mt-1 text-sm text-red-600 font-medium">{errors.confirmPassword}</p>
+                      <p className="mt-1 text-sm text-red-600 dark:text-red-400 font-medium">{errors.confirmPassword}</p>
                     )}
                   </div>
                 </div>
@@ -1529,7 +1718,7 @@ export default function UserFormModal({ isOpen, onClose, onSuccess, user }: User
           type="button"
           onClick={onClose}
           disabled={isLoading}
-          className="px-6 py-3 border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 font-semibold transition-colors"
+          className="px-6 py-3 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 font-semibold transition-colors"
         >
           Cancel
         </Button>
@@ -1538,7 +1727,7 @@ export default function UserFormModal({ isOpen, onClose, onSuccess, user }: User
           type="submit"
           form="user-form"
           disabled={isLoading}
-          className="bg-sky-500 hover:bg-sky-600 text-white px-8 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
+          className="bg-sky-500 hover:bg-sky-600 dark:bg-sky-600 dark:hover:bg-sky-700 text-white px-8 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
         >
           {isLoading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
           {showSuccess ? 'Success!' : (isEditing ? 'Update User' : 'Create User')}

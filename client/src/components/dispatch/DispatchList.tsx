@@ -27,7 +27,9 @@ import {
   CheckCircle,
   AlertCircle,
   XCircle,
-  PlayCircle
+  PlayCircle,
+  Zap,
+  Edit3
 } from 'lucide-react'
 import { format } from 'date-fns'
 
@@ -35,6 +37,7 @@ interface DispatchListProps {
   dispatches: Dispatch[]
   onView?: (dispatch: Dispatch) => void
   onEdit?: (dispatch: Dispatch) => void
+  onQuickUpdate?: (dispatch: Dispatch) => void
   onDelete?: (dispatch: Dispatch) => void
   onCreate?: () => void
   onRefresh?: () => void
@@ -46,6 +49,7 @@ export const DispatchList = ({
   dispatches,
   onView,
   onEdit,
+  onQuickUpdate,
   onDelete,
   onCreate,
   onRefresh,
@@ -237,10 +241,10 @@ export const DispatchList = ({
       </div>
 
       {/* Filters and Actions */}
-      <Card className="border-0 shadow-lg">
-        <CardHeader className="pb-4 bg-gradient-to-r from-gray-50 to-gray-100">
+      <Card className="border-0 shadow-lg dark:shadow-gray-800/20">
+        <CardHeader className="pb-4 bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-700">
           <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between">
-            <CardTitle className="text-xl font-bold text-gray-800">Dispatch Management</CardTitle>
+            <CardTitle className="text-xl font-bold text-gray-800 dark:text-white">Dispatch Management</CardTitle>
             <div className="flex flex-col lg:flex-row gap-3 w-full lg:w-auto">
               {/* Search and Filters */}
               <div className="flex flex-col sm:flex-row gap-2 w-full lg:w-auto">
@@ -250,14 +254,14 @@ export const DispatchList = ({
                     placeholder="Search dispatches..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10 w-full sm:w-64 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                    className="pl-10 w-full sm:w-64 border-gray-300 dark:border-gray-600 focus:border-blue-500 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                   />
                 </div>
                 <div className="flex gap-2">
                   <select
                     value={statusFilter}
                     onChange={(e) => setStatusFilter(e.target.value)}
-                    className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white flex-1 sm:flex-none"
+                    className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white flex-1 sm:flex-none"
                   >
                     <option value="all">All Status</option>
                     <option value="pending">Pending</option>
@@ -269,7 +273,7 @@ export const DispatchList = ({
                   <select
                     value={priorityFilter}
                     onChange={(e) => setPriorityFilter(e.target.value)}
-                    className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white flex-1 sm:flex-none"
+                    className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white flex-1 sm:flex-none"
                   >
                     <option value="all">All Priority</option>
                     <option value="low">Low</option>
@@ -287,7 +291,7 @@ export const DispatchList = ({
                     size="sm"
                     onClick={onRefresh}
                     disabled={isLoading}
-                    className="flex items-center gap-2 border-gray-300 hover:bg-gray-50 flex-1 lg:flex-none"
+                    className="flex items-center gap-2 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 flex-1 lg:flex-none"
                   >
                     <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
                     <span className="hidden sm:inline">Refresh</span>
@@ -312,40 +316,40 @@ export const DispatchList = ({
           {/* Desktop Table View */}
           <div className="hidden lg:block overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-gradient-to-r from-gray-50 to-gray-100 border-b border-gray-200">
+              <thead className="bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-700 border-b border-gray-200 dark:border-gray-600">
                 <tr>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider">
                     Dispatch Info
                   </th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider">
                     Source & Destination
                   </th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider">
                     Delivery Details
                   </th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider">
                     Status & Priority
                   </th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider">
                     Actions
                   </th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+              <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-600">
                 {filteredDispatches.map((dispatch) => (
-                  <tr key={dispatch._id} className="hover:bg-gray-50 transition-colors">
+                  <tr key={dispatch._id} className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
                     <td className="px-6 py-4">
                       <div className="space-y-2">
                         <div className="flex items-center gap-3">
                           <span className="text-2xl">{getDispatchTypeIcon(dispatch.dispatchType)}</span>
                           <div>
-                            <p className="text-sm font-semibold text-gray-900">{dispatch.dispatchNumber}</p>
-                            <p className="text-xs text-gray-500">
+                            <p className="text-sm font-semibold text-gray-900 dark:text-white">{dispatch.dispatchNumber}</p>
+                            <p className="text-xs text-gray-500 dark:text-gray-400">
                               {format(new Date(dispatch.dispatchDate), 'MMM dd, yyyy')}
                             </p>
                           </div>
                         </div>
-                        <div className="flex items-center gap-2 text-xs text-gray-600">
+                        <div className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400">
                           <Building className="h-3 w-3" />
                           <span className="font-medium">{dispatch.companyId?.companyName}</span>
                         </div>
@@ -377,8 +381,8 @@ export const DispatchList = ({
                             <Building className="h-3 w-3 text-blue-600" />
                           </div>
                           <div>
-                            <span className="text-gray-600 text-xs">From:</span>
-                            <p className="font-medium text-gray-900">{dispatch.sourceWarehouseId?.warehouseName}</p>
+                            <span className="text-gray-600 dark:text-gray-400 text-xs">From:</span>
+                            <p className="font-medium text-gray-900 dark:text-white">{dispatch.sourceWarehouseId?.warehouseName}</p>
                           </div>
                         </div>
                         <div className="flex items-center gap-2 text-sm">
@@ -386,8 +390,8 @@ export const DispatchList = ({
                             <Package className="h-3 w-3 text-green-600" />
                           </div>
                           <div>
-                            <span className="text-gray-600 text-xs">Order:</span>
-                            <p className="font-medium text-gray-900">{dispatch.customerOrderId?.orderNumber}</p>
+                            <span className="text-gray-600 dark:text-gray-400 text-xs">Order:</span>
+                            <p className="font-medium text-gray-900 dark:text-white">{dispatch.customerOrderId?.orderNumber}</p>
                           </div>
                         </div>
                       </div>
@@ -400,8 +404,8 @@ export const DispatchList = ({
                               <Truck className="h-3 w-3 text-gray-600" />
                             </div>
                             <div>
-                              <span className="text-gray-600 text-xs">Vehicle:</span>
-                              <p className="font-medium text-gray-900">{dispatch.vehicleNumber}</p>
+                            <span className="text-gray-600 dark:text-gray-400 text-xs">Vehicle:</span>
+                            <p className="font-medium text-gray-900 dark:text-white">{dispatch.vehicleNumber}</p>
                             </div>
                           </div>
                         )}
@@ -411,8 +415,8 @@ export const DispatchList = ({
                               <User className="h-3 w-3 text-gray-600" />
                             </div>
                             <div>
-                              <span className="text-gray-600 text-xs">Person:</span>
-                              <p className="font-medium text-gray-900">{dispatch.deliveryPersonName}</p>
+                            <span className="text-gray-600 dark:text-gray-400 text-xs">Person:</span>
+                            <p className="font-medium text-gray-900 dark:text-white">{dispatch.deliveryPersonName}</p>
                             </div>
                           </div>
                         )}
@@ -422,8 +426,8 @@ export const DispatchList = ({
                               <Phone className="h-3 w-3 text-gray-600" />
                             </div>
                             <div>
-                              <span className="text-gray-600 text-xs">Phone:</span>
-                              <p className="font-medium text-gray-900">{dispatch.deliveryPersonNumber}</p>
+                            <span className="text-gray-600 dark:text-gray-400 text-xs">Phone:</span>
+                            <p className="font-medium text-gray-900 dark:text-white">{dispatch.deliveryPersonNumber}</p>
                             </div>
                           </div>
                         )}
@@ -456,12 +460,12 @@ export const DispatchList = ({
                               <ChevronDown className="h-3 w-3" />
                             </Button>
                             {statusDropdownOpen === dispatch._id && (
-                              <div className="absolute top-full left-0 mt-1 w-48 bg-white border border-gray-200 rounded-md shadow-lg z-10">
+                              <div className="absolute top-full left-0 mt-1 w-48 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-md shadow-lg z-10">
                                 {statusOptions.map((option) => (
                                   <button
                                     key={option.value}
                                     onClick={() => handleStatusChange(dispatch._id, option.value)}
-                                    className="w-full px-3 py-2 text-left text-sm hover:bg-gray-50 flex items-center gap-2"
+                                    className="w-full px-3 py-2 text-left text-sm hover:bg-gray-50 dark:hover:bg-gray-600 flex items-center gap-2 text-gray-900 dark:text-white"
                                   >
                                     {option.icon}
                                     {option.label}
@@ -474,16 +478,27 @@ export const DispatchList = ({
                       </div>
                     </td>
                     <td className="px-6 py-4">
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-1">
                         {onView && (
                           <Button
                             variant="ghost"
                             size="sm"
                             onClick={() => onView(dispatch)}
-                            className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 p-2"
+                            className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-blue-900/20 p-2"
                             title="View Details"
                           >
                             <Eye className="h-4 w-4" />
+                          </Button>
+                        )}
+                        {onQuickUpdate && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => onQuickUpdate(dispatch)}
+                            className="text-purple-600 hover:text-purple-700 hover:bg-purple-50 dark:hover:bg-purple-900/20 p-2"
+                            title="Quick Update"
+                          >
+                            <Zap className="h-4 w-4" />
                           </Button>
                         )}
                         {onEdit && (
@@ -491,10 +506,10 @@ export const DispatchList = ({
                             variant="ghost"
                             size="sm"
                             onClick={() => onEdit(dispatch)}
-                            className="text-green-600 hover:text-green-700 hover:bg-green-50 p-2"
+                            className="text-green-600 hover:text-green-700 hover:bg-green-50 dark:hover:bg-green-900/20 p-2"
                             title="Edit Dispatch"
                           >
-                            <Edit className="h-4 w-4" />
+                            <Edit3 className="h-4 w-4" />
                           </Button>
                         )}
                         {onDelete && (
@@ -502,7 +517,7 @@ export const DispatchList = ({
                             variant="ghost"
                             size="sm"
                             onClick={() => onDelete(dispatch)}
-                            className="text-red-600 hover:text-red-700 hover:bg-red-50 p-2"
+                            className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 p-2"
                             title="Delete Dispatch"
                           >
                             <Trash2 className="h-4 w-4" />
@@ -519,15 +534,15 @@ export const DispatchList = ({
           {/* Mobile Card View */}
           <div className="lg:hidden space-y-4 p-4">
             {filteredDispatches.map((dispatch) => (
-              <Card key={dispatch._id} className="border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+              <Card key={dispatch._id} className="border border-gray-200 dark:border-gray-600 shadow-sm hover:shadow-md dark:hover:shadow-gray-800/20 transition-shadow">
                 <CardContent className="p-4">
                   {/* Header */}
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-3">
                       <span className="text-2xl">{getDispatchTypeIcon(dispatch.dispatchType)}</span>
                       <div>
-                        <p className="text-sm font-semibold text-gray-900">{dispatch.dispatchNumber}</p>
-                        <p className="text-xs text-gray-500">
+                        <p className="text-sm font-semibold text-gray-900 dark:text-white">{dispatch.dispatchNumber}</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">
                           {format(new Date(dispatch.dispatchDate), 'MMM dd, yyyy')}
                         </p>
                       </div>
@@ -541,7 +556,7 @@ export const DispatchList = ({
                   </div>
 
                   {/* Company Info */}
-                  <div className="flex items-center gap-2 text-xs text-gray-600 mb-3">
+                  <div className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400 mb-3">
                     <Building className="h-3 w-3" />
                     <span className="font-medium">{dispatch.companyId?.companyName}</span>
                   </div>
@@ -576,8 +591,8 @@ export const DispatchList = ({
                           <Truck className="h-3 w-3 text-gray-600" />
                         </div>
                         <div>
-                          <span className="text-gray-600 text-xs">Vehicle:</span>
-                          <p className="font-medium text-gray-900">{dispatch.vehicleNumber}</p>
+                            <span className="text-gray-600 dark:text-gray-400 text-xs">Vehicle:</span>
+                            <p className="font-medium text-gray-900 dark:text-white">{dispatch.vehicleNumber}</p>
                         </div>
                       </div>
                     )}
@@ -587,8 +602,8 @@ export const DispatchList = ({
                           <User className="h-3 w-3 text-gray-600" />
                         </div>
                         <div>
-                          <span className="text-gray-600 text-xs">Person:</span>
-                          <p className="font-medium text-gray-900">{dispatch.deliveryPersonName}</p>
+                            <span className="text-gray-600 dark:text-gray-400 text-xs">Person:</span>
+                            <p className="font-medium text-gray-900 dark:text-white">{dispatch.deliveryPersonName}</p>
                         </div>
                       </div>
                     )}
@@ -598,8 +613,8 @@ export const DispatchList = ({
                           <Phone className="h-3 w-3 text-gray-600" />
                         </div>
                         <div>
-                          <span className="text-gray-600 text-xs">Phone:</span>
-                          <p className="font-medium text-gray-900">{dispatch.deliveryPersonNumber}</p>
+                            <span className="text-gray-600 dark:text-gray-400 text-xs">Phone:</span>
+                            <p className="font-medium text-gray-900 dark:text-white">{dispatch.deliveryPersonNumber}</p>
                         </div>
                       </div>
                     )}
@@ -608,7 +623,7 @@ export const DispatchList = ({
                   {/* Images */}
                   {dispatch.documents?.photos && dispatch.documents.photos.length > 0 && (
                     <div className="mb-4">
-                      <p className="text-xs text-gray-600 mb-2">Photos:</p>
+                      <p className="text-xs text-gray-600 dark:text-gray-400 mb-2">Photos:</p>
                       <div className="flex gap-2 overflow-x-auto">
                         {dispatch.documents.photos.map((photo, index) => (
                           <ImageWithFallback
@@ -629,7 +644,7 @@ export const DispatchList = ({
                       <Badge className={`${getPriorityColor(dispatch.priority)} text-xs font-medium`}>
                         {dispatch.priority}
                       </Badge>
-                      <span className="text-xs text-gray-500">
+                      <span className="text-xs text-gray-500 dark:text-gray-400">
                         Created: {format(new Date(dispatch.createdAt), 'MMM dd')}
                       </span>
                     </div>
@@ -639,10 +654,21 @@ export const DispatchList = ({
                           variant="ghost"
                           size="sm"
                           onClick={() => onView(dispatch)}
-                          className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 p-1"
+                          className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-blue-900/20 p-1"
                           title="View Details"
                         >
                           <Eye className="h-4 w-4" />
+                        </Button>
+                      )}
+                      {onQuickUpdate && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => onQuickUpdate(dispatch)}
+                          className="text-purple-600 hover:text-purple-700 hover:bg-purple-50 dark:hover:bg-purple-900/20 p-1"
+                          title="Quick Update"
+                        >
+                          <Zap className="h-4 w-4" />
                         </Button>
                       )}
                       {onEdit && (
@@ -650,10 +676,10 @@ export const DispatchList = ({
                           variant="ghost"
                           size="sm"
                           onClick={() => onEdit(dispatch)}
-                          className="text-green-600 hover:text-green-700 hover:bg-green-50 p-1"
+                          className="text-green-600 hover:text-green-700 hover:bg-green-50 dark:hover:bg-green-900/20 p-1"
                           title="Edit Dispatch"
                         >
-                          <Edit className="h-4 w-4" />
+                          <Edit3 className="h-4 w-4" />
                         </Button>
                       )}
                       {onDelete && (
@@ -661,7 +687,7 @@ export const DispatchList = ({
                           variant="ghost"
                           size="sm"
                           onClick={() => onDelete(dispatch)}
-                          className="text-red-600 hover:text-red-700 hover:bg-red-50 p-1"
+                          className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 p-1"
                           title="Delete Dispatch"
                         >
                           <Trash2 className="h-4 w-4" />
@@ -684,12 +710,12 @@ export const DispatchList = ({
                           <ChevronDown className="h-3 w-3" />
                         </Button>
                         {statusDropdownOpen === dispatch._id && (
-                          <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-md shadow-lg z-10">
+                          <div className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-md shadow-lg z-10">
                             {statusOptions.map((option) => (
                               <button
                                 key={option.value}
                                 onClick={() => handleStatusChange(dispatch._id, option.value)}
-                                className="w-full px-3 py-2 text-left text-sm hover:bg-gray-50 flex items-center gap-2"
+                                className="w-full px-3 py-2 text-left text-sm hover:bg-gray-50 dark:hover:bg-gray-600 flex items-center gap-2 text-gray-900 dark:text-white"
                               >
                                 {option.icon}
                                 {option.label}
@@ -711,8 +737,8 @@ export const DispatchList = ({
                 <Truck className="w-24 h-24 text-gray-300" />
                 <div className="absolute inset-0 bg-gradient-to-r from-blue-400 to-indigo-500 rounded-full opacity-10 animate-pulse"></div>
               </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">No dispatches found</h3>
-              <p className="text-gray-500 mb-6">
+              <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">No dispatches found</h3>
+              <p className="text-gray-500 dark:text-gray-400 mb-6">
                 {searchTerm || statusFilter !== 'all' || priorityFilter !== 'all'
                   ? 'Try adjusting your search or filters'
                   : 'Get started by creating your first dispatch'}

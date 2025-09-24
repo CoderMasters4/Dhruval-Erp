@@ -19,14 +19,14 @@ export function DashboardHeader({
     <div className={`flex items-center justify-between ${className}`}>
       <div className="flex items-center space-x-3">
         {icon && (
-          <div className="flex items-center justify-center w-12 h-12 bg-gradient-to-br from-sky-500 to-blue-600 rounded-lg shadow-lg">
+          <div className="flex items-center justify-center w-12 h-12 bg-gradient-to-br from-sky-500 to-blue-600 dark:from-sky-600 dark:to-blue-700 rounded-lg shadow-lg">
             {icon}
           </div>
         )}
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">{title}</h1>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{title}</h1>
           {description && (
-            <p className="text-gray-600 mt-1">{description}</p>
+            <p className="text-gray-600 dark:text-gray-400 mt-1">{description}</p>
           )}
         </div>
       </div>

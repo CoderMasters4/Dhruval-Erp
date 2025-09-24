@@ -15,9 +15,10 @@ import {
 interface InventoryAnalyticsProps {
   stats: any;
   alerts: any[];
+  theme: 'light' | 'dark';
 }
 
-export function InventoryAnalytics({ stats, alerts }: InventoryAnalyticsProps) {
+export function InventoryAnalytics({ stats, alerts, theme }: InventoryAnalyticsProps) {
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-IN', {
       style: 'currency',

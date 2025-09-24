@@ -9,9 +9,10 @@ interface InventoryDetailsModalProps {
   onClose: () => void;
   onEdit: (item: any) => void;
   onDelete: (id: string) => void;
+  theme: 'light' | 'dark';
 }
 
-export function InventoryDetailsModal({ item, onClose, onEdit, onDelete }: InventoryDetailsModalProps) {
+export function InventoryDetailsModal({ item, onClose, onEdit, onDelete, theme }: InventoryDetailsModalProps) {
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-IN', {
       style: 'currency',
@@ -22,14 +23,25 @@ export function InventoryDetailsModal({ item, onClose, onEdit, onDelete }: Inven
   if (!item) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white p-6 rounded-lg w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+    <div className={`fixed inset-0 flex items-center justify-center z-50 transition-theme ${
+      theme === 'dark' ? 'bg-black/70' : 'bg-black bg-opacity-50'
+    }`}>
+      <div className={`p-6 rounded-lg w-full max-w-4xl max-h-[90vh] overflow-y-auto transition-theme ${
+        theme === 'dark' ? 'bg-gray-800' : 'bg-white'
+      }`}>
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-xl font-bold">Item Details: {item.itemName}</h2>
+          <h2 className={`text-xl font-bold ${
+            theme === 'dark' ? 'text-gray-100' : 'text-gray-900'
+          }`}>Item Details: {item.itemName}</h2>
           <Button 
             variant="outline" 
             size="sm"
             onClick={onClose}
+            className={`transition-theme ${
+              theme === 'dark' 
+                ? 'border-gray-600 text-gray-300 hover:bg-gray-700' 
+                : 'border-gray-300 text-gray-700 hover:bg-gray-50'
+            }`}
           >
             ✕
           </Button>

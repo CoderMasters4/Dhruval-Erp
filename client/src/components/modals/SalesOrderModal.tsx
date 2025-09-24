@@ -96,28 +96,28 @@ function SearchableDropdown({
   return (
     <div className="relative searchable-dropdown">
       <div
-        className="flex items-center justify-between w-full px-3 py-2 border border-gray-300 rounded-md bg-white cursor-pointer hover:border-gray-400"
+        className="flex items-center justify-between w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 cursor-pointer hover:border-gray-400 dark:hover:border-gray-500 transition-all duration-200"
         onClick={() => {
           console.log('Dropdown clicked, current state:', isOpen)
           setIsOpen(!isOpen)
         }}
       >
-        <span className={selectedItem ? "text-gray-900" : "text-gray-500"}>
+        <span className={selectedItem ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-gray-400"}>
           {selectedItem ? selectedItem[displayKey] : placeholder}
         </span>
-        <ChevronDown className={`h-4 w-4 text-gray-500 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+        <ChevronDown className={`h-4 w-4 text-gray-500 dark:text-gray-400 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
       </div>
 
       {isOpen && (
-        <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-hidden">
-          <div className="p-2 border-b border-gray-200">
+        <div className="absolute z-50 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md shadow-lg max-h-60 overflow-hidden">
+          <div className="p-2 border-b border-gray-200 dark:border-gray-700">
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 dark:text-gray-500" />
               <Input
                 placeholder={searchPlaceholder}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 pr-3 py-2 text-sm"
+                className="pl-10 pr-3 py-2 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
                 autoFocus
               />
             </div>
@@ -127,14 +127,14 @@ function SearchableDropdown({
               filteredOptions.map((option) => (
                 <div
                   key={option[valueKey]}
-                  className="px-3 py-2 hover:bg-gray-100 cursor-pointer border-b border-gray-100 last:border-b-0"
+                  className="px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer border-b border-gray-100 dark:border-gray-700 last:border-b-0 transition-colors duration-200"
                   onClick={() => handleSelect(option)}
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex-1">
-                      <div className="font-medium text-sm">{option[displayKey]}</div>
+                      <div className="font-medium text-sm text-gray-900 dark:text-white">{option[displayKey]}</div>
                       {showDetails && (
-                        <div className="text-xs text-gray-500 mt-1 space-y-1">
+                        <div className="text-xs text-gray-500 dark:text-gray-400 mt-1 space-y-1">
                           {option.customerCode && (
                             <div>Code: {option.customerCode}</div>
                           )}
@@ -143,13 +143,13 @@ function SearchableDropdown({
                           )}
                           {option.contactInfo?.primaryPhone && (
                             <div className="flex items-center gap-1">
-                              <Phone className="h-3 w-3" />
+                              <Phone className="h-3 w-3 text-gray-600 dark:text-gray-400" />
                               <span>{option.contactInfo.primaryPhone}</span>
                             </div>
                           )}
                           {option.contactInfo?.primaryEmail && (
                             <div className="flex items-center gap-1">
-                              <Mail className="h-3 w-3" />
+                              <Mail className="h-3 w-3 text-gray-600 dark:text-gray-400" />
                               <span>{option.contactInfo.primaryEmail}</span>
                             </div>
                           )}
@@ -157,13 +157,13 @@ function SearchableDropdown({
                       )}
                     </div>
                     {selectedItem?.[valueKey] === option[valueKey] && (
-                      <Check className="h-4 w-4 text-blue-600 ml-2" />
+                      <Check className="h-4 w-4 text-blue-600 dark:text-blue-400 ml-2" />
                     )}
                   </div>
                 </div>
               ))
             ) : (
-              <div className="px-3 py-2 text-sm text-gray-500">No options found</div>
+              <div className="px-3 py-2 text-sm text-gray-500 dark:text-gray-400">No options found</div>
             )}
           </div>
         </div>
@@ -522,27 +522,70 @@ export default function SalesOrderModal({ isOpen, onClose, order, mode, onSucces
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} size="lg">
-      <div className="p-6">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-semibold">
-            {mode === 'create' ? 'Create New Sales Order' : 'Edit Sales Order'}
-          </h2>
-          <Button variant="ghost" size="sm" onClick={onClose}>
-            <X className="h-4 w-4" />
-          </Button>
+      <div className="p-6 bg-gradient-to-br from-white via-blue-50/30 to-indigo-100/30 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 transition-all duration-300">
+        {/* Enhanced Header */}
+        <div className="relative overflow-hidden bg-gradient-to-r from-white via-blue-50/50 to-indigo-100/50 dark:from-gray-900 dark:via-blue-900/20 dark:to-indigo-900/20 backdrop-blur-sm rounded-2xl shadow-lg border border-white/20 dark:border-gray-700/50 p-6 mb-6 transition-all duration-300">
+          {/* Animated Background Elements */}
+          <div className="absolute inset-0 overflow-hidden rounded-2xl">
+            <div className="absolute -top-2 -right-2 w-16 h-16 bg-gradient-to-br from-blue-400/10 to-indigo-500/10 rounded-full blur-lg animate-pulse"></div>
+            <div className="absolute -bottom-2 -left-2 w-20 h-20 bg-gradient-to-tr from-purple-400/10 to-pink-500/10 rounded-full blur-lg animate-pulse delay-1000"></div>
+          </div>
+          
+          <div className="relative z-10 flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <div className="relative group/icon">
+                <div className="absolute inset-0 bg-gradient-to-r from-blue-500 via-indigo-600 to-purple-600 rounded-xl blur-md opacity-75 group-hover/icon:opacity-100 transition-opacity duration-300 animate-pulse"></div>
+                <div className="relative p-3 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-xl shadow-lg group-hover/icon:scale-110 transition-transform duration-300">
+                  <svg className="h-6 w-6 text-white drop-shadow-lg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                </div>
+              </div>
+              
+              <div>
+                <h2 className="text-2xl font-bold bg-gradient-to-r from-gray-900 via-blue-800 to-indigo-900 dark:from-white dark:via-blue-200 dark:to-indigo-200 bg-clip-text text-transparent transition-all duration-300">
+                  {mode === 'create' ? 'Create New Sales Order' : 'Edit Sales Order'}
+                </h2>
+                <p className="text-sm font-medium text-gray-600 dark:text-gray-300 mt-1">
+                  {mode === 'create' ? 'Fill in the details to create a new sales order' : 'Update the sales order information'}
+                </p>
+              </div>
+            </div>
+            
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={onClose}
+              className="relative group/btn overflow-hidden border-2 border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 hover:border-gray-400 dark:hover:border-gray-500 p-3 rounded-xl transition-all duration-300 transform hover:scale-105 hover:-translate-y-1 shadow-lg hover:shadow-gray-500/10"
+            >
+              <div className="absolute inset-0 bg-gradient-to-r from-gray-500/10 to-transparent opacity-0 group-hover/btn:opacity-100 transition-opacity duration-300"></div>
+              <X className="h-5 w-5 relative z-10" />
+            </Button>
+          </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-8">
           {/* Company Selection (for superadmin) */}
           {isSuperAdmin && (
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 p-6 transition-all duration-300">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
+                  <svg className="h-5 w-5 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                  </svg>
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Company Selection</h3>
+                  <p className="text-sm text-gray-600 dark:text-gray-300">Choose the company for this order</p>
+                </div>
+              </div>
+              <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
                 Company *
               </label>
               <select
                 value={selectedCompanyId}
                 onChange={(e) => setSelectedCompanyId(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 dark:text-white font-medium transition-all duration-200"
               >
                 <option value="">Select a company...</option>
                 {companies.map((company: any) => (
@@ -555,49 +598,75 @@ export default function SalesOrderModal({ isOpen, onClose, order, mode, onSucces
           )}
 
           {/* Order Type and Source */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Order Type *
-              </label>
-              <select
-                value={formData.orderType || 'local'}
-                onChange={(e) => setFormData(prev => ({ ...prev, orderType: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              >
-                <option value="local">Local</option>
-                <option value="export">Export</option>
-                <option value="custom">Custom</option>
-                <option value="sample">Sample</option>
-                <option value="bulk">Bulk</option>
-                <option value="repeat">Repeat</option>
-              </select>
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 p-6 transition-all duration-300">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="p-2 bg-green-100 dark:bg-green-900/30 rounded-lg">
+                <svg className="h-5 w-5 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+                </svg>
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Order Configuration</h3>
+                <p className="text-sm text-gray-600 dark:text-gray-300">Set the order type and source</p>
+              </div>
             </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
+                  Order Type *
+                </label>
+                <select
+                  value={formData.orderType || 'local'}
+                  onChange={(e) => setFormData(prev => ({ ...prev, orderType: e.target.value }))}
+                  className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 dark:text-white font-medium transition-all duration-200"
+                >
+                  <option value="local">Local</option>
+                  <option value="export">Export</option>
+                  <option value="custom">Custom</option>
+                  <option value="sample">Sample</option>
+                  <option value="bulk">Bulk</option>
+                  <option value="repeat">Repeat</option>
+                </select>
+              </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Order Source *
-              </label>
-              <select
-                value={formData.orderSource || 'direct'}
-                onChange={(e) => setFormData(prev => ({ ...prev, orderSource: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              >
-                <option value="direct">Direct</option>
-                <option value="meesho">Meesho</option>
-                <option value="indiamart">IndiaMART</option>
-                <option value="website">Website</option>
-                <option value="phone">Phone</option>
-                <option value="email">Email</option>
-                <option value="whatsapp">WhatsApp</option>
-                <option value="exhibition">Exhibition</option>
-              </select>
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
+                  Order Source *
+                </label>
+                <select
+                  value={formData.orderSource || 'direct'}
+                  onChange={(e) => setFormData(prev => ({ ...prev, orderSource: e.target.value }))}
+                  className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 dark:text-white font-medium transition-all duration-200"
+                >
+                  <option value="direct">Direct</option>
+                  <option value="meesho">Meesho</option>
+                  <option value="indiamart">IndiaMART</option>
+                  <option value="website">Website</option>
+                  <option value="phone">Phone</option>
+                  <option value="email">Email</option>
+                  <option value="whatsapp">WhatsApp</option>
+                  <option value="exhibition">Exhibition</option>
+                </select>
+              </div>
             </div>
           </div>
 
           {/* Customer Selection */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 p-6 transition-all duration-300">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="p-2 bg-purple-100 dark:bg-purple-900/30 rounded-lg">
+                <svg className="h-5 w-5 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Customer Selection</h3>
+                <p className="text-sm text-gray-600 dark:text-gray-300">Choose the customer for this order</p>
+              </div>
+            </div>
+            
+            <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
               Customer *
             </label>
             <SearchableDropdown
@@ -662,30 +731,62 @@ export default function SalesOrderModal({ isOpen, onClose, order, mode, onSucces
           </div>
 
           {/* Order Items */}
-          <div>
-            <div className="flex items-center justify-between mb-4">
-              <label className="block text-sm font-medium text-gray-700">
-                Order Items *
-              </label>
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 p-6 transition-all duration-300">
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-orange-100 dark:bg-orange-900/30 rounded-lg">
+                  <svg className="h-5 w-5 text-orange-600 dark:text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                  </svg>
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Order Items</h3>
+                  <p className="text-sm text-gray-600 dark:text-gray-300">Add products to this order</p>
+                </div>
+              </div>
               <Button
                 type="button"
                 variant="outline"
                 size="sm"
                 onClick={addOrderItem}
-                className="flex items-center gap-2"
+                className="relative group/btn overflow-hidden border-2 border-blue-300 dark:border-blue-600 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:border-blue-400 dark:hover:border-blue-500 px-4 py-2 rounded-xl font-medium transition-all duration-300 transform hover:scale-105 hover:-translate-y-1 shadow-lg hover:shadow-blue-500/10"
               >
-                <Plus className="h-4 w-4" />
-                Add Item
+                <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-transparent opacity-0 group-hover/btn:opacity-100 transition-opacity duration-300"></div>
+                <div className="relative flex items-center gap-2">
+                  <Plus className="h-4 w-4" />
+                  Add Item
+                </div>
               </Button>
             </div>
 
-            <div className="space-y-4">
+            <div className="space-y-6">
               {formData.orderItems.map((item, index) => (
-                <div key={index} className="border border-gray-200 rounded-lg p-4">
+                <div key={index} className="border border-gray-200 dark:border-gray-700 rounded-xl p-6 bg-gray-50 dark:bg-gray-700/50 transition-all duration-300 hover:shadow-lg">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-2">
+                      <div className="p-1 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
+                        <span className="text-sm font-bold text-blue-600 dark:text-blue-400">#{index + 1}</span>
+                      </div>
+                      <h4 className="text-lg font-semibold text-gray-900 dark:text-white">Item {index + 1}</h4>
+                    </div>
+                    {formData.orderItems.length > 1 && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => removeOrderItem(index)}
+                        className="flex items-center gap-2 text-red-600 dark:text-red-400 border-red-200 dark:border-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 hover:border-red-300 dark:hover:border-red-600 transition-all duration-200"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                        Remove
+                      </Button>
+                    )}
+                  </div>
+                  
                   <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                     {/* Item Selection */}
                     <div className="md:col-span-2">
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                      <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
                         Item *
                       </label>
                       <SearchableDropdown
@@ -705,7 +806,7 @@ export default function SalesOrderModal({ isOpen, onClose, order, mode, onSucces
 
                     {/* Quantity */}
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                      <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
                         Quantity
                       </label>
                       <Input
@@ -713,13 +814,13 @@ export default function SalesOrderModal({ isOpen, onClose, order, mode, onSucces
                         min="1"
                         value={item.quantity}
                         onChange={(e) => updateOrderItem(index, 'quantity', parseInt(e.target.value) || 1)}
-                        className="w-full"
+                        className="w-full bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white"
                       />
                     </div>
 
                     {/* Rate */}
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                      <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
                         Rate (₹)
                       </label>
                       <Input
@@ -728,46 +829,46 @@ export default function SalesOrderModal({ isOpen, onClose, order, mode, onSucces
                         step="0.01"
                         value={item.rate}
                         onChange={(e) => updateOrderItem(index, 'rate', parseFloat(e.target.value) || 0)}
-                        className="w-full"
+                        className="w-full bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white"
                       />
                     </div>
                   </div>
 
                   {/* Item Details */}
-                  <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
                         Item Name
                       </label>
                       <Input
                         value={item.itemName}
                         onChange={(e) => updateOrderItem(index, 'itemName', e.target.value)}
                         placeholder="Item name"
-                        className="w-full"
+                        className="w-full bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white"
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
                         Category
                       </label>
                       <Input
                         value={item.category}
                         onChange={(e) => updateOrderItem(index, 'category', e.target.value)}
                         placeholder="Category"
-                        className="w-full"
+                        className="w-full bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white"
                       />
                     </div>
                   </div>
 
                   {/* Product Type */}
-                  <div className="mt-3">
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <div className="mt-6">
+                    <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
                       Product Type
                     </label>
                     <select
                       value={item.productType}
                       onChange={(e) => updateOrderItem(index, 'productType', e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 dark:text-white font-medium transition-all duration-200"
                     >
                       <option value="saree">Saree</option>
                       <option value="african_cotton">African Cotton</option>
@@ -779,49 +880,47 @@ export default function SalesOrderModal({ isOpen, onClose, order, mode, onSucces
 
                   {/* Stock Information */}
                   {item.stockInfo && (
-                    <div className="mt-3 p-3 bg-blue-50 rounded-lg">
-                      <h4 className="text-sm font-medium text-gray-700 mb-2">Stock Information</h4>
-                      <div className="grid grid-cols-3 gap-4 text-sm">
-                        <div>
-                          <span className="text-gray-600">Available:</span>
-                          <span className={`ml-1 font-medium ${item.stockInfo.available >= item.quantity ? 'text-green-600' : 'text-red-600'}`}>
+                    <div className="mt-6 p-4 bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50 dark:from-blue-900/20 dark:via-indigo-900/20 dark:to-purple-900/20 rounded-xl border border-blue-200 dark:border-blue-700 transition-all duration-300">
+                      <div className="flex items-center gap-3 mb-4">
+                        <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
+                          <svg className="h-5 w-5 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                          </svg>
+                        </div>
+                        <h4 className="text-lg font-semibold text-gray-900 dark:text-white">Stock Information</h4>
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <div className="bg-white dark:bg-gray-800 rounded-lg p-3 border border-gray-200 dark:border-gray-700">
+                          <div className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">Available</div>
+                          <div className={`text-lg font-bold ${item.stockInfo.available >= item.quantity ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
                             {item.stockInfo.available} {item.stockInfo.unit}
-                          </span>
+                          </div>
                         </div>
-                        <div>
-                          <span className="text-gray-600">Current:</span>
-                          <span className="ml-1 font-medium text-gray-900">
+                        <div className="bg-white dark:bg-gray-800 rounded-lg p-3 border border-gray-200 dark:border-gray-700">
+                          <div className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">Current</div>
+                          <div className="text-lg font-bold text-gray-900 dark:text-white">
                             {item.stockInfo.current} {item.stockInfo.unit}
-                          </span>
+                          </div>
                         </div>
-                        <div>
-                          <span className="text-gray-600">Reserved:</span>
-                          <span className="ml-1 font-medium text-gray-900">
+                        <div className="bg-white dark:bg-gray-800 rounded-lg p-3 border border-gray-200 dark:border-gray-700">
+                          <div className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">Reserved</div>
+                          <div className="text-lg font-bold text-gray-900 dark:text-white">
                             {item.stockInfo.reserved} {item.stockInfo.unit}
-                          </span>
+                          </div>
                         </div>
                       </div>
                       {item.stockInfo.available < item.quantity && (
-                        <div className="mt-2 p-2 bg-red-100 rounded text-red-700 text-sm">
-                          ⚠️ Insufficient stock! Requested: {item.quantity}, Available: {item.stockInfo.available}
+                        <div className="mt-4 p-3 bg-red-100 dark:bg-red-900/30 rounded-lg border border-red-200 dark:border-red-700">
+                          <div className="flex items-center gap-2">
+                            <svg className="h-5 w-5 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                            </svg>
+                            <span className="text-sm font-semibold text-red-700 dark:text-red-300">
+                              Insufficient stock! Requested: {item.quantity}, Available: {item.stockInfo.available}
+                            </span>
+                          </div>
                         </div>
                       )}
-                    </div>
-                  )}
-
-                  {/* Remove Button */}
-                  {formData.orderItems.length > 1 && (
-                    <div className="mt-3 flex justify-end">
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={() => removeOrderItem(index)}
-                        className="flex items-center gap-2 text-red-600 hover:text-red-700"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                        Remove
-                      </Button>
                     </div>
                   )}
                 </div>
@@ -830,115 +929,167 @@ export default function SalesOrderModal({ isOpen, onClose, order, mode, onSucces
           </div>
 
           {/* Order Summary */}
-          <div className="bg-gray-50 p-4 rounded-lg">
-            <h3 className="text-lg font-medium mb-4">Order Summary</h3>
+          <div className="bg-gradient-to-r from-gray-50 via-blue-50 to-indigo-50 dark:from-gray-800 dark:via-blue-900/20 dark:to-indigo-900/20 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 p-6 transition-all duration-300">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="p-2 bg-green-100 dark:bg-green-900/30 rounded-lg">
+                <svg className="h-5 w-5 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                </svg>
+              </div>
+              <div>
+                <h3 className="text-xl font-bold text-gray-900 dark:text-white">Order Summary</h3>
+                <p className="text-sm text-gray-600 dark:text-gray-300">Review the order totals</p>
+              </div>
+            </div>
+            
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Subtotal</label>
-                <p className="text-lg font-semibold">₹{formData.orderSummary.subtotal.toFixed(2)}</p>
+              <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700 shadow-sm">
+                <div className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">Subtotal</div>
+                <p className="text-xl font-bold text-gray-900 dark:text-white">₹{formData.orderSummary.subtotal.toFixed(2)}</p>
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Tax (18%)</label>
-                <p className="text-lg font-semibold">₹{formData.orderSummary.totalTax.toFixed(2)}</p>
+              <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700 shadow-sm">
+                <div className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">Tax (18%)</div>
+                <p className="text-xl font-bold text-gray-900 dark:text-white">₹{formData.orderSummary.totalTax.toFixed(2)}</p>
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Discount</label>
-                <p className="text-lg font-semibold">₹{formData.orderSummary.totalDiscount.toFixed(2)}</p>
+              <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700 shadow-sm">
+                <div className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">Discount</div>
+                <p className="text-xl font-bold text-gray-900 dark:text-white">₹{formData.orderSummary.totalDiscount.toFixed(2)}</p>
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Total</label>
-                <p className="text-xl font-bold text-blue-600">₹{formData.orderSummary.finalAmount.toFixed(2)}</p>
+              <div className="bg-gradient-to-r from-blue-500 to-indigo-600 rounded-lg p-4 shadow-lg">
+                <div className="text-xs font-medium text-blue-100 uppercase tracking-wide mb-2">Total</div>
+                <p className="text-2xl font-bold text-white">₹{formData.orderSummary.finalAmount.toFixed(2)}</p>
               </div>
             </div>
           </div>
 
           {/* Payment Details */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Payment Method</label>
-              <select
-                value={formData.payment.paymentMethod}
-                onChange={(e) => {
-                  console.log('Payment method changed to:', e.target.value)
-                  setFormData(prev => ({
-                    ...prev,
-                    payment: { ...prev.payment, paymentMethod: e.target.value }
-                  }))
-                }}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                onClick={() => console.log('Payment method dropdown clicked')}
-              >
-                <option value="cash">Cash</option>
-                <option value="bank_transfer">Bank Transfer</option>
-                <option value="cheque">Cheque</option>
-                <option value="upi">UPI</option>
-                <option value="card">Card</option>
-                <option value="credit">Credit</option>
-              </select>
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 p-6 transition-all duration-300">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="p-2 bg-yellow-100 dark:bg-yellow-900/30 rounded-lg">
+                <svg className="h-5 w-5 text-yellow-600 dark:text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                </svg>
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Payment Details</h3>
+                <p className="text-sm text-gray-600 dark:text-gray-300">Configure payment method and terms</p>
+              </div>
             </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Payment Method</label>
+                <select
+                  value={formData.payment.paymentMethod}
+                  onChange={(e) => {
+                    console.log('Payment method changed to:', e.target.value)
+                    setFormData(prev => ({
+                      ...prev,
+                      payment: { ...prev.payment, paymentMethod: e.target.value }
+                    }))
+                  }}
+                  className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 dark:text-white font-medium transition-all duration-200"
+                  onClick={() => console.log('Payment method dropdown clicked')}
+                >
+                  <option value="cash">Cash</option>
+                  <option value="bank_transfer">Bank Transfer</option>
+                  <option value="cheque">Cheque</option>
+                  <option value="upi">UPI</option>
+                  <option value="card">Card</option>
+                  <option value="credit">Credit</option>
+                </select>
+              </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Payment Terms</label>
-              <Input
-                value={formData.payment.paymentTerms}
-                onChange={(e) => setFormData(prev => ({
-                  ...prev,
-                  payment: { ...prev.payment, paymentTerms: e.target.value }
-                }))}
-                placeholder="e.g., Net 30 days"
-              />
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Payment Terms</label>
+                <Input
+                  value={formData.payment.paymentTerms}
+                  onChange={(e) => setFormData(prev => ({
+                    ...prev,
+                    payment: { ...prev.payment, paymentTerms: e.target.value }
+                  }))}
+                  placeholder="e.g., Net 30 days"
+                  className="w-full bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white"
+                />
+              </div>
             </div>
           </div>
 
           {/* Delivery Details */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Delivery Type</label>
-              <select
-                value={formData.delivery.deliveryType}
-                onChange={(e) => {
-                  console.log('Delivery type changed to:', e.target.value)
-                  setFormData(prev => ({
-                    ...prev,
-                    delivery: { ...prev.delivery, deliveryType: e.target.value }
-                  }))
-                }}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                onClick={() => console.log('Delivery type dropdown clicked')}
-              >
-                <option value="pickup">Pickup</option>
-                <option value="delivery">Delivery</option>
-                <option value="courier">Courier</option>
-              </select>
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 p-6 transition-all duration-300">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="p-2 bg-indigo-100 dark:bg-indigo-900/30 rounded-lg">
+                <svg className="h-5 w-5 text-indigo-600 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Delivery Details</h3>
+                <p className="text-sm text-gray-600 dark:text-gray-300">Set delivery type and expected date</p>
+              </div>
             </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Delivery Type</label>
+                <select
+                  value={formData.delivery.deliveryType}
+                  onChange={(e) => {
+                    console.log('Delivery type changed to:', e.target.value)
+                    setFormData(prev => ({
+                      ...prev,
+                      delivery: { ...prev.delivery, deliveryType: e.target.value }
+                    }))
+                  }}
+                  className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 dark:text-white font-medium transition-all duration-200"
+                  onClick={() => console.log('Delivery type dropdown clicked')}
+                >
+                  <option value="pickup">Pickup</option>
+                  <option value="delivery">Delivery</option>
+                  <option value="courier">Courier</option>
+                </select>
+              </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Expected Delivery Date</label>
-              <Input
-                type="date"
-                value={formData.delivery.expectedDeliveryDate}
-                onChange={(e) => setFormData(prev => ({
-                  ...prev,
-                  delivery: { ...prev.delivery, expectedDeliveryDate: e.target.value }
-                }))}
-              />
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Expected Delivery Date</label>
+                <Input
+                  type="date"
+                  value={formData.delivery.expectedDeliveryDate}
+                  onChange={(e) => setFormData(prev => ({
+                    ...prev,
+                    delivery: { ...prev.delivery, expectedDeliveryDate: e.target.value }
+                  }))}
+                  className="w-full bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white"
+                />
+              </div>
             </div>
           </div>
 
           {/* Delivery Address */}
-          <div className="border border-gray-200 rounded-lg p-4">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-medium">Delivery Address</h3>
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 p-6 transition-all duration-300">
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-pink-100 dark:bg-pink-900/30 rounded-lg">
+                  <svg className="h-5 w-5 text-pink-600 dark:text-pink-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Delivery Address</h3>
+                  <p className="text-sm text-gray-600 dark:text-gray-300">Enter the delivery address details</p>
+                </div>
+              </div>
               {formData.customerId && (
-                <div className={`flex items-center gap-2 text-sm px-3 py-1 rounded-full ${
+                <div className={`flex items-center gap-2 text-sm px-4 py-2 rounded-xl border ${
                   isAddressAutoPopulated 
-                    ? 'text-blue-600 bg-blue-50' 
-                    : 'text-green-600 bg-green-50'
+                    ? 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 border-blue-200 dark:border-blue-700' 
+                    : 'text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/30 border-green-200 dark:border-green-700'
                 }`}>
                   <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
                   </svg>
-                  <span>
+                  <span className="font-medium">
                     {isAddressAutoPopulated 
                       ? 'Auto-populated from customer • Editable' 
                       : 'Manually entered • Editable'
@@ -949,91 +1100,114 @@ export default function SalesOrderModal({ isOpen, onClose, order, mode, onSucces
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Contact Person</label>
+                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Contact Person</label>
                 <Input
                   value={formData.delivery.deliveryAddress.contactPerson}
                   onChange={(e) => handleDeliveryAddressChange('contactPerson', e.target.value)}
                   placeholder="Contact person name"
+                  className="w-full bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Phone</label>
+                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Phone</label>
                 <Input
                   value={formData.delivery.deliveryAddress.phone}
                   onChange={(e) => handleDeliveryAddressChange('phone', e.target.value)}
                   placeholder="Phone number"
+                  className="w-full bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Email</label>
                 <Input
                   type="email"
                   value={formData.delivery.deliveryAddress.email}
                   onChange={(e) => handleDeliveryAddressChange('email', e.target.value)}
                   placeholder="Email address"
+                  className="w-full bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Country</label>
+                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Country</label>
                 <Input
                   value={formData.delivery.deliveryAddress.country}
                   onChange={(e) => handleDeliveryAddressChange('country', e.target.value)}
                   placeholder="Country"
+                  className="w-full bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white"
                 />
               </div>
               <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-2">Address Line 1</label>
+                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Address Line 1</label>
                 <Input
                   value={formData.delivery.deliveryAddress.addressLine1}
                   onChange={(e) => handleDeliveryAddressChange('addressLine1', e.target.value)}
                   placeholder="Street address"
+                  className="w-full bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white"
                 />
               </div>
               <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-2">Address Line 2</label>
+                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Address Line 2</label>
                 <Input
                   value={formData.delivery.deliveryAddress.addressLine2}
                   onChange={(e) => handleDeliveryAddressChange('addressLine2', e.target.value)}
                   placeholder="Apartment, suite, etc."
+                  className="w-full bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">City</label>
+                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">City</label>
                 <Input
                   value={formData.delivery.deliveryAddress.city}
                   onChange={(e) => handleDeliveryAddressChange('city', e.target.value)}
                   placeholder="City"
+                  className="w-full bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">State</label>
+                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">State</label>
                 <Input
                   value={formData.delivery.deliveryAddress.state}
                   onChange={(e) => handleDeliveryAddressChange('state', e.target.value)}
                   placeholder="State"
+                  className="w-full bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Pincode</label>
+                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Pincode</label>
                 <Input
                   value={formData.delivery.deliveryAddress.pincode}
                   onChange={(e) => handleDeliveryAddressChange('pincode', e.target.value)}
                   placeholder="Pincode"
+                  className="w-full bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Landmark</label>
+                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Landmark</label>
                 <Input
                   value={formData.delivery.deliveryAddress.landmark}
                   onChange={(e) => handleDeliveryAddressChange('landmark', e.target.value)}
                   placeholder="Nearby landmark"
+                  className="w-full bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white"
                 />
               </div>
             </div>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Delivery Instructions</label>
+          {/* Delivery Instructions */}
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 p-6 transition-all duration-300">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="p-2 bg-teal-100 dark:bg-teal-900/30 rounded-lg">
+                <svg className="h-5 w-5 text-teal-600 dark:text-teal-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Delivery Instructions</h3>
+                <p className="text-sm text-gray-600 dark:text-gray-300">Add any special delivery instructions</p>
+              </div>
+            </div>
+            
+            <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Instructions</label>
             <Textarea
               value={formData.delivery.deliveryInstructions}
               onChange={(e) => setFormData(prev => ({
@@ -1042,73 +1216,115 @@ export default function SalesOrderModal({ isOpen, onClose, order, mode, onSucces
               }))}
               placeholder="Any special delivery instructions..."
               rows={3}
+              className="w-full bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white"
             />
           </div>
 
           {/* Priority and Status */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Priority</label>
-              <select
-                value={formData.priority}
-                onChange={(e) => {
-                  console.log('Priority changed to:', e.target.value)
-                  setFormData(prev => ({ ...prev, priority: e.target.value }))
-                }}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                onClick={() => console.log('Priority dropdown clicked')}
-              >
-                <option value="low">Low</option>
-                <option value="medium">Medium</option>
-                <option value="high">High</option>
-                <option value="urgent">Urgent</option>
-                <option value="rush">Rush</option>
-              </select>
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 p-6 transition-all duration-300">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="p-2 bg-red-100 dark:bg-red-900/30 rounded-lg">
+                <svg className="h-5 w-5 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Order Priority & Status</h3>
+                <p className="text-sm text-gray-600 dark:text-gray-300">Set priority level and current status</p>
+              </div>
             </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Priority</label>
+                <select
+                  value={formData.priority}
+                  onChange={(e) => {
+                    console.log('Priority changed to:', e.target.value)
+                    setFormData(prev => ({ ...prev, priority: e.target.value }))
+                  }}
+                  className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 dark:text-white font-medium transition-all duration-200"
+                  onClick={() => console.log('Priority dropdown clicked')}
+                >
+                  <option value="low">Low</option>
+                  <option value="medium">Medium</option>
+                  <option value="high">High</option>
+                  <option value="urgent">Urgent</option>
+                  <option value="rush">Rush</option>
+                </select>
+              </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
-              <select
-                value={formData.status}
-                onChange={(e) => {
-                  console.log('Status changed to:', e.target.value)
-                  setFormData(prev => ({ ...prev, status: e.target.value }))
-                }}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                onClick={() => console.log('Status dropdown clicked')}
-              >
-                <option value="draft">Draft</option>
-                <option value="confirmed">Confirmed</option>
-                <option value="in_production">In Production</option>
-                <option value="ready_to_dispatch">Ready to Dispatch</option>
-                <option value="dispatched">Dispatched</option>
-                <option value="delivered">Delivered</option>
-                <option value="completed">Completed</option>
-                <option value="cancelled">Cancelled</option>
-                <option value="returned">Returned</option>
-              </select>
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Status</label>
+                <select
+                  value={formData.status}
+                  onChange={(e) => {
+                    console.log('Status changed to:', e.target.value)
+                    setFormData(prev => ({ ...prev, status: e.target.value }))
+                  }}
+                  className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 dark:text-white font-medium transition-all duration-200"
+                  onClick={() => console.log('Status dropdown clicked')}
+                >
+                  <option value="draft">Draft</option>
+                  <option value="confirmed">Confirmed</option>
+                  <option value="in_production">In Production</option>
+                  <option value="ready_to_dispatch">Ready to Dispatch</option>
+                  <option value="dispatched">Dispatched</option>
+                  <option value="delivered">Delivered</option>
+                  <option value="completed">Completed</option>
+                  <option value="cancelled">Cancelled</option>
+                  <option value="returned">Returned</option>
+                </select>
+              </div>
             </div>
           </div>
 
           {/* Special Instructions */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Special Instructions</label>
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 p-6 transition-all duration-300">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="p-2 bg-cyan-100 dark:bg-cyan-900/30 rounded-lg">
+                <svg className="h-5 w-5 text-cyan-600 dark:text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
+                </svg>
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Special Instructions</h3>
+                <p className="text-sm text-gray-600 dark:text-gray-300">Add any special notes or instructions</p>
+              </div>
+            </div>
+            
+            <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Instructions</label>
             <Textarea
               value={formData.specialInstructions}
               onChange={(e) => setFormData(prev => ({ ...prev, specialInstructions: e.target.value }))}
               placeholder="Any special instructions or notes..."
               rows={3}
+              className="w-full bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white"
             />
           </div>
 
           {/* Action Buttons */}
-          <div className="flex items-center justify-end gap-3 pt-6 border-t">
-            <Button type="button" variant="outline" onClick={onClose}>
-              Cancel
-            </Button>
-            <Button type="submit" className="bg-blue-600 hover:bg-blue-700">
-              {mode === 'create' ? 'Create Order' : 'Update Order'}
-            </Button>
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 p-6 transition-all duration-300">
+            <div className="flex items-center justify-end gap-4">
+              <Button 
+                type="button" 
+                variant="outline" 
+                onClick={onClose}
+                className="relative group/btn overflow-hidden border-2 border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 hover:border-gray-400 dark:hover:border-gray-500 px-8 py-3 rounded-xl font-medium transition-all duration-300 transform hover:scale-105 hover:-translate-y-1 shadow-lg hover:shadow-gray-500/10"
+              >
+                <div className="absolute inset-0 bg-gradient-to-r from-gray-500/10 to-transparent opacity-0 group-hover/btn:opacity-100 transition-opacity duration-300"></div>
+                <span className="relative z-10">Cancel</span>
+              </Button>
+              <Button 
+                type="submit" 
+                className="relative group/btn overflow-hidden bg-gradient-to-r from-blue-500 via-indigo-600 to-purple-600 hover:from-blue-600 hover:via-indigo-700 hover:to-purple-700 text-white shadow-2xl hover:shadow-blue-500/25 transition-all duration-300 px-8 py-3 text-lg font-bold rounded-xl transform hover:scale-105 hover:-translate-y-1"
+              >
+                <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover/btn:opacity-100 transition-opacity duration-300"></div>
+                <span className="relative z-10">
+                  {mode === 'create' ? 'Create Order' : 'Update Order'}
+                </span>
+              </Button>
+            </div>
           </div>
         </form>
       </div>

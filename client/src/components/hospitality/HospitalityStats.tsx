@@ -23,11 +23,11 @@ export default function HospitalityStats({ stats, isLoading }: HospitalityStatsP
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {[...Array(8)].map((_, i) => (
-          <div key={i} className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <div key={i} className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
             <div className="animate-pulse">
-              <div className="w-8 h-8 bg-gray-200 rounded-lg mb-4"></div>
-              <div className="h-6 bg-gray-200 rounded mb-2"></div>
-              <div className="h-4 bg-gray-200 rounded w-2/3"></div>
+              <div className="w-8 h-8 bg-gray-200 dark:bg-gray-700 rounded-lg mb-4"></div>
+              <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded mb-2"></div>
+              <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-2/3"></div>
             </div>
           </div>
         ))}
@@ -126,19 +126,19 @@ export default function HospitalityStats({ stats, isLoading }: HospitalityStatsP
         return (
           <div
             key={index}
-            className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow"
+            className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6 hover:shadow-md transition-shadow"
           >
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600 mb-1">
+                <p className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">
                   {card.title}
                 </p>
-                <p className="text-2xl font-bold text-gray-900">
+                <p className="text-2xl font-bold text-gray-900 dark:text-white">
                   {card.isString ? (card.value || '₹0') : (card.value || 0).toLocaleString()}
                 </p>
               </div>
-              <div className={`p-3 rounded-lg ${card.bgColor}`}>
-                <Icon className={`w-6 h-6 ${card.textColor}`} />
+              <div className={`p-3 rounded-lg ${card.bgColor} dark:bg-opacity-20`}>
+                <Icon className={`w-6 h-6 ${card.textColor} dark:text-opacity-80`} />
               </div>
             </div>
           </div>

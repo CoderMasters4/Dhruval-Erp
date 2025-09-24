@@ -11,6 +11,7 @@ interface InventoryFiltersProps {
   onCategoryChange: (category: string) => void;
   onStatusChange: (status: string) => void;
   onClearFilters: () => void;
+  theme: 'light' | 'dark';
 }
 
 export const InventoryFilters: React.FC<InventoryFiltersProps> = ({
@@ -18,7 +19,8 @@ export const InventoryFilters: React.FC<InventoryFiltersProps> = ({
   statusFilter,
   onCategoryChange,
   onStatusChange,
-  onClearFilters
+  onClearFilters,
+  theme
 }) => {
   const categories = [
     { value: 'raw_material', label: 'Raw Material', color: 'bg-blue-100 text-blue-800' },
@@ -36,7 +38,11 @@ export const InventoryFilters: React.FC<InventoryFiltersProps> = ({
   const hasActiveFilters = categoryFilter || statusFilter;
 
   return (
-    <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
+    <div className={`rounded-xl border p-4 shadow-sm transition-theme ${
+      theme === 'dark' 
+        ? 'bg-gray-800 border-gray-700' 
+        : 'bg-white border-gray-200'
+    }`}>
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
           <Filter className="w-5 h-5 text-gray-600" />

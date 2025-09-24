@@ -18,9 +18,10 @@ interface InventoryListProps {
   onViewDetails: (item: any) => void;
   onEditItem: (item: any) => void;
   onDeleteItem: (id: string) => void;
+  theme: 'light' | 'dark';
 }
 
-export function InventoryList({ items, onViewDetails, onEditItem, onDeleteItem }: InventoryListProps) {
+export function InventoryList({ items, onViewDetails, onEditItem, onDeleteItem, theme }: InventoryListProps) {
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-IN', {
       style: 'currency',
@@ -67,70 +68,108 @@ export function InventoryList({ items, onViewDetails, onEditItem, onDeleteItem }
   if (items.length === 0) {
     return (
       <div className="text-center py-12">
-        <Package className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-        <h3 className="text-lg font-medium text-gray-900 mb-2">No inventory items found</h3>
-        <p className="text-gray-600">Get started by adding your first inventory item.</p>
+        <Package className={`w-16 h-16 mx-auto mb-4 ${
+          theme === 'dark' ? 'text-gray-600' : 'text-gray-300'
+        }`} />
+        <h3 className={`text-lg font-medium mb-2 ${
+          theme === 'dark' ? 'text-gray-100' : 'text-gray-900'
+        }`}>No inventory items found</h3>
+        <p className={`${
+          theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
+        }`}>Get started by adding your first inventory item.</p>
       </div>
     );
   }
 
   return (
-    <div className="bg-white rounded-lg shadow overflow-hidden">
+    <div className={`rounded-lg shadow overflow-hidden transition-theme ${
+      theme === 'dark' ? 'bg-gray-800' : 'bg-white'
+    }`}>
       <div className="overflow-x-auto">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
+        <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+          <thead className={`${
+            theme === 'dark' ? 'bg-gray-700' : 'bg-gray-50'
+          }`}>
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className={`px-6 py-3 text-left text-xs font-medium uppercase tracking-wider ${
+                theme === 'dark' ? 'text-gray-300' : 'text-gray-500'
+              }`}>
                 Item
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className={`px-6 py-3 text-left text-xs font-medium uppercase tracking-wider ${
+                theme === 'dark' ? 'text-gray-300' : 'text-gray-500'
+              }`}>
                 Category
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className={`px-6 py-3 text-left text-xs font-medium uppercase tracking-wider ${
+                theme === 'dark' ? 'text-gray-300' : 'text-gray-500'
+              }`}>
                 Stock
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className={`px-6 py-3 text-left text-xs font-medium uppercase tracking-wider ${
+                theme === 'dark' ? 'text-gray-300' : 'text-gray-500'
+              }`}>
                 Status
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className={`px-6 py-3 text-left text-xs font-medium uppercase tracking-wider ${
+                theme === 'dark' ? 'text-gray-300' : 'text-gray-500'
+              }`}>
                 Value
               </th>
-              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className={`px-6 py-3 text-right text-xs font-medium uppercase tracking-wider ${
+                theme === 'dark' ? 'text-gray-300' : 'text-gray-500'
+              }`}>
                 Actions
               </th>
             </tr>
           </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
+          <tbody className={`divide-y divide-gray-200 dark:divide-gray-700 ${
+            theme === 'dark' ? 'bg-gray-800' : 'bg-white'
+          }`}>
             {items.map((item) => {
               const stockStatus = getStockStatus(item);
               
               return (
-                <tr key={item._id} className="hover:bg-gray-50">
+                <tr key={item._id} className={`transition-colors ${
+                  theme === 'dark' ? 'hover:bg-gray-700' : 'hover:bg-gray-50'
+                }`}>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div>
-                      <div className="text-sm font-medium text-gray-900">
+                      <div className={`text-sm font-medium ${
+                        theme === 'dark' ? 'text-gray-100' : 'text-gray-900'
+                      }`}>
                         {item.itemName}
                       </div>
-                      <div className="text-sm text-gray-500 font-mono">
+                      <div className={`text-sm font-mono ${
+                        theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
+                      }`}>
                         {item.itemCode}
                       </div>
                     </div>
                   </td>
                   
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900 capitalize">
+                    <div className={`text-sm capitalize ${
+                      theme === 'dark' ? 'text-gray-100' : 'text-gray-900'
+                    }`}>
                       {item.category?.primary || 'N/A'}
                     </div>
-                    <div className="text-sm text-gray-500">
+                    <div className={`text-sm ${
+                      theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
+                    }`}>
                       {item.productType || 'N/A'}
                     </div>
                   </td>
                   
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">
+                    <div className={`text-sm ${
+                      theme === 'dark' ? 'text-gray-100' : 'text-gray-900'
+                    }`}>
                       {item.stock?.currentStock || 0} {item.stock?.unit || 'units'}
                     </div>
-                    <div className="text-sm text-gray-500">
+                    <div className={`text-sm ${
+                      theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
+                    }`}>
                       Reorder: {item.stock?.reorderLevel || 0}
                     </div>
                   </td>
@@ -143,10 +182,14 @@ export function InventoryList({ items, onViewDetails, onEditItem, onDeleteItem }
                   </td>
                   
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">
+                    <div className={`text-sm ${
+                      theme === 'dark' ? 'text-gray-100' : 'text-gray-900'
+                    }`}>
                       {formatCurrency(item.stock?.totalValue || 0)}
                     </div>
-                    <div className="text-sm text-gray-500">
+                    <div className={`text-sm ${
+                      theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
+                    }`}>
                       {formatCurrency(item.pricing?.costPrice || 0)} per unit
                     </div>
                   </td>
@@ -158,7 +201,11 @@ export function InventoryList({ items, onViewDetails, onEditItem, onDeleteItem }
                           variant="ghost"
                           size="sm"
                           onClick={() => onViewDetails(item)}
-                          className="text-gray-600 hover:text-gray-900"
+                          className={`transition-colors ${
+                            theme === 'dark' 
+                              ? 'text-gray-400 hover:text-gray-200' 
+                              : 'text-gray-600 hover:text-gray-900'
+                          }`}
                         >
                           <Eye className="w-4 h-4" />
                         </Button>
@@ -169,7 +216,11 @@ export function InventoryList({ items, onViewDetails, onEditItem, onDeleteItem }
                           variant="ghost"
                           size="sm"
                           onClick={() => onEditItem(item)}
-                          className="text-blue-600 hover:text-blue-900"
+                          className={`transition-colors ${
+                            theme === 'dark' 
+                              ? 'text-blue-400 hover:text-blue-300' 
+                              : 'text-blue-600 hover:text-blue-900'
+                          }`}
                         >
                           <Edit className="w-4 h-4" />
                         </Button>
@@ -180,7 +231,11 @@ export function InventoryList({ items, onViewDetails, onEditItem, onDeleteItem }
                           variant="ghost"
                           size="sm"
                           onClick={() => onDeleteItem(item._id)}
-                          className="text-red-600 hover:text-red-900"
+                          className={`transition-colors ${
+                            theme === 'dark' 
+                              ? 'text-red-400 hover:text-red-300' 
+                              : 'text-red-600 hover:text-red-900'
+                          }`}
                         >
                           <Trash2 className="w-4 h-4" />
                         </Button>

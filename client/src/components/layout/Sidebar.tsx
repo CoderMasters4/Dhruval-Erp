@@ -66,7 +66,7 @@ import {
   CheckCircle,
   Scissors
 } from 'lucide-react'
-import { selectSidebarCollapsed, selectSidebarOpen, toggleSidebar, setSidebarCollapsed } from '@/lib/features/ui/uiSlice'
+import { selectSidebarCollapsed, selectSidebarOpen, toggleSidebar, setSidebarCollapsed, selectTheme } from '@/lib/features/ui/uiSlice'
 import { selectCurrentUser, selectIsSuperAdmin } from '@/lib/features/auth/authSlice'
 import { SidebarLogo } from '@/components/ui/Logo'
 
@@ -158,12 +158,12 @@ const navigationItems: NavigationItem[] = [
         icon: FileText,
         permission: 'view:Order'
       },
-      {
-        name: 'Quotations',
-        href: '/quotations',
-        icon: Quote,
-        permission: 'view:Quotation'
-      }
+      // {
+      //   name: 'Quotations',
+      //   href: '/quotations',
+      //   icon: Quote,
+      //   permission: 'view:Quotation'
+      // }
     ]
   },
 
@@ -403,12 +403,12 @@ const navigationItems: NavigationItem[] = [
         icon: Send,
         permission: 'view:Dispatch'
       },
-      {
-        name: 'RTO Tracking',
-        href: '/operations/dispatch/rto',
-        icon: RotateCcw,
-        permission: 'view:Dispatch'
-      },
+      // {
+      //   name: 'RTO Tracking',
+      //   href: '/operations/dispatch/rto',
+      //   icon: RotateCcw,
+      //   permission: 'view:Dispatch'
+      // },
       // {
       //   name: 'Packing Management',
       //   href: '/operations/dispatch/packing',
@@ -508,18 +508,18 @@ const navigationItems: NavigationItem[] = [
         icon: TrendingUp,
         permission: 'view:BusinessAnalytics'
       },
-      {
-        name: 'Boiler Monitoring',
-        href: '/operations/boiler',
-        icon: Thermometer,
-        permission: 'view:BoilerMonitoring'
-      },
-      {
-        name: 'Electricity Monitoring',
-        href: '/operations/electricity',
-        icon: Zap,
-        permission: 'view:ElectricityMonitoring'
-      },
+      // {
+      //   name: 'Boiler Monitoring',
+      //   href: '/operations/boiler',
+      //   icon: Thermometer,
+      //   permission: 'view:BoilerMonitoring'
+      // },
+      // {
+      //   name: 'Electricity Monitoring',
+      //   href: '/operations/electricity',
+      //   icon: Zap,
+      //   permission: 'view:ElectricityMonitoring'
+      // },
       {
         name: 'Hospitality Management',
         href: '/operations/hospitality',
@@ -536,12 +536,12 @@ const navigationItems: NavigationItem[] = [
     icon: BarChart3,
     permission: 'view:Report',
     children: [
-      {
-        name: 'Standard Reports',
-        href: '/reports',
-        icon: FileText,
-        permission: 'view:Report'
-      },
+      // {
+      //   name: 'Standard Reports',
+      //   href: '/reports',
+      //   icon: FileText,
+      //   permission: 'view:Report'
+      // },
       {
         name: 'Advanced Analytics',
         href: '/analytics/advanced',
@@ -566,6 +566,7 @@ export function Sidebar() {
   const isOpen = useSelector(selectSidebarOpen)
   const user = useSelector(selectCurrentUser)
   const isSuperAdmin = useSelector(selectIsSuperAdmin)
+  const theme = useSelector(selectTheme)
   const [expandedItems, setExpandedItems] = useState<string[]>([])
 
   // Get user's current role
@@ -647,11 +648,11 @@ export function Sidebar() {
             <button
               onClick={() => toggleExpanded(item.name)}
               className={clsx(
-                'w-full flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-all duration-200',
+                'w-full flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-all duration-200 group/nav',
                 level > 0 && 'ml-4',
                 active
-                  ? 'bg-sky-500 text-white shadow-lg'
-                  : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-gray-800 dark:hover:text-white',
+                  ? 'bg-gradient-to-r from-sky-500 to-blue-600 text-white shadow-lg shadow-sky-500/25 border border-sky-400'
+                  : 'text-gray-700 hover:bg-gradient-to-r hover:from-sky-50 hover:to-blue-50 hover:text-sky-700 dark:text-gray-300 dark:hover:bg-gradient-to-r dark:hover:from-gray-700 dark:hover:to-gray-600 dark:hover:text-white border border-transparent hover:border-sky-200 dark:hover:border-gray-600',
                 isCollapsed && 'justify-center'
               )}
             >
@@ -673,11 +674,11 @@ export function Sidebar() {
             <Link
               href={item.href}
               className={clsx(
-                'flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-all duration-200',
+                'flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-all duration-200 group/nav',
                 level > 0 && 'ml-4',
                 active
-                  ? 'bg-sky-500 text-white shadow-lg'
-                  : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-gray-800 dark:hover:text-white',
+                  ? 'bg-gradient-to-r from-sky-500 to-blue-600 text-white shadow-lg shadow-sky-500/25 border border-sky-400'
+                  : 'text-gray-700 hover:bg-gradient-to-r hover:from-sky-50 hover:to-blue-50 hover:text-sky-700 dark:text-gray-300 dark:hover:bg-gradient-to-r dark:hover:from-gray-700 dark:hover:to-gray-600 dark:hover:text-white border border-transparent hover:border-sky-200 dark:hover:border-gray-600',
                 isCollapsed && 'justify-center'
               )}
             >
@@ -708,41 +709,44 @@ export function Sidebar() {
 
       {/* Sidebar */}
       <div className={clsx(
-        'fixed inset-y-0 left-0 z-50 flex flex-col bg-white dark:bg-gray-900 border-r-2 border-sky-500 transition-all duration-300 ease-in-out shadow-lg',
+        'fixed inset-y-0 left-0 z-50 flex flex-col bg-white dark:bg-gray-900 border-r-2 border-sky-500 dark:border-sky-400 transition-all duration-300 ease-in-out shadow-lg backdrop-blur-sm',
         isCollapsed ? 'w-16' : 'w-64',
         isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
       )}>
         {/* Header */}
-        <div className="flex items-center justify-between h-16 px-3 sm:px-4 border-b-2 border-sky-500 bg-gradient-to-r from-white to-gray-50 dark:from-gray-900 dark:to-gray-800">
-          <Link href="/dashboard" className="flex items-center space-x-2">
+        <div className="flex items-center justify-between h-16 px-3 sm:px-4 border-b-2 border-sky-500 dark:border-sky-400 bg-gradient-to-r from-white via-sky-50 to-blue-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-700">
+          <Link href="/dashboard" className="flex items-center space-x-2 group">
             <SidebarLogo collapsed={isCollapsed} />
           </Link>
           
           <button
             onClick={() => dispatch(setSidebarCollapsed(!isCollapsed))}
-            className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-200 lg:block hidden text-gray-600 dark:text-gray-300 hover:text-sky-600 dark:hover:text-sky-400 group"
+            className="p-1.5 rounded-lg hover:bg-sky-100 dark:hover:bg-gray-700 transition-all duration-200 lg:block hidden text-sky-600 dark:text-sky-400 hover:text-sky-700 dark:hover:text-sky-300 group border border-sky-200 dark:border-gray-600 hover:border-sky-300 dark:hover:border-gray-500"
           >
             {isCollapsed ? <ChevronRight className="h-4 w-4 group-hover:scale-110 transition-transform" /> : <Menu className="h-4 w-4 group-hover:scale-110 transition-transform" />}
           </button>
 
           <button
             onClick={() => dispatch(toggleSidebar())}
-            className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-200 lg:hidden text-gray-600 dark:text-gray-300 hover:text-sky-600 dark:hover:text-sky-400 group"
+            className="p-1.5 rounded-lg hover:bg-sky-100 dark:hover:bg-gray-700 transition-all duration-200 lg:hidden text-sky-600 dark:text-sky-400 hover:text-sky-700 dark:hover:text-sky-300 group border border-sky-200 dark:border-gray-600 hover:border-sky-300 dark:hover:border-gray-500"
           >
             <X className="h-4 w-4 group-hover:scale-110 transition-transform" />
           </button>
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 px-2 sm:px-3 py-4 space-y-1 overflow-y-auto bg-gradient-to-b from-white to-gray-50 dark:from-gray-900 dark:to-gray-800">
+        <nav className="flex-1 px-2 sm:px-3 py-4 space-y-1 overflow-y-auto bg-gradient-to-b from-white via-sky-50/30 to-blue-50/50 dark:from-gray-900 dark:via-gray-800/50 dark:to-gray-700/30">
           {finalNavigation.map((item: NavigationItem) => renderNavigationItem(item))}
         </nav>
 
         {/* Footer */}
         {!isCollapsed && (
-          <div className="p-4 border-t border-gray-200 dark:border-gray-700 bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900">
-            <div className="text-xs text-gray-500 dark:text-gray-400 text-center">
+          <div className="p-4 border-t border-sky-200 dark:border-gray-700 bg-gradient-to-r from-sky-50/50 via-blue-50/30 to-gray-50 dark:from-gray-800/50 dark:via-gray-700/30 dark:to-gray-800">
+            <div className="text-xs text-sky-600 dark:text-sky-400 text-center font-medium">
               ERP System v1.0
+            </div>
+            <div className="text-xs text-gray-500 dark:text-gray-500 text-center mt-1">
+              Theme: {theme === 'light' ? 'Light' : 'Dark'}
             </div>
           </div>
         )}

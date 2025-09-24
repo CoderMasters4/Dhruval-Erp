@@ -167,13 +167,13 @@ export default function CustomerStats({ customers, totalCustomers, isLoading, cu
     return (
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6 mb-8">
         {[...Array(6)].map((_, i) => (
-          <div key={i} className="bg-white rounded-2xl shadow-lg border border-sky-200 p-6 animate-pulse">
+          <div key={i} className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-sky-200 dark:border-gray-700 p-6 animate-pulse transition-all duration-300">
             <div className="flex items-center justify-between mb-4">
-              <div className="w-12 h-12 bg-gray-200 rounded-xl"></div>
-              <div className="w-8 h-4 bg-gray-200 rounded"></div>
+              <div className="w-12 h-12 bg-gray-200 dark:bg-gray-600 rounded-xl"></div>
+              <div className="w-8 h-4 bg-gray-200 dark:bg-gray-600 rounded"></div>
             </div>
-            <div className="h-8 bg-gray-200 rounded mb-2"></div>
-            <div className="h-3 bg-gray-200 rounded w-2/3"></div>
+            <div className="h-8 bg-gray-200 dark:bg-gray-600 rounded mb-2"></div>
+            <div className="h-3 bg-gray-200 dark:bg-gray-600 rounded w-2/3"></div>
           </div>
         ))}
       </div>
@@ -187,15 +187,15 @@ export default function CustomerStats({ customers, totalCustomers, isLoading, cu
         return (
           <div
             key={index}
-            className={`bg-white rounded-2xl shadow-lg ${stat.borderColor} border p-6 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1`}
+            className={`bg-white dark:bg-gray-800 rounded-2xl shadow-lg ${stat.borderColor} dark:border-gray-700 border p-6 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1`}
           >
             <div className="flex items-center justify-between mb-4">
-              <div className={`p-3 ${stat.bgColor} rounded-xl`}>
-                <Icon className={`w-6 h-6 ${stat.textColor}`} />
+              <div className={`p-3 ${stat.bgColor} dark:bg-gray-700/50 rounded-xl transition-all duration-300`}>
+                <Icon className={`w-6 h-6 ${stat.textColor} dark:text-gray-300 transition-colors duration-300`} />
               </div>
               <div className="flex items-center">
-                <TrendingUp className={`w-4 h-4 ${stat.changeColor} mr-1`} />
-                <span className={`text-sm font-semibold ${stat.changeColor}`}>
+                <TrendingUp className={`w-4 h-4 ${stat.changeColor} dark:text-gray-400 mr-1 transition-colors duration-300`} />
+                <span className={`text-sm font-semibold ${stat.changeColor} dark:text-gray-300 transition-colors duration-300`}>
                   {stat.title === 'Total Customers' ? 'Active Rate' : 
                    stat.title === 'Active Customers' ? 'New This Month' :
                    stat.title === 'Private Limited' ? 'Company Share' :
@@ -207,12 +207,12 @@ export default function CustomerStats({ customers, totalCustomers, isLoading, cu
             </div>
             
             <div className="mb-2">
-              <p className="text-2xl font-bold text-black">
+              <p className="text-2xl font-bold text-black dark:text-white transition-colors duration-300">
                 {typeof stat.value === 'number' ? stat.value.toLocaleString() : stat.value}
               </p>
             </div>
             
-            <p className="text-sm font-medium text-gray-600">
+            <p className="text-sm font-medium text-gray-600 dark:text-gray-300 transition-colors duration-300">
               {stat.title}
             </p>
           </div>

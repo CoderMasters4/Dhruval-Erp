@@ -78,10 +78,12 @@ export default function WarehouseDetailPage() {
   const warehouse = warehouseData?.data
 
   // Fetch company data if warehouse has companyId
-  const { data: company, isLoading: companyLoading } = useGetCompanyByIdQuery(
+  const { data: companyData, isLoading: companyLoading } = useGetCompanyByIdQuery(
     warehouse?.companyId || '',
     { skip: !warehouse?.companyId }
   )
+  
+  const company = companyData?.data
 
   const handleEdit = () => {
     router.push(`/warehouses/${warehouseId}/edit`)

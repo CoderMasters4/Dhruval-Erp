@@ -82,10 +82,10 @@ const CompanyFormModal: React.FC<CompanyModalProps> = ({
 
   const steps = [
     { title: 'Basic Information', component: 'basic' },
-    { title: 'Registration & GST Details', component: 'registration' },
-    { title: 'Contact Information', component: 'contact' },
-    { title: 'Address Information', component: 'address' },
-    { title: 'Business Configuration', component: 'business' }
+    { title: 'Registration & GST Details (Optional)', component: 'registration' },
+    { title: 'Contact Information (Optional)', component: 'contact' },
+    { title: 'Address Information (Optional)', component: 'address' },
+    { title: 'Business Configuration (Optional)', component: 'business' }
   ]
 
   // Initialize form data when company prop changes
@@ -223,63 +223,41 @@ const CompanyFormModal: React.FC<CompanyModalProps> = ({
     }
 
     switch (currentStep) {
-      case 0: // Basic Information
+      case 0: // Basic Information - Only company name and code are mandatory
         if (!formData.companyName?.trim()) {
           newErrors.companyName = 'Company name is required'
-        }
-        if (!formData.legalName?.trim()) {
-          newErrors.legalName = 'Legal name is required'
         }
         if (!formData.companyCode?.trim()) {
           newErrors.companyCode = 'Company code is required'
         }
+        // Legal name is now optional
         break
 
-      case 1: // Registration Details
-        if (!formData.registrationDetails?.gstin?.trim()) {
-          newErrors.gstin = 'GSTIN is required'
-        } else if (!validateGSTIN(formData.registrationDetails.gstin)) {
+      case 1: // Registration Details - All fields are optional, but validate format if provided
+        if (formData.registrationDetails?.gstin?.trim() && !validateGSTIN(formData.registrationDetails.gstin)) {
           newErrors.gstin = 'Invalid GSTIN format'
         }
-        if (!formData.registrationDetails?.pan?.trim()) {
-          newErrors.pan = 'PAN is required'
-        } else if (!validatePAN(formData.registrationDetails.pan)) {
+        if (formData.registrationDetails?.pan?.trim() && !validatePAN(formData.registrationDetails.pan)) {
           newErrors.pan = 'Invalid PAN format'
         }
-        if (formData.registrationDetails?.cin && !validateCIN(formData.registrationDetails.cin)) {
+        if (formData.registrationDetails?.cin?.trim() && !validateCIN(formData.registrationDetails.cin)) {
           newErrors.cin = 'Invalid CIN format'
         }
         break
 
-      case 2: // Contact Information
-        if (!formData.contactInfo.emails[0]?.type?.trim()) {
-          newErrors.email = 'Primary email is required'
-        } else if (!validateEmail(formData.contactInfo.emails[0].type)) {
+      case 2: // Contact Information - All fields are optional, but validate format if provided
+        if (formData.contactInfo.emails[0]?.type?.trim() && !validateEmail(formData.contactInfo.emails[0].type)) {
           newErrors.email = 'Invalid email format'
-        }
-        if (!formData.contactInfo.phones[0]?.type?.trim()) {
-          newErrors.phone = 'Primary phone is required'
         }
         break
 
-      case 3: // Address Information
-        if (!formData.addresses?.registeredOffice?.street?.trim()) {
-          newErrors.street = 'Street address is required'
-        }
-        if (!formData.addresses?.registeredOffice?.city?.trim()) {
-          newErrors.city = 'City is required'
-        }
-        if (!formData.addresses?.registeredOffice?.state?.trim()) {
-          newErrors.state = 'State is required'
-        }
-        if (!formData.addresses?.registeredOffice?.pincode?.trim()) {
-          newErrors.pincode = 'Pincode is required'
-        } else if (!validatePincode(formData.addresses.registeredOffice.pincode)) {
+      case 3: // Address Information - All fields are optional, but validate format if provided
+        if (formData.addresses?.registeredOffice?.pincode?.trim() && !validatePincode(formData.addresses.registeredOffice.pincode)) {
           newErrors.pincode = 'Invalid pincode format'
         }
         break
 
-      case 4: // Business Configuration - optional validation
+      case 4: // Business Configuration - All fields are optional
         break
     }
 
@@ -312,6 +290,15 @@ const CompanyFormModal: React.FC<CompanyModalProps> = ({
     }
   }
 
+  const handleSkip = () => {
+    if (currentStep === steps.length - 1) {
+      // Submit form with current data
+      onSubmit(formData)
+    } else {
+      setCurrentStep(prev => prev + 1)
+    }
+  }
+
   const handlePrevious = () => {
     setCurrentStep(prev => Math.max(0, prev - 1))
   }
@@ -328,14 +315,17 @@ const CompanyFormModal: React.FC<CompanyModalProps> = ({
       case 0: // Basic Information
         return (
           <div className="space-y-6">
-            <div className="bg-sky-50 rounded-xl p-4 sm:p-6 border border-sky-200">
-              <h3 className="text-base sm:text-lg font-semibold text-black mb-4 flex items-center">
-                <Building2 className="w-4 h-4 sm:w-5 sm:h-5 mr-2 text-sky-600" />
-                Basic Company Information
+            <div className="bg-sky-50 dark:bg-sky-900/20 rounded-xl p-4 sm:p-6 border border-sky-200 dark:border-sky-700">
+              <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
+                <Building2 className="w-4 h-4 sm:w-5 sm:h-5 mr-2 text-sky-600 dark:text-sky-400" />
+                Basic Company Information (Required)
               </h3>
+              <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                Only company name and code are required. All other information can be added later.
+              </p>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
                 <div className="sm:col-span-2">
-                  <label className="block text-sm font-semibold text-black mb-2">
+                  <label className="block text-sm font-semibold text-gray-900 dark:text-white mb-2">
                     Company Name *
                   </label>
                   <input
@@ -344,36 +334,30 @@ const CompanyFormModal: React.FC<CompanyModalProps> = ({
                     value={formData.companyName}
                     onChange={(e) => updateFormData({ companyName: e.target.value })}
                     className={`w-full px-3 sm:px-4 py-2 sm:py-3 border rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-all duration-200 text-sm sm:text-base ${
-                      errors.companyName ? 'border-red-300 bg-red-50' : 'border-gray-300 bg-white'
-                    }`}
+                      errors.companyName ? 'border-red-300 dark:border-red-600 bg-red-50 dark:bg-red-900/20' : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700'
+                    } text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400`}
                     placeholder="Enter the full company name"
                   />
                   {errors.companyName && (
-                    <p className="mt-1 text-xs sm:text-sm text-red-600 font-medium">{errors.companyName}</p>
+                    <p className="mt-1 text-xs sm:text-sm text-red-600 dark:text-red-400 font-medium">{errors.companyName}</p>
                   )}
                 </div>
 
                 <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Legal Name *
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Legal Name (Optional)
                   </label>
                   <input
                     type="text"
-                    required
                     value={formData.legalName}
                     onChange={(e) => updateFormData({ legalName: e.target.value })}
-                    className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors ${
-                      errors.legalName ? 'border-red-300 bg-red-50' : 'border-gray-300'
-                    }`}
-                    placeholder="Enter the legal name as per registration"
+                    className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
+                    placeholder="Enter the legal name as per registration (optional)"
                   />
-                  {errors.legalName && (
-                    <p className="mt-1 text-sm text-red-600">{errors.legalName}</p>
-                  )}
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Company Code *
                   </label>
                   <input
@@ -382,24 +366,24 @@ const CompanyFormModal: React.FC<CompanyModalProps> = ({
                     value={formData.companyCode}
                     onChange={(e) => updateFormData({ companyCode: e.target.value.toUpperCase() })}
                     className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors font-mono ${
-                      errors.companyCode ? 'border-red-300 bg-red-50' : 'border-gray-300'
-                    }`}
+                      errors.companyCode ? 'border-red-300 dark:border-red-600 bg-red-50 dark:bg-red-900/20' : 'border-gray-300 dark:border-gray-600'
+                    } bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400`}
                     placeholder="COMP001"
                     maxLength={20}
                   />
                   {errors.companyCode && (
-                    <p className="mt-1 text-sm text-red-600">{errors.companyCode}</p>
+                    <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.companyCode}</p>
                   )}
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Company Status *
                   </label>
                   <select
                     value={formData.status}
                     onChange={(e) => updateFormData({ status: e.target.value as any })}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                    className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                   >
                     <option value="active">Active</option>
                     <option value="inactive">Inactive</option>
@@ -410,7 +394,7 @@ const CompanyFormModal: React.FC<CompanyModalProps> = ({
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Currency
                   </label>
                   <select
@@ -421,7 +405,7 @@ const CompanyFormModal: React.FC<CompanyModalProps> = ({
                         currency: e.target.value
                       }
                     })}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                    className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                   >
                     <option value="INR">Indian Rupee (₹)</option>
                     <option value="USD">US Dollar ($)</option>
@@ -437,19 +421,21 @@ const CompanyFormModal: React.FC<CompanyModalProps> = ({
       case 1: // Registration Details
         return (
           <div className="space-y-6">
-            <div className="bg-green-50 rounded-xl p-6 border border-green-200">
-              <h3 className="text-lg font-semibold text-black mb-4 flex items-center">
-                <FileText className="w-5 h-5 mr-2 text-green-600" />
-                Registration & Tax Details
+            <div className="bg-green-50 dark:bg-green-900/20 rounded-xl p-6 border border-green-200 dark:border-green-700">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
+                <FileText className="w-5 h-5 mr-2 text-green-600 dark:text-green-400" />
+                Registration & Tax Details (Optional)
               </h3>
+              <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                Add your company's registration details. You can skip this step and add this information later.
+              </p>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    GSTIN *
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    GSTIN (Optional)
                   </label>
                   <input
                     type="text"
-                    required
                     value={formData.registrationDetails.gstin}
                     onChange={(e) => updateFormData({
                       registrationDetails: {
@@ -457,24 +443,23 @@ const CompanyFormModal: React.FC<CompanyModalProps> = ({
                         gstin: e.target.value.toUpperCase()
                       }
                     })}
-                    className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors font-mono ${
-                      errors.gstin ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                    className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors font-mono bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 ${
+                      errors.gstin ? 'border-red-300 dark:border-red-600 bg-red-50 dark:bg-red-900/20' : 'border-gray-300 dark:border-gray-600'
                     }`}
-                    placeholder="22AAAAA0000A1Z5"
+                    placeholder="22AAAAA0000A1Z5 (optional)"
                     maxLength={15}
                   />
                   {errors.gstin && (
-                    <p className="mt-1 text-sm text-red-600">{errors.gstin}</p>
+                    <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.gstin}</p>
                   )}
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    PAN *
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    PAN (Optional)
                   </label>
                   <input
                     type="text"
-                    required
                     value={formData.registrationDetails.pan}
                     onChange={(e) => updateFormData({
                       registrationDetails: {
@@ -482,19 +467,19 @@ const CompanyFormModal: React.FC<CompanyModalProps> = ({
                         pan: e.target.value.toUpperCase()
                       }
                     })}
-                    className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors font-mono ${
-                      errors.pan ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                    className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors font-mono bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 ${
+                      errors.pan ? 'border-red-300 dark:border-red-600 bg-red-50 dark:bg-red-900/20' : 'border-gray-300 dark:border-gray-600'
                     }`}
-                    placeholder="AAAAA0000A"
+                    placeholder="AAAAA0000A (optional)"
                     maxLength={10}
                   />
                   {errors.pan && (
-                    <p className="mt-1 text-sm text-red-600">{errors.pan}</p>
+                    <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.pan}</p>
                   )}
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     CIN (Optional)
                   </label>
                   <input
@@ -506,19 +491,19 @@ const CompanyFormModal: React.FC<CompanyModalProps> = ({
                         cin: e.target.value.toUpperCase()
                       }
                     })}
-                    className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors font-mono ${
-                      errors.cin ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                    className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors font-mono bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 ${
+                      errors.cin ? 'border-red-300 dark:border-red-600 bg-red-50 dark:bg-red-900/20' : 'border-gray-300 dark:border-gray-600'
                     }`}
                     placeholder="L17110DL1995PLC069348"
                     maxLength={21}
                   />
                   {errors.cin && (
-                    <p className="mt-1 text-sm text-red-600">{errors.cin}</p>
+                    <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.cin}</p>
                   )}
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Udyog Aadhar (Optional)
                   </label>
                   <input
@@ -530,7 +515,7 @@ const CompanyFormModal: React.FC<CompanyModalProps> = ({
                         udyogAadhar: e.target.value
                       }
                     })}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors font-mono"
+                    className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors font-mono bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
                     placeholder="UDYAM-XX-00-0000000"
                   />
                 </div>
@@ -542,19 +527,21 @@ const CompanyFormModal: React.FC<CompanyModalProps> = ({
       case 2: // Contact Information
         return (
           <div className="space-y-6">
-            <div className="bg-purple-50 rounded-lg p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                <Phone className="w-5 h-5 mr-2 text-purple-600" />
-                Contact Information
+            <div className="bg-purple-50 dark:bg-purple-900/20 rounded-lg p-6 border border-purple-200 dark:border-purple-700">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
+                <Phone className="w-5 h-5 mr-2 text-purple-600 dark:text-purple-400" />
+                Contact Information (Optional)
               </h3>
+              <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                Add contact details for your company. You can skip this step and add this information later.
+              </p>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Primary Email *
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Primary Email (Optional)
                   </label>
                   <input
                     type="email"
-                    required
                     value={formData.contactInfo.emails[0]?.type || ''}
                     onChange={(e) => updateFormData({
                       contactInfo: {
@@ -562,23 +549,22 @@ const CompanyFormModal: React.FC<CompanyModalProps> = ({
                         emails: [{ type: e.target.value, label: 'Primary' }]
                       }
                     })}
-                    className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors ${
-                      errors.email ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                    className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 ${
+                      errors.email ? 'border-red-300 dark:border-red-600 bg-red-50 dark:bg-red-900/20' : 'border-gray-300 dark:border-gray-600'
                     }`}
-                    placeholder="company@example.com"
+                    placeholder="company@example.com (optional)"
                   />
                   {errors.email && (
-                    <p className="mt-1 text-sm text-red-600">{errors.email}</p>
+                    <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.email}</p>
                   )}
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Primary Phone *
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Primary Phone (Optional)
                   </label>
                   <input
                     type="tel"
-                    required
                     value={formData.contactInfo.phones[0]?.type || ''}
                     onChange={(e) => updateFormData({
                       contactInfo: {
@@ -586,18 +572,13 @@ const CompanyFormModal: React.FC<CompanyModalProps> = ({
                         phones: [{ type: e.target.value, label: 'Primary' }]
                       }
                     })}
-                    className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors ${
-                      errors.phone ? 'border-red-300 bg-red-50' : 'border-gray-300'
-                    }`}
-                    placeholder="+91 9876543210"
+                    className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
+                    placeholder="+91 9876543210 (optional)"
                   />
-                  {errors.phone && (
-                    <p className="mt-1 text-sm text-red-600">{errors.phone}</p>
-                  )}
                 </div>
 
                 <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Website (Optional)
                   </label>
                   <input
@@ -609,13 +590,13 @@ const CompanyFormModal: React.FC<CompanyModalProps> = ({
                         website: e.target.value
                       }
                     })}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                    className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
                     placeholder="https://www.company.com"
                   />
                 </div>
 
                 <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     LinkedIn (Optional)
                   </label>
                   <input
@@ -630,7 +611,7 @@ const CompanyFormModal: React.FC<CompanyModalProps> = ({
                         }
                       }
                     })}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                    className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
                     placeholder="https://www.linkedin.com/company/company-name"
                   />
                 </div>
@@ -642,18 +623,20 @@ const CompanyFormModal: React.FC<CompanyModalProps> = ({
       case 3: // Address Information
         return (
           <div className="space-y-6">
-            <div className="bg-red-50 rounded-lg p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                <MapPin className="w-5 h-5 mr-2 text-red-600" />
-                Registered Office Address
+            <div className="bg-red-50 dark:bg-red-900/20 rounded-lg p-6 border border-red-200 dark:border-red-700">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
+                <MapPin className="w-5 h-5 mr-2 text-red-600 dark:text-red-400" />
+                Registered Office Address (Optional)
               </h3>
+              <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                Add your company's registered office address. You can skip this step and add this information later.
+              </p>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Street Address *
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Street Address (Optional)
                   </label>
                   <textarea
-                    required
                     rows={3}
                     value={formData.addresses.registeredOffice.street}
                     onChange={(e) => updateFormData({
@@ -665,23 +648,17 @@ const CompanyFormModal: React.FC<CompanyModalProps> = ({
                         }
                       }
                     })}
-                    className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors resize-none ${
-                      errors.street ? 'border-red-300 bg-red-50' : 'border-gray-300'
-                    }`}
-                    placeholder="Enter complete street address"
+                    className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors resize-none bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
+                    placeholder="Enter complete street address (optional)"
                   />
-                  {errors.street && (
-                    <p className="mt-1 text-sm text-red-600">{errors.street}</p>
-                  )}
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    City *
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    City (Optional)
                   </label>
                   <input
                     type="text"
-                    required
                     value={formData.addresses.registeredOffice.city}
                     onChange={(e) => updateFormData({
                       addresses: {
@@ -692,23 +669,17 @@ const CompanyFormModal: React.FC<CompanyModalProps> = ({
                         }
                       }
                     })}
-                    className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors ${
-                      errors.city ? 'border-red-300 bg-red-50' : 'border-gray-300'
-                    }`}
-                    placeholder="Enter city name"
+                    className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
+                    placeholder="Enter city name (optional)"
                   />
-                  {errors.city && (
-                    <p className="mt-1 text-sm text-red-600">{errors.city}</p>
-                  )}
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    State *
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    State (Optional)
                   </label>
                   <input
                     type="text"
-                    required
                     value={formData.addresses.registeredOffice.state}
                     onChange={(e) => updateFormData({
                       addresses: {
@@ -719,23 +690,17 @@ const CompanyFormModal: React.FC<CompanyModalProps> = ({
                         }
                       }
                     })}
-                    className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors ${
-                      errors.state ? 'border-red-300 bg-red-50' : 'border-gray-300'
-                    }`}
-                    placeholder="Enter state name"
+                    className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
+                    placeholder="Enter state name (optional)"
                   />
-                  {errors.state && (
-                    <p className="mt-1 text-sm text-red-600">{errors.state}</p>
-                  )}
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Pincode *
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Pincode (Optional)
                   </label>
                   <input
                     type="text"
-                    required
                     value={formData.addresses.registeredOffice.pincode}
                     onChange={(e) => updateFormData({
                       addresses: {
@@ -746,19 +711,19 @@ const CompanyFormModal: React.FC<CompanyModalProps> = ({
                         }
                       }
                     })}
-                    className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors font-mono ${
-                      errors.pincode ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                    className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors font-mono bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 ${
+                      errors.pincode ? 'border-red-300 dark:border-red-600 bg-red-50 dark:bg-red-900/20' : 'border-gray-300 dark:border-gray-600'
                     }`}
-                    placeholder="000000"
+                    placeholder="000000 (optional)"
                     maxLength={6}
                   />
                   {errors.pincode && (
-                    <p className="mt-1 text-sm text-red-600">{errors.pincode}</p>
+                    <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.pincode}</p>
                   )}
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Country
                   </label>
                   <select
@@ -772,7 +737,7 @@ const CompanyFormModal: React.FC<CompanyModalProps> = ({
                         }
                       }
                     })}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                    className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                   >
                     <option value="India">India</option>
                     <option value="USA">United States</option>
@@ -789,14 +754,17 @@ const CompanyFormModal: React.FC<CompanyModalProps> = ({
       case 4: // Business Configuration
         return (
           <div className="space-y-6">
-            <div className="bg-yellow-50 rounded-lg p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                <Building2 className="w-5 h-5 mr-2 text-yellow-600" />
-                Business Configuration
+            <div className="bg-yellow-50 dark:bg-yellow-900/20 rounded-lg p-6 border border-yellow-200 dark:border-yellow-700">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
+                <Building2 className="w-5 h-5 mr-2 text-yellow-600 dark:text-yellow-400" />
+                Business Configuration (Optional)
               </h3>
+              <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                Configure business settings like currency, timezone, and GST rates. You can skip this step and configure these settings later.
+              </p>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Fiscal Year Start
                   </label>
                   <select
@@ -807,7 +775,7 @@ const CompanyFormModal: React.FC<CompanyModalProps> = ({
                         fiscalYearStart: e.target.value
                       }
                     })}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                    className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                   >
                     <option value="April">April</option>
                     <option value="January">January</option>
@@ -815,7 +783,7 @@ const CompanyFormModal: React.FC<CompanyModalProps> = ({
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Timezone
                   </label>
                   <select
@@ -826,7 +794,7 @@ const CompanyFormModal: React.FC<CompanyModalProps> = ({
                         timezone: e.target.value
                       }
                     })}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                    className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                   >
                     <option value="Asia/Kolkata">India Standard Time (IST)</option>
                     <option value="America/New_York">Eastern Time (ET)</option>
@@ -836,7 +804,7 @@ const CompanyFormModal: React.FC<CompanyModalProps> = ({
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Default GST Rate (%)
                   </label>
                   <input
@@ -854,13 +822,13 @@ const CompanyFormModal: React.FC<CompanyModalProps> = ({
                         }
                       }
                     })}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                    className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
                     placeholder="18"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Raw Material GST Rate (%)
                   </label>
                   <input
@@ -878,7 +846,7 @@ const CompanyFormModal: React.FC<CompanyModalProps> = ({
                         }
                       }
                     })}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                    className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
                     placeholder="12"
                   />
                 </div>
@@ -893,8 +861,8 @@ const CompanyFormModal: React.FC<CompanyModalProps> = ({
   }
 
   return (
-    <div className="fixed inset-0 bg-white/30 backdrop-blur-md flex items-center justify-center z-[60] p-2 sm:p-4">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-5xl max-h-[95vh] overflow-hidden border border-sky-200 relative mx-2 sm:mx-0">
+    <div className="fixed inset-0 bg-white/30 dark:bg-black/50 backdrop-blur-md flex items-center justify-center z-[60] p-2 sm:p-4">
+      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-5xl max-h-[95vh] overflow-hidden border border-sky-200 dark:border-sky-700 relative mx-2 sm:mx-0 transition-all duration-300">
         {/* Header */}
         <div className="flex items-center justify-between p-4 sm:p-6 border-b border-sky-200 bg-sky-500">
           <div className="flex items-center gap-3 sm:gap-4 min-w-0 flex-1">
@@ -920,22 +888,22 @@ const CompanyFormModal: React.FC<CompanyModalProps> = ({
         </div>
 
         {/* Progress Bar */}
-        <div className="px-4 sm:px-6 py-3 sm:py-4 bg-sky-50 border-b border-sky-200">
+        <div className="px-4 sm:px-6 py-3 sm:py-4 bg-sky-50 dark:bg-sky-900/20 border-b border-sky-200 dark:border-sky-700">
           {/* Mobile Progress */}
           <div className="block sm:hidden">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-sm font-semibold text-black">Progress</span>
-              <span className="text-sm font-semibold text-sky-600">
+              <span className="text-sm font-semibold text-gray-900 dark:text-white">Progress</span>
+              <span className="text-sm font-semibold text-sky-600 dark:text-sky-400">
                 {Math.round(((currentStep + 1) / steps.length) * 100)}%
               </span>
             </div>
-            <div className="w-full bg-gray-200 rounded-full h-2">
+            <div className="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-2">
               <div
                 className="bg-sky-500 h-2 rounded-full transition-all duration-300"
                 style={{ width: `${((currentStep + 1) / steps.length) * 100}%` }}
               />
             </div>
-            <p className="text-xs text-gray-600 mt-2">
+            <p className="text-xs text-gray-600 dark:text-gray-300 mt-2">
               Step {currentStep + 1} of {steps.length}: {steps[currentStep].title}
             </p>
           </div>
@@ -960,7 +928,7 @@ const CompanyFormModal: React.FC<CompanyModalProps> = ({
                 </div>
                 <span
                   className={`ml-2 text-xs sm:text-sm font-semibold truncate ${
-                    index <= currentStep ? 'text-black' : 'text-gray-500'
+                    index <= currentStep ? 'text-gray-900 dark:text-white' : 'text-gray-500 dark:text-gray-400'
                   }`}
                 >
                   {step.title}
@@ -983,7 +951,7 @@ const CompanyFormModal: React.FC<CompanyModalProps> = ({
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-between p-6 border-t border-sky-200 bg-sky-50">
+        <div className="flex items-center justify-between p-6 border-t border-sky-200 dark:border-sky-700 bg-sky-50 dark:bg-sky-900/20">
           <Button
             type="button"
             variant="outline"
@@ -1002,6 +970,20 @@ const CompanyFormModal: React.FC<CompanyModalProps> = ({
             >
               Cancel
             </Button>
+            
+            {/* Show Skip button for optional steps (steps 1-4) */}
+            {currentStep > 0 && currentStep < steps.length - 1 && (
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleSkip}
+                disabled={isLoading}
+                className="text-gray-600 hover:text-gray-800"
+              >
+                Skip This Step
+              </Button>
+            )}
+            
             <Button
               type="button"
               onClick={handleNext}

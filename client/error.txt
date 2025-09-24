@@ -1,7 +1,341 @@
-All errors have been resolved! ✅
+rajat@Mac client % pnpm error
 
-Fixed Issues:
-1. GatePassTable.tsx - Fixed JSX syntax error with missing closing parenthesis in map function
-2. Hospitality page - Fixed TypeScript errors with visitOutcome property access by adding proper type checking
+> client@0.1.0 error /Users/rajat/Downloads/projects/erp/client
+> npx tsc --noEmit --skipLibCheck
 
-The application should now compile and run without errors.
+npm warn Unknown env config "verify-deps-before-run". This will stop working in the next major version of npm.
+npm warn Unknown env config "_jsr-registry". This will stop working in the next major version of npm.
+src/components/customers/modals/CustomerDetailsModal.tsx:177:41 - error TS2339: Property 'website' does not exist on type '{ primaryEmail?: string | undefined; primaryPhone?: string | undefined; }'.
+
+177                 {(customer.contactInfo?.website || customer.website) && (
+                                            ~~~~~~~
+
+src/components/customers/modals/CustomerDetailsModal.tsx:183:53 - error TS2339: Property 'website' does not exist on type '{ primaryEmail?: string | undefined; primaryPhone?: string | undefined; }'.
+
+183                         href={customer.contactInfo?.website || customer.website}
+                                                        ~~~~~~~
+
+src/components/customers/modals/CustomerDetailsModal.tsx:188:48 - error TS2339: Property 'website' does not exist on type '{ primaryEmail?: string | undefined; primaryPhone?: string | undefined; }'.
+
+188                         {customer.contactInfo?.website || customer.website}
+                                                   ~~~~~~~
+
+src/components/customers/modals/CustomerDetailsModal.tsx:197:44 - error TS2551: Property 'addresses' does not exist on type 'Customer'. Did you mean 'address'?
+
+197             {(customer.address || customer.addresses?.length) && (
+                                               ~~~~~~~~~
+
+  src/lib/features/customers/customersApi.ts:17:3
+    17   address: {
+         ~~~~~~~
+    'address' is declared here.
+
+src/components/customers/modals/CustomerDetailsModal.tsx:208:62 - error TS2551: Property 'addresses' does not exist on type 'Customer'. Did you mean 'address'?
+
+208                       {(customer.address?.street || customer.addresses?.[0]?.street) && <p>{customer.address?.street || customer.addresses?.[0]?.street}</p>}
+                                                                 ~~~~~~~~~
+
+  src/lib/features/customers/customersApi.ts:17:3
+    17   address: {
+         ~~~~~~~
+    'address' is declared here.
+
+src/components/customers/modals/CustomerDetailsModal.tsx:208:130 - error TS2551: Property 'addresses' does not exist on type 'Customer'. Did you mean 'address'?
+
+208                       {(customer.address?.street || customer.addresses?.[0]?.street) && <p>{customer.address?.street || customer.addresses?.[0]?.street}</p>}
+                                                                                                                                     ~~~~~~~~~
+
+  src/lib/features/customers/customersApi.ts:17:3
+    17   address: {
+         ~~~~~~~
+    'address' is declared here.
+
+src/components/customers/modals/CustomerDetailsModal.tsx:210:62 - error TS2551: Property 'addresses' does not exist on type 'Customer'. Did you mean 'address'?
+
+210                         {[customer.address?.city || customer.addresses?.[0]?.city, customer.address?.state || customer.addresses?.[0]?.state].filter(Boolean).join(', ')}
+                                                                 ~~~~~~~~~
+
+  src/lib/features/customers/customersApi.ts:17:3
+    17   address: {
+         ~~~~~~~
+    'address' is declared here.
+
+src/components/customers/modals/CustomerDetailsModal.tsx:210:120 - error TS2551: Property 'addresses' does not exist on type 'Customer'. Did you mean 'address'?
+
+210                         {[customer.address?.city || customer.addresses?.[0]?.city, customer.address?.state || customer.addresses?.[0]?.state].filter(Boolean).join(', ')}
+                                                                                                                           ~~~~~~~~~
+
+  src/lib/features/customers/customersApi.ts:17:3
+    17   address: {
+         ~~~~~~~
+    'address' is declared here.
+
+src/components/customers/modals/CustomerDetailsModal.tsx:211:65 - error TS2551: Property 'addresses' does not exist on type 'Customer'. Did you mean 'address'?
+
+211                         {(customer.address?.zipCode || customer.addresses?.[0]?.zipCode) && ` - ${customer.address?.zipCode || customer.addresses?.[0]?.zipCode}`}
+                                                                    ~~~~~~~~~
+
+  src/lib/features/customers/customersApi.ts:17:3
+    17   address: {
+         ~~~~~~~
+    'address' is declared here.
+
+src/components/customers/modals/CustomerDetailsModal.tsx:211:137 - error TS2551: Property 'addresses' does not exist on type 'Customer'. Did you mean 'address'?
+
+211                         {(customer.address?.zipCode || customer.addresses?.[0]?.zipCode) && ` - ${customer.address?.zipCode || customer.addresses?.[0]?.zipCode}`}
+                                                                                                                                            ~~~~~~~~~
+
+  src/lib/features/customers/customersApi.ts:17:3
+    17   address: {
+         ~~~~~~~
+    'address' is declared here.
+
+src/components/customers/modals/CustomerDetailsModal.tsx:213:63 - error TS2551: Property 'addresses' does not exist on type 'Customer'. Did you mean 'address'?
+
+213                       {(customer.address?.country || customer.addresses?.[0]?.country) && <p>{customer.address?.country || customer.addresses?.[0]?.country}</p>}
+                                                                  ~~~~~~~~~
+
+  src/lib/features/customers/customersApi.ts:17:3
+    17   address: {
+         ~~~~~~~
+    'address' is declared here.
+
+src/components/customers/modals/CustomerDetailsModal.tsx:213:133 - error TS2551: Property 'addresses' does not exist on type 'Customer'. Did you mean 'address'?
+
+213                       {(customer.address?.country || customer.addresses?.[0]?.country) && <p>{customer.address?.country || customer.addresses?.[0]?.country}</p>}
+                                                                                                                                        ~~~~~~~~~
+
+  src/lib/features/customers/customersApi.ts:17:3
+    17   address: {
+         ~~~~~~~
+    'address' is declared here.
+
+src/components/customers/modals/CustomerDetailsModal.tsx:217:57 - error TS2551: Property 'addresses' does not exist on type 'Customer'. Did you mean 'address'?
+
+217                   {(customer.billingAddress || customer.addresses?.find(addr => addr.addressType === 'billing')) && (
+                                                            ~~~~~~~~~
+
+  src/lib/features/customers/customersApi.ts:17:3
+    17   address: {
+         ~~~~~~~
+    'address' is declared here.
+
+src/components/customers/modals/CustomerDetailsModal.tsx:217:73 - error TS7006: Parameter 'addr' implicitly has an 'any' type.
+
+217                   {(customer.billingAddress || customer.addresses?.find(addr => addr.addressType === 'billing')) && (
+                                                                            ~~~~
+
+src/components/customers/modals/CustomerDetailsModal.tsx:221:71 - error TS2551: Property 'addresses' does not exist on type 'Customer'. Did you mean 'address'?
+
+221                         {(customer.billingAddress?.street || customer.addresses?.find(addr => addr.addressType === 'billing')?.street) && <p>{customer.billingAddress?.street || customer.addresses?.find(addr => addr.addressType === 'billing')?.street}</p>}
+                                                                          ~~~~~~~~~
+
+  src/lib/features/customers/customersApi.ts:17:3
+    17   address: {
+         ~~~~~~~
+    'address' is declared here.
+
+src/components/customers/modals/CustomerDetailsModal.tsx:221:87 - error TS7006: Parameter 'addr' implicitly has an 'any' type.
+
+221                         {(customer.billingAddress?.street || customer.addresses?.find(addr => addr.addressType === 'billing')?.street) && <p>{customer.billingAddress?.street || customer.addresses?.find(addr => addr.addressType === 'billing')?.street}</p>}
+                                                                                          ~~~~
+
+src/components/customers/modals/CustomerDetailsModal.tsx:221:187 - error TS2551: Property 'addresses' does not exist on type 'Customer'. Did you mean 'address'?
+
+221                         {(customer.billingAddress?.street || customer.addresses?.find(addr => addr.addressType === 'billing')?.street) && <p>{customer.billingAddress?.street || customer.addresses?.find(addr => addr.addressType === 'billing')?.street}</p>}
+                                                                                                                                                                                              ~~~~~~~~~
+
+  src/lib/features/customers/customersApi.ts:17:3
+    17   address: {
+         ~~~~~~~
+    'address' is declared here.
+
+src/components/customers/modals/CustomerDetailsModal.tsx:221:203 - error TS7006: Parameter 'addr' implicitly has an 'any' type.
+
+221                         {(customer.billingAddress?.street || customer.addresses?.find(addr => addr.addressType === 'billing')?.street) && <p>{customer.billingAddress?.street || customer.addresses?.find(addr => addr.addressType === 'billing')?.street}</p>}
+                                                                                                                                                                                                              ~~~~
+
+src/components/customers/modals/CustomerDetailsModal.tsx:223:71 - error TS2551: Property 'addresses' does not exist on type 'Customer'. Did you mean 'address'?
+
+223                           {[customer.billingAddress?.city || customer.addresses?.find(addr => addr.addressType === 'billing')?.city, customer.billingAddress?.state || customer.addresses?.find(addr => addr.addressType === 'billing')?.state].filter(Boolean).join(', ')}
+                                                                          ~~~~~~~~~
+
+  src/lib/features/customers/customersApi.ts:17:3
+    17   address: {
+         ~~~~~~~
+    'address' is declared here.
+
+src/components/customers/modals/CustomerDetailsModal.tsx:223:87 - error TS7006: Parameter 'addr' implicitly has an 'any' type.
+
+223                           {[customer.billingAddress?.city || customer.addresses?.find(addr => addr.addressType === 'billing')?.city, customer.billingAddress?.state || customer.addresses?.find(addr => addr.addressType === 'billing')?.state].filter(Boolean).join(', ')}
+                                                                                          ~~~~
+
+src/components/customers/modals/CustomerDetailsModal.tsx:223:177 - error TS2551: Property 'addresses' does not exist on type 'Customer'. Did you mean 'address'?
+
+223                           {[customer.billingAddress?.city || customer.addresses?.find(addr => addr.addressType === 'billing')?.city, customer.billingAddress?.state || customer.addresses?.find(addr => addr.addressType === 'billing')?.state].filter(Boolean).join(', ')}
+                                                                                                                                                                                    ~~~~~~~~~
+
+  src/lib/features/customers/customersApi.ts:17:3
+    17   address: {
+         ~~~~~~~
+    'address' is declared here.
+
+src/components/customers/modals/CustomerDetailsModal.tsx:223:193 - error TS7006: Parameter 'addr' implicitly has an 'any' type.
+
+223                           {[customer.billingAddress?.city || customer.addresses?.find(addr => addr.addressType === 'billing')?.city, customer.billingAddress?.state || customer.addresses?.find(addr => addr.addressType === 'billing')?.state].filter(Boolean).join(', ')}
+                                                                                                                                                                                                    ~~~~
+
+src/components/customers/modals/CustomerDetailsModal.tsx:224:74 - error TS2551: Property 'addresses' does not exist on type 'Customer'. Did you mean 'address'?
+
+224                           {(customer.billingAddress?.zipCode || customer.addresses?.find(addr => addr.addressType === 'billing')?.zipCode) && ` - ${customer.billingAddress?.zipCode || customer.addresses?.find(addr => addr.addressType === 'billing')?.zipCode}`}
+                                                                             ~~~~~~~~~
+
+  src/lib/features/customers/customersApi.ts:17:3
+    17   address: {
+         ~~~~~~~
+    'address' is declared here.
+
+src/components/customers/modals/CustomerDetailsModal.tsx:224:90 - error TS7006: Parameter 'addr' implicitly has an 'any' type.
+
+224                           {(customer.billingAddress?.zipCode || customer.addresses?.find(addr => addr.addressType === 'billing')?.zipCode) && ` - ${customer.billingAddress?.zipCode || customer.addresses?.find(addr => addr.addressType === 'billing')?.zipCode}`}
+                                                                                             ~~~~
+
+src/components/customers/modals/CustomerDetailsModal.tsx:224:194 - error TS2551: Property 'addresses' does not exist on type 'Customer'. Did you mean 'address'?
+
+224                           {(customer.billingAddress?.zipCode || customer.addresses?.find(addr => addr.addressType === 'billing')?.zipCode) && ` - ${customer.billingAddress?.zipCode || customer.addresses?.find(addr => addr.addressType === 'billing')?.zipCode}`}
+                                                                                                                                                                                                     ~~~~~~~~~
+
+  src/lib/features/customers/customersApi.ts:17:3
+    17   address: {
+         ~~~~~~~
+    'address' is declared here.
+
+src/components/customers/modals/CustomerDetailsModal.tsx:224:210 - error TS7006: Parameter 'addr' implicitly has an 'any' type.
+
+224                           {(customer.billingAddress?.zipCode || customer.addresses?.find(addr => addr.addressType === 'billing')?.zipCode) && ` - ${customer.billingAddress?.zipCode || customer.addresses?.find(addr => addr.addressType === 'billing')?.zipCode}`}
+                                                                                                                                                                                                                     ~~~~
+
+src/components/customers/modals/CustomerDetailsModal.tsx:226:72 - error TS2551: Property 'addresses' does not exist on type 'Customer'. Did you mean 'address'?
+
+226                         {(customer.billingAddress?.country || customer.addresses?.find(addr => addr.addressType === 'billing')?.country) && <p>{customer.billingAddress?.country || customer.addresses?.find(addr => addr.addressType === 'billing')?.country}</p>}
+                                                                           ~~~~~~~~~
+
+  src/lib/features/customers/customersApi.ts:17:3
+    17   address: {
+         ~~~~~~~
+    'address' is declared here.
+
+src/components/customers/modals/CustomerDetailsModal.tsx:226:88 - error TS7006: Parameter 'addr' implicitly has an 'any' type.
+
+226                         {(customer.billingAddress?.country || customer.addresses?.find(addr => addr.addressType === 'billing')?.country) && <p>{customer.billingAddress?.country || customer.addresses?.find(addr => addr.addressType === 'billing')?.country}</p>}
+                                                                                           ~~~~
+
+src/components/customers/modals/CustomerDetailsModal.tsx:226:190 - error TS2551: Property 'addresses' does not exist on type 'Customer'. Did you mean 'address'?
+
+226                         {(customer.billingAddress?.country || customer.addresses?.find(addr => addr.addressType === 'billing')?.country) && <p>{customer.billingAddress?.country || customer.addresses?.find(addr => addr.addressType === 'billing')?.country}</p>}
+                                                                                                                                                                                                 ~~~~~~~~~
+
+  src/lib/features/customers/customersApi.ts:17:3
+    17   address: {
+         ~~~~~~~
+    'address' is declared here.
+
+src/components/customers/modals/CustomerDetailsModal.tsx:226:206 - error TS7006: Parameter 'addr' implicitly has an 'any' type.
+
+226                         {(customer.billingAddress?.country || customer.addresses?.find(addr => addr.addressType === 'billing')?.country) && <p>{customer.billingAddress?.country || customer.addresses?.find(addr => addr.addressType === 'billing')?.country}</p>}
+                                                                                                                                                                                                                 ~~~~
+
+src/components/customers/modals/CustomerDetailsModal.tsx:284:71 - error TS2339: Property 'lastOrderDate' does not exist on type '{ totalOrders?: number | undefined; totalOrderValue?: number | undefined; averageOrderValue?: number | undefined; }'.
+
+284                 {(customer.lastOrderDate || customer.purchaseHistory?.lastOrderDate) && (
+                                                                          ~~~~~~~~~~~~~
+
+src/components/customers/modals/CustomerDetailsModal.tsx:289:174 - error TS2339: Property 'lastOrderDate' does not exist on type '{ totalOrders?: number | undefined; totalOrderValue?: number | undefined; averageOrderValue?: number | undefined; }'.
+
+289                       <p className="text-black dark:text-white font-semibold transition-colors duration-300">{formatDate(customer.lastOrderDate || customer.purchaseHistory?.lastOrderDate || customer.createdAt)}</p>
+                                                                                                                                                                                 ~~~~~~~~~~~~~
+
+src/components/customers/modals/CustomerDetailsModal.tsx:294:52 - error TS2339: Property 'financialInfo' does not exist on type 'Customer'.
+
+294                 {(customer.creditLimit || customer.financialInfo?.creditLimit) && (
+                                                       ~~~~~~~~~~~~~
+
+src/components/customers/modals/CustomerDetailsModal.tsx:299:135 - error TS2339: Property 'financialInfo' does not exist on type 'Customer'.
+
+299                       <p className="text-black dark:text-white font-semibold transition-colors duration-300">{formatCurrency(customer.financialInfo?.creditLimit || customer.creditLimit || 0)}</p>
+                                                                                                                                          ~~~~~~~~~~~~~
+
+src/components/customers/modals/CustomerDetailsModal.tsx:304:53 - error TS2339: Property 'financialInfo' does not exist on type 'Customer'.
+
+304                 {(customer.paymentTerms || customer.financialInfo?.paymentTerms) && (
+                                                        ~~~~~~~~~~~~~
+
+src/components/customers/modals/CustomerDetailsModal.tsx:309:120 - error TS2339: Property 'financialInfo' does not exist on type 'Customer'.
+
+309                       <p className="text-black dark:text-white font-semibold transition-colors duration-300">{customer.financialInfo?.paymentTerms || customer.paymentTerms}</p>
+                                                                                                                           ~~~~~~~~~~~~~
+
+src/components/dispatch/DispatchEditModal.tsx:45:25 - error TS2339: Property 'companyId' does not exist on type 'Partial<UpdateDispatchRequest>'.
+
+45     companyId: formData.companyId || userCompanyId,
+                           ~~~~~~~~~
+
+src/components/dispatch/DispatchEditModal.tsx:51:25 - error TS2339: Property 'companyId' does not exist on type 'Partial<UpdateDispatchRequest>'.
+
+51     companyId: formData.companyId || userCompanyId,
+                           ~~~~~~~~~
+
+src/components/dispatch/DispatchEditModal.tsx:265:7 - error TS2322: Type 'Element' is not assignable to type 'string'.
+
+265       title={
+          ~~~~~
+
+  src/components/ui/Modal.tsx:10:3
+    10   title?: string
+         ~~~~~
+    The expected type comes from property 'title' which is declared here on type 'IntrinsicAttributes & ModalProps'
+
+src/components/dispatch/QuickUpdateModal.tsx:156:7 - error TS2322: Type 'Element' is not assignable to type 'string'.
+
+156       title={
+          ~~~~~
+
+  src/components/ui/Modal.tsx:10:3
+    10   title?: string
+         ~~~~~
+    The expected type comes from property 'title' which is declared here on type 'IntrinsicAttributes & ModalProps'
+
+src/components/suppliers/modals/SupplierFormModal.tsx:688:11 - error TS2322: Type 'string | undefined' is not assignable to type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+
+688           id: supplier._id,
+              ~~
+
+  src/lib/api/suppliersApi.ts:266:9
+    266       { id: string; data: Partial<Supplier> }
+                ~~
+    The expected type comes from property 'id' which is declared here on type '{ id: string; data: Partial<Supplier>; }'
+
+src/components/suppliers/modals/SupplierFormModal.tsx:693:30 - error TS2345: Argument of type '{ companyId: string; supplierName: string; supplierCode: string; legalName: string; displayName: string; businessInfo: { businessType: string; industry: string; subIndustry: string; businessDescription: string; ... 4 more ...; manufacturingCapacity: string; }; ... 9 more ...; isActive: boolean; }' is not assignable to parameter of type 'Supplier'.
+  Type '{ companyId: string; supplierName: string; supplierCode: string; legalName: string; displayName: string; businessInfo: { businessType: string; industry: string; subIndustry: string; businessDescription: string; ... 4 more ...; manufacturingCapacity: string; }; ... 9 more ...; isActive: boolean; }' is missing the following properties from type 'Supplier': supplierId, partNumber, isPrimary, leadTime, and 5 more.
+
+693         await createSupplier(supplierData).unwrap()
+                                 ~~~~~~~~~~~~
+
+
+Found 42 errors in 4 files.
+
+Errors  Files
+    36  src/components/customers/modals/CustomerDetailsModal.tsx:177
+     3  src/components/dispatch/DispatchEditModal.tsx:45
+     1  src/components/dispatch/QuickUpdateModal.tsx:156
+     2  src/components/suppliers/modals/SupplierFormModal.tsx:688
+ ELIFECYCLE  Command failed with exit code 2.
+rajat@Mac client % >....                  
+Errors  Files
+    36  src/components/customers/modals/CustomerDetailsModal.tsx:177
+     3  src/components/dispatch/DispatchEditModal.tsx:45
+     1  src/components/dispatch/QuickUpdateModal.tsx:156
+     2  src/components/suppliers/modals/SupplierFormModal.tsx:688
+ ELIFECYCLE  Command failed with exit code 2.
+rajat@Mac client % 

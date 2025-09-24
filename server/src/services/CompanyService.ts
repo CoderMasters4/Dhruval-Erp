@@ -28,16 +28,17 @@ export class CompanyService extends BaseService<ICompany> {
         throw new AppError('Company code already exists', 400);
       }
 
-      // Check if primary email already exists
+      // Check if email already exists (if provided)
       if (companyData.contactInfo?.emails && companyData.contactInfo.emails.length > 0) {
-        const primaryEmail = companyData.contactInfo.emails.find(email => email.type === 'primary');
-        if (primaryEmail) {
-          const existingEmail = await this.findOne({
-            'contactInfo.emails': { $elemMatch: { type: 'primary', label: primaryEmail.label } }
-          });
+        for (const email of companyData.contactInfo.emails) {
+          if (email.type && email.type.trim()) {
+            const existingEmail = await this.findOne({
+              'contactInfo.emails': { $elemMatch: { type: email.type } }
+            });
 
-          if (existingEmail) {
-            throw new AppError('Company email already exists', 400);
+            if (existingEmail) {
+              throw new AppError(`Email ${email.type} already exists`, 400);
+            }
           }
         }
       }
@@ -281,39 +282,57 @@ export class CompanyService extends BaseService<ICompany> {
   }
 
   /**
-   * Validate company data
+   * Validate company data - Only company name and code are required
    */
   private validateCompanyData(companyData: Partial<ICompany>): void {
+    // Only company name and code are required
     if (!companyData.companyName) {
       throw new AppError('Company name is required', 400);
     }
 
-    if (!companyData.legalName) {
-      throw new AppError('Legal name is required', 400);
+    if (!companyData.companyCode) {
+      throw new AppError('Company code is required', 400);
     }
 
-    if (!companyData.registrationDetails?.gstin) {
-      throw new AppError('GSTIN is required', 400);
+    // Validate format if optional fields are provided
+    if (companyData.registrationDetails?.gstin) {
+      const gstinRegex = /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/;
+      if (!gstinRegex.test(companyData.registrationDetails.gstin)) {
+        throw new AppError('Invalid GSTIN format', 400);
+      }
     }
 
-    if (!companyData.registrationDetails?.pan) {
-      throw new AppError('PAN is required', 400);
+    if (companyData.registrationDetails?.pan) {
+      const panRegex = /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/;
+      if (!panRegex.test(companyData.registrationDetails.pan)) {
+        throw new AppError('Invalid PAN format', 400);
+      }
     }
 
-    if (!companyData.contactInfo?.emails || companyData.contactInfo.emails.length === 0) {
-      throw new AppError('At least one email is required', 400);
+    if (companyData.registrationDetails?.cin) {
+      const cinRegex = /^[LU][0-9]{5}[A-Z]{2}[0-9]{4}[A-Z]{3}[0-9]{6}$/;
+      if (!cinRegex.test(companyData.registrationDetails.cin)) {
+        throw new AppError('Invalid CIN format', 400);
+      }
     }
 
-    if (!companyData.contactInfo?.phones || companyData.contactInfo.phones.length === 0) {
-      throw new AppError('At least one phone number is required', 400);
+    // Validate email format if provided
+    if (companyData.contactInfo?.emails && companyData.contactInfo.emails.length > 0) {
+      for (const email of companyData.contactInfo.emails) {
+        if (email.type && email.type.trim()) {
+          const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+          if (!emailRegex.test(email.type)) {
+            throw new AppError('Invalid email format', 400);
+          }
+        }
+      }
     }
 
-    // Validate email format for primary email
-    const primaryEmail = companyData.contactInfo.emails.find(email => email.type === 'primary');
-    if (primaryEmail && primaryEmail.label) {
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRegex.test(primaryEmail.label)) {
-        throw new AppError('Invalid email format', 400);
+    // Validate website format if provided
+    if (companyData.contactInfo?.website) {
+      const websiteRegex = /^https?:\/\/.+/;
+      if (!websiteRegex.test(companyData.contactInfo.website)) {
+        throw new AppError('Invalid website format. Must start with http:// or https://', 400);
       }
     }
   }

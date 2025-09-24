@@ -30,6 +30,7 @@ interface StockMovementDetailsProps {
   onDelete: () => void
   canEdit?: boolean
   canDelete?: boolean
+  theme?: 'light' | 'dark'
 }
 
 export function StockMovementDetails({ 
@@ -38,7 +39,8 @@ export function StockMovementDetails({
   onEdit, 
   onDelete, 
   canEdit = true, 
-  canDelete = true 
+  canDelete = true,
+  theme = 'light'
 }: StockMovementDetailsProps) {
   
   const formatDate = (dateString: string) => {

@@ -20,6 +20,8 @@ import {
 } from '@/lib/features/vehicles/vehiclesApi'
 import { useGetAllCompaniesQuery } from '@/lib/features/companies/companiesApi'
 import { useGetAllVehiclesQuery } from '@/lib/features/vehicles/vehiclesApi'
+import { useSelector } from 'react-redux'
+import { selectTheme } from '@/lib/features/ui/uiSlice'
 
 
 interface VehicleFormModalProps {
@@ -48,6 +50,7 @@ const getInitialFormData = (): FormData => ({
 })
 
 export default function VehicleFormModal({ isOpen, onClose, onSuccess, vehicle }: VehicleFormModalProps) {
+  const theme = useSelector(selectTheme)
   const [formData, setFormData] = useState<FormData>(getInitialFormData())
 
   const [errors, setErrors] = useState<Partial<FormData>>({})
@@ -235,8 +238,8 @@ export default function VehicleFormModal({ isOpen, onClose, onSuccess, vehicle }
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 bg-white/30 backdrop-blur-md flex items-center justify-center z-[60] p-4">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-6xl max-h-[90vh] overflow-hidden border border-gray-200">
+    <div className="fixed inset-0 bg-white/30 dark:bg-black/30 backdrop-blur-md flex items-center justify-center z-[60] p-4">
+      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-6xl max-h-[90vh] overflow-hidden border border-gray-200 dark:border-gray-700">
         {/* Header */}
         <div className="bg-blue-500 p-6 relative overflow-hidden">
           <div className="absolute -top-4 -right-4 w-20 h-20 bg-white/20 rounded-full"></div>
@@ -270,15 +273,15 @@ export default function VehicleFormModal({ isOpen, onClose, onSuccess, vehicle }
         <form onSubmit={handleSubmit} className="p-6 overflow-y-auto max-h-[calc(90vh-200px)]">
           <div className="space-y-6">
             {/* Vehicle Gate Pass Information */}
-            <div className="bg-blue-50 rounded-xl p-6 border border-blue-200">
-              <h3 className="text-lg font-semibold text-black mb-4 flex items-center">
-                <Car className="w-5 h-5 mr-2 text-blue-600" />
+            <div className="bg-blue-50 dark:bg-blue-900/20 rounded-xl p-6 border border-blue-200 dark:border-blue-800">
+              <h3 className="text-lg font-semibold text-black dark:text-gray-100 mb-4 flex items-center">
+                <Car className="w-5 h-5 mr-2 text-blue-600 dark:text-blue-400" />
                 Vehicle Gate Pass Information
               </h3>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-semibold text-black mb-2">
+                  <label className="block text-sm font-semibold text-black dark:text-gray-100 mb-2">
                     Vehicle Number *
                   </label>
                   <input
@@ -287,18 +290,18 @@ export default function VehicleFormModal({ isOpen, onClose, onSuccess, vehicle }
                     value={formData.vehicleNumber}
                     onChange={(e) => updateFormData({ vehicleNumber: e.target.value.toUpperCase() })}
                     className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 ${
-                      errors.vehicleNumber ? 'border-red-300 bg-red-50' : 'border-gray-300 bg-white'
-                    }`}
+                      errors.vehicleNumber ? 'border-red-300 dark:border-red-600 bg-red-50 dark:bg-red-900/20' : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700'
+                    } text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400`}
                     placeholder="e.g., MH01AB1234"
                   />
                   {errors.vehicleNumber && (
-                    <p className="mt-1 text-sm text-red-600 font-medium">{errors.vehicleNumber}</p>
+                    <p className="mt-1 text-sm text-red-600 dark:text-red-400 font-medium">{errors.vehicleNumber}</p>
                   )}
                 </div>
 
 
                 <div>
-                  <label className="block text-sm font-semibold text-black mb-2">
+                  <label className="block text-sm font-semibold text-black dark:text-gray-100 mb-2">
                     Driver Name *
                   </label>
                   <input
@@ -307,46 +310,46 @@ export default function VehicleFormModal({ isOpen, onClose, onSuccess, vehicle }
                     value={formData.driverName}
                     onChange={(e) => updateFormData({ driverName: e.target.value })}
                     className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 ${
-                      errors.driverName ? 'border-red-300 bg-red-50' : 'border-gray-300 bg-white'
-                    }`}
+                      errors.driverName ? 'border-red-300 dark:border-red-600 bg-red-50 dark:bg-red-900/20' : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700'
+                    } text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400`}
                     placeholder="Driver full name"
                   />
                   {errors.driverName && (
-                    <p className="mt-1 text-sm text-red-600 font-medium">{errors.driverName}</p>
+                    <p className="mt-1 text-sm text-red-600 dark:text-red-400 font-medium">{errors.driverName}</p>
                   )}
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-black mb-2">
+                  <label className="block text-sm font-semibold text-black dark:text-gray-100 mb-2">
                     Driver Mobile Number *
                   </label>
                   <div className="relative">
-                    <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                    <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400 dark:text-gray-500" />
                     <input
                       type="tel"
                       required
                       value={formData.driverPhone}
                       onChange={(e) => updateFormData({ driverPhone: e.target.value })}
                       className={`w-full pl-10 pr-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 ${
-                        errors.driverPhone ? 'border-red-300 bg-red-50' : 'border-gray-300 bg-white'
-                      }`}
+                        errors.driverPhone ? 'border-red-300 dark:border-red-600 bg-red-50 dark:bg-red-900/20' : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700'
+                      } text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400`}
                       placeholder="Driver phone number"
                     />
                   </div>
                   {errors.driverPhone && (
-                    <p className="mt-1 text-sm text-red-600 font-medium">{errors.driverPhone}</p>
+                    <p className="mt-1 text-sm text-red-600 dark:text-red-400 font-medium">{errors.driverPhone}</p>
                   )}
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-black mb-2">
+                  <label className="block text-sm font-semibold text-black dark:text-gray-100 mb-2">
                     Purpose of Visit *
                   </label>
                   <select
                     required
                     value={formData.purpose}
                     onChange={(e) => updateFormData({ purpose: e.target.value as Vehicle['purpose'] })}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white"
+                    className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                   >
                     <option value="delivery">Delivery</option>
                     <option value="pickup">Pickup</option>
@@ -356,7 +359,7 @@ export default function VehicleFormModal({ isOpen, onClose, onSuccess, vehicle }
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-black mb-2">
+                  <label className="block text-sm font-semibold text-black dark:text-gray-100 mb-2">
                     Company *
                   </label>
                   <select
@@ -364,8 +367,8 @@ export default function VehicleFormModal({ isOpen, onClose, onSuccess, vehicle }
                     value={formData.companyId}
                     onChange={(e) => updateFormData({ companyId: e.target.value })}
                     className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 ${
-                      errors.companyId ? 'border-red-300 bg-red-50' : 'border-gray-300 bg-white'
-                    }`}
+                      errors.companyId ? 'border-red-300 dark:border-red-600 bg-red-50 dark:bg-red-900/20' : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700'
+                    } text-gray-900 dark:text-gray-100`}
                   >
                     <option value="">Select Company</option>
                     {companies.map((company) => (
@@ -375,12 +378,12 @@ export default function VehicleFormModal({ isOpen, onClose, onSuccess, vehicle }
                     ))}
                   </select>
                   {errors.companyId && (
-                    <p className="mt-1 text-sm text-red-600 font-medium">{errors.companyId}</p>
+                    <p className="mt-1 text-sm text-red-600 dark:text-red-400 font-medium">{errors.companyId}</p>
                   )}
                 </div>
 
                 <div className="md:col-span-2">
-                  <label className="block text-sm font-semibold text-black mb-2">
+                  <label className="block text-sm font-semibold text-black dark:text-gray-100 mb-2">
                     Reason for Visit *
                   </label>
                   <textarea
@@ -389,12 +392,12 @@ export default function VehicleFormModal({ isOpen, onClose, onSuccess, vehicle }
                     value={formData.reason}
                     onChange={(e) => updateFormData({ reason: e.target.value })}
                     className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 resize-none ${
-                      errors.reason ? 'border-red-300 bg-red-50' : 'border-gray-300 bg-white'
-                    }`}
+                      errors.reason ? 'border-red-300 dark:border-red-600 bg-red-50 dark:bg-red-900/20' : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700'
+                    } text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400`}
                     placeholder="Please provide detailed reason for the visit..."
                   />
                   {errors.reason && (
-                    <p className="mt-1 text-sm text-red-600 font-medium">{errors.reason}</p>
+                    <p className="mt-1 text-sm text-red-600 dark:text-red-400 font-medium">{errors.reason}</p>
                   )}
                 </div>
               </div>
@@ -402,22 +405,22 @@ export default function VehicleFormModal({ isOpen, onClose, onSuccess, vehicle }
 
             {/* Today's Vehicles for Selected Company */}
             {formData.companyId && (
-              <div className="bg-yellow-50 rounded-xl p-6 border border-yellow-200">
-                <h3 className="text-lg font-semibold text-black mb-4 flex items-center">
-                  <Car className="w-5 h-5 mr-2 text-yellow-600" />
+              <div className="bg-yellow-50 dark:bg-yellow-900/20 rounded-xl p-6 border border-yellow-200 dark:border-yellow-800">
+                <h3 className="text-lg font-semibold text-black dark:text-gray-100 mb-4 flex items-center">
+                  <Car className="w-5 h-5 mr-2 text-yellow-600 dark:text-yellow-400" />
                   Today's Vehicles ({todayVehicles.length})
                 </h3>
                 
                 {todayVehicles.length > 0 ? (
                   <div className="space-y-3">
-                    <div className="text-sm text-gray-600 mb-3">
+                    <div className="text-sm text-gray-600 dark:text-gray-400 mb-3">
                       Showing vehicles that entered today for the selected company
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                       {todayVehicles.map((vehicle) => (
                         <div
                           key={vehicle._id}
-                          className="bg-white p-4 rounded-lg border border-gray-200 hover:border-yellow-300 transition-colors cursor-pointer"
+                          className="bg-white dark:bg-gray-700 p-4 rounded-lg border border-gray-200 dark:border-gray-600 hover:border-yellow-300 dark:hover:border-yellow-600 transition-colors cursor-pointer"
                           onClick={() => {
                             setFormData(prev => ({
                               ...prev,
@@ -430,16 +433,16 @@ export default function VehicleFormModal({ isOpen, onClose, onSuccess, vehicle }
                           }}
                         >
                           <div className="flex items-center justify-between mb-2">
-                            <span className="font-semibold text-gray-900">{vehicle.vehicleNumber}</span>
+                            <span className="font-semibold text-gray-900 dark:text-gray-100">{vehicle.vehicleNumber}</span>
                             <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                              vehicle.status === 'in' ? 'bg-green-100 text-green-800' :
-                              vehicle.status === 'out' ? 'bg-red-100 text-red-800' :
-                              'bg-yellow-100 text-yellow-800'
+                              vehicle.status === 'in' ? 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200' :
+                              vehicle.status === 'out' ? 'bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200' :
+                              'bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200'
                             }`}>
                               {vehicle.status}
                             </span>
                           </div>
-                          <div className="text-sm text-gray-600">
+                          <div className="text-sm text-gray-600 dark:text-gray-400">
                             <div>Driver: {vehicle.driverName}</div>
                             <div>Phone: {vehicle.driverPhone}</div>
                             <div>Purpose: {vehicle.purpose}</div>
@@ -450,8 +453,8 @@ export default function VehicleFormModal({ isOpen, onClose, onSuccess, vehicle }
                     </div>
                   </div>
                 ) : (
-                  <div className="text-center py-8 text-gray-500">
-                    <Car className="w-12 h-12 mx-auto mb-3 text-gray-300" />
+                  <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+                    <Car className="w-12 h-12 mx-auto mb-3 text-gray-300 dark:text-gray-600" />
                     <p>No vehicles entered today for this company</p>
                   </div>
                 )}
@@ -459,15 +462,15 @@ export default function VehicleFormModal({ isOpen, onClose, onSuccess, vehicle }
             )}
 
             {/* Vehicle Images */}
-            <div className="bg-green-50 rounded-xl p-6 border border-green-200">
-              <h3 className="text-lg font-semibold text-black mb-4 flex items-center">
-                <ImageIcon className="w-5 h-5 mr-2 text-green-600" />
+            <div className="bg-green-50 dark:bg-green-900/20 rounded-xl p-6 border border-green-200 dark:border-green-800">
+              <h3 className="text-lg font-semibold text-black dark:text-gray-100 mb-4 flex items-center">
+                <ImageIcon className="w-5 h-5 mr-2 text-green-600 dark:text-green-400" />
                 Vehicle Images
               </h3>
               
               <div className="space-y-4">
                 {/* Upload Area */}
-                <div className="border-2 border-dashed border-gray-300 rounded-xl p-6 text-center hover:border-blue-400 transition-colors">
+                <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl p-6 text-center hover:border-blue-400 dark:hover:border-blue-500 transition-colors">
                   <input
                     ref={fileInputRef}
                     type="file"
@@ -476,9 +479,9 @@ export default function VehicleFormModal({ isOpen, onClose, onSuccess, vehicle }
                     onChange={handleImageSelect}
                     className="hidden"
                   />
-                  <ImageIcon className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                  <p className="text-gray-600 mb-2">Click to upload vehicle images</p>
-                  <p className="text-sm text-gray-500 mb-4">PNG, JPG, GIF up to 5MB each</p>
+                  <ImageIcon className="w-12 h-12 text-gray-400 dark:text-gray-500 mx-auto mb-4" />
+                  <p className="text-gray-600 dark:text-gray-400 mb-2">Click to upload vehicle images</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-500 mb-4">PNG, JPG, GIF up to 5MB each</p>
                   <Button
                     type="button"
                     onClick={() => fileInputRef.current?.click()}
@@ -492,14 +495,14 @@ export default function VehicleFormModal({ isOpen, onClose, onSuccess, vehicle }
                 {/* Existing Images */}
                 {existingImages.length > 0 && (
                   <div>
-                    <h4 className="font-semibold text-black mb-2">Current Images</h4>
+                    <h4 className="font-semibold text-black dark:text-gray-100 mb-2">Current Images</h4>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                       {existingImages.map((imageUrl, index) => (
                         <div key={index} className="relative group">
                           <img
                             src={imageUrl}
                             alt={`Vehicle ${index + 1}`}
-                            className="w-full h-24 object-cover rounded-lg border border-gray-200"
+                            className="w-full h-24 object-cover rounded-lg border border-gray-200 dark:border-gray-600"
                           />
                           <button
                             type="button"
@@ -517,14 +520,14 @@ export default function VehicleFormModal({ isOpen, onClose, onSuccess, vehicle }
                 {/* Selected Images Preview */}
                 {previewImages.length > 0 && (
                   <div>
-                    <h4 className="font-semibold text-black mb-2">New Images to Upload</h4>
+                    <h4 className="font-semibold text-black dark:text-gray-100 mb-2">New Images to Upload</h4>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                       {previewImages.map((preview, index) => (
                         <div key={index} className="relative group">
                           <img
                             src={preview}
                             alt={`Preview ${index + 1}`}
-                            className="w-full h-24 object-cover rounded-lg border border-gray-200"
+                            className="w-full h-24 object-cover rounded-lg border border-gray-200 dark:border-gray-600"
                           />
                           <button
                             type="button"
@@ -543,12 +546,12 @@ export default function VehicleFormModal({ isOpen, onClose, onSuccess, vehicle }
           </div>
 
           {/* Actions */}
-          <div className="flex items-center justify-end gap-4 mt-8 pt-6 border-t border-gray-200">
+          <div className="flex items-center justify-end gap-4 mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
             <Button
               type="button"
               onClick={onClose}
               disabled={isLoading}
-              className="px-6 py-3 border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 font-semibold transition-colors"
+              className="px-6 py-3 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 font-semibold transition-colors"
             >
               Cancel
             </Button>

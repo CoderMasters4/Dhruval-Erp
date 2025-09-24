@@ -75,6 +75,7 @@ export default function CustomerVisitList({
   }
 
   const handleView = (visit: CustomerVisit) => {
+    console.log('Navigating to visit details:', visit._id)
     router.push(`/operations/hospitality/${visit._id}`)
   }
 
@@ -217,17 +218,17 @@ export default function CustomerVisitList({
 
   if (isLoading) {
     return (
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
         <div className="p-6">
           <div className="animate-pulse space-y-4">
             {[...Array(5)].map((_, i) => (
               <div key={i} className="flex items-center space-x-4">
-                <div className="w-12 h-12 bg-gray-200 rounded-lg"></div>
+                <div className="w-12 h-12 bg-gray-200 dark:bg-gray-700 rounded-lg"></div>
                 <div className="flex-1 space-y-2">
-                  <div className="h-4 bg-gray-200 rounded w-1/4"></div>
-                  <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+                  <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/4"></div>
+                  <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-1/2"></div>
                 </div>
-                <div className="w-20 h-8 bg-gray-200 rounded"></div>
+                <div className="w-20 h-8 bg-gray-200 dark:bg-gray-700 rounded"></div>
               </div>
             ))}
           </div>
@@ -238,11 +239,11 @@ export default function CustomerVisitList({
 
   if (visits.length === 0) {
     return (
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
         <div className="p-12 text-center">
-          <Users className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-gray-900 mb-2">No customer visits found</h3>
-          <p className="text-gray-500 mb-4">
+          <Users className="w-12 h-12 text-gray-400 dark:text-gray-500 mx-auto mb-4" />
+          <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">No customer visits found</h3>
+          <p className="text-gray-500 dark:text-gray-400 mb-4">
             No customer visits match your current search and filter criteria.
           </p>
           <Button onClick={onRefresh} variant="outline">
@@ -256,11 +257,11 @@ export default function CustomerVisitList({
 
   return (
     <>
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
         {/* Header */}
-        <div className="px-6 py-4 border-b border-gray-200">
+        <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-600">
           <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-gray-900">
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
               Customer Visits ({totalVisits})
             </h2>
             <Button onClick={onRefresh} variant="outline" size="sm">
@@ -271,20 +272,20 @@ export default function CustomerVisitList({
         </div>
 
         {/* Visit List */}
-        <div className="divide-y divide-gray-200">
+        <div className="divide-y divide-gray-200 dark:divide-gray-600">
           {visits.map((visit) => (
-            <div key={visit._id} className="p-6 hover:bg-gray-50 transition-colors">
+            <div key={visit._id} className="p-6 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-4">
                   <div className="flex-shrink-0">
-                    <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                      <Users className="w-6 h-6 text-blue-600" />
+                    <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/20 rounded-lg flex items-center justify-center">
+                      <Users className="w-6 h-6 text-blue-600 dark:text-blue-400" />
                     </div>
                   </div>
 
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center space-x-3 mb-2">
-                      <h3 className="text-lg font-semibold text-gray-900">
+                      <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
                         {visit.partyName}
                       </h3>
                       {getStatusBadge(visit.approvalStatus)}
@@ -293,7 +294,7 @@ export default function CustomerVisitList({
                       {visit.reimbursementStatus && getReimbursementBadge(visit.reimbursementStatus)}
                     </div>
 
-                    <div className="flex items-center space-x-4 text-sm text-gray-500 mb-2">
+                    <div className="flex items-center space-x-4 text-sm text-gray-500 dark:text-gray-400 mb-2">
                       <div className="flex items-center">
                         <User className="w-4 h-4 mr-1" />
                         {visit.contactPerson}
@@ -309,14 +310,14 @@ export default function CustomerVisitList({
                     </div>
 
                     <div className="flex items-center space-x-4 text-sm">
-                      <div className="flex items-center text-green-600">
+                      <div className="flex items-center text-green-600 dark:text-green-400">
                         <DollarSign className="w-4 h-4 mr-1" />
                         <span className="font-medium">
                           ₹{(visit.travelExpenses?.total || visit.totalExpenses?.total || 0).toLocaleString()}
                         </span>
                       </div>
                       {visit.purposeDescription && (
-                        <div className="text-gray-600 text-xs bg-gray-100 px-2 py-1 rounded max-w-xs truncate">
+                        <div className="text-gray-600 dark:text-gray-400 text-xs bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded max-w-xs truncate">
                           {visit.purposeDescription}
                         </div>
                       )}
@@ -446,9 +447,9 @@ export default function CustomerVisitList({
 
         {/* Pagination */}
         {totalPages > 1 && (
-          <div className="px-6 py-4 border-t border-gray-200">
+          <div className="px-6 py-4 border-t border-gray-200 dark:border-gray-600">
             <div className="flex items-center justify-between">
-              <div className="text-sm text-gray-700">
+              <div className="text-sm text-gray-700 dark:text-gray-300">
                 Showing page {page} of {totalPages}
               </div>
 

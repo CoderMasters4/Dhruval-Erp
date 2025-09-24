@@ -12,13 +12,15 @@ interface InventoryItemFormProps {
   onSubmit: (formData: any) => void;
   onCancel: () => void;
   isSubmitting?: boolean;
+  theme: 'light' | 'dark';
 }
 
 export const InventoryItemForm: React.FC<InventoryItemFormProps> = ({
   item,
   onSubmit,
   onCancel,
-  isSubmitting = false
+  isSubmitting = false,
+  theme
 }) => {
   const [selectedWarehouse, setSelectedWarehouse] = useState(item?.warehouseId || '');
   const [reorderPoint, setReorderPoint] = useState(item?.reorderPoint || 0);

@@ -20,9 +20,10 @@ interface InventoryGridProps {
   onViewDetails: (item: any) => void;
   onEditItem: (item: any) => void;
   onDeleteItem: (id: string) => void;
+  theme: 'light' | 'dark';
 }
 
-export function InventoryGrid({ items, onViewDetails, onEditItem, onDeleteItem }: InventoryGridProps) {
+export function InventoryGrid({ items, onViewDetails, onEditItem, onDeleteItem, theme }: InventoryGridProps) {
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-IN', {
       style: 'currency',

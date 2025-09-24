@@ -62,18 +62,18 @@ const CompanyFilters: React.FC<CompanyFiltersProps> = ({
   const hasActiveFilters = filters.search || filters.status !== 'all' || filters.location || filters.industry
 
   return (
-    <div className="bg-white rounded-2xl shadow-lg border border-sky-200 p-6 lg:p-8">
+    <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-sky-200 dark:border-sky-700 p-6 lg:p-8 transition-all duration-300">
       <div className="flex flex-col lg:flex-row gap-6">
         {/* Search Section */}
         <div className="flex-1">
           <div className="relative">
-            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400 dark:text-gray-500" />
             <input
               type="text"
               placeholder="Search companies by name, code, or GSTIN..."
               value={filters.search}
               onChange={(e) => handleSearchChange(e.target.value)}
-              className="w-full pl-12 pr-4 py-4 border border-gray-300 rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-all duration-200 bg-gray-50 focus:bg-white text-gray-900 font-medium placeholder:text-gray-500"
+              className="w-full pl-12 pr-4 py-4 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-all duration-200 bg-gray-50 dark:bg-gray-700 focus:bg-white dark:focus:bg-gray-600 text-gray-900 dark:text-white font-medium placeholder:text-gray-500 dark:placeholder:text-gray-400"
               disabled={isLoading}
             />
           </div>
@@ -86,7 +86,7 @@ const CompanyFilters: React.FC<CompanyFiltersProps> = ({
             <select
               value={filters.status}
               onChange={(e) => handleStatusChange(e.target.value)}
-              className="appearance-none bg-gray-50 border border-gray-300 rounded-xl px-4 py-4 pr-10 focus:ring-2 focus:ring-sky-500 focus:border-sky-500 focus:bg-white transition-all duration-200 text-gray-900 font-medium"
+              className="appearance-none bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-xl px-4 py-4 pr-10 focus:ring-2 focus:ring-sky-500 focus:border-sky-500 focus:bg-white dark:focus:bg-gray-600 transition-all duration-200 text-gray-900 dark:text-white font-medium"
               disabled={isLoading}
             >
               <option value="all">All Status</option>
@@ -96,7 +96,7 @@ const CompanyFilters: React.FC<CompanyFiltersProps> = ({
               <option value="pending_approval">Pending Approval</option>
               <option value="under_review">Under Review</option>
             </select>
-            <Filter className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
+            <Filter className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 dark:text-gray-500 pointer-events-none" />
           </div>
 
           {/* Sort Filter */}
@@ -107,7 +107,7 @@ const CompanyFilters: React.FC<CompanyFiltersProps> = ({
                 const [sortBy, sortOrder] = e.target.value.split('-')
                 handleSortChange(sortBy, sortOrder as 'asc' | 'desc')
               }}
-              className="appearance-none bg-gray-50 border border-gray-300 rounded-xl px-4 py-4 pr-10 focus:ring-2 focus:ring-sky-500 focus:border-sky-500 focus:bg-white transition-all duration-200 text-black font-medium"
+              className="appearance-none bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-xl px-4 py-4 pr-10 focus:ring-2 focus:ring-sky-500 focus:border-sky-500 focus:bg-white dark:focus:bg-gray-600 transition-all duration-200 text-gray-900 dark:text-white font-medium"
               disabled={isLoading}
             >
               <option value="name-asc">Name A-Z</option>
@@ -117,29 +117,29 @@ const CompanyFilters: React.FC<CompanyFiltersProps> = ({
               <option value="companyCode-asc">Code A-Z</option>
               <option value="companyCode-desc">Code Z-A</option>
             </select>
-            <SlidersHorizontal className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
+            <SlidersHorizontal className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 dark:text-gray-500 pointer-events-none" />
           </div>
 
           {/* Location Filter */}
           <div className="relative">
-            <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 dark:text-gray-500" />
             <input
               type="text"
               placeholder="Location..."
               value={filters.location || ''}
               onChange={(e) => handleLocationChange(e.target.value)}
-              className="pl-10 pr-4 py-4 border border-gray-300 rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-all duration-200 bg-gray-50 focus:bg-white text-black w-40"
+              className="pl-10 pr-4 py-4 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-all duration-200 bg-gray-50 dark:bg-gray-700 focus:bg-white dark:focus:bg-gray-600 text-gray-900 dark:text-white w-40"
               disabled={isLoading}
             />
           </div>
 
           {/* Industry Filter */}
           <div className="relative">
-            <Building2 className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <Building2 className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 dark:text-gray-500" />
             <select
               value={filters.industry || ''}
               onChange={(e) => handleIndustryChange(e.target.value)}
-              className="appearance-none bg-gray-50 border border-gray-300 rounded-xl pl-10 pr-8 py-4 focus:ring-2 focus:ring-sky-500 focus:border-sky-500 focus:bg-white transition-all duration-200 text-gray-900 font-medium"
+              className="appearance-none bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-xl pl-10 pr-8 py-4 focus:ring-2 focus:ring-sky-500 focus:border-sky-500 focus:bg-white dark:focus:bg-gray-600 transition-all duration-200 text-gray-900 dark:text-white font-medium"
               disabled={isLoading}
             >
               <option value="">All Industries</option>
@@ -161,7 +161,7 @@ const CompanyFilters: React.FC<CompanyFiltersProps> = ({
               variant="outline"
               onClick={onReset}
               disabled={isLoading}
-              className="border-gray-300 text-gray-600 hover:bg-gray-50 hover:border-gray-400 px-6 py-4 rounded-xl font-medium transition-all duration-200"
+              className="border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 hover:border-gray-400 dark:hover:border-gray-500 px-6 py-4 rounded-xl font-medium transition-all duration-200"
             >
               <RotateCcw className="w-4 h-4 mr-2" />
               Reset
@@ -174,26 +174,26 @@ const CompanyFilters: React.FC<CompanyFiltersProps> = ({
 
       {/* Active Filters Display */}
       {hasActiveFilters && (
-        <div className="mt-6 pt-4 border-t border-gray-200">
+        <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
           <div className="flex flex-wrap gap-3">
-            <span className="text-sm font-semibold text-black">Active filters:</span>
+            <span className="text-sm font-semibold text-gray-900 dark:text-white">Active filters:</span>
             {filters.search && (
-              <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-sky-100 text-sky-800 border border-sky-200">
+              <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-sky-100 dark:bg-sky-900/30 text-sky-800 dark:text-sky-200 border border-sky-200 dark:border-sky-700">
                 Search: "{filters.search}"
               </span>
             )}
             {filters.status !== 'all' && (
-              <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 border border-green-200">
+              <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200 border border-green-200 dark:border-green-700">
                 Status: {filters.status}
               </span>
             )}
             {filters.location && (
-              <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 border border-yellow-200">
+              <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-200 border border-yellow-200 dark:border-yellow-700">
                 Location: {filters.location}
               </span>
             )}
             {filters.industry && (
-              <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800 border border-gray-200">
+              <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 border border-gray-200 dark:border-gray-600">
                 Industry: {filters.industry}
               </span>
             )}

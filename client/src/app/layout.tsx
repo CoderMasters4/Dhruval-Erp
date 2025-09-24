@@ -149,14 +149,30 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{
             __html: `(() => {
   try {
-    const saved = localStorage.getItem('theme');
-    if (saved === 'dark') {
+    // Always check for saved theme preference first
+    const savedTheme = localStorage.getItem('theme');
+    
+    if (savedTheme === 'dark') {
       document.documentElement.classList.add('dark');
-    } else {
+      document.body.classList.add('dark');
+      console.log('Applied saved dark theme');
+    } else if (savedTheme === 'light') {
       document.documentElement.classList.remove('dark');
+      document.body.classList.remove('dark');
+      console.log('Applied saved light theme');
+    } else {
+      // No saved preference - default to light theme (don't auto-detect system)
+      document.documentElement.classList.remove('dark');
+      document.body.classList.remove('dark');
+      localStorage.setItem('theme', 'light');
+      console.log('No saved theme, defaulting to light');
     }
-  } catch (_) {
+  } catch (error) {
+    // Fallback to light theme
     document.documentElement.classList.remove('dark');
+    document.body.classList.remove('dark');
+    localStorage.setItem('theme', 'light');
+    console.log('Error in theme script, defaulting to light');
   }
 })();`,
           }}

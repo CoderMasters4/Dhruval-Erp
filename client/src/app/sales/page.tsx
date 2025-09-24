@@ -194,27 +194,27 @@ export default function SalesPage() {
   }
 
   const getGrowthColor = (growth: number) => {
-    return growth >= 0 ? 'text-green-600' : 'text-red-600'
+    return growth >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
   }
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'completed': return 'bg-green-100 text-green-800'
-      case 'confirmed': return 'bg-blue-100 text-blue-800'
-      case 'in_production': return 'bg-yellow-100 text-yellow-800'
-      case 'pending': return 'bg-gray-100 text-gray-800'
-      case 'cancelled': return 'bg-red-100 text-red-800'
-      default: return 'bg-gray-100 text-gray-800'
+      case 'completed': return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
+      case 'confirmed': return 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300'
+      case 'in_production': return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300'
+      case 'pending': return 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300'
+      case 'cancelled': return 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300'
+      default: return 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300'
     }
   }
 
   const getPaymentStatusColor = (status: string) => {
     switch (status) {
-      case 'paid': return 'bg-green-100 text-green-800'
-      case 'partial': return 'bg-yellow-100 text-yellow-800'
-      case 'pending': return 'bg-blue-100 text-blue-800'
-      case 'overdue': return 'bg-red-100 text-red-800'
-      default: return 'bg-gray-100 text-gray-800'
+      case 'paid': return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
+      case 'partial': return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300'
+      case 'pending': return 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300'
+      case 'overdue': return 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300'
+      default: return 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300'
     }
   }
 
@@ -231,7 +231,9 @@ export default function SalesPage() {
   if (dashboardLoading) {
     return (
       <AppLayout>
-        <LoadingSpinner />
+        <div className="flex items-center justify-center h-64 bg-gray-50 dark:bg-gray-900 transition-colors duration-300">
+          <LoadingSpinner />
+        </div>
       </AppLayout>
     )
   }
@@ -288,15 +290,15 @@ export default function SalesPage() {
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm font-medium text-gray-600">Total Sales</p>
-                      <p className="text-2xl font-bold text-gray-900">
+                      <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Total Sales</p>
+                      <p className="text-2xl font-bold text-gray-900 dark:text-white">
                         {stats ? formatCurrency(stats.totalSales) : '₹0'}
                       </p>
-                                             <p className={clsx("text-sm", getGrowthColor(stats?.monthlyGrowth ?? 0))}>
-                         {stats?.monthlyGrowth && stats.monthlyGrowth >= 0 ? '+' : ''}{stats?.monthlyGrowth ?? 0}% from last month
-                       </p>
+                      <p className={clsx("text-sm", getGrowthColor(stats?.monthlyGrowth ?? 0))}>
+                        {stats?.monthlyGrowth && stats.monthlyGrowth >= 0 ? '+' : ''}{stats?.monthlyGrowth ?? 0}% from last month
+                      </p>
                     </div>
-                    <DollarSign className="h-8 w-8 text-green-600" />
+                    <DollarSign className="h-8 w-8 text-green-600 dark:text-green-400" />
                   </div>
                 </CardContent>
               </Card>
@@ -305,15 +307,15 @@ export default function SalesPage() {
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm font-medium text-gray-600">Total Orders</p>
-                      <p className="text-2xl font-bold text-gray-900">
+                      <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Total Orders</p>
+                      <p className="text-2xl font-bold text-gray-900 dark:text-white">
                         {formatNumber(stats?.totalOrders || 0)}
                       </p>
-                      <p className="text-sm text-gray-500">
+                      <p className="text-sm text-gray-500 dark:text-gray-400">
                         Avg: {stats ? formatCurrency(stats.averageOrderValue) : '₹0'}
                       </p>
                     </div>
-                    <Package className="h-8 w-8 text-blue-600" />
+                    <Package className="h-8 w-8 text-blue-600 dark:text-blue-400" />
                   </div>
                 </CardContent>
               </Card>
@@ -322,15 +324,15 @@ export default function SalesPage() {
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm font-medium text-gray-600">Pending Payments</p>
-                      <p className="text-2xl font-bold text-yellow-600">
+                      <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Pending Payments</p>
+                      <p className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">
                         {stats ? formatCurrency(stats.pendingPayments) : '₹0'}
                       </p>
-                      <p className="text-sm text-gray-500">
+                      <p className="text-sm text-gray-500 dark:text-gray-400">
                         {stats?.overduePayments ? `${formatCurrency(stats.overduePayments)} overdue` : 'All on time'}
                       </p>
                     </div>
-                    <Clock className="h-8 w-8 text-yellow-600" />
+                    <Clock className="h-8 w-8 text-yellow-600 dark:text-yellow-400" />
                   </div>
                 </CardContent>
               </Card>
@@ -339,15 +341,15 @@ export default function SalesPage() {
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm font-medium text-gray-600">Active Customers</p>
-                      <p className="text-2xl font-bold text-gray-900">
+                      <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Active Customers</p>
+                      <p className="text-2xl font-bold text-gray-900 dark:text-white">
                         {customerReport.length}
                       </p>
-                      <p className="text-sm text-gray-500">
+                      <p className="text-sm text-gray-500 dark:text-gray-400">
                         Top customers this month
                       </p>
                     </div>
-                    <Users className="h-8 w-8 text-purple-600" />
+                    <Users className="h-8 w-8 text-purple-600 dark:text-purple-400" />
                   </div>
                 </CardContent>
               </Card>
@@ -366,10 +368,18 @@ export default function SalesPage() {
                 <CardContent>
                   <RechartsResponsiveContainer width="100%" height={300}>
                     <RechartsLineChart data={salesTrends}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="_id" />
-                      <YAxis />
-                      <Tooltip formatter={(value) => formatCurrency(Number(value))} />
+                      <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" className="dark:stroke-gray-600" />
+                      <XAxis dataKey="_id" stroke="#6b7280" className="dark:stroke-gray-400" />
+                      <YAxis stroke="#6b7280" className="dark:stroke-gray-400" />
+                      <Tooltip 
+                        formatter={(value) => formatCurrency(Number(value))} 
+                        contentStyle={{
+                          backgroundColor: 'white',
+                          border: '1px solid #e5e7eb',
+                          borderRadius: '8px',
+                          color: '#374151'
+                        }}
+                      />
                       <Line type="monotone" dataKey="amount" stroke="#3b82f6" strokeWidth={2} />
                     </RechartsLineChart>
                   </RechartsResponsiveContainer>
@@ -387,10 +397,18 @@ export default function SalesPage() {
                 <CardContent>
                   <RechartsResponsiveContainer width="100%" height={300}>
                     <BarChart data={productPerformance.slice(0, 5)}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="_id" />
-                      <YAxis />
-                      <Tooltip formatter={(value) => formatCurrency(Number(value))} />
+                      <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" className="dark:stroke-gray-600" />
+                      <XAxis dataKey="_id" stroke="#6b7280" className="dark:stroke-gray-400" />
+                      <YAxis stroke="#6b7280" className="dark:stroke-gray-400" />
+                      <Tooltip 
+                        formatter={(value) => formatCurrency(Number(value))} 
+                        contentStyle={{
+                          backgroundColor: 'white',
+                          border: '1px solid #e5e7eb',
+                          borderRadius: '8px',
+                          color: '#374151'
+                        }}
+                      />
                       <Bar dataKey="totalRevenue" fill="#10b981" />
                     </BarChart>
                   </RechartsResponsiveContainer>
@@ -409,11 +427,11 @@ export default function SalesPage() {
               <CardContent>
                 <div className="space-y-4">
                   {dashboard?.recentOrders?.slice(0, 5).map((order: any) => (
-                    <div key={order._id} className="flex items-center justify-between p-4 border rounded-lg">
+                    <div key={order._id} className="flex items-center justify-between p-4 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800">
                       <div className="flex items-center gap-4">
                         <div>
-                          <p className="font-medium">{order.orderNumber}</p>
-                          <p className="text-sm text-gray-500">{order.customerName}</p>
+                          <p className="font-medium text-gray-900 dark:text-white">{order.orderNumber}</p>
+                          <p className="text-sm text-gray-500 dark:text-gray-400">{order.customerName}</p>
                         </div>
                       </div>
                       <div className="flex items-center gap-4">
@@ -423,7 +441,7 @@ export default function SalesPage() {
                         <Badge className={getPaymentStatusColor(order.payment.paymentStatus)}>
                           {order.payment.paymentStatus}
                         </Badge>
-                        <p className="font-medium">{formatCurrency(order.orderSummary.finalAmount)}</p>
+                        <p className="font-medium text-gray-900 dark:text-white">{formatCurrency(order.orderSummary.finalAmount)}</p>
                       </div>
                     </div>
                   ))}
@@ -446,7 +464,7 @@ export default function SalesPage() {
                 <select
                   value={selectedFilter}
                   onChange={(e) => setSelectedFilter(e.target.value)}
-                  className="border rounded-md px-3 py-2"
+                  className="border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
                 >
                   <option value="all">All Status</option>
                   <option value="pending">Pending</option>
@@ -467,40 +485,40 @@ export default function SalesPage() {
               <CardContent className="p-0">
                 <div className="overflow-x-auto">
                   <table className="w-full">
-                    <thead className="bg-gray-50">
+                    <thead className="bg-gray-50 dark:bg-gray-800">
                       <tr>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                           Order
                         </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                           Customer
                         </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                           Status
                         </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                           Payment
                         </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                           Amount
                         </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                           Date
                         </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                           Actions
                         </th>
                       </tr>
                     </thead>
-                    <tbody className="bg-white divide-y divide-gray-200">
+                    <tbody className="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
                       {orders.map((order: any) => (
-                        <tr key={order._id}>
+                        <tr key={order._id} className="hover:bg-gray-50 dark:hover:bg-gray-800">
                           <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="text-sm font-medium text-gray-900">{order.orderNumber}</div>
+                            <div className="text-sm font-medium text-gray-900 dark:text-white">{order.orderNumber}</div>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="text-sm text-gray-900">{order.customerName}</div>
-                            <div className="text-sm text-gray-500">{order.customerCode}</div>
+                            <div className="text-sm text-gray-900 dark:text-white">{order.customerName}</div>
+                            <div className="text-sm text-gray-500 dark:text-gray-400">{order.customerCode}</div>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
                             <Badge className={getStatusColor(order.status)}>
@@ -512,24 +530,24 @@ export default function SalesPage() {
                               {order.payment.paymentStatus}
                             </Badge>
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
                             {formatCurrency(order.orderSummary.finalAmount)}
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                             {new Date(order.createdAt).toLocaleDateString()}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                                         <div className="flex items-center gap-2">
-                               <Button variant="ghost" size="sm">
-                                 <Eye className="h-4 w-4" />
-                               </Button>
-                               <Button variant="ghost" size="sm" onClick={() => handleEditOrder(order)}>
-                                 <Edit className="h-4 w-4" />
-                               </Button>
-                               <Button variant="ghost" size="sm" onClick={() => handleDeleteOrder(order._id)}>
-                                 <Trash2 className="h-4 w-4" />
-                               </Button>
-                             </div>
+                            <div className="flex items-center gap-2">
+                              <Button variant="ghost" size="sm">
+                                <Eye className="h-4 w-4" />
+                              </Button>
+                              <Button variant="ghost" size="sm" onClick={() => handleEditOrder(order)}>
+                                <Edit className="h-4 w-4" />
+                              </Button>
+                              <Button variant="ghost" size="sm" onClick={() => handleDeleteOrder(order._id)}>
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
                           </td>
                         </tr>
                       ))}
@@ -542,7 +560,7 @@ export default function SalesPage() {
             {/* Pagination */}
             {pagination && (
               <div className="flex items-center justify-between">
-                <div className="text-sm text-gray-700">
+                <div className="text-sm text-gray-700 dark:text-gray-300">
                   Showing {((pagination.page - 1) * pagination.limit) + 1} to {Math.min(pagination.page * pagination.limit, pagination.total)} of {pagination.total} results
                 </div>
                 <div className="flex items-center gap-2">
@@ -595,7 +613,14 @@ export default function SalesPage() {
                           <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                         ))}
                       </Pie>
-                      <Tooltip />
+                      <Tooltip 
+                        contentStyle={{
+                          backgroundColor: 'white',
+                          border: '1px solid #e5e7eb',
+                          borderRadius: '8px',
+                          color: '#374151'
+                        }}
+                      />
                     </RechartsPieChart>
                   </RechartsResponsiveContainer>
                 </CardContent>
@@ -612,10 +637,18 @@ export default function SalesPage() {
                 <CardContent>
                   <RechartsResponsiveContainer width="100%" height={300}>
                     <BarChart data={analytics?.salesByStatus || []}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="_id" />
-                      <YAxis />
-                      <Tooltip formatter={(value) => formatCurrency(Number(value))} />
+                      <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" className="dark:stroke-gray-600" />
+                      <XAxis dataKey="_id" stroke="#6b7280" className="dark:stroke-gray-400" />
+                      <YAxis stroke="#6b7280" className="dark:stroke-gray-400" />
+                      <Tooltip 
+                        formatter={(value) => formatCurrency(Number(value))} 
+                        contentStyle={{
+                          backgroundColor: 'white',
+                          border: '1px solid #e5e7eb',
+                          borderRadius: '8px',
+                          color: '#374151'
+                        }}
+                      />
                       <Bar dataKey="amount" fill="#8b5cf6" />
                     </BarChart>
                   </RechartsResponsiveContainer>
@@ -637,14 +670,14 @@ export default function SalesPage() {
               <CardContent>
                 <div className="space-y-4">
                   {teamPerformance.map((member: any) => (
-                    <div key={member._id} className="flex items-center justify-between p-4 border rounded-lg">
+                    <div key={member._id} className="flex items-center justify-between p-4 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800">
                       <div>
-                        <p className="font-medium">{member.salesPersonName}</p>
-                        <p className="text-sm text-gray-500">{member.totalOrders} orders</p>
+                        <p className="font-medium text-gray-900 dark:text-white">{member.salesPersonName}</p>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">{member.totalOrders} orders</p>
                       </div>
                       <div className="text-right">
-                        <p className="font-medium">{formatCurrency(member.totalAmount)}</p>
-                        <p className="text-sm text-gray-500">Avg: {formatCurrency(member.averageOrderValue)}</p>
+                        <p className="font-medium text-gray-900 dark:text-white">{formatCurrency(member.totalAmount)}</p>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">Avg: {formatCurrency(member.averageOrderValue)}</p>
                       </div>
                     </div>
                   ))}
@@ -663,14 +696,14 @@ export default function SalesPage() {
               <CardContent>
                 <div className="space-y-4">
                   {customerReport.slice(0, 10).map((customer: any) => (
-                    <div key={customer._id} className="flex items-center justify-between p-4 border rounded-lg">
+                    <div key={customer._id} className="flex items-center justify-between p-4 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800">
                       <div>
-                        <p className="font-medium">{customer.customerName}</p>
-                        <p className="text-sm text-gray-500">{customer.customerCode}</p>
+                        <p className="font-medium text-gray-900 dark:text-white">{customer.customerName}</p>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">{customer.customerCode}</p>
                       </div>
                       <div className="text-right">
-                        <p className="font-medium">{formatCurrency(customer.totalAmount)}</p>
-                        <p className="text-sm text-gray-500">{customer.totalOrders} orders</p>
+                        <p className="font-medium text-gray-900 dark:text-white">{formatCurrency(customer.totalAmount)}</p>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">{customer.totalOrders} orders</p>
                       </div>
                     </div>
                   ))}

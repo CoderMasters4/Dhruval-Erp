@@ -2,7 +2,13 @@ import { Router, Request, Response } from 'express';
 import { authenticate, requireCompany } from '../../middleware/auth';
 import Company from '../../models/Company';
 import User from '../../models/User';
+import CustomerOrder from '../../models/CustomerOrder';
+import ProductionOrder from '../../models/ProductionOrder';
+import InventoryItem from '../../models/InventoryItem';
+import Customer from '../../models/Customer';
+import Invoice from '../../models/Invoice';
 import { logger } from '../../utils/logger';
+import { Types } from 'mongoose';
 
 const router = Router();
 
@@ -108,6 +114,269 @@ router.get('/stats', authenticate, async (req: Request, res: Response) => {
   }
 });
 
+// GET /api/v1/companies/batch-stats - Get stats for multiple companies at once
+router.get('/batch-stats', authenticate, async (req: Request, res: Response) => {
+  try {
+    const { companyIds } = req.query;
+    
+    // Handle both array and single string formats
+    let companyIdsArray: string[] = [];
+    if (Array.isArray(companyIds)) {
+      companyIdsArray = companyIds as string[];
+    } else if (typeof companyIds === 'string') {
+      // Split comma-separated string into array
+      companyIdsArray = companyIds.split(',').map(id => id.trim()).filter(id => id.length > 0);
+    } else if (req.query.companyIds && Array.isArray(req.query.companyIds)) {
+      companyIdsArray = req.query.companyIds as string[];
+    }
+    
+    if (companyIdsArray.length === 0) {
+      return res.status(400).json({
+        success: false,
+        error: 'Bad Request',
+        message: 'companyIds array is required',
+        timestamp: new Date().toISOString()
+      });
+    }
+
+    logger.info(`GET /api/v1/companies/batch-stats - Fetching stats for ${companyIdsArray.length} companies`);
+
+    // Get stats for all companies in parallel
+    const statsPromises = companyIdsArray.map(async (companyId: string) => {
+      try {
+        const [
+          totalUsers,
+          activeUsers,
+          totalOrders,
+          completedOrders,
+          totalRevenue,
+          totalInventory,
+          totalProduction,
+          totalCustomers,
+          totalInvoices
+        ] = await Promise.all([
+          // Users stats
+          User.countDocuments({
+            'companyAccess.companyId': new Types.ObjectId(companyId),
+            isActive: true
+          }),
+          User.countDocuments({
+            'companyAccess.companyId': new Types.ObjectId(companyId),
+            isActive: true,
+            lastLoginAt: { $gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) }
+          }),
+          
+          // Orders stats
+          CustomerOrder.countDocuments({
+            companyId: new Types.ObjectId(companyId)
+          }),
+          CustomerOrder.countDocuments({
+            companyId: new Types.ObjectId(companyId),
+            status: { $in: ['delivered', 'completed'] }
+          }),
+          
+          // Revenue stats
+          CustomerOrder.aggregate([
+            { $match: { 
+              companyId: new Types.ObjectId(companyId),
+              status: { $in: ['delivered', 'completed'] }
+            }},
+            { $group: { _id: null, total: { $sum: '$totalAmount' } } }
+          ]),
+          
+          // Inventory stats
+          InventoryItem.countDocuments({
+            companyId: new Types.ObjectId(companyId)
+          }),
+          
+          // Production stats
+          ProductionOrder.countDocuments({
+            companyId: new Types.ObjectId(companyId),
+            status: 'completed'
+          }),
+          
+          // Customer stats
+          Customer.countDocuments({
+            companyId: new Types.ObjectId(companyId)
+          }),
+          
+          // Invoice stats
+          Invoice.countDocuments({
+            companyId: new Types.ObjectId(companyId)
+          })
+        ]);
+
+        const revenue = totalRevenue[0]?.total || 0;
+
+        return {
+          companyId,
+          stats: {
+            totalUsers,
+            activeUsers,
+            inactiveUsers: totalUsers - activeUsers,
+            totalOrders,
+            completedOrders,
+            pendingOrders: totalOrders - completedOrders,
+            totalRevenue: revenue,
+            totalInventory,
+            totalProduction,
+            totalCustomers,
+            totalInvoices,
+            orderCompletionRate: totalOrders > 0 ? Math.round((completedOrders / totalOrders) * 100) : 0,
+            userActivityRate: totalUsers > 0 ? Math.round((activeUsers / totalUsers) * 100) : 0
+          }
+        };
+      } catch (error) {
+        logger.error(`Error fetching stats for company ${companyId}:`, error);
+        return {
+          companyId,
+          stats: {
+            totalUsers: 0,
+            activeUsers: 0,
+            inactiveUsers: 0,
+            totalOrders: 0,
+            completedOrders: 0,
+            pendingOrders: 0,
+            totalRevenue: 0,
+            totalInventory: 0,
+            totalProduction: 0,
+            totalCustomers: 0,
+            totalInvoices: 0,
+            orderCompletionRate: 0,
+            userActivityRate: 0
+          }
+        };
+      }
+    });
+
+    const results = await Promise.all(statsPromises);
+
+    res.status(200).json({
+      success: true,
+      message: 'Batch company stats retrieved successfully',
+      data: results,
+      timestamp: new Date().toISOString()
+    });
+
+  } catch (error: any) {
+    logger.error('Error fetching batch company stats:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Internal Server Error',
+      message: 'Failed to fetch batch company stats',
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
+// GET /api/v1/companies/:id/stats - Get detailed stats for a specific company
+router.get('/:id/stats', authenticate, async (req: Request, res: Response) => {
+  const { id } = req.params;
+
+  try {
+    logger.info(`GET /api/v1/companies/${id}/stats - Fetching company stats`);
+
+    // Models are already imported at the top
+
+    // Get company-specific stats
+    const [
+      totalUsers,
+      activeUsers,
+      totalOrders,
+      completedOrders,
+      totalRevenue,
+      totalInventory,
+      totalProduction,
+      totalCustomers,
+      totalInvoices
+    ] = await Promise.all([
+      // Users stats
+      User.countDocuments({
+        'companyAccess.companyId': new Types.ObjectId(id),
+        isActive: true
+      }),
+      User.countDocuments({
+        'companyAccess.companyId': new Types.ObjectId(id),
+        isActive: true,
+        lastLoginAt: { $gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) }
+      }),
+      
+      // Orders stats
+      CustomerOrder.countDocuments({
+        companyId: new Types.ObjectId(id)
+      }),
+      CustomerOrder.countDocuments({
+        companyId: new Types.ObjectId(id),
+        status: { $in: ['delivered', 'completed'] }
+      }),
+      
+      // Revenue stats
+      CustomerOrder.aggregate([
+        { $match: { 
+          companyId: new Types.ObjectId(id),
+          status: { $in: ['delivered', 'completed'] }
+        }},
+        { $group: { _id: null, total: { $sum: '$totalAmount' } } }
+      ]),
+      
+      // Inventory stats
+      InventoryItem.countDocuments({
+        companyId: new Types.ObjectId(id)
+      }),
+      
+      // Production stats
+      ProductionOrder.countDocuments({
+        companyId: new Types.ObjectId(id),
+        status: 'completed'
+      }),
+      
+      // Customer stats
+      Customer.countDocuments({
+        companyId: new Types.ObjectId(id)
+      }),
+      
+      // Invoice stats
+      Invoice.countDocuments({
+        companyId: new Types.ObjectId(id)
+      })
+    ]);
+
+    const revenue = totalRevenue[0]?.total || 0;
+
+    const stats = {
+      totalUsers,
+      activeUsers,
+      inactiveUsers: totalUsers - activeUsers,
+      totalOrders,
+      completedOrders,
+      pendingOrders: totalOrders - completedOrders,
+      totalRevenue: revenue,
+      totalInventory,
+      totalProduction,
+      totalCustomers,
+      totalInvoices,
+      orderCompletionRate: totalOrders > 0 ? Math.round((completedOrders / totalOrders) * 100) : 0,
+      userActivityRate: totalUsers > 0 ? Math.round((activeUsers / totalUsers) * 100) : 0
+    };
+
+    res.status(200).json({
+      success: true,
+      message: 'Company stats retrieved successfully',
+      data: stats,
+      timestamp: new Date().toISOString()
+    });
+
+  } catch (error: any) {
+    logger.error('Error fetching company stats:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Internal Server Error',
+      message: 'Failed to fetch company stats',
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
 // GET /api/v1/companies/:id - Get company by ID with detailed information (SUPERADMIN CAN ACCESS WITHOUT COMPANY ID)
 router.get('/:id', authenticate, async (req: Request, res: Response) => {
   const { id } = req.params;
@@ -160,12 +429,21 @@ router.post('/', authenticate, async (req: Request, res: Response) => {
 
     const { companyName, companyCode, email, phone, website, address, gstin, pan } = req.body;
 
-    // Validation
-    if (!companyName || !email) {
+    // Validation - Only company name and code are required
+    if (!companyName) {
       return res.status(400).json({
         success: false,
         error: 'Validation Error',
-        message: 'Company name and email are required',
+        message: 'Company name is required',
+        timestamp: new Date().toISOString()
+      });
+    }
+
+    if (!companyCode) {
+      return res.status(400).json({
+        success: false,
+        error: 'Validation Error',
+        message: 'Company code is required',
         timestamp: new Date().toISOString()
       });
     }
@@ -173,7 +451,6 @@ router.post('/', authenticate, async (req: Request, res: Response) => {
     // Check if company already exists
     const existingCompany = await Company.findOne({
       $or: [
-        { 'contactInfo.emails.email': email },
         { companyName },
         { companyCode }
       ]
@@ -183,65 +460,71 @@ router.post('/', authenticate, async (req: Request, res: Response) => {
       return res.status(409).json({
         success: false,
         error: 'Conflict',
-        message: 'Company with this name, code, or email already exists',
+        message: 'Company with this name or code already exists',
         timestamp: new Date().toISOString()
       });
     }
 
-    // Create new company with proper structure
-    const company = new Company({
+    // Check email uniqueness if provided
+    if (email) {
+      const existingEmail = await Company.findOne({
+        'contactInfo.emails.type': email
+      });
+
+      if (existingEmail) {
+        return res.status(409).json({
+          success: false,
+          error: 'Conflict',
+          message: 'Company with this email already exists',
+          timestamp: new Date().toISOString()
+        });
+      }
+    }
+
+    // Create new company with proper structure - only required fields
+    const companyData: any = {
       companyName,
-      companyCode: companyCode || companyName.toUpperCase().replace(/\s+/g, ''),
-      legalName: companyName,
-      contactInfo: {
+      companyCode: companyCode.toUpperCase(),
+      status: 'active',
+      createdBy: new Types.ObjectId(user.id),
+      isActive: true
+    };
+
+    // Add optional fields only if provided
+    if (req.body.legalName) {
+      companyData.legalName = req.body.legalName;
+    }
+
+    if (email) {
+      companyData.contactInfo = {
         emails: [{ type: email, label: 'Primary' }],
         phones: phone ? [{ type: phone, label: 'Primary' }] : [],
         website: website || '',
         socialMedia: {}
-      },
-      addresses: {
-        registeredOffice: {
-          street: address?.street || '',
-          city: address?.city || '',
-          state: address?.state || '',
-          country: address?.country || 'India',
-          pincode: address?.pincode || ''
-        },
-        factoryAddress: {
-          street: address?.street || '',
-          city: address?.city || '',
-          state: address?.state || '',
-          country: address?.country || 'India',
-          pincode: address?.pincode || ''
-        },
-        warehouseAddresses: []
-      },
-      registrationDetails: {
+      };
+    }
+
+    if (gstin || pan) {
+      companyData.registrationDetails = {
         gstin: gstin || '',
         pan: pan || '',
         registrationDate: new Date()
-      },
-      businessConfig: {
-        currency: 'INR',
-        timezone: 'Asia/Kolkata',
-        fiscalYearStart: 'April',
-        workingDays: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
-        workingHours: {
-          start: '09:00',
-          end: '18:00',
-          breakStart: '13:00',
-          breakEnd: '14:00'
-        },
-        gstRates: {
-          defaultRate: 18,
-          rawMaterialRate: 18,
-          finishedGoodsRate: 18
+      };
+    }
+
+    if (address) {
+      companyData.addresses = {
+        registeredOffice: {
+          street: address.street || '',
+          city: address.city || '',
+          state: address.state || '',
+          country: address.country || 'India',
+          pincode: address.pincode || ''
         }
-      },
-      status: 'active',
-      createdBy: user.id,
-      isActive: true
-    });
+      };
+    }
+
+    const company = new Company(companyData);
 
     await company.save();
 
