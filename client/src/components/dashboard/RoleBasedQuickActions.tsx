@@ -216,10 +216,10 @@ export const RoleBasedQuickActions: React.FC<RoleBasedQuickActionsProps> = ({ lo
           <button
             key={index}
             onClick={() => handleActionClick(action.href)}
-            className="p-3 sm:p-4 border-2 border-sky-200 dark:border-gray-600 rounded-lg hover:border-sky-500 dark:hover:border-sky-400 hover:bg-sky-50 dark:hover:bg-gray-700 transition-all text-left group"
+            className="p-3 sm:p-4 border-2 border-sky-200 dark:border-gray-600 rounded-lg transition-all text-left group bg-white dark:bg-gray-800 hover:border-sky-500 dark:hover:border-sky-400 hover:bg-sky-50 dark:hover:bg-gray-700"
           >
             <div className="flex items-center space-x-3">
-              <div className={`p-2 rounded-lg flex-shrink-0 ${action.color === 'sky' ? 'bg-sky-500 dark:bg-sky-600 group-hover:bg-black dark:group-hover:bg-gray-700' : 'bg-black dark:bg-gray-700 group-hover:bg-sky-500 dark:group-hover:bg-sky-600'} transition-colors`}>
+              <div className={`p-2 rounded-lg flex-shrink-0 transition-colors ${action.color === 'sky' ? 'bg-sky-500 dark:bg-sky-600 group-hover:bg-black dark:group-hover:bg-gray-700' : 'bg-black dark:bg-gray-700 group-hover:bg-sky-500 dark:group-hover:bg-sky-600'}`}>
                 <action.icon className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
               </div>
               <div className="flex-1 min-w-0">

@@ -118,7 +118,25 @@ const MaterialInputSchema = new Schema({
   status: { type: String, enum: ['allocated', 'consumed', 'partial', 'returned', 'wasted'], default: 'allocated' },
   consumptionDate: { type: Date },
   consumedBy: { type: String },
-  notes: { type: String }
+  notes: { type: String },
+  
+  // GRN and Material Source Tracking
+  grnId: { type: Schema.Types.ObjectId, ref: 'GreyFabricInward' },
+  grnNumber: { type: String },
+  materialSource: { type: String, enum: ['own_material', 'client_provided', 'job_work_material'], default: 'own_material' },
+  clientId: { type: Schema.Types.ObjectId, ref: 'Customer' },
+  clientName: { type: String },
+  clientOrderId: { type: Schema.Types.ObjectId, ref: 'CustomerOrder' },
+  clientOrderNumber: { type: String },
+  
+  // Material Tracking for Client Materials
+  clientMaterialTracking: {
+    originalQuantity: { type: Number, min: 0 },
+    consumedFromClient: { type: Number, min: 0, default: 0 },
+    wasteFromClient: { type: Number, min: 0, default: 0 },
+    returnableToClient: { type: Number, min: 0, default: 0 },
+    keptAsStock: { type: Number, min: 0, default: 0 }
+  }
 }, { _id: false });
 
 const MaterialOutputSchema = new Schema({
@@ -142,7 +160,39 @@ const MaterialOutputSchema = new Schema({
   totalValue: { type: Number, min: 0 },
   status: { type: String, enum: ['produced', 'transferred', 'dispatched', 'returned'], default: 'produced' },
   nextStage: { type: String },
-  notes: { type: String }
+  notes: { type: String },
+  
+  // Elongation/Longation Tracking
+  elongationTracking: {
+    inputQuantity: { type: Number, min: 0 }, // Original input quantity
+    inputUnit: { type: String },
+    outputQuantity: { type: Number, min: 0 }, // Final output quantity
+    outputUnit: { type: String },
+    elongationPercentage: { type: Number, min: 0 }, // Calculated elongation %
+    elongationQuantity: { type: Number, min: 0 }, // Actual elongation amount
+    elongationReason: { type: String, enum: ['stitching', 'processing', 'finishing', 'natural_stretch', 'other'] },
+    elongationNotes: { type: String },
+    qualityImpact: { type: String, enum: ['positive', 'neutral', 'negative'] },
+    approvedBy: { type: String },
+    approvalDate: { type: Date }
+  },
+  
+  // Client Material Output Tracking
+  clientOutputTracking: {
+    isClientMaterial: { type: Boolean, default: false },
+    clientId: { type: Schema.Types.ObjectId, ref: 'Customer' },
+    clientName: { type: String },
+    grnId: { type: Schema.Types.ObjectId, ref: 'GreyFabricInward' },
+    grnNumber: { type: String },
+    clientOrderId: { type: Schema.Types.ObjectId, ref: 'CustomerOrder' },
+    clientOrderNumber: { type: String },
+    returnToClient: { type: Boolean, default: false },
+    returnQuantity: { type: Number, min: 0 },
+    keepAsStock: { type: Boolean, default: false },
+    stockQuantity: { type: Number, min: 0 },
+    clientReturnDate: { type: Date },
+    clientInstructions: { type: String }
+  }
 }, { _id: false });
 
 const ResourceAllocationSchema = new Schema({
@@ -630,6 +680,41 @@ export interface IProductionBatch extends Document {
   ): Promise<this>;
   getCostSummary(): any;
   getProductionMetrics(): any;
+  
+  // Elongation calculation methods
+  calculateElongation(inputQuantity: number, outputQuantity: number, inputUnit: string, outputUnit: string): {
+    elongationPercentage: number;
+    elongationQuantity: number;
+  };
+  
+  addElongationTracking(outputIndex: number, elongationData: {
+    inputQuantity: number;
+    inputUnit: string;
+    outputQuantity: number;
+    outputUnit: string;
+    elongationReason: string;
+    elongationNotes?: string;
+    qualityImpact: string;
+    approvedBy: string;
+  }): Promise<any>;
+  
+  // Client material tracking methods
+  trackClientMaterialConsumption(materialIndex: number, consumedQuantity: number, wasteQuantity: number): Promise<any>;
+  
+  updateClientMaterialOutput(outputIndex: number, clientOutputData: {
+    returnToClient: boolean;
+    returnQuantity?: number;
+    keepAsStock: boolean;
+    stockQuantity?: number;
+    clientInstructions?: string;
+  }): Promise<any>;
+  
+  getClientMaterialSummary(): any;
+  
+  // GRN mapping methods
+  mapMaterialToGRN(materialIndex: number, grnId: string, grnNumber: string, materialSource: string, clientInfo?: any): Promise<any>;
+  
+  getGRNMappedMaterials(): any[];
 }
 
 // Main Batch Schema
@@ -1715,6 +1800,187 @@ ProductionBatchSchema.methods.getProductionMetrics = function() {
   });
   
   return metrics;
+};
+
+// Elongation calculation method
+ProductionBatchSchema.methods.calculateElongation = function(inputQuantity: number, outputQuantity: number, inputUnit: string, outputUnit: string) {
+  // Convert units to same base unit for calculation
+  let inputInMeters = inputQuantity;
+  let outputInMeters = outputQuantity;
+  
+  // Convert to meters for consistent calculation
+  if (inputUnit === 'yards') inputInMeters = inputQuantity * 0.9144;
+  if (outputUnit === 'yards') outputInMeters = outputQuantity * 0.9144;
+  
+  const elongationQuantity = outputInMeters - inputInMeters;
+  const elongationPercentage = inputInMeters > 0 ? (elongationQuantity / inputInMeters) * 100 : 0;
+  
+  return {
+    elongationPercentage: Math.round(elongationPercentage * 100) / 100, // Round to 2 decimal places
+    elongationQuantity: Math.round(elongationQuantity * 100) / 100
+  };
+};
+
+// Add elongation tracking to output
+ProductionBatchSchema.methods.addElongationTracking = function(outputIndex: number, elongationData: any) {
+  if (outputIndex < 0 || outputIndex >= this.outputMaterials.length) {
+    throw new Error('Invalid output index');
+  }
+  
+  const output = this.outputMaterials[outputIndex];
+  const elongation = this.calculateElongation(
+    elongationData.inputQuantity,
+    elongationData.outputQuantity,
+    elongationData.inputUnit,
+    elongationData.outputUnit
+  );
+  
+  output.elongationTracking = {
+    inputQuantity: elongationData.inputQuantity,
+    inputUnit: elongationData.inputUnit,
+    outputQuantity: elongationData.outputQuantity,
+    outputUnit: elongationData.outputUnit,
+    elongationPercentage: elongation.elongationPercentage,
+    elongationQuantity: elongation.elongationQuantity,
+    elongationReason: elongationData.elongationReason,
+    elongationNotes: elongationData.elongationNotes,
+    qualityImpact: elongationData.qualityImpact,
+    approvedBy: elongationData.approvedBy,
+    approvalDate: new Date()
+  };
+  
+  return this.save();
+};
+
+// Track client material consumption
+ProductionBatchSchema.methods.trackClientMaterialConsumption = function(materialIndex: number, consumedQuantity: number, wasteQuantity: number) {
+  if (materialIndex < 0 || materialIndex >= this.inputMaterials.length) {
+    throw new Error('Invalid material index');
+  }
+  
+  const material = this.inputMaterials[materialIndex];
+  
+  if (material.materialSource === 'client_provided' && material.clientMaterialTracking) {
+    material.clientMaterialTracking.consumedFromClient += consumedQuantity;
+    material.clientMaterialTracking.wasteFromClient += wasteQuantity;
+    material.clientMaterialTracking.returnableToClient = 
+      material.clientMaterialTracking.originalQuantity - 
+      material.clientMaterialTracking.consumedFromClient - 
+      material.clientMaterialTracking.wasteFromClient;
+  }
+  
+  material.actualConsumption = consumedQuantity;
+  material.wasteQuantity = wasteQuantity;
+  material.status = 'consumed';
+  material.consumptionDate = new Date();
+  
+  return this.save();
+};
+
+// Update client material output
+ProductionBatchSchema.methods.updateClientMaterialOutput = function(outputIndex: number, clientOutputData: any) {
+  if (outputIndex < 0 || outputIndex >= this.outputMaterials.length) {
+    throw new Error('Invalid output index');
+  }
+  
+  const output = this.outputMaterials[outputIndex];
+  
+  if (!output.clientOutputTracking) {
+    output.clientOutputTracking = {
+      isClientMaterial: false,
+      returnToClient: false,
+      keepAsStock: false,
+      returnQuantity: 0,
+      stockQuantity: 0
+    };
+  }
+  
+  output.clientOutputTracking.returnToClient = clientOutputData.returnToClient;
+  output.clientOutputTracking.returnQuantity = clientOutputData.returnQuantity || 0;
+  output.clientOutputTracking.keepAsStock = clientOutputData.keepAsStock;
+  output.clientOutputTracking.stockQuantity = clientOutputData.stockQuantity || 0;
+  output.clientOutputTracking.clientInstructions = clientOutputData.clientInstructions;
+  
+  if (clientOutputData.returnToClient || clientOutputData.keepAsStock) {
+    output.clientOutputTracking.clientReturnDate = new Date();
+  }
+  
+  return this.save();
+};
+
+// Get client material summary
+ProductionBatchSchema.methods.getClientMaterialSummary = function() {
+  const clientMaterials = this.inputMaterials.filter(m => m.materialSource === 'client_provided');
+  const clientOutputs = this.outputMaterials.filter(o => o.clientOutputTracking?.isClientMaterial);
+  
+  return {
+    batchNumber: this.batchNumber,
+    clientMaterials: clientMaterials.map(m => ({
+      grnNumber: m.grnNumber,
+      clientName: m.clientName,
+      itemName: m.itemName,
+      originalQuantity: m.clientMaterialTracking?.originalQuantity || 0,
+      consumedQuantity: m.clientMaterialTracking?.consumedFromClient || 0,
+      wasteQuantity: m.clientMaterialTracking?.wasteFromClient || 0,
+      returnableQuantity: m.clientMaterialTracking?.returnableToClient || 0,
+      keptAsStock: m.clientMaterialTracking?.keptAsStock || 0
+    })),
+    clientOutputs: clientOutputs.map(o => ({
+      itemName: o.itemName,
+      outputQuantity: o.quantity,
+      returnToClient: o.clientOutputTracking?.returnToClient || false,
+      returnQuantity: o.clientOutputTracking?.returnQuantity || 0,
+      keepAsStock: o.clientOutputTracking?.keepAsStock || false,
+      stockQuantity: o.clientOutputTracking?.stockQuantity || 0,
+      elongationPercentage: o.elongationTracking?.elongationPercentage || 0
+    }))
+  };
+};
+
+// Map material to GRN
+ProductionBatchSchema.methods.mapMaterialToGRN = function(materialIndex: number, grnId: string, grnNumber: string, materialSource: string, clientInfo?: any) {
+  if (materialIndex < 0 || materialIndex >= this.inputMaterials.length) {
+    throw new Error('Invalid material index');
+  }
+  
+  const material = this.inputMaterials[materialIndex];
+  
+  material.grnId = grnId;
+  material.grnNumber = grnNumber;
+  material.materialSource = materialSource;
+  
+  if (materialSource === 'client_provided' && clientInfo) {
+    material.clientId = clientInfo.clientId;
+    material.clientName = clientInfo.clientName;
+    material.clientOrderId = clientInfo.clientOrderId;
+    material.clientOrderNumber = clientInfo.clientOrderNumber;
+    
+    // Initialize client material tracking
+    material.clientMaterialTracking = {
+      originalQuantity: material.quantity,
+      consumedFromClient: 0,
+      wasteFromClient: 0,
+      returnableToClient: material.quantity,
+      keptAsStock: 0
+    };
+  }
+  
+  return this.save();
+};
+
+// Get GRN mapped materials
+ProductionBatchSchema.methods.getGRNMappedMaterials = function() {
+  return this.inputMaterials.filter(m => m.grnId && m.grnNumber).map(m => ({
+    materialIndex: this.inputMaterials.indexOf(m),
+    itemName: m.itemName,
+    grnId: m.grnId,
+    grnNumber: m.grnNumber,
+    materialSource: m.materialSource,
+    clientName: m.clientName,
+    quantity: m.quantity,
+    unit: m.unit,
+    status: m.status
+  }));
 };
 
 export const ProductionBatch = model<IProductionBatch>('ProductionBatch', ProductionBatchSchema);

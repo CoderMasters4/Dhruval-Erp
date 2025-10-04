@@ -10,6 +10,29 @@ export interface GreyFabricInward {
   supplierName?: string;
   supplierId?: string;
   entryType: 'purchase_order' | 'direct_stock_entry' | 'transfer_in' | 'adjustment';
+  
+  // Material Source - New field
+  materialSource?: 'own_material' | 'client_provided' | 'job_work_material';
+  
+  // Client Material Information - New section
+  clientMaterialInfo?: {
+    clientId: string;
+    clientName: string;
+    clientOrderId?: string;
+    clientOrderNumber?: string;
+    clientMaterialCode?: string;
+    clientBatchNumber?: string;
+    clientLotNumber?: string;
+    clientProvidedDate?: string;
+    clientInstructions?: string;
+    clientQualitySpecs?: string;
+    returnRequired: boolean;
+    returnDeadline?: string;
+    clientContactPerson?: string;
+    clientContactPhone?: string;
+    clientContactEmail?: string;
+  };
+  
   fabricType: string;
   fabricColor: string;
   fabricWeight: number;
@@ -109,6 +132,29 @@ export interface CreateGreyFabricInwardRequest {
     transportationCost: number;
     inspectionCost: number;
   };
+  
+  // Material Source - New field
+  materialSource: 'own_material' | 'client_provided' | 'job_work_material';
+  
+  // Client Material Information - New section
+  clientMaterialInfo?: {
+    clientId: string;
+    clientName: string;
+    clientOrderId?: string;
+    clientOrderNumber?: string;
+    clientMaterialCode?: string;
+    clientBatchNumber?: string;
+    clientLotNumber?: string;
+    clientProvidedDate?: string;
+    clientInstructions?: string;
+    clientQualitySpecs?: string;
+    returnRequired: boolean;
+    returnDeadline?: string;
+    clientContactPerson?: string;
+    clientContactPhone?: string;
+    clientContactEmail?: string;
+  };
+  
   greyStockLots?: Array<{
     lotNumber: string;
     lotQuantity: number;
@@ -150,6 +196,7 @@ export interface GreyFabricInwardFilters {
   quality?: string;
   fabricType?: string;
   supplierId?: string;
+  companyId?: string;
   dateFrom?: string;
   dateTo?: string;
   search?: string;

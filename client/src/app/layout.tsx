@@ -115,7 +115,6 @@ export const metadata: Metadata = {
     'application-name': 'ERP System',
     'msapplication-TileColor': '#0ea5e9',
     'msapplication-TileImage': '/icons/icon-144x144.png',
-    'theme-color': '#0ea5e9',
   },
 };
 
@@ -124,7 +123,6 @@ export const viewport: Viewport = {
   initialScale: 1,
   maximumScale: 1,
   userScalable: false,
-  themeColor: "#0ea5e9",
 };
 
 export default function RootLayout({
@@ -135,6 +133,12 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
+        <style
+          id="lock-color-scheme"
+          dangerouslySetInnerHTML={{ __html: 'html, body, :root { color-scheme: light; }' }}
+        />
+        {/* Single controllable theme-color meta for dynamic updates */}
+        <meta name="theme-color" id="theme-color" content="#ffffff" />
         <meta name="application-name" content="ERP System" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
@@ -154,15 +158,18 @@ export default function RootLayout({
     
     if (savedTheme === 'dark') {
       document.documentElement.classList.add('dark');
+      document.documentElement.setAttribute('data-theme', 'dark');
       document.body.classList.add('dark');
       console.log('Applied saved dark theme');
     } else if (savedTheme === 'light') {
       document.documentElement.classList.remove('dark');
+      document.documentElement.setAttribute('data-theme', 'light');
       document.body.classList.remove('dark');
       console.log('Applied saved light theme');
     } else {
       // No saved preference - default to light theme (don't auto-detect system)
       document.documentElement.classList.remove('dark');
+      document.documentElement.setAttribute('data-theme', 'light');
       document.body.classList.remove('dark');
       localStorage.setItem('theme', 'light');
       console.log('No saved theme, defaulting to light');
@@ -170,6 +177,7 @@ export default function RootLayout({
   } catch (error) {
     // Fallback to light theme
     document.documentElement.classList.remove('dark');
+    document.documentElement.setAttribute('data-theme', 'light');
     document.body.classList.remove('dark');
     localStorage.setItem('theme', 'light');
     console.log('Error in theme script, defaulting to light');

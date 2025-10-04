@@ -25,7 +25,7 @@ class DatabaseManager {
   }
 
   private getConnectionConfig(): DatabaseConfig {
-    const uri = config.NODE_ENV === 'test' ? config.MONGODB_URI_TEST : config.MONGODB_URI;
+    const uri = config.NODE_ENV === 'development' ? config.MONGODB_URI_TEST : config.MONGODB_URI;
     
     const options: mongoose.ConnectOptions = {
       // Connection Pool Settings

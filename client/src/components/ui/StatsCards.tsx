@@ -112,7 +112,7 @@ export function StatsCards({ cards, className }: StatsCardsProps) {
         return (
           <div
             key={index}
-            className="bg-white rounded-xl border border-gray-200 shadow-lg p-6 hover:shadow-xl transition-all duration-200 transform hover:scale-105"
+            className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-lg p-6 hover:shadow-xl transition-all duration-200 transform hover:scale-105"
           >
             <div className="flex items-center justify-between">
               <div className="flex-1">

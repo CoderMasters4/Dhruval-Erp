@@ -223,14 +223,20 @@ const CompanyFormModal: React.FC<CompanyModalProps> = ({
     }
 
     switch (currentStep) {
-      case 0: // Basic Information - Only company name and code are mandatory
+      case 0: // Basic Information - Company name and code are mandatory
         if (!formData.companyName?.trim()) {
           newErrors.companyName = 'Company name is required'
         }
         if (!formData.companyCode?.trim()) {
           newErrors.companyCode = 'Company code is required'
+        } else {
+          // Validate company code format (alphanumeric, 3-20 characters)
+          const companyCodeRegex = /^[A-Z0-9]{3,20}$/;
+          if (!companyCodeRegex.test(formData.companyCode.trim())) {
+            newErrors.companyCode = 'Company code must be 3-20 characters long and contain only letters and numbers'
+          }
         }
-        // Legal name is now optional
+        // Legal name is optional
         break
 
       case 1: // Registration Details - All fields are optional, but validate format if provided
@@ -265,8 +271,58 @@ const CompanyFormModal: React.FC<CompanyModalProps> = ({
     return Object.keys(newErrors).length === 0
   }
 
+  const validateAllSteps = (): boolean => {
+    const newErrors: Record<string, string> = {}
+    
+    // Safety check - ensure formData is properly initialized
+    if (!formData) {
+      return false
+    }
+
+    // Step 0: Basic Information - Company name and code are mandatory
+    if (!formData.companyName?.trim()) {
+      newErrors.companyName = 'Company name is required'
+    }
+    if (!formData.companyCode?.trim()) {
+      newErrors.companyCode = 'Company code is required'
+    } else {
+      // Validate company code format (alphanumeric, 3-20 characters)
+      const companyCodeRegex = /^[A-Z0-9]{3,20}$/;
+      if (!companyCodeRegex.test(formData.companyCode.trim())) {
+        newErrors.companyCode = 'Company code must be 3-20 characters long and contain only letters and numbers'
+      }
+    }
+
+    // Step 1: Registration Details - All fields are optional, but validate format if provided
+    if (formData.registrationDetails?.gstin?.trim() && !validateGSTIN(formData.registrationDetails.gstin)) {
+      newErrors.gstin = 'Invalid GSTIN format'
+    }
+    if (formData.registrationDetails?.pan?.trim() && !validatePAN(formData.registrationDetails.pan)) {
+      newErrors.pan = 'Invalid PAN format'
+    }
+    if (formData.registrationDetails?.cin?.trim() && !validateCIN(formData.registrationDetails.cin)) {
+      newErrors.cin = 'Invalid CIN format'
+    }
+
+    // Step 2: Contact Information - All fields are optional, but validate format if provided
+    if (formData.contactInfo.emails[0]?.type?.trim() && !validateEmail(formData.contactInfo.emails[0].type)) {
+      newErrors.email = 'Invalid email format'
+    }
+    if (formData.contactInfo.website?.trim() && !formData.contactInfo.website.match(/^https?:\/\/.+/)) {
+      newErrors.website = 'Website must start with http:// or https://'
+    }
+
+    // Step 3: Address Information - All fields are optional, but validate format if provided
+    if (formData.addresses?.registeredOffice?.pincode?.trim() && !validatePincode(formData.addresses.registeredOffice.pincode)) {
+      newErrors.pincode = 'Invalid pincode format'
+    }
+
+    setErrors(newErrors)
+    return Object.keys(newErrors).length === 0
+  }
+
   const handleSubmit = async () => {
-    if (validateCurrentStep()) {
+    if (validateAllSteps()) {
       await onSubmit(formData)
     }
   }
@@ -278,11 +334,13 @@ const CompanyFormModal: React.FC<CompanyModalProps> = ({
   const handleNext = async () => {
     if (validateCurrentStep()) {
       if (currentStep === steps.length - 1) {
-        // Submit form
-        try {
-          await onSubmit(formData)
-        } catch (error) {
-          console.error('Form submission error:', error)
+        // Submit form - validate all steps before submission
+        if (validateAllSteps()) {
+          try {
+            await onSubmit(formData)
+          } catch (error) {
+            console.error('Form submission error:', error)
+          }
         }
       } else {
         setCurrentStep(prev => prev + 1)
@@ -292,8 +350,10 @@ const CompanyFormModal: React.FC<CompanyModalProps> = ({
 
   const handleSkip = () => {
     if (currentStep === steps.length - 1) {
-      // Submit form with current data
-      onSubmit(formData)
+      // Submit form with current data - validate all steps before submission
+      if (validateAllSteps()) {
+        onSubmit(formData)
+      }
     } else {
       setCurrentStep(prev => prev + 1)
     }

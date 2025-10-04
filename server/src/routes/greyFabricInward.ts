@@ -280,4 +280,170 @@ router.put('/:id/lots/:lotNumber/status', validateUpdateLotStatus, async (req, r
   }
 });
 
+// Client Material Management Routes
+
+// Get all clients material summary
+router.get('/client-materials/summary', async (req, res) => {
+  try {
+    const { GreyFabricInwardController } = await import('../controllers/GreyFabricInwardController');
+    const controller = new GreyFabricInwardController();
+    await controller.getAllClientsMaterialSummary(req, res);
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error',
+      error: error.message
+    });
+  }
+});
+
+// Get specific client material summary
+router.get('/client-materials/summary/:clientId', async (req, res) => {
+  try {
+    const { GreyFabricInwardController } = await import('../controllers/GreyFabricInwardController');
+    const controller = new GreyFabricInwardController();
+    await controller.getClientMaterialSummary(req, res);
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error',
+      error: error.message
+    });
+  }
+});
+
+// Get client material balance
+router.get('/client-materials/balance/:clientId', async (req, res) => {
+  try {
+    const { GreyFabricInwardController } = await import('../controllers/GreyFabricInwardController');
+    const controller = new GreyFabricInwardController();
+    await controller.getClientMaterialBalance(req, res);
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error',
+      error: error.message
+    });
+  }
+});
+
+// Get client material history
+router.get('/client-materials/history/:clientId', async (req, res) => {
+  try {
+    const { GreyFabricInwardController } = await import('../controllers/GreyFabricInwardController');
+    const controller = new GreyFabricInwardController();
+    await controller.getClientMaterialHistory(req, res);
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error',
+      error: error.message
+    });
+  }
+});
+
+// Get client materials for return
+router.get('/client-materials/for-return', async (req, res) => {
+  try {
+    const { GreyFabricInwardController } = await import('../controllers/GreyFabricInwardController');
+    const controller = new GreyFabricInwardController();
+    await controller.getClientMaterialsForReturn(req, res);
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error',
+      error: error.message
+    });
+  }
+});
+
+// Return client material
+router.post('/:id/return-client-material', [
+  param('id').isMongoId().withMessage('Valid GRN ID is required'),
+  body('returnQuantity').isFloat({ min: 0 }).withMessage('Return quantity must be a positive number'),
+  body('returnReason').notEmpty().withMessage('Return reason is required'),
+  body('returnDate').optional().isISO8601().withMessage('Return date must be a valid ISO date'),
+  body('notes').optional().isString().withMessage('Notes must be a string')
+], async (req, res) => {
+  try {
+    const { GreyFabricInwardController } = await import('../controllers/GreyFabricInwardController');
+    const controller = new GreyFabricInwardController();
+    await controller.returnClientMaterial(req, res);
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error',
+      error: error.message
+    });
+  }
+});
+
+// Production Output Management Routes
+
+// Add production output for client material
+router.post('/:id/production-output', [
+  param('id').isMongoId().withMessage('Valid GRN ID is required'),
+  body('productionOrderId').isMongoId().withMessage('Valid production order ID is required'),
+  body('productionOrderNumber').notEmpty().withMessage('Production order number is required'),
+  body('outputQuantity').isFloat({ min: 0 }).withMessage('Output quantity must be a positive number'),
+  body('outputUnit').isIn(['meters', 'yards', 'pieces', 'kg', 'tons']).withMessage('Invalid output unit'),
+  body('outputType').isIn(['finished_goods', 'semi_finished', 'waste']).withMessage('Invalid output type'),
+  body('qualityGrade').isIn(['A+', 'A', 'B+', 'B', 'C']).withMessage('Invalid quality grade'),
+  body('notes').optional().isString().withMessage('Notes must be a string')
+], async (req, res) => {
+  try {
+    const { GreyFabricInwardController } = await import('../controllers/GreyFabricInwardController');
+    const controller = new GreyFabricInwardController();
+    await controller.addProductionOutput(req, res);
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error',
+      error: error.message
+    });
+  }
+});
+
+// Update production output status
+router.put('/:id/production-output/:productionOrderId/status', [
+  param('id').isMongoId().withMessage('Valid GRN ID is required'),
+  param('productionOrderId').isMongoId().withMessage('Valid production order ID is required'),
+  body('status').isIn(['pending', 'completed', 'returned_to_client', 'kept_as_stock']).withMessage('Invalid status'),
+  body('clientReturnQuantity').optional().isFloat({ min: 0 }).withMessage('Client return quantity must be a positive number'),
+  body('keptAsStockQuantity').optional().isFloat({ min: 0 }).withMessage('Kept as stock quantity must be a positive number'),
+  body('notes').optional().isString().withMessage('Notes must be a string')
+], async (req, res) => {
+  try {
+    const { GreyFabricInwardController } = await import('../controllers/GreyFabricInwardController');
+    const controller = new GreyFabricInwardController();
+    await controller.updateProductionOutputStatus(req, res);
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error',
+      error: error.message
+    });
+  }
+});
+
+// Update material consumption
+router.put('/:id/material-consumption', [
+  param('id').isMongoId().withMessage('Valid GRN ID is required'),
+  body('consumedQuantity').isFloat({ min: 0 }).withMessage('Consumed quantity must be a positive number'),
+  body('wasteQuantity').isFloat({ min: 0 }).withMessage('Waste quantity must be a positive number'),
+  body('notes').optional().isString().withMessage('Notes must be a string')
+], async (req, res) => {
+  try {
+    const { GreyFabricInwardController } = await import('../controllers/GreyFabricInwardController');
+    const controller = new GreyFabricInwardController();
+    await controller.updateMaterialConsumption(req, res);
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error',
+      error: error.message
+    });
+  }
+});
+
 export default router;

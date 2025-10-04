@@ -35,9 +35,9 @@ export function ResponsiveCard({
 
   return (
     <div className={clsx(
-      'bg-white rounded-lg sm:rounded-xl',
+      'bg-white dark:bg-gray-800 rounded-lg sm:rounded-xl',
       paddingClasses[padding],
-      border && 'border border-gray-100',
+      border && 'border border-gray-100 dark:border-gray-700',
       shadowClasses[shadow],
       hover && 'hover:shadow-md transition-shadow duration-200',
       className

@@ -3,14 +3,14 @@
 import { useState, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useSelector, useDispatch } from 'react-redux'
-import { 
-  Menu, 
-  Bell, 
-  Search, 
-  User, 
-  Settings, 
-  LogOut, 
-  Moon, 
+import {
+  Menu,
+  Bell,
+  Search,
+  User,
+  Settings,
+  LogOut,
+  Moon,
   Sun,
   ChevronDown,
   Building2,
@@ -19,13 +19,13 @@ import {
 import { selectCurrentUser, selectCurrentCompany, selectIsSuperAdmin } from '@/lib/features/auth/authSlice'
 import { CompanySwitcher } from '@/components/ui/CompanySwitcher'
 import { BrowserInstallButton } from '@/components/pwa/BrowserInstallButton'
-import { 
-  selectNotifications, 
-  selectUnreadNotifications, 
+import {
+  selectNotifications,
+  selectUnreadNotifications,
   selectTheme,
-  toggleSidebar, 
+  toggleSidebar,
   toggleTheme,
-  markAllNotificationsRead 
+  markAllNotificationsRead
 } from '@/lib/features/ui/uiSlice'
 import { useLogoutMutation } from '@/lib/api/authApi'
 import { logout } from '@/lib/features/auth/authSlice'
@@ -43,14 +43,14 @@ export function Header() {
   const notifications = useSelector(selectNotifications)
   const unreadNotifications = useSelector(selectUnreadNotifications)
   const theme = useSelector(selectTheme)
-  
+
   const [showUserMenu, setShowUserMenu] = useState(false)
   const [showNotifications, setShowNotifications] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
-  
+
   const userMenuRef = useRef<HTMLDivElement>(null)
   const notificationsRef = useRef<HTMLDivElement>(null)
-  
+
   const [logoutMutation, { isLoading: isLoggingOut }] = useLogoutMutation()
 
   // Close dropdowns when clicking outside
@@ -83,43 +83,9 @@ export function Header() {
   const handleThemeToggle = () => {
     console.log('=== HEADER THEME TOGGLE ===')
     console.log('Current theme from Redux:', theme)
-    console.log('Document has dark class:', document.documentElement.classList.contains('dark'))
-    console.log('localStorage theme:', localStorage.getItem('theme'))
-    
     const newTheme = theme === 'light' ? 'dark' : 'light'
-    console.log('Switching to theme:', newTheme)
-    
-    // Update localStorage first
     localStorage.setItem('theme', newTheme)
-    console.log('Updated localStorage with theme:', newTheme)
-    
-    // Force immediate DOM update to ensure synchronization
-    if (newTheme === 'dark') {
-      document.documentElement.classList.add('dark')
-      document.body.classList.add('dark')
-      console.log('Added dark class to document and body')
-    } else {
-      document.documentElement.classList.remove('dark')
-      document.body.classList.remove('dark')
-      console.log('Removed dark class from document and body')
-    }
-    
-    // Dispatch the Redux action after DOM update
     dispatch(toggleTheme())
-    
-    // Update meta theme-color for mobile browsers
-    const metaThemeColor = document.querySelector('meta[name="theme-color"]')
-    if (metaThemeColor) {
-      metaThemeColor.setAttribute('content', newTheme === 'dark' ? '#0f172a' : '#ffffff')
-      console.log('Updated meta theme-color')
-    }
-    
-    // Force a re-render by triggering a custom event
-    window.dispatchEvent(new CustomEvent('themeChanged', { detail: { theme: newTheme } }))
-    
-    console.log('Final document classes:', document.documentElement.className)
-    console.log('Final body classes:', document.body.className)
-    
     toast.success(`${newTheme === 'dark' ? 'Dark' : 'Light'} theme enabled`)
   }
 
@@ -158,7 +124,7 @@ export function Header() {
         {/* Mobile Search Button */}
         <button
           className="md:hidden p-2 rounded-lg hover:bg-sky-100 dark:hover:bg-gray-700 border border-sky-300 dark:border-gray-600 transition-all duration-200 group shadow-sm hover:shadow-md"
-          onClick={() => {/* TODO: Implement mobile search modal */}}
+          onClick={() => {/* TODO: Implement mobile search modal */ }}
         >
           <Bell className="h-5 w-5 text-sky-600 dark:text-sky-400 group-hover:text-sky-700 dark:group-hover:text-sky-300 transition-colors" />
         </button>
@@ -206,12 +172,11 @@ export function Header() {
           title={`Current: ${theme} theme - Click to switch to ${theme === 'light' ? 'dark' : 'light'} theme`}
         >
           {/* Background with theme-aware gradient */}
-          <div className={`absolute inset-0 transition-all duration-300 ${
-            theme === 'light' 
-              ? 'bg-gradient-to-br from-sky-50 to-blue-100 hover:from-sky-100 hover:to-blue-200' 
+          <div className={`absolute inset-0 transition-all duration-300 ${theme === 'light'
+              ? 'bg-gradient-to-br from-sky-50 to-blue-100 hover:from-sky-100 hover:to-blue-200'
               : 'bg-gradient-to-br from-gray-800 to-gray-700 hover:from-gray-700 hover:to-gray-600'
-          }`} />
-          
+            }`} />
+
           {/* Icon container with enhanced animations */}
           <div className="relative z-10 transform transition-all duration-500 group-hover:rotate-12 group-active:scale-110">
             {theme === 'light' ? (
@@ -220,26 +185,24 @@ export function Header() {
               <Sun className="h-4 w-4 sm:h-5 sm:w-5 text-yellow-500 group-hover:text-yellow-400 transition-all duration-300 drop-shadow-sm" />
             )}
           </div>
-          
+
           {/* Animated theme indicator */}
-          <div className={`absolute top-1 right-1 w-2 h-2 rounded-full transition-all duration-300 ${
-            theme === 'light' 
-              ? "bg-sky-500 shadow-lg shadow-sky-500/50" 
+          <div className={`absolute top-1 right-1 w-2 h-2 rounded-full transition-all duration-300 ${theme === 'light'
+              ? "bg-sky-500 shadow-lg shadow-sky-500/50"
               : "bg-yellow-500 shadow-lg shadow-yellow-500/50"
-          }`} />
-          
+            }`} />
+
           {/* Pulse effect on hover */}
-          <div className={`absolute inset-0 rounded-lg opacity-0 group-hover:opacity-20 transition-opacity duration-300 ${
-            theme === 'light' ? 'bg-sky-500' : 'bg-yellow-500'
-          }`} />
+          <div className={`absolute inset-0 rounded-lg opacity-0 group-hover:opacity-20 transition-opacity duration-300 ${theme === 'light' ? 'bg-sky-500' : 'bg-yellow-500'
+            }`} />
         </button>
-        
+
         {/* Debug info - remove after fixing */}
         <div className="text-xs text-gray-500 dark:text-gray-400 hidden">
           Theme: {theme} | Dark: {document.documentElement.classList.contains('dark') ? 'Yes' : 'No'}
         </div>
-        
-  
+
+
 
         {/* Notifications */}
         <div className="relative" ref={notificationsRef}>
@@ -271,7 +234,7 @@ export function Header() {
                   )}
                 </div>
               </div>
-              
+
               <div className="max-h-96 overflow-y-auto">
                 {notifications.length === 0 ? (
                   <div className="p-4 text-center text-gray-500 dark:text-gray-400">
@@ -310,7 +273,7 @@ export function Header() {
                   ))
                 )}
               </div>
-              
+
               {notifications.length > 10 && (
                 <div className="p-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700">
                   <button
@@ -386,7 +349,7 @@ export function Header() {
                   </div>
                 </div>
               </div>
-              
+
               <div className="py-2">
                 <button
                   onClick={() => {
@@ -398,7 +361,7 @@ export function Header() {
                   <UserCircle className="h-4 w-4 mr-3" />
                   Profile
                 </button>
-                
+
                 <button
                   onClick={() => {
                     router.push('/settings')
@@ -409,9 +372,9 @@ export function Header() {
                   <Settings className="h-4 w-4 mr-3" />
                   Settings
                 </button>
-                
+
                 <hr className="my-2 border-gray-200 dark:border-gray-600" />
-                
+
                 <button
                   onClick={handleLogout}
                   disabled={isLoggingOut}

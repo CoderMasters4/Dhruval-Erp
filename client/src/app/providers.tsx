@@ -6,6 +6,7 @@ import { Toaster } from 'react-hot-toast'
 import { store } from '@/lib/store'
 import { AuthProvider } from '@/components/auth/AuthProvider'
 import { ModalProvider } from '@/components/providers/ModalProvider'
+import { ThemeSync } from '@/components/providers/ThemeSync'
 
 import { initializeUI } from '@/lib/features/ui/uiSlice'
 
@@ -24,6 +25,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
       <AppInitializer>
         <AuthProvider>
           <ModalProvider>
+            <ThemeSync />
             {children}
           </ModalProvider>
           <Toaster

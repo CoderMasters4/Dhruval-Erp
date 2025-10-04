@@ -62,6 +62,20 @@ const getStatusBadge = (status: string) => {
   }
 }
 
+// Background styling per status with light and dark theme support
+const getRowBackgroundClass = (status: string) => {
+  switch (status) {
+    case 'success':
+      return 'bg-sky-50 dark:bg-sky-900/20 border border-sky-200/70 dark:border-sky-800'
+    case 'warning':
+      return 'bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200/70 dark:border-yellow-800'
+    case 'error':
+      return 'bg-red-50 dark:bg-red-900/20 border border-red-200/70 dark:border-red-800'
+    default:
+      return 'bg-gray-50 dark:bg-gray-800/60 border border-gray-200/70 dark:border-gray-700'
+  }
+}
+
 // Format timestamp for better display
 const formatTimestamp = (timestamp: string) => {
   try {
@@ -186,7 +200,10 @@ export const RoleBasedActivity: React.FC<RoleBasedActivityProps> = ({ activities
 
       <div className="space-y-3 sm:space-y-4">
         {activities.map((activity: Activity) => (
-          <div key={activity.id} className="flex items-start space-x-3 p-2 sm:p-3 rounded-lg hover:bg-sky-50 dark:hover:bg-gray-700 transition-colors">
+          <div
+            key={activity.id}
+            className={`flex items-start space-x-3 p-2 sm:p-3 rounded-lg transition-colors ${getRowBackgroundClass(activity.status)}`}
+          >
             <div className="flex-shrink-0 w-8 h-8 sm:w-10 sm:h-10 bg-white dark:bg-gray-800 border-2 border-sky-500 dark:border-sky-400 rounded-full flex items-center justify-center">
               {getActivityIcon(activity.type, activity.status)}
             </div>

@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, Suspense } from 'react'
+import React, { useState, Suspense, useEffect } from 'react'
 import { toast } from 'react-hot-toast'
 import { useRouter } from 'next/navigation'
 import {
@@ -16,7 +16,7 @@ import { PageHeader } from '@/components/ui/PageHeader'
 import { Button } from '@/components/ui/Button'
 
 import { ConfirmModal } from '@/components/ui/ConfirmModal'
-import { selectIsSuperAdmin } from '@/lib/features/auth/authSlice'
+import { selectIsSuperAdmin, selectCurrentCompanyId } from '@/lib/features/auth/authSlice'
 import { useGetAllCompaniesQuery } from '@/lib/features/companies/companiesApi'
 import {
   useCreateCompanyMutation,
@@ -36,6 +36,14 @@ const CompanyFormModal = React.lazy(() => import('@/components/companies/modals/
 export default function CompaniesPage() {
   const router = useRouter()
   const isSuperAdmin = useSelector(selectIsSuperAdmin)
+  const currentCompanyId = useSelector(selectCurrentCompanyId)
+
+  // For non-superadmin users, redirect directly to their assigned company page
+  useEffect(() => {
+    if (!isSuperAdmin && currentCompanyId) {
+      router.replace(`/companies/${currentCompanyId}`)
+    }
+  }, [isSuperAdmin, currentCompanyId, router])
 
   // State management
   const [filters, setFilters] = useState({
@@ -80,11 +88,11 @@ export default function CompaniesPage() {
       company.registrationDetails?.gstin?.toLowerCase().includes(filters.search.toLowerCase())
 
     const matchesStatus = filters.status === 'all' ||
-                         (filters.status === 'active' && company.status === 'active') ||
-                         (filters.status === 'inactive' && company.status === 'inactive') ||
-                         (filters.status === 'suspended' && company.status === 'suspended') ||
-                         (filters.status === 'pending_approval' && company.status === 'pending_approval') ||
-                         (filters.status === 'under_review' && company.status === 'under_review')
+      (filters.status === 'active' && company.status === 'active') ||
+      (filters.status === 'inactive' && company.status === 'inactive') ||
+      (filters.status === 'suspended' && company.status === 'suspended') ||
+      (filters.status === 'pending_approval' && company.status === 'pending_approval') ||
+      (filters.status === 'under_review' && company.status === 'under_review')
 
     const matchesLocation = !filters.location ||
       company.addresses?.registeredOffice?.city?.toLowerCase().includes(filters.location.toLowerCase()) ||
@@ -179,14 +187,30 @@ export default function CompaniesPage() {
   }
 
   // Access control
-  if (!isSuperAdmin) {
+  // If non-superadmin and we have a company, show a lightweight loader while redirecting
+  if (!isSuperAdmin && currentCompanyId) {
+    return (
+      <AppLayout>
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <div className="text-center">
+            <Shield className="h-12 w-12 text-sky-400 mx-auto mb-4" />
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Loading your company…</h2>
+            <p className="text-gray-600 dark:text-gray-400">Redirecting to your company details</p>
+          </div>
+        </div>
+      </AppLayout>
+    )
+  }
+
+  // If non-superadmin and there is no company context, block access
+  if (!isSuperAdmin && !currentCompanyId) {
     return (
       <AppLayout>
         <div className="flex items-center justify-center min-h-[60vh]">
           <div className="text-center">
             <Shield className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-            <h2 className="text-xl font-semibold text-gray-900 mb-2">Access Denied</h2>
-            <p className="text-gray-600">You need Super Admin privileges to access this page.</p>
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">Company Access Required</h2>
+            <p className="text-gray-600 dark:text-gray-400">Your account doesn’t have a company assigned.</p>
           </div>
         </div>
       </AppLayout>
@@ -238,60 +262,8 @@ export default function CompaniesPage() {
             </div>
           </div>
 
-        {/* Stats Cards */}
-        <Suspense fallback={
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-            {[...Array(4)].map((_, i) => (
-              <div key={i} className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 animate-pulse transition-all duration-300">
-                <div className="flex items-center justify-between">
-                  <div className="space-y-3">
-                    <div className="h-4 bg-gray-200 dark:bg-gray-600 rounded w-24"></div>
-                    <div className="h-8 bg-gray-200 dark:bg-gray-600 rounded w-16"></div>
-                  </div>
-                  <div className="h-8 w-8 bg-gray-200 dark:bg-gray-600 rounded"></div>
-                </div>
-              </div>
-            ))}
-          </div>
-        }>
-          <CompanyStats stats={stats} isLoading={isLoading} />
-        </Suspense>
-
-        {/* Search and Filters */}
-        <Suspense fallback={
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 animate-pulse transition-all duration-300">
-            <div className="flex flex-col sm:flex-row gap-4">
-              <div className="flex-1">
-                <div className="h-12 bg-gray-200 dark:bg-gray-600 rounded-lg"></div>
-              </div>
-              <div className="flex gap-3">
-                <div className="h-12 w-32 bg-gray-200 dark:bg-gray-600 rounded-lg"></div>
-                <div className="h-12 w-32 bg-gray-200 dark:bg-gray-600 rounded-lg"></div>
-                <div className="h-12 w-32 bg-gray-200 dark:bg-gray-600 rounded-lg"></div>
-              </div>
-            </div>
-          </div>
-        }>
-          <CompanyFilters
-            filters={filters}
-            onFiltersChange={setFilters}
-            onReset={() => setFilters({
-              search: '',
-              status: 'all',
-              sortBy: 'name',
-              sortOrder: 'asc',
-              location: '',
-              industry: ''
-            })}
-            onCreateNew={() => setShowCreateModal(true)}
-            isLoading={isLoading}
-          />
-        </Suspense>
-
-        {/* Companies Grid */}
-        {isLoading ? (
-          <div className="space-y-6">
-            {/* Loading Stats */}
+          {/* Stats Cards */}
+          <Suspense fallback={
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
               {[...Array(4)].map((_, i) => (
                 <div key={i} className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 animate-pulse transition-all duration-300">
@@ -305,163 +277,215 @@ export default function CompaniesPage() {
                 </div>
               ))}
             </div>
+          }>
+            <CompanyStats stats={stats} isLoading={isLoading} />
+          </Suspense>
 
-            {/* Loading Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {[...Array(6)].map((_, i) => (
-                <div key={i} className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 animate-pulse transition-all duration-300">
-                  <div className="flex items-start justify-between mb-4">
-                    <div className="flex-1 space-y-3">
-                      <div className="h-6 bg-gray-200 dark:bg-gray-600 rounded w-3/4"></div>
-                      <div className="h-4 bg-gray-200 dark:bg-gray-600 rounded w-1/2"></div>
-                      <div className="h-6 bg-gray-200 dark:bg-gray-600 rounded-full w-20"></div>
-                    </div>
-                    <div className="flex gap-2">
-                      <div className="h-8 w-8 bg-gray-200 dark:bg-gray-600 rounded"></div>
-                      <div className="h-8 w-8 bg-gray-200 dark:bg-gray-600 rounded"></div>
-                    </div>
-                  </div>
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-3">
-                      <div className="h-4 w-4 bg-gray-200 dark:bg-gray-600 rounded"></div>
-                      <div className="h-4 bg-gray-200 dark:bg-gray-600 rounded w-2/3"></div>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <div className="h-4 w-4 bg-gray-200 dark:bg-gray-600 rounded"></div>
-                      <div className="h-4 bg-gray-200 dark:bg-gray-600 rounded w-1/2"></div>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <div className="h-4 w-4 bg-gray-200 dark:bg-gray-600 rounded"></div>
-                      <div className="h-4 bg-gray-200 dark:bg-gray-600 rounded w-3/4"></div>
-                    </div>
-                  </div>
-                  <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
-                    <div className="h-3 bg-gray-200 dark:bg-gray-600 rounded w-20"></div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        ) : filteredCompanies.length === 0 ? (
-          <div className="bg-gradient-to-br from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-12 text-center transition-all duration-300">
-            <div className="relative">
-              <div className="absolute inset-0 bg-gradient-to-r from-blue-400 to-purple-400 rounded-full opacity-20 animate-pulse"></div>
-              <Building2 className="h-20 w-20 text-blue-500 dark:text-blue-400 mx-auto mb-6 relative z-10 transition-colors duration-300" />
-            </div>
-            <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-3 transition-colors duration-300">
-              {filters.search || filters.status !== 'all' || filters.location || filters.industry ? 'No companies found' : 'Welcome to Companies Management'}
-            </h3>
-            <p className="text-gray-600 dark:text-gray-300 mb-8 max-w-md mx-auto text-lg transition-colors duration-300">
-              {filters.search || filters.status !== 'all' || filters.location || filters.industry
-                ? 'Try adjusting your search criteria or filters to find the companies you\'re looking for.'
-                : 'Start building your business network by adding your first company to the system.'
-              }
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              {(filters.search || filters.status !== 'all' || filters.location || filters.industry) && (
-                <Button
-                  onClick={() => setFilters({
-                    search: '',
-                    status: 'all',
-                    sortBy: 'name',
-                    sortOrder: 'asc',
-                    location: '',
-                    industry: ''
-                  })}
-                  variant="outline"
-                  className="border-blue-300 dark:border-blue-600 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all duration-200"
-                >
-                  Clear Filters
-                </Button>
-              )}
-              <Button
-                onClick={() => setShowCreateModal(true)}
-                className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-lg hover:shadow-xl transition-all duration-200"
-              >
-                <Plus className="h-5 w-5 mr-2" />
-                Add Your First Company
-              </Button>
-            </div>
-          </div>
-        ) : (
+          {/* Search and Filters */}
           <Suspense fallback={
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {[...Array(6)].map((_, i) => (
-                <div key={i} className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 animate-pulse transition-all duration-300">
-                  <div className="flex items-start justify-between mb-4">
-                    <div className="flex-1 space-y-3">
-                      <div className="h-6 bg-gray-200 dark:bg-gray-600 rounded w-3/4"></div>
-                      <div className="h-4 bg-gray-200 dark:bg-gray-600 rounded w-1/2"></div>
-                      <div className="h-6 bg-gray-200 dark:bg-gray-600 rounded-full w-20"></div>
-                    </div>
-                    <div className="flex gap-2">
-                      <div className="h-8 w-8 bg-gray-200 dark:bg-gray-600 rounded"></div>
-                      <div className="h-8 w-8 bg-gray-200 dark:bg-gray-600 rounded"></div>
-                    </div>
-                  </div>
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-3">
-                      <div className="h-4 w-4 bg-gray-200 dark:bg-gray-600 rounded"></div>
-                      <div className="h-4 bg-gray-200 dark:bg-gray-600 rounded w-2/3"></div>
-                    </div>
-                  </div>
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 animate-pulse transition-all duration-300">
+              <div className="flex flex-col sm:flex-row gap-4">
+                <div className="flex-1">
+                  <div className="h-12 bg-gray-200 dark:bg-gray-600 rounded-lg"></div>
                 </div>
-              ))}
+                <div className="flex gap-3">
+                  <div className="h-12 w-32 bg-gray-200 dark:bg-gray-600 rounded-lg"></div>
+                  <div className="h-12 w-32 bg-gray-200 dark:bg-gray-600 rounded-lg"></div>
+                  <div className="h-12 w-32 bg-gray-200 dark:bg-gray-600 rounded-lg"></div>
+                </div>
+              </div>
             </div>
           }>
-            <CompanyList
-              companies={filteredCompanies}
+            <CompanyFilters
+              filters={filters}
+              onFiltersChange={setFilters}
+              onReset={() => setFilters({
+                search: '',
+                status: 'all',
+                sortBy: 'name',
+                sortOrder: 'asc',
+                location: '',
+                industry: ''
+              })}
+              onCreateNew={() => setShowCreateModal(true)}
               isLoading={isLoading}
-              onView={handleView}
-              onEdit={handleEditCompany}
-              onDelete={handleDeleteClick}
-              realStats={{
-                totalUsers: stats.totalUsers,
-                totalRevenue: stats.totalRevenue,
-                totalProduction: stats.totalProduction,
-                totalOrders: stats.totalOrders,
-                totalCustomers: stats.totalCustomers
-              }}
             />
           </Suspense>
-        )}
 
-        {/* Modals */}
-        <Suspense fallback={null}>
-          <CompanyFormModal
-            isOpen={showCreateModal}
-            onClose={() => setShowCreateModal(false)}
-            onSubmit={handleCreateCompany}
-            isLoading={createLoading}
-          />
-        </Suspense>
+          {/* Companies Grid */}
+          {isLoading ? (
+            <div className="space-y-6">
+              {/* Loading Stats */}
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                {[...Array(4)].map((_, i) => (
+                  <div key={i} className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 animate-pulse transition-all duration-300">
+                    <div className="flex items-center justify-between">
+                      <div className="space-y-3">
+                        <div className="h-4 bg-gray-200 dark:bg-gray-600 rounded w-24"></div>
+                        <div className="h-8 bg-gray-200 dark:bg-gray-600 rounded w-16"></div>
+                      </div>
+                      <div className="h-8 w-8 bg-gray-200 dark:bg-gray-600 rounded"></div>
+                    </div>
+                  </div>
+                ))}
+              </div>
 
-        <Suspense fallback={null}>
-          <CompanyFormModal
-            isOpen={showEditModal}
+              {/* Loading Cards */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {[...Array(6)].map((_, i) => (
+                  <div key={i} className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 animate-pulse transition-all duration-300">
+                    <div className="flex items-start justify-between mb-4">
+                      <div className="flex-1 space-y-3">
+                        <div className="h-6 bg-gray-200 dark:bg-gray-600 rounded w-3/4"></div>
+                        <div className="h-4 bg-gray-200 dark:bg-gray-600 rounded w-1/2"></div>
+                        <div className="h-6 bg-gray-200 dark:bg-gray-600 rounded-full w-20"></div>
+                      </div>
+                      <div className="flex gap-2">
+                        <div className="h-8 w-8 bg-gray-200 dark:bg-gray-600 rounded"></div>
+                        <div className="h-8 w-8 bg-gray-200 dark:bg-gray-600 rounded"></div>
+                      </div>
+                    </div>
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-3">
+                        <div className="h-4 w-4 bg-gray-200 dark:bg-gray-600 rounded"></div>
+                        <div className="h-4 bg-gray-200 dark:bg-gray-600 rounded w-2/3"></div>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <div className="h-4 w-4 bg-gray-200 dark:bg-gray-600 rounded"></div>
+                        <div className="h-4 bg-gray-200 dark:bg-gray-600 rounded w-1/2"></div>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <div className="h-4 w-4 bg-gray-200 dark:bg-gray-600 rounded"></div>
+                        <div className="h-4 bg-gray-200 dark:bg-gray-600 rounded w-3/4"></div>
+                      </div>
+                    </div>
+                    <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
+                      <div className="h-3 bg-gray-200 dark:bg-gray-600 rounded w-20"></div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : filteredCompanies.length === 0 ? (
+            <div className="bg-gradient-to-br from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-12 text-center transition-all duration-300">
+              <div className="relative">
+                <div className="absolute inset-0 bg-gradient-to-r from-blue-400 to-purple-400 rounded-full opacity-20 animate-pulse"></div>
+                <Building2 className="h-20 w-20 text-blue-500 dark:text-blue-400 mx-auto mb-6 relative z-10 transition-colors duration-300" />
+              </div>
+              <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-3 transition-colors duration-300">
+                {filters.search || filters.status !== 'all' || filters.location || filters.industry ? 'No companies found' : 'Welcome to Companies Management'}
+              </h3>
+              <p className="text-gray-600 dark:text-gray-300 mb-8 max-w-md mx-auto text-lg transition-colors duration-300">
+                {filters.search || filters.status !== 'all' || filters.location || filters.industry
+                  ? 'Try adjusting your search criteria or filters to find the companies you\'re looking for.'
+                  : 'Start building your business network by adding your first company to the system.'
+                }
+              </p>
+              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                {(filters.search || filters.status !== 'all' || filters.location || filters.industry) && (
+                  <Button
+                    onClick={() => setFilters({
+                      search: '',
+                      status: 'all',
+                      sortBy: 'name',
+                      sortOrder: 'asc',
+                      location: '',
+                      industry: ''
+                    })}
+                    variant="outline"
+                    className="border-blue-300 dark:border-blue-600 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all duration-200"
+                  >
+                    Clear Filters
+                  </Button>
+                )}
+                <Button
+                  onClick={() => setShowCreateModal(true)}
+                  className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-lg hover:shadow-xl transition-all duration-200"
+                >
+                  <Plus className="h-5 w-5 mr-2" />
+                  Add Your First Company
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <Suspense fallback={
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {[...Array(6)].map((_, i) => (
+                  <div key={i} className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 animate-pulse transition-all duration-300">
+                    <div className="flex items-start justify-between mb-4">
+                      <div className="flex-1 space-y-3">
+                        <div className="h-6 bg-gray-200 dark:bg-gray-600 rounded w-3/4"></div>
+                        <div className="h-4 bg-gray-200 dark:bg-gray-600 rounded w-1/2"></div>
+                        <div className="h-6 bg-gray-200 dark:bg-gray-600 rounded-full w-20"></div>
+                      </div>
+                      <div className="flex gap-2">
+                        <div className="h-8 w-8 bg-gray-200 dark:bg-gray-600 rounded"></div>
+                        <div className="h-8 w-8 bg-gray-200 dark:bg-gray-600 rounded"></div>
+                      </div>
+                    </div>
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-3">
+                        <div className="h-4 w-4 bg-gray-200 dark:bg-gray-600 rounded"></div>
+                        <div className="h-4 bg-gray-200 dark:bg-gray-600 rounded w-2/3"></div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            }>
+              <CompanyList
+                companies={filteredCompanies}
+                isLoading={isLoading}
+                onView={handleView}
+                onEdit={handleEditCompany}
+                onDelete={handleDeleteClick}
+                realStats={{
+                  totalUsers: stats.totalUsers,
+                  totalRevenue: stats.totalRevenue,
+                  totalProduction: stats.totalProduction,
+                  totalOrders: stats.totalOrders,
+                  totalCustomers: stats.totalCustomers
+                }}
+              />
+            </Suspense>
+          )}
+
+          {/* Modals */}
+          <Suspense fallback={null}>
+            <CompanyFormModal
+              isOpen={showCreateModal}
+              onClose={() => setShowCreateModal(false)}
+              onSubmit={handleCreateCompany}
+              isLoading={createLoading}
+            />
+          </Suspense>
+
+          <Suspense fallback={null}>
+            <CompanyFormModal
+              isOpen={showEditModal}
+              onClose={() => {
+                setShowEditModal(false)
+                setSelectedCompany(null)
+              }}
+              company={selectedCompany}
+              onSubmit={handleUpdateCompany}
+              isLoading={updateLoading}
+            />
+          </Suspense>
+
+          <ConfirmModal
+            isOpen={showDeleteModal}
             onClose={() => {
-              setShowEditModal(false)
+              setShowDeleteModal(false)
               setSelectedCompany(null)
             }}
-            company={selectedCompany}
-            onSubmit={handleUpdateCompany}
-            isLoading={updateLoading}
+            onConfirm={handleDeleteConfirm}
+            title="Delete Company"
+            message={`Are you sure you want to delete "${selectedCompany?.companyName}"? This action cannot be undone.`}
+            confirmText="Delete Company"
+            isLoading={deleteLoading}
+            type="danger"
           />
-        </Suspense>
-
-        <ConfirmModal
-          isOpen={showDeleteModal}
-          onClose={() => {
-            setShowDeleteModal(false)
-            setSelectedCompany(null)
-          }}
-          onConfirm={handleDeleteConfirm}
-          title="Delete Company"
-          message={`Are you sure you want to delete "${selectedCompany?.companyName}"? This action cannot be undone.`}
-          confirmText="Delete Company"
-          isLoading={deleteLoading}
-          type="danger"
-        />
         </div>
       </div>
     </AppLayout>

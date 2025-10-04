@@ -65,6 +65,22 @@ export const useDashboardPermissions = (): DashboardPermissions => {
   const currentCompanyAccess = user.companyAccess?.find(access => access.isActive)
   const permissions = currentCompanyAccess?.permissions as Record<string, any> | undefined
 
+  // Helper to support both shapes:
+  // 1) Object of booleans: permissions.module.action => boolean
+  // 2) Array of strings: permissions.module => string[] of allowed actions
+  const has = (moduleKey: string, action: string): boolean => {
+    if (!permissions) return false
+    const mod = (permissions as any)[moduleKey]
+    if (!mod) return false
+    if (Array.isArray(mod)) {
+      return mod.includes(action)
+    }
+    if (typeof mod === 'object') {
+      return Boolean(mod[action])
+    }
+    return false
+  }
+
   if (!permissions) {
     return {
       canViewFinancials: false,
@@ -85,19 +101,20 @@ export const useDashboardPermissions = (): DashboardPermissions => {
   }
 
   return {
-    canViewFinancials: permissions.financial?.view || false,
-    canViewProduction: permissions.production?.view || false,
-    canViewInventory: permissions.inventory?.view || false,
-    canViewOrders: permissions.orders?.view || false,
-    canViewCustomers: permissions.customers?.view || false,
-    canViewSuppliers: permissions.suppliers?.view || false,
-    canViewUsers: permissions.users?.view || false,
-    canViewReports: permissions.financial?.viewReports || permissions.production?.viewReports || permissions.inventory?.viewReports || false,
-    canViewAnalytics: permissions.analytics?.businessAnalytics || false,
-    canViewQuality: permissions.quality?.qualityControl || false,
-    canViewMaintenance: permissions.maintenance?.equipmentManagement || false,
-    canViewSecurity: permissions.security?.gateManagement || false,
-    canViewHR: permissions.hr?.viewEmployees || false,
-    canManageSystem: permissions.admin?.systemSettings || false,
+    canViewFinancials: has('financial', 'view'),
+    canViewProduction: has('production', 'view'),
+    canViewInventory: has('inventory', 'view'),
+    canViewOrders: has('orders', 'view'),
+    // Map customers/suppliers to relevant modules if not explicitly present
+    canViewCustomers: has('customers', 'view') || has('orders', 'view'),
+    canViewSuppliers: has('suppliers', 'view') || has('inventory', 'view'),
+    canViewUsers: has('users', 'view') || has('admin', 'userManagement'),
+    canViewReports: has('financial', 'viewReports') || has('production', 'viewReports') || has('inventory', 'viewReports') || has('orders', 'viewReports'),
+    canViewAnalytics: has('analytics', 'businessAnalytics') || false,
+    canViewQuality: has('quality', 'qualityControl') || has('production', 'qualityCheck'),
+    canViewMaintenance: has('maintenance', 'equipmentManagement') || false,
+    canViewSecurity: has('security', 'gateManagement') || false,
+    canViewHR: has('hr', 'viewEmployees') || false,
+    canManageSystem: has('admin', 'systemSettings') || has('admin', 'userManagement'),
   }
 }

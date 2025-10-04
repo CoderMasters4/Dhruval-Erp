@@ -6,6 +6,7 @@ import { ArrowLeft, Save, Package, AlertCircle } from 'lucide-react';
 import { useCreateBatchMutation, CreateBatchRequest } from '@/lib/api/productionBatches';
 import { useGetCompaniesQuery } from '@/lib/api/baseApi';
 import { useGetInventoryItemsQuery } from '@/lib/api/inventoryApi';
+import { useGetGreyFabricInwardsQuery } from '@/lib/api/greyFabricInwardApi';
 import { useSelector, useDispatch } from 'react-redux';
 import { logout } from '@/lib/features/auth/authSlice';
 import { Button } from '@/components/ui/Button';
@@ -41,6 +42,15 @@ function CreateBatchPageContent() {
     quantity: number;
     unit: string;
     unitCost: number;
+    grnId?: string;
+    grnNumber?: string;
+    materialSource?: 'own_material' | 'client_provided' | 'job_work_material';
+    clientInfo?: {
+      clientId: string;
+      clientName: string;
+      clientOrderId?: string;
+      clientOrderNumber?: string;
+    };
   }>>([]);
   
   // Get companies list
@@ -53,6 +63,19 @@ function CreateBatchPageContent() {
     limit: 100
   });
   const inventoryItems = inventoryData?.data?.data || [];
+
+  // Get GRNs for selected company
+  const { data: grnsData, isLoading: grnsLoading } = useGetGreyFabricInwardsQuery({
+    filters: {
+      companyId: selectedCompanyId
+    },
+    limit: 100
+  });
+  const grns = grnsData?.data || [];
+
+  // GRN mapping state
+  const [showGRNMapping, setShowGRNMapping] = useState(false);
+  const [selectedMaterialForGRN, setSelectedMaterialForGRN] = useState<number | null>(null);
   
   const [formData, setFormData] = useState<CreateBatchRequest>({
     companyId: selectedCompanyId,
@@ -126,6 +149,44 @@ function CreateBatchPageContent() {
     }));
     // Clear selected materials when company changes
     setSelectedMaterials([]);
+  };
+
+  // GRN mapping functions
+  const handleGRNMapping = (materialIndex: number) => {
+    setSelectedMaterialForGRN(materialIndex);
+    setShowGRNMapping(true);
+  };
+
+  const handleGRNSelection = (grnId: string, grnNumber: string, materialSource: 'own_material' | 'client_provided' | 'job_work_material', clientInfo?: any) => {
+    if (selectedMaterialForGRN !== null) {
+      setSelectedMaterials(prev => prev.map((material, index) => 
+        index === selectedMaterialForGRN 
+          ? { 
+              ...material, 
+              grnId, 
+              grnNumber, 
+              materialSource,
+              clientInfo: materialSource === 'client_provided' ? clientInfo : undefined
+            }
+          : material
+      ));
+    }
+    setShowGRNMapping(false);
+    setSelectedMaterialForGRN(null);
+  };
+
+  const removeGRNMapping = (materialIndex: number) => {
+    setSelectedMaterials(prev => prev.map((material, index) => 
+      index === materialIndex 
+        ? { 
+            ...material, 
+            grnId: undefined, 
+            grnNumber: undefined, 
+            materialSource: undefined,
+            clientInfo: undefined
+          }
+        : material
+    ));
   };
 
   // Add material to the batch
@@ -426,36 +487,83 @@ function CreateBatchPageContent() {
                     {selectedMaterials.map((material) => {
                       const inventoryItem = inventoryItems.find(item => item._id === material.itemId);
                       return (
-                        <div key={material.itemId} className="flex items-center space-x-4 p-3 border rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors">
-                          <div className="flex-1 min-w-0">
-                            <div className="font-medium truncate">{material.itemName}</div>
-                            <div className="text-sm text-gray-500">
-                              Available: {inventoryItem?.stock.availableStock} {material.unit} | 
-                              Cost: ₹{material.unitCost}/{material.unit}
+                        <div key={material.itemId} className="p-3 border rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors">
+                          <div className="flex items-center space-x-4">
+                            <div className="flex-1 min-w-0">
+                              <div className="font-medium truncate">{material.itemName}</div>
+                              <div className="text-sm text-gray-500">
+                                Available: {inventoryItem?.stock.availableStock} {material.unit} | 
+                                Cost: ₹{material.unitCost}/{material.unit}
+                              </div>
+                              {/* GRN Mapping Info */}
+                              {material.grnNumber && (
+                                <div className="mt-1 text-xs">
+                                  <span className="inline-flex items-center px-2 py-1 rounded-full bg-blue-100 text-blue-800 mr-2">
+                                    GRN: {material.grnNumber}
+                                  </span>
+                                  <span className={`inline-flex items-center px-2 py-1 rounded-full ${
+                                    material.materialSource === 'client_provided' 
+                                      ? 'bg-green-100 text-green-800' 
+                                      : 'bg-gray-100 text-gray-800'
+                                  }`}>
+                                    {material.materialSource === 'client_provided' ? 'Client Material' : 'Own Material'}
+                                  </span>
+                                  {material.clientInfo && (
+                                    <span className="inline-flex items-center px-2 py-1 rounded-full bg-purple-100 text-purple-800 ml-2">
+                                      Client: {material.clientInfo.clientName}
+                                    </span>
+                                  )}
+                                </div>
+                              )}
+                            </div>
+                            <div className="flex items-center space-x-2 flex-shrink-0">
+                              <Label htmlFor={`quantity-${material.itemId}`} className="text-sm whitespace-nowrap">Quantity:</Label>
+                              <Input
+                                id={`quantity-${material.itemId}`}
+                                type="number"
+                                min="0"
+                                max={inventoryItem?.stock.availableStock || 0}
+                                value={material.quantity}
+                                onChange={(e) => updateMaterialQuantity(material.itemId, parseFloat(e.target.value) || 0)}
+                                className="w-20"
+                              />
+                              <span className="text-sm text-gray-500 whitespace-nowrap">{material.unit}</span>
+                            </div>
+                            <div className="flex items-center space-x-1">
+                              {/* GRN Mapping Button */}
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleGRNMapping(selectedMaterials.indexOf(material))}
+                                className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                              >
+                                {material.grnNumber ? 'Change GRN' : 'Map GRN'}
+                              </Button>
+                              {/* Remove GRN Mapping */}
+                              {material.grnNumber && (
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => removeGRNMapping(selectedMaterials.indexOf(material))}
+                                  className="text-orange-600 hover:text-orange-700 hover:bg-orange-50"
+                                >
+                                  Remove GRN
+                                </Button>
+                              )}
+                              {/* Remove Material */}
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => removeMaterial(material.itemId)}
+                                className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                              >
+                                Remove
+                              </Button>
                             </div>
                           </div>
-                          <div className="flex items-center space-x-2 flex-shrink-0">
-                            <Label htmlFor={`quantity-${material.itemId}`} className="text-sm whitespace-nowrap">Quantity:</Label>
-                            <Input
-                              id={`quantity-${material.itemId}`}
-                              type="number"
-                              min="0"
-                              max={inventoryItem?.stock.availableStock || 0}
-                              value={material.quantity}
-                              onChange={(e) => updateMaterialQuantity(material.itemId, parseFloat(e.target.value) || 0)}
-                              className="w-20"
-                            />
-                            <span className="text-sm text-gray-500 whitespace-nowrap">{material.unit}</span>
-                          </div>
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => removeMaterial(material.itemId)}
-                            className="text-red-600 hover:text-red-700 hover:bg-red-50 flex-shrink-0"
-                          >
-                            Remove
-                          </Button>
                         </div>
                       );
                     })}
@@ -797,6 +905,90 @@ function CreateBatchPageContent() {
           </Button>
         </div>
       </form>
+
+      {/* GRN Mapping Modal */}
+      {showGRNMapping && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-2xl mx-4 max-h-[80vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold">Map Material to GRN</h3>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setShowGRNMapping(false);
+                  setSelectedMaterialForGRN(null);
+                }}
+              >
+                ×
+              </Button>
+            </div>
+            
+            <div className="space-y-4">
+              <p className="text-sm text-gray-600">
+                Select a GRN to map to the selected material. This will help track material source and client information.
+              </p>
+              
+              <div className="space-y-2">
+                <Label>Available GRNs</Label>
+                <div className="max-h-60 overflow-y-auto border rounded-md">
+                  {grnsLoading ? (
+                    <div className="p-4 text-center text-gray-500">Loading GRNs...</div>
+                  ) : grns.length === 0 ? (
+                    <div className="p-4 text-center text-gray-500">No GRNs available</div>
+                  ) : (
+                    grns.map((grn: any) => (
+                      <div
+                        key={grn._id}
+                        className="p-3 border-b hover:bg-gray-50 cursor-pointer"
+                        onClick={() => handleGRNSelection(
+                          grn._id,
+                          grn.grnNumber,
+                          grn.materialSource,
+                          grn.materialSource === 'client_provided' ? {
+                            clientId: grn.clientMaterialInfo?.clientId,
+                            clientName: grn.clientMaterialInfo?.clientName,
+                            clientOrderId: grn.clientMaterialInfo?.clientOrderId,
+                            clientOrderNumber: grn.clientMaterialInfo?.clientOrderNumber
+                          } : undefined
+                        )}
+                      >
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <div className="font-medium">{grn.grnNumber}</div>
+                            <div className="text-sm text-gray-500">
+                              {grn.fabricDetails?.fabricType} - {grn.fabricDetails?.color} | 
+                              {grn.quantity} {grn.unit}
+                            </div>
+                            <div className="text-xs">
+                              <span className={`inline-flex items-center px-2 py-1 rounded-full mr-2 ${
+                                grn.materialSource === 'client_provided' 
+                                  ? 'bg-green-100 text-green-800' 
+                                  : 'bg-gray-100 text-gray-800'
+                              }`}>
+                                {grn.materialSource === 'client_provided' ? 'Client Material' : 'Own Material'}
+                              </span>
+                              {grn.materialSource === 'client_provided' && grn.clientMaterialInfo?.clientName && (
+                                <span className="text-purple-600">
+                                  Client: {grn.clientMaterialInfo.clientName}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                          <div className="text-sm text-gray-500">
+                            {grn.status}
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

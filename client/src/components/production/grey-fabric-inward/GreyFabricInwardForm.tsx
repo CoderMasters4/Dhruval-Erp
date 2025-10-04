@@ -7,8 +7,8 @@ import { Input } from '@/components/ui/Input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { 
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import {
   useCreateGreyFabricInwardMutation,
   useUpdateGreyFabricInwardMutation,
   GreyFabricInward,
@@ -17,6 +17,7 @@ import {
 import { useGetAllCompaniesQuery } from '@/lib/features/companies/companiesApi';
 import { useGetPurchaseOrdersQuery } from '@/lib/api/purchaseOrdersApi';
 import { useGetWarehousesQuery } from '@/lib/api/warehousesApi';
+import { useGetCustomersQuery } from '@/lib/api/customersApi';
 import { useSelector } from 'react-redux';
 import { selectCurrentUser, selectIsSuperAdmin } from '@/lib/features/auth/authSlice';
 import { selectTheme } from '@/lib/features/ui/uiSlice';
@@ -36,7 +37,7 @@ export function GreyFabricInwardForm({ grn, onClose, onSuccess }: GreyFabricInwa
   const userCompanyId = (user as any)?.companyAccess?.[0]?.companyId;
 
   const [formData, setFormData] = useState<CreateGreyFabricInwardRequest>({
-    purchaseOrderId: '',
+    purchaseOrderId: 'none',
     companyId: userCompanyId || '',
     fabricType: 'cotton',
     fabricColor: '',
@@ -54,6 +55,24 @@ export function GreyFabricInwardForm({ grn, onClose, onSuccess }: GreyFabricInwa
       inspectionCost: 0
     },
     entryType: 'direct_stock_entry',
+    materialSource: 'own_material',
+    clientMaterialInfo: {
+      clientId: '',
+      clientName: '',
+      clientOrderId: '',
+      clientOrderNumber: '',
+      clientMaterialCode: '',
+      clientBatchNumber: '',
+      clientLotNumber: '',
+      clientProvidedDate: '',
+      clientInstructions: '',
+      clientQualitySpecs: '',
+      returnRequired: false,
+      returnDeadline: '',
+      clientContactPerson: '',
+      clientContactPhone: '',
+      clientContactEmail: ''
+    },
     greyStockLots: []
   });
 
@@ -79,6 +98,7 @@ export function GreyFabricInwardForm({ grn, onClose, onSuccess }: GreyFabricInwa
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [selectedPO, setSelectedPO] = useState<any>(null);
   const [selectedItemIndex, setSelectedItemIndex] = useState(0);
+  const [selectedClientId, setSelectedClientId] = useState('');
 
   // RTK Query hooks
   const [createGrn, { isLoading: isCreating }] = useCreateGreyFabricInwardMutation();
@@ -103,6 +123,15 @@ export function GreyFabricInwardForm({ grn, onClose, onSuccess }: GreyFabricInwa
     skip: !formData.companyId
   });
 
+  // Get customers for selected company (when material source is client_provided)
+  const { data: customersData, isLoading: customersLoading } = useGetCustomersQuery({
+    companyId: selectedCompanyId,
+    page: 1,
+    limit: 100
+  }, {
+    skip: !selectedCompanyId || formData.materialSource !== 'client_provided'
+  });
+
   // Reset lot warehouse selection and counter when company changes
   useEffect(() => {
     if (formData.companyId && newLot.warehouseId) {
@@ -119,17 +148,17 @@ export function GreyFabricInwardForm({ grn, onClose, onSuccess }: GreyFabricInwa
   const isEdit = !!grn;
   const isLoading = isCreating || isUpdating;
   const isFormDisabled = formData.entryType === 'purchase_order' && (
-    !purchaseOrders?.data?.length || 
-    !!ordersError || 
-    formData.purchaseOrderId === 'loading' || 
-    formData.purchaseOrderId === 'error' || 
+    !purchaseOrders?.data?.length ||
+    !!ordersError ||
+    formData.purchaseOrderId === 'loading' ||
+    formData.purchaseOrderId === 'error' ||
     formData.purchaseOrderId === 'no-data'
   );
 
   useEffect(() => {
     if (grn) {
       setFormData({
-        purchaseOrderId: grn.purchaseOrderId || '',
+        purchaseOrderId: grn.purchaseOrderId || 'none',
         companyId: grn.companyId || userCompanyId || '',
         entryType: grn.entryType || 'direct_stock_entry',
         fabricType: (grn.fabricType as 'cotton' | 'polyester' | 'viscose' | 'blend' | 'other') || 'cotton',
@@ -147,6 +176,24 @@ export function GreyFabricInwardForm({ grn, onClose, onSuccess }: GreyFabricInwa
           transportationCost: grn.costBreakdown?.transportationCost || 0,
           inspectionCost: grn.costBreakdown?.inspectionCost || 0
         },
+        materialSource: grn.materialSource || 'own_material',
+        clientMaterialInfo: grn.clientMaterialInfo || {
+          clientId: '',
+          clientName: '',
+          clientOrderId: '',
+          clientOrderNumber: '',
+          clientMaterialCode: '',
+          clientBatchNumber: '',
+          clientLotNumber: '',
+          clientProvidedDate: '',
+          clientInstructions: '',
+          clientQualitySpecs: '',
+          returnRequired: false,
+          returnDeadline: '',
+          clientContactPerson: '',
+          clientContactPhone: '',
+          clientContactEmail: ''
+        },
         greyStockLots: grn.greyStockLots || []
       });
     }
@@ -158,11 +205,11 @@ export function GreyFabricInwardForm({ grn, onClose, onSuccess }: GreyFabricInwa
       const selectedOrder = purchaseOrders.data.find(po => po._id === formData.purchaseOrderId);
       if (selectedOrder) {
         setSelectedPO(selectedOrder);
-        
+
         // Auto-populate form data from selected PO
         if (selectedOrder.items && selectedOrder.items.length > 0) {
           const selectedItem = selectedOrder.items[selectedItemIndex] || selectedOrder.items[0];
-          
+
           // Map item name to valid fabric type enum
           const mapToFabricType = (itemName: string): 'cotton' | 'polyester' | 'viscose' | 'blend' | 'other' => {
             const name = itemName.toLowerCase();
@@ -172,7 +219,7 @@ export function GreyFabricInwardForm({ grn, onClose, onSuccess }: GreyFabricInwa
             if (name.includes('blend')) return 'blend';
             return 'other';
           };
-          
+
           setFormData(prev => ({
             ...prev,
             fabricType: mapToFabricType(selectedItem.itemName || ''),
@@ -187,7 +234,7 @@ export function GreyFabricInwardForm({ grn, onClose, onSuccess }: GreyFabricInwa
             }
           }));
         }
-        
+
         // Auto-populate supplier info if available
         if (selectedOrder.supplier) {
           setFormData(prev => ({
@@ -203,7 +250,7 @@ export function GreyFabricInwardForm({ grn, onClose, onSuccess }: GreyFabricInwa
   useEffect(() => {
     if (selectedPO && selectedPO.items && selectedPO.items.length > 0) {
       const selectedItem = selectedPO.items[selectedItemIndex] || selectedPO.items[0];
-      
+
       // Map item name to valid fabric type enum
       const mapToFabricType = (itemName: string): 'cotton' | 'polyester' | 'viscose' | 'blend' | 'other' => {
         const name = itemName.toLowerCase();
@@ -213,7 +260,7 @@ export function GreyFabricInwardForm({ grn, onClose, onSuccess }: GreyFabricInwa
         if (name.includes('blend')) return 'blend';
         return 'other';
       };
-      
+
       setFormData(prev => ({
         ...prev,
         fabricType: mapToFabricType(selectedItem.itemName || ''),
@@ -229,6 +276,27 @@ export function GreyFabricInwardForm({ grn, onClose, onSuccess }: GreyFabricInwa
       }));
     }
   }, [selectedItemIndex, selectedPO]);
+
+  // Auto-populate client details when client is selected
+  useEffect(() => {
+    if (selectedClientId && customersData?.data) {
+      const selectedClient = customersData.data.find((client: any) => client._id === selectedClientId);
+      if (selectedClient) {
+        setFormData(prev => ({
+          ...prev,
+          clientMaterialInfo: {
+            ...prev.clientMaterialInfo,
+            clientId: selectedClient._id,
+            clientName: selectedClient.customerName,
+            clientContactPerson: selectedClient.contactInfo?.primaryPhone || '',
+            clientContactPhone: selectedClient.contactInfo?.primaryPhone || '',
+            clientContactEmail: selectedClient.contactInfo?.primaryEmail || '',
+            returnRequired: prev.clientMaterialInfo?.returnRequired || false
+          }
+        }));
+      }
+    }
+  }, [selectedClientId, customersData]);
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
@@ -246,9 +314,19 @@ export function GreyFabricInwardForm({ grn, onClose, onSuccess }: GreyFabricInwa
     console.log('Quality:', formData.quality);
 
     // Only require purchase order for purchase order entries
-    if (formData.entryType === 'purchase_order' && (!formData.purchaseOrderId || formData.purchaseOrderId === 'loading' || formData.purchaseOrderId === 'error' || formData.purchaseOrderId === 'no-data')) {
+    if (formData.entryType === 'purchase_order' && (!formData.purchaseOrderId || formData.purchaseOrderId === 'loading' || formData.purchaseOrderId === 'error' || formData.purchaseOrderId === 'no-data' || formData.purchaseOrderId === 'none')) {
       newErrors.purchaseOrderId = 'Purchase Order is required';
       console.log('❌ Purchase Order validation failed');
+    }
+
+    // Validate client material info when material source is client_provided
+    if (formData.materialSource === 'client_provided') {
+      if (!formData.clientMaterialInfo?.clientId) {
+        newErrors.clientId = 'Client selection is required for client-provided material';
+      }
+      if (!formData.clientMaterialInfo?.clientName) {
+        newErrors.clientName = 'Client name is required for client-provided material';
+      }
     }
     if (!formData.companyId) {
       newErrors.companyId = 'Company is required';
@@ -273,18 +351,18 @@ export function GreyFabricInwardForm({ grn, onClose, onSuccess }: GreyFabricInwa
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     console.log('=== FORM SUBMISSION DEBUG ===');
     console.log('Form data:', formData);
     console.log('Entry type:', formData.entryType);
     console.log('Grey stock lots:', formData.greyStockLots);
     console.log('Company ID:', formData.companyId);
     console.log('Purchase Order ID:', formData.purchaseOrderId);
-    
+
     const isValid = validateForm();
     console.log('Form validation result:', isValid);
     console.log('Current errors:', errors);
-    
+
     if (!isValid) {
       console.log('Form validation failed, stopping submission');
       alert(`Form validation failed! Please check the following fields:\n${Object.keys(errors).join(', ')}`);
@@ -299,10 +377,16 @@ export function GreyFabricInwardForm({ grn, onClose, onSuccess }: GreyFabricInwa
       }
 
       // Check if valid IDs are selected (not special values)
-      if (formData.purchaseOrderId === 'loading' || formData.purchaseOrderId === 'error' || formData.purchaseOrderId === 'no-data') {
+      if (formData.purchaseOrderId === 'loading' || formData.purchaseOrderId === 'error' || formData.purchaseOrderId === 'no-data' || formData.purchaseOrderId === 'none') {
         alert('Please select a valid purchase order.');
         return;
       }
+    }
+
+    // For client-provided materials, ensure client is selected
+    if (formData.materialSource === 'client_provided' && !formData.clientMaterialInfo?.clientId) {
+      alert('Please select a client for client-provided material.');
+      return;
     }
 
     // For direct stock entry, check if lots are added
@@ -311,12 +395,18 @@ export function GreyFabricInwardForm({ grn, onClose, onSuccess }: GreyFabricInwa
       return;
     }
 
-    // Use actual form data
-    console.log('Using form data:', formData);
+    // Prepare form data for submission
+    const submissionData = {
+      ...formData,
+      // Convert "none" to undefined for purchase order
+      purchaseOrderId: formData.purchaseOrderId === 'none' ? undefined : formData.purchaseOrderId
+    };
+
+    console.log('Using form data:', submissionData);
 
     try {
       // Debug: Log the data being sent
-      console.log('Form data being sent:', formData);
+      console.log('Form data being sent:', submissionData);
       console.log('Is Edit:', isEdit);
       console.log('GRN exists:', !!grn);
       
@@ -324,12 +414,12 @@ export function GreyFabricInwardForm({ grn, onClose, onSuccess }: GreyFabricInwa
         console.log('Updating GRN with ID:', grn._id);
         await updateGrn({
           id: grn._id,
-          data: formData
+          data: submissionData
         }).unwrap();
       } else {
         console.log('Creating new GRN...');
         // Use actual form data
-        const result = await createGrn(formData).unwrap();
+        const result = await createGrn(submissionData).unwrap();
         console.log('GRN created successfully:', result);
       }
       console.log('GRN operation completed successfully');
@@ -338,10 +428,10 @@ export function GreyFabricInwardForm({ grn, onClose, onSuccess }: GreyFabricInwa
       console.error('=== API ERROR ===');
       console.error('Error saving GRN:', error);
       console.error('Error details:', error?.data || error?.message || error);
-      
+
       // Better error handling
       let errorMessage = 'Error saving GRN. Please try again.';
-      
+
       if (error?.data?.message) {
         errorMessage = error.data.message;
       } else if (error?.message) {
@@ -355,7 +445,7 @@ export function GreyFabricInwardForm({ grn, onClose, onSuccess }: GreyFabricInwa
       } else if (error?.status === 500) {
         errorMessage = 'Server error. Please try again later.';
       }
-      
+
       alert(errorMessage);
       console.log('Error alert shown to user');
     }
@@ -366,7 +456,7 @@ export function GreyFabricInwardForm({ grn, onClose, onSuccess }: GreyFabricInwa
       ...prev,
       [field]: value
     }));
-    
+
     // Clear error when user starts typing
     if (errors[field]) {
       setErrors(prev => ({
@@ -383,7 +473,7 @@ export function GreyFabricInwardForm({ grn, onClose, onSuccess }: GreyFabricInwa
     const month = (date.getMonth() + 1).toString().padStart(2, '0');
     const day = date.getDate().toString().padStart(2, '0');
     const counter = lotCounter.toString().padStart(3, '0');
-    
+
     return `LOT-${year}${month}${day}-${counter}`;
   };
 
@@ -447,9 +537,9 @@ export function GreyFabricInwardForm({ grn, onClose, onSuccess }: GreyFabricInwa
     }));
   };
 
-  const totalCost = (formData.costBreakdown?.fabricCost || 0) + 
-                   (formData.costBreakdown?.transportationCost || 0) + 
-                   (formData.costBreakdown?.inspectionCost || 0);
+  const totalCost = (formData.costBreakdown?.fabricCost || 0) +
+    (formData.costBreakdown?.transportationCost || 0) +
+    (formData.costBreakdown?.inspectionCost || 0);
 
   return (
     <Dialog open={true} onOpenChange={onClose}>
@@ -532,7 +622,7 @@ export function GreyFabricInwardForm({ grn, onClose, onSuccess }: GreyFabricInwa
                         setFormData(prev => ({ 
                           ...prev, 
                           companyId: value, 
-                          purchaseOrderId: '',
+                          purchaseOrderId: 'none',
                           greyStockLots: [] // Reset lots when company changes
                         }));
                       }}
@@ -555,16 +645,17 @@ export function GreyFabricInwardForm({ grn, onClose, onSuccess }: GreyFabricInwa
                 )}
 
                 <div>
-                  <Label htmlFor="purchaseOrderId">Purchase Order *</Label>
+                  <Label htmlFor="purchaseOrderId">Purchase Order {formData.entryType === 'purchase_order' ? '*' : '(Optional)'}</Label>
                   <Select
                     value={formData.purchaseOrderId}
                     onValueChange={(value) => handleInputChange('purchaseOrderId', value)}
                     disabled={ordersLoading || !selectedCompanyId}
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder={ordersLoading ? "Loading..." : !selectedCompanyId ? "Select Company First" : "Select Purchase Order"} />
+                      <SelectValue placeholder={ordersLoading ? "Loading..." : !selectedCompanyId ? "Select Company First" : "Select Purchase Order (Optional)"} />
                     </SelectTrigger>
                     <SelectContent className="bg-white border border-gray-200 shadow-lg z-50">
+                      <SelectItem value="none" className="bg-white hover:bg-gray-50">No Purchase Order</SelectItem>
                       {ordersLoading ? (
                         <SelectItem value="loading" disabled className="bg-white hover:bg-gray-50">Loading purchase orders...</SelectItem>
                       ) : ordersError ? (
@@ -619,7 +710,7 @@ export function GreyFabricInwardForm({ grn, onClose, onSuccess }: GreyFabricInwa
                     <p className="text-sm text-gray-900 dark:text-gray-100">{selectedPO.items?.length || 0}</p>
                   </div>
                 </div>
-                
+
                 {/* PO Items Preview */}
                 {selectedPO.items && selectedPO.items.length > 0 && (
                   <div className="mt-4">
@@ -945,12 +1036,12 @@ export function GreyFabricInwardForm({ grn, onClose, onSuccess }: GreyFabricInwa
                       </div>
                       <div>
                         <Label htmlFor="warehouseId">Warehouse *</Label>
-                        <Select 
-                          value={newLot.warehouseId} 
+                        <Select
+                          value={newLot.warehouseId}
                           onValueChange={(value) => {
                             const selectedWarehouse = warehousesData?.data?.find((w: any) => w._id === value);
-                            setNewLot(prev => ({ 
-                              ...prev, 
+                            setNewLot(prev => ({
+                              ...prev,
                               warehouseId: value,
                               warehouseName: selectedWarehouse?.warehouseName || ''
                             }));
@@ -1000,6 +1091,251 @@ export function GreyFabricInwardForm({ grn, onClose, onSuccess }: GreyFabricInwa
               </CardContent>
             </Card>
           )}
+
+          {/* Material Source Selection */}
+          <Card className="border-0 shadow-lg bg-gradient-to-r from-purple-50 to-pink-50 dark:from-gray-700 dark:to-gray-600">
+            <CardHeader className="pb-4">
+              <CardTitle className="flex items-center gap-2 text-lg font-semibold text-gray-800 dark:text-gray-200">
+                <div className="w-6 h-6 bg-purple-500 dark:bg-purple-600 rounded-full flex items-center justify-center text-white text-sm">3</div>
+                Material Source
+              </CardTitle>
+              <CardDescription className="text-gray-600 dark:text-gray-400">
+                Select whether this is your own material or client-provided material
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label className="text-gray-700 dark:text-gray-300 font-medium">Material Source *</Label>
+                <Select
+                  value={formData.materialSource}
+                  onValueChange={(value) => handleInputChange('materialSource', value)}
+                >
+                  <SelectTrigger className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-600 text-gray-900 dark:text-gray-100 hover:border-gray-300 dark:hover:border-gray-500 transition-colors">
+                    <SelectValue placeholder="Select material source" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 shadow-lg z-50">
+                    <SelectItem value="own_material" className="bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-900 dark:text-gray-100">Own Material</SelectItem>
+                    <SelectItem value="client_provided" className="bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-900 dark:text-gray-100">Client Provided Material</SelectItem>
+                    <SelectItem value="job_work_material" className="bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-900 dark:text-gray-100">Job Work Material</SelectItem>
+                  </SelectContent>
+                </Select>
+                {errors.materialSource && (
+                  <p className="text-sm text-red-600 dark:text-red-400 mt-1">{errors.materialSource}</p>
+                )}
+              </div>
+
+              {/* Client Material Information - Show only when client_provided is selected */}
+              {formData.materialSource === 'client_provided' && (
+                <div className="space-y-4 p-4 border rounded-lg bg-blue-50 dark:bg-blue-900/20">
+                  <h4 className="font-medium text-blue-900 dark:text-blue-100">Client Material Information</h4>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="clientId" className="text-gray-700 dark:text-gray-300 font-medium">Select Client *</Label>
+                      <Select
+                        value={selectedClientId}
+                        onValueChange={(value) => {
+                          setSelectedClientId(value);
+                          if (value === 'none') {
+                            setFormData(prev => ({
+                              ...prev,
+                              clientMaterialInfo: {
+                                ...prev.clientMaterialInfo,
+                                clientId: '',
+                                clientName: '',
+                                clientContactPerson: '',
+                                clientContactPhone: '',
+                                clientContactEmail: '',
+                                returnRequired: prev.clientMaterialInfo?.returnRequired || false
+                              }
+                            }));
+                          }
+                        }}
+                        disabled={customersLoading || !selectedCompanyId}
+                      >
+                        <SelectTrigger className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-600 text-gray-900 dark:text-gray-100">
+                          <SelectValue placeholder={customersLoading ? "Loading..." : !selectedCompanyId ? "Select Company First" : "Select Client"} />
+                        </SelectTrigger>
+                        <SelectContent className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 shadow-lg z-50">
+                          {customersLoading ? (
+                            <SelectItem value="loading" disabled className="bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700">Loading clients...</SelectItem>
+                          ) : customersData?.data && customersData.data.length > 0 ? (
+                            customersData.data.map((client: any) => (
+                              <SelectItem key={client._id} value={client._id} className="bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-900 dark:text-gray-100">
+                                {client.customerName} - {client.contactInfo?.primaryPhone || 'No Phone'}
+                              </SelectItem>
+                            ))
+                          ) : (
+                            <SelectItem value="no-data" disabled className="bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700">No clients found</SelectItem>
+                          )}
+                        </SelectContent>
+                      </Select>
+                      {errors.clientId && (
+                        <p className="text-sm text-red-600 dark:text-red-400 mt-1">{errors.clientId}</p>
+                      )}
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="clientName" className="text-gray-700 dark:text-gray-300 font-medium">Client Name *</Label>
+                      <Input
+                        id="clientName"
+                        value={formData.clientMaterialInfo?.clientName || ''}
+                        onChange={(e) => handleInputChange('clientMaterialInfo.clientName', e.target.value)}
+                        placeholder="Auto-populated from selection"
+                        className="bg-gray-100 dark:bg-gray-700 border-gray-200 dark:border-gray-600 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
+                        readOnly
+                      />
+                      {errors.clientName && (
+                        <p className="text-sm text-red-600 dark:text-red-400 mt-1">{errors.clientName}</p>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="clientOrderId" className="text-gray-700 dark:text-gray-300 font-medium">Client Order ID</Label>
+                      <Input
+                        id="clientOrderId"
+                        value={formData.clientMaterialInfo?.clientOrderId || ''}
+                        onChange={(e) => handleInputChange('clientMaterialInfo.clientOrderId', e.target.value)}
+                        placeholder="Optional"
+                        className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-600 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:border-blue-500 dark:focus:border-blue-400"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="clientOrderNumber" className="text-gray-700 dark:text-gray-300 font-medium">Client Order Number</Label>
+                      <Input
+                        id="clientOrderNumber"
+                        value={formData.clientMaterialInfo?.clientOrderNumber || ''}
+                        onChange={(e) => handleInputChange('clientMaterialInfo.clientOrderNumber', e.target.value)}
+                        placeholder="Optional"
+                        className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-600 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:border-blue-500 dark:focus:border-blue-400"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="clientMaterialCode" className="text-gray-700 dark:text-gray-300 font-medium">Client Material Code</Label>
+                      <Input
+                        id="clientMaterialCode"
+                        value={formData.clientMaterialInfo?.clientMaterialCode || ''}
+                        onChange={(e) => handleInputChange('clientMaterialInfo.clientMaterialCode', e.target.value)}
+                        placeholder="Optional"
+                        className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-600 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:border-blue-500 dark:focus:border-blue-400"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="clientBatchNumber" className="text-gray-700 dark:text-gray-300 font-medium">Client Batch Number</Label>
+                      <Input
+                        id="clientBatchNumber"
+                        value={formData.clientMaterialInfo?.clientBatchNumber || ''}
+                        onChange={(e) => handleInputChange('clientMaterialInfo.clientBatchNumber', e.target.value)}
+                        placeholder="Optional"
+                        className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-600 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:border-blue-500 dark:focus:border-blue-400"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="clientProvidedDate" className="text-gray-700 dark:text-gray-300 font-medium">Client Provided Date</Label>
+                    <Input
+                      id="clientProvidedDate"
+                      type="date"
+                      value={formData.clientMaterialInfo?.clientProvidedDate || ''}
+                      onChange={(e) => handleInputChange('clientMaterialInfo.clientProvidedDate', e.target.value)}
+                      className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-600 text-gray-900 dark:text-gray-100 focus:border-blue-500 dark:focus:border-blue-400"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="clientInstructions" className="text-gray-700 dark:text-gray-300 font-medium">Client Instructions</Label>
+                    <Textarea
+                      id="clientInstructions"
+                      value={formData.clientMaterialInfo?.clientInstructions || ''}
+                      onChange={(e) => handleInputChange('clientMaterialInfo.clientInstructions', e.target.value)}
+                      placeholder="Any special instructions from client"
+                      rows={3}
+                      className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-600 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:border-blue-500 dark:focus:border-blue-400"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="clientQualitySpecs" className="text-gray-700 dark:text-gray-300 font-medium">Client Quality Specifications</Label>
+                    <Textarea
+                      id="clientQualitySpecs"
+                      value={formData.clientMaterialInfo?.clientQualitySpecs || ''}
+                      onChange={(e) => handleInputChange('clientMaterialInfo.clientQualitySpecs', e.target.value)}
+                      placeholder="Quality requirements from client"
+                      rows={3}
+                      className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-600 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:border-blue-500 dark:focus:border-blue-400"
+                    />
+                  </div>
+
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="checkbox"
+                      id="returnRequired"
+                      checked={formData.clientMaterialInfo?.returnRequired || false}
+                      onChange={(e) => handleInputChange('clientMaterialInfo.returnRequired', e.target.checked)}
+                      className="rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500 dark:focus:ring-blue-400"
+                    />
+                    <Label htmlFor="returnRequired" className="text-gray-700 dark:text-gray-300 font-medium">Return Required</Label>
+                  </div>
+
+                  {formData.clientMaterialInfo?.returnRequired && (
+                    <div className="space-y-2">
+                      <Label htmlFor="returnDeadline" className="text-gray-700 dark:text-gray-300 font-medium">Return Deadline</Label>
+                      <Input
+                        id="returnDeadline"
+                        type="date"
+                        value={formData.clientMaterialInfo?.returnDeadline || ''}
+                        onChange={(e) => handleInputChange('clientMaterialInfo.returnDeadline', e.target.value)}
+                        className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-600 text-gray-900 dark:text-gray-100 focus:border-blue-500 dark:focus:border-blue-400"
+                      />
+                    </div>
+                  )}
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="clientContactPerson" className="text-gray-700 dark:text-gray-300 font-medium">Contact Person</Label>
+                      <Input
+                        id="clientContactPerson"
+                        value={formData.clientMaterialInfo?.clientContactPerson || ''}
+                        onChange={(e) => handleInputChange('clientMaterialInfo.clientContactPerson', e.target.value)}
+                        placeholder="Auto-populated from client selection"
+                        className="bg-gray-100 dark:bg-gray-700 border-gray-200 dark:border-gray-600 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
+                        readOnly
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="clientContactPhone" className="text-gray-700 dark:text-gray-300 font-medium">Contact Phone</Label>
+                      <Input
+                        id="clientContactPhone"
+                        value={formData.clientMaterialInfo?.clientContactPhone || ''}
+                        onChange={(e) => handleInputChange('clientMaterialInfo.clientContactPhone', e.target.value)}
+                        placeholder="Auto-populated from client selection"
+                        className="bg-gray-100 dark:bg-gray-700 border-gray-200 dark:border-gray-600 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
+                        readOnly
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="clientContactEmail" className="text-gray-700 dark:text-gray-300 font-medium">Contact Email</Label>
+                    <Input
+                      id="clientContactEmail"
+                      type="email"
+                      value={formData.clientMaterialInfo?.clientContactEmail || ''}
+                      onChange={(e) => handleInputChange('clientMaterialInfo.clientContactEmail', e.target.value)}
+                      placeholder="Auto-populated from client selection"
+                      className="bg-gray-100 dark:bg-gray-700 border-gray-200 dark:border-gray-600 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
+                      readOnly
+                    />
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
 
           {/* Cost Breakdown */}
           <Card className="border-0 shadow-lg bg-gradient-to-r from-purple-50 to-pink-50 dark:from-gray-700 dark:to-gray-600">
@@ -1070,17 +1406,17 @@ export function GreyFabricInwardForm({ grn, onClose, onSuccess }: GreyFabricInwa
 
           {/* Enhanced Actions */}
           <div className="flex justify-end gap-4 pt-6 border-t border-gray-200 dark:border-gray-700">
-            <Button 
-              type="button" 
-              variant="outline" 
+            <Button
+              type="button"
+              variant="outline"
               onClick={onClose}
               className="px-6 py-2 hover:bg-gray-50 dark:hover:bg-gray-700 border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300 transition-all duration-200"
             >
               <X className="h-4 w-4 mr-2" />
               Cancel
             </Button>
-            <Button 
-              type="submit" 
+            <Button
+              type="submit"
               disabled={isLoading || isFormDisabled}
               className="px-8 py-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 dark:from-blue-700 dark:to-purple-700 dark:hover:from-blue-800 dark:hover:to-purple-800 text-white shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50"
             >

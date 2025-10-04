@@ -40,16 +40,37 @@ export class UserService extends BaseService<IUser> {
       // Validate user data
       await this.validateUserData(userData);
 
+      // Normalize phone (trim spaces)
+      // Normalize phone similar to model pre-save (keep leading + and digits only)
+      let phone = userData.personalInfo?.phone
+      if (phone) {
+        const raw = phone.toString()
+        phone = raw
+          .replace(/\s+/g, '')
+          .replace(/(?!^)[^\d]/g, '')
+          .replace(/^\+?(.*)$/,(m, g1)=> (raw.startsWith('+') ? '+' : '') + g1)
+      }
+
       // Check if username already exists
       const existingUsername = await this.findOne({ username: userData.username });
       if (existingUsername) {
         throw new AppError('Username already exists', 400);
       }
 
-      // Check if email already exists
-      const existingEmail = await this.findOne({ email: userData.email });
-      if (existingEmail) {
-        throw new AppError('Email already exists', 400);
+      // Check if email already exists (when provided)
+      if (userData.email) {
+        const existingEmail = await this.findOne({ email: userData.email.toLowerCase() });
+        if (existingEmail) {
+          throw new AppError('Email already exists', 400);
+        }
+      }
+
+      // Check if phone already exists (unique)
+      if (phone) {
+        const existingPhone = await this.findOne({ 'personalInfo.phone': phone });
+        if (existingPhone) {
+          throw new AppError('Phone already exists', 400);
+        }
       }
 
       // Note: Password hashing is handled by the User model's pre-save hook
@@ -63,6 +84,10 @@ export class UserService extends BaseService<IUser> {
       // Set default values
       const userToCreate = {
         ...userData,
+        personalInfo: {
+          ...userData.personalInfo,
+          phone: phone || userData.personalInfo?.phone
+        },
         isActive: true,
         isSuperAdmin: userData.isSuperAdmin || false,
         security: {
@@ -170,7 +195,24 @@ export class UserService extends BaseService<IUser> {
         }
       }
 
-      const user = await this.create(userToCreate, createdBy);
+      let user: any
+      try {
+        user = await this.create(userToCreate, createdBy);
+      } catch (err: any) {
+        // Handle duplicate key error from DB (race conditions)
+        if (err && err.code === 11000) {
+          if (err.message?.includes('personalInfo.phone')) {
+            throw new AppError('Phone already exists', 400);
+          }
+          if (err.message?.includes('username')) {
+            throw new AppError('Username already exists', 400);
+          }
+          if (err.message?.includes('email')) {
+            throw new AppError('Email already exists', 400);
+          }
+        }
+        throw err
+      }
 
       logger.info('User created successfully', { 
         userId: user._id, 

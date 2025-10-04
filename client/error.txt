@@ -1,341 +1,149 @@
-rajat@Mac client % pnpm error
+pnpm er
+ror
 
 > client@0.1.0 error /Users/rajat/Downloads/projects/erp/client
 > npx tsc --noEmit --skipLibCheck
 
 npm warn Unknown env config "verify-deps-before-run". This will stop working in the next major version of npm.
 npm warn Unknown env config "_jsr-registry". This will stop working in the next major version of npm.
-src/components/customers/modals/CustomerDetailsModal.tsx:177:41 - error TS2339: Property 'website' does not exist on type '{ primaryEmail?: string | undefined; primaryPhone?: string | undefined; }'.
+src/app/production/batches/create/page.tsx:69:5 - error TS2353: Object literal may only specify known properties, and 'companyId' does not exist in type '{ page?: number | undefined; limit?: number | undefined; filters?: GreyFabricInwardFilters | undefined; }'.
 
-177                 {(customer.contactInfo?.website || customer.website) && (
-                                            ~~~~~~~
+69     companyId: selectedCompanyId,
+       ~~~~~~~~~
 
-src/components/customers/modals/CustomerDetailsModal.tsx:183:53 - error TS2339: Property 'website' does not exist on type '{ primaryEmail?: string | undefined; primaryPhone?: string | undefined; }'.
+src/app/production/batches/create/page.tsx:72:32 - error TS2339: Property 'data' does not exist on type 'GreyFabricInward[]'.
 
-183                         href={customer.contactInfo?.website || customer.website}
-                                                        ~~~~~~~
+72   const grns = grnsData?.data?.data || [];
+                                  ~~~~
 
-src/components/customers/modals/CustomerDetailsModal.tsx:188:48 - error TS2339: Property 'website' does not exist on type '{ primaryEmail?: string | undefined; primaryPhone?: string | undefined; }'.
+src/app/production/batches/create/page.tsx:160:28 - error TS2345: Argument of type '(prev: { itemId: string; itemName: string; quantity: number; unit: string; unitCost: number; grnId?: string | undefined; grnNumber?: string | undefined; materialSource?: "own_material" | "client_provided" | "job_work_material" | undefined; clientInfo?: { ...; } | undefined; }[]) => ({ ...; } | { ...; })[]' is not assignable to parameter of type 'SetStateAction<{ itemId: string; itemName: string; quantity: number; unit: string; unitCost: number; grnId?: string | undefined; grnNumber?: string | undefined; materialSource?: "own_material" | "client_provided" | "job_work_material" | undefined; clientInfo?: { ...; } | undefined; }[]>'.
+  Type '(prev: { itemId: string; itemName: string; quantity: number; unit: string; unitCost: number; grnId?: string | undefined; grnNumber?: string | undefined; materialSource?: "own_material" | "client_provided" | "job_work_material" | undefined; clientInfo?: { ...; } | undefined; }[]) => ({ ...; } | { ...; })[]' is not assignable to type '(prevState: { itemId: string; itemName: string; quantity: number; unit: string; unitCost: number; grnId?: string | undefined; grnNumber?: string | undefined; materialSource?: "own_material" | "client_provided" | "job_work_material" | undefined; clientInfo?: { ...; } | undefined; }[]) => { ...; }[]'.
+    Type '({ itemId: string; itemName: string; quantity: number; unit: string; unitCost: number; grnId?: string | undefined; grnNumber?: string | undefined; materialSource?: "own_material" | "client_provided" | "job_work_material" | undefined; clientInfo?: { ...; } | undefined; } | { ...; })[]' is not assignable to type '{ itemId: string; itemName: string; quantity: number; unit: string; unitCost: number; grnId?: string | undefined; grnNumber?: string | undefined; materialSource?: "own_material" | "client_provided" | "job_work_material" | undefined; clientInfo?: { ...; } | undefined; }[]'.
+      Type '{ itemId: string; itemName: string; quantity: number; unit: string; unitCost: number; grnId?: string | undefined; grnNumber?: string | undefined; materialSource?: "own_material" | "client_provided" | "job_work_material" | undefined; clientInfo?: { ...; } | undefined; } | { ...; }' is not assignable to type '{ itemId: string; itemName: string; quantity: number; unit: string; unitCost: number; grnId?: string | undefined; grnNumber?: string | undefined; materialSource?: "own_material" | "client_provided" | "job_work_material" | undefined; clientInfo?: { ...; } | undefined; }'.
+        Type '{ grnId: string; grnNumber: string; materialSource: string; clientInfo: any; itemId: string; itemName: string; quantity: number; unit: string; unitCost: number; }' is not assignable to type '{ itemId: string; itemName: string; quantity: number; unit: string; unitCost: number; grnId?: string | undefined; grnNumber?: string | undefined; materialSource?: "own_material" | "client_provided" | "job_work_material" | undefined; clientInfo?: { ...; } | undefined; }'.
+          Types of property 'materialSource' are incompatible.
+            Type 'string' is not assignable to type '"own_material" | "client_provided" | "job_work_material" | undefined'.
 
-188                         {customer.contactInfo?.website || customer.website}
-                                                   ~~~~~~~
+160       setSelectedMaterials(prev => prev.map((material, index) =>
+                               ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+161         index === selectedMaterialForGRN
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+... 
+169           : material
+    ~~~~~~~~~~~~~~~~~~~~
+170       ));
+    ~~~~~~~
 
-src/components/customers/modals/CustomerDetailsModal.tsx:197:44 - error TS2551: Property 'addresses' does not exist on type 'Customer'. Did you mean 'address'?
+src/app/production/batches/create/page.tsx:939:31 - error TS7006: Parameter 'grn' implicitly has an 'any' type.
 
-197             {(customer.address || customer.addresses?.length) && (
-                                               ~~~~~~~~~
+939                     grns.map((grn) => (
+                                  ~~~
 
-  src/lib/features/customers/customersApi.ts:17:3
-    17   address: {
-         ~~~~~~~
-    'address' is declared here.
+src/components/production/grey-fabric-inward/GreyFabricInwardForm.tsx:57:5 - error TS2353: Object literal may only specify known properties, and 'materialSource' does not exist in type 'CreateGreyFabricInwardRequest | (() => CreateGreyFabricInwardRequest)'.
 
-src/components/customers/modals/CustomerDetailsModal.tsx:208:62 - error TS2551: Property 'addresses' does not exist on type 'Customer'. Did you mean 'address'?
+57     materialSource: 'own_material',
+       ~~~~~~~~~~~~~~
 
-208                       {(customer.address?.street || customer.addresses?.[0]?.street) && <p>{customer.address?.street || customer.addresses?.[0]?.street}</p>}
-                                                                 ~~~~~~~~~
+src/components/production/grey-fabric-inward/GreyFabricInwardForm.tsx:1029:16 - error TS2304: Cannot find name 'CardDescription'.
 
-  src/lib/features/customers/customersApi.ts:17:3
-    17   address: {
-         ~~~~~~~
-    'address' is declared here.
+1029               <CardDescription className="text-gray-600 dark:text-gray-400">
+                    ~~~~~~~~~~~~~~~
 
-src/components/customers/modals/CustomerDetailsModal.tsx:208:130 - error TS2551: Property 'addresses' does not exist on type 'Customer'. Did you mean 'address'?
+src/components/production/grey-fabric-inward/GreyFabricInwardForm.tsx:1031:17 - error TS2304: Cannot find name 'CardDescription'.
 
-208                       {(customer.address?.street || customer.addresses?.[0]?.street) && <p>{customer.address?.street || customer.addresses?.[0]?.street}</p>}
-                                                                                                                                     ~~~~~~~~~
+1031               </CardDescription>
+                     ~~~~~~~~~~~~~~~
 
-  src/lib/features/customers/customersApi.ts:17:3
-    17   address: {
-         ~~~~~~~
-    'address' is declared here.
+src/components/production/grey-fabric-inward/GreyFabricInwardForm.tsx:1037:35 - error TS2339: Property 'materialSource' does not exist on type 'CreateGreyFabricInwardRequest'.
 
-src/components/customers/modals/CustomerDetailsModal.tsx:210:62 - error TS2551: Property 'addresses' does not exist on type 'Customer'. Did you mean 'address'?
+1037                   value={formData.materialSource}
+                                       ~~~~~~~~~~~~~~
 
-210                         {[customer.address?.city || customer.addresses?.[0]?.city, customer.address?.state || customer.addresses?.[0]?.state].filter(Boolean).join(', ')}
-                                                                 ~~~~~~~~~
+src/components/production/grey-fabric-inward/GreyFabricInwardForm.tsx:1055:25 - error TS2339: Property 'materialSource' does not exist on type 'CreateGreyFabricInwardRequest'.
 
-  src/lib/features/customers/customersApi.ts:17:3
-    17   address: {
-         ~~~~~~~
-    'address' is declared here.
+1055               {formData.materialSource === 'client_provided' && (
+                             ~~~~~~~~~~~~~~
 
-src/components/customers/modals/CustomerDetailsModal.tsx:210:120 - error TS2551: Property 'addresses' does not exist on type 'Customer'. Did you mean 'address'?
+src/components/production/grey-fabric-inward/GreyFabricInwardForm.tsx:1064:41 - error TS2339: Property 'clientMaterialInfo' does not exist on type 'CreateGreyFabricInwardRequest'.
 
-210                         {[customer.address?.city || customer.addresses?.[0]?.city, customer.address?.state || customer.addresses?.[0]?.state].filter(Boolean).join(', ')}
-                                                                                                                           ~~~~~~~~~
+1064                         value={formData.clientMaterialInfo.clientId}
+                                             ~~~~~~~~~~~~~~~~~~
 
-  src/lib/features/customers/customersApi.ts:17:3
-    17   address: {
-         ~~~~~~~
-    'address' is declared here.
+src/components/production/grey-fabric-inward/GreyFabricInwardForm.tsx:1077:41 - error TS2339: Property 'clientMaterialInfo' does not exist on type 'CreateGreyFabricInwardRequest'.
 
-src/components/customers/modals/CustomerDetailsModal.tsx:211:65 - error TS2551: Property 'addresses' does not exist on type 'Customer'. Did you mean 'address'?
+1077                         value={formData.clientMaterialInfo.clientName}
+                                             ~~~~~~~~~~~~~~~~~~
 
-211                         {(customer.address?.zipCode || customer.addresses?.[0]?.zipCode) && ` - ${customer.address?.zipCode || customer.addresses?.[0]?.zipCode}`}
-                                                                    ~~~~~~~~~
+src/components/production/grey-fabric-inward/GreyFabricInwardForm.tsx:1093:41 - error TS2339: Property 'clientMaterialInfo' does not exist on type 'CreateGreyFabricInwardRequest'.
 
-  src/lib/features/customers/customersApi.ts:17:3
-    17   address: {
-         ~~~~~~~
-    'address' is declared here.
+1093                         value={formData.clientMaterialInfo.clientOrderId}
+                                             ~~~~~~~~~~~~~~~~~~
 
-src/components/customers/modals/CustomerDetailsModal.tsx:211:137 - error TS2551: Property 'addresses' does not exist on type 'Customer'. Did you mean 'address'?
+src/components/production/grey-fabric-inward/GreyFabricInwardForm.tsx:1103:41 - error TS2339: Property 'clientMaterialInfo' does not exist on type 'CreateGreyFabricInwardRequest'.
 
-211                         {(customer.address?.zipCode || customer.addresses?.[0]?.zipCode) && ` - ${customer.address?.zipCode || customer.addresses?.[0]?.zipCode}`}
-                                                                                                                                            ~~~~~~~~~
+1103                         value={formData.clientMaterialInfo.clientOrderNumber}
+                                             ~~~~~~~~~~~~~~~~~~
 
-  src/lib/features/customers/customersApi.ts:17:3
-    17   address: {
-         ~~~~~~~
-    'address' is declared here.
+src/components/production/grey-fabric-inward/GreyFabricInwardForm.tsx:1116:41 - error TS2339: Property 'clientMaterialInfo' does not exist on type 'CreateGreyFabricInwardRequest'.
 
-src/components/customers/modals/CustomerDetailsModal.tsx:213:63 - error TS2551: Property 'addresses' does not exist on type 'Customer'. Did you mean 'address'?
+1116                         value={formData.clientMaterialInfo.clientMaterialCode}
+                                             ~~~~~~~~~~~~~~~~~~
 
-213                       {(customer.address?.country || customer.addresses?.[0]?.country) && <p>{customer.address?.country || customer.addresses?.[0]?.country}</p>}
-                                                                  ~~~~~~~~~
+src/components/production/grey-fabric-inward/GreyFabricInwardForm.tsx:1126:41 - error TS2339: Property 'clientMaterialInfo' does not exist on type 'CreateGreyFabricInwardRequest'.
 
-  src/lib/features/customers/customersApi.ts:17:3
-    17   address: {
-         ~~~~~~~
-    'address' is declared here.
+1126                         value={formData.clientMaterialInfo.clientBatchNumber}
+                                             ~~~~~~~~~~~~~~~~~~
 
-src/components/customers/modals/CustomerDetailsModal.tsx:213:133 - error TS2551: Property 'addresses' does not exist on type 'Customer'. Did you mean 'address'?
+src/components/production/grey-fabric-inward/GreyFabricInwardForm.tsx:1139:39 - error TS2339: Property 'clientMaterialInfo' does not exist on type 'CreateGreyFabricInwardRequest'.
 
-213                       {(customer.address?.country || customer.addresses?.[0]?.country) && <p>{customer.address?.country || customer.addresses?.[0]?.country}</p>}
-                                                                                                                                        ~~~~~~~~~
+1139                       value={formData.clientMaterialInfo.clientProvidedDate}
+                                           ~~~~~~~~~~~~~~~~~~
 
-  src/lib/features/customers/customersApi.ts:17:3
-    17   address: {
-         ~~~~~~~
-    'address' is declared here.
+src/components/production/grey-fabric-inward/GreyFabricInwardForm.tsx:1149:39 - error TS2339: Property 'clientMaterialInfo' does not exist on type 'CreateGreyFabricInwardRequest'.
 
-src/components/customers/modals/CustomerDetailsModal.tsx:217:57 - error TS2551: Property 'addresses' does not exist on type 'Customer'. Did you mean 'address'?
+1149                       value={formData.clientMaterialInfo.clientInstructions}
+                                           ~~~~~~~~~~~~~~~~~~
 
-217                   {(customer.billingAddress || customer.addresses?.find(addr => addr.addressType === 'billing')) && (
-                                                            ~~~~~~~~~
+src/components/production/grey-fabric-inward/GreyFabricInwardForm.tsx:1161:39 - error TS2339: Property 'clientMaterialInfo' does not exist on type 'CreateGreyFabricInwardRequest'.
 
-  src/lib/features/customers/customersApi.ts:17:3
-    17   address: {
-         ~~~~~~~
-    'address' is declared here.
+1161                       value={formData.clientMaterialInfo.clientQualitySpecs}
+                                           ~~~~~~~~~~~~~~~~~~
 
-src/components/customers/modals/CustomerDetailsModal.tsx:217:73 - error TS7006: Parameter 'addr' implicitly has an 'any' type.
+src/components/production/grey-fabric-inward/GreyFabricInwardForm.tsx:1173:41 - error TS2339: Property 'clientMaterialInfo' does not exist on type 'CreateGreyFabricInwardRequest'.
 
-217                   {(customer.billingAddress || customer.addresses?.find(addr => addr.addressType === 'billing')) && (
-                                                                            ~~~~
+1173                       checked={formData.clientMaterialInfo.returnRequired}
+                                             ~~~~~~~~~~~~~~~~~~
 
-src/components/customers/modals/CustomerDetailsModal.tsx:221:71 - error TS2551: Property 'addresses' does not exist on type 'Customer'. Did you mean 'address'?
+src/components/production/grey-fabric-inward/GreyFabricInwardForm.tsx:1180:29 - error TS2339: Property 'clientMaterialInfo' does not exist on type 'CreateGreyFabricInwardRequest'.
 
-221                         {(customer.billingAddress?.street || customer.addresses?.find(addr => addr.addressType === 'billing')?.street) && <p>{customer.billingAddress?.street || customer.addresses?.find(addr => addr.addressType === 'billing')?.street}</p>}
-                                                                          ~~~~~~~~~
+1180                   {formData.clientMaterialInfo.returnRequired && (
+                                 ~~~~~~~~~~~~~~~~~~
 
-  src/lib/features/customers/customersApi.ts:17:3
-    17   address: {
-         ~~~~~~~
-    'address' is declared here.
+src/components/production/grey-fabric-inward/GreyFabricInwardForm.tsx:1186:41 - error TS2339: Property 'clientMaterialInfo' does not exist on type 'CreateGreyFabricInwardRequest'.
 
-src/components/customers/modals/CustomerDetailsModal.tsx:221:87 - error TS7006: Parameter 'addr' implicitly has an 'any' type.
+1186                         value={formData.clientMaterialInfo.returnDeadline}
+                                             ~~~~~~~~~~~~~~~~~~
 
-221                         {(customer.billingAddress?.street || customer.addresses?.find(addr => addr.addressType === 'billing')?.street) && <p>{customer.billingAddress?.street || customer.addresses?.find(addr => addr.addressType === 'billing')?.street}</p>}
-                                                                                          ~~~~
+src/components/production/grey-fabric-inward/GreyFabricInwardForm.tsx:1198:41 - error TS2339: Property 'clientMaterialInfo' does not exist on type 'CreateGreyFabricInwardRequest'.
 
-src/components/customers/modals/CustomerDetailsModal.tsx:221:187 - error TS2551: Property 'addresses' does not exist on type 'Customer'. Did you mean 'address'?
+1198                         value={formData.clientMaterialInfo.clientContactPerson}
+                                             ~~~~~~~~~~~~~~~~~~
 
-221                         {(customer.billingAddress?.street || customer.addresses?.find(addr => addr.addressType === 'billing')?.street) && <p>{customer.billingAddress?.street || customer.addresses?.find(addr => addr.addressType === 'billing')?.street}</p>}
-                                                                                                                                                                                              ~~~~~~~~~
+src/components/production/grey-fabric-inward/GreyFabricInwardForm.tsx:1208:41 - error TS2339: Property 'clientMaterialInfo' does not exist on type 'CreateGreyFabricInwardRequest'.
 
-  src/lib/features/customers/customersApi.ts:17:3
-    17   address: {
-         ~~~~~~~
-    'address' is declared here.
+1208                         value={formData.clientMaterialInfo.clientContactPhone}
+                                             ~~~~~~~~~~~~~~~~~~
 
-src/components/customers/modals/CustomerDetailsModal.tsx:221:203 - error TS7006: Parameter 'addr' implicitly has an 'any' type.
+src/components/production/grey-fabric-inward/GreyFabricInwardForm.tsx:1221:39 - error TS2339: Property 'clientMaterialInfo' does not exist on type 'CreateGreyFabricInwardRequest'.
 
-221                         {(customer.billingAddress?.street || customer.addresses?.find(addr => addr.addressType === 'billing')?.street) && <p>{customer.billingAddress?.street || customer.addresses?.find(addr => addr.addressType === 'billing')?.street}</p>}
-                                                                                                                                                                                                              ~~~~
+1221                       value={formData.clientMaterialInfo.clientContactEmail}
+                                           ~~~~~~~~~~~~~~~~~~
 
-src/components/customers/modals/CustomerDetailsModal.tsx:223:71 - error TS2551: Property 'addresses' does not exist on type 'Customer'. Did you mean 'address'?
 
-223                           {[customer.billingAddress?.city || customer.addresses?.find(addr => addr.addressType === 'billing')?.city, customer.billingAddress?.state || customer.addresses?.find(addr => addr.addressType === 'billing')?.state].filter(Boolean).join(', ')}
-                                                                          ~~~~~~~~~
-
-  src/lib/features/customers/customersApi.ts:17:3
-    17   address: {
-         ~~~~~~~
-    'address' is declared here.
-
-src/components/customers/modals/CustomerDetailsModal.tsx:223:87 - error TS7006: Parameter 'addr' implicitly has an 'any' type.
-
-223                           {[customer.billingAddress?.city || customer.addresses?.find(addr => addr.addressType === 'billing')?.city, customer.billingAddress?.state || customer.addresses?.find(addr => addr.addressType === 'billing')?.state].filter(Boolean).join(', ')}
-                                                                                          ~~~~
-
-src/components/customers/modals/CustomerDetailsModal.tsx:223:177 - error TS2551: Property 'addresses' does not exist on type 'Customer'. Did you mean 'address'?
-
-223                           {[customer.billingAddress?.city || customer.addresses?.find(addr => addr.addressType === 'billing')?.city, customer.billingAddress?.state || customer.addresses?.find(addr => addr.addressType === 'billing')?.state].filter(Boolean).join(', ')}
-                                                                                                                                                                                    ~~~~~~~~~
-
-  src/lib/features/customers/customersApi.ts:17:3
-    17   address: {
-         ~~~~~~~
-    'address' is declared here.
-
-src/components/customers/modals/CustomerDetailsModal.tsx:223:193 - error TS7006: Parameter 'addr' implicitly has an 'any' type.
-
-223                           {[customer.billingAddress?.city || customer.addresses?.find(addr => addr.addressType === 'billing')?.city, customer.billingAddress?.state || customer.addresses?.find(addr => addr.addressType === 'billing')?.state].filter(Boolean).join(', ')}
-                                                                                                                                                                                                    ~~~~
-
-src/components/customers/modals/CustomerDetailsModal.tsx:224:74 - error TS2551: Property 'addresses' does not exist on type 'Customer'. Did you mean 'address'?
-
-224                           {(customer.billingAddress?.zipCode || customer.addresses?.find(addr => addr.addressType === 'billing')?.zipCode) && ` - ${customer.billingAddress?.zipCode || customer.addresses?.find(addr => addr.addressType === 'billing')?.zipCode}`}
-                                                                             ~~~~~~~~~
-
-  src/lib/features/customers/customersApi.ts:17:3
-    17   address: {
-         ~~~~~~~
-    'address' is declared here.
-
-src/components/customers/modals/CustomerDetailsModal.tsx:224:90 - error TS7006: Parameter 'addr' implicitly has an 'any' type.
-
-224                           {(customer.billingAddress?.zipCode || customer.addresses?.find(addr => addr.addressType === 'billing')?.zipCode) && ` - ${customer.billingAddress?.zipCode || customer.addresses?.find(addr => addr.addressType === 'billing')?.zipCode}`}
-                                                                                             ~~~~
-
-src/components/customers/modals/CustomerDetailsModal.tsx:224:194 - error TS2551: Property 'addresses' does not exist on type 'Customer'. Did you mean 'address'?
-
-224                           {(customer.billingAddress?.zipCode || customer.addresses?.find(addr => addr.addressType === 'billing')?.zipCode) && ` - ${customer.billingAddress?.zipCode || customer.addresses?.find(addr => addr.addressType === 'billing')?.zipCode}`}
-                                                                                                                                                                                                     ~~~~~~~~~
-
-  src/lib/features/customers/customersApi.ts:17:3
-    17   address: {
-         ~~~~~~~
-    'address' is declared here.
-
-src/components/customers/modals/CustomerDetailsModal.tsx:224:210 - error TS7006: Parameter 'addr' implicitly has an 'any' type.
-
-224                           {(customer.billingAddress?.zipCode || customer.addresses?.find(addr => addr.addressType === 'billing')?.zipCode) && ` - ${customer.billingAddress?.zipCode || customer.addresses?.find(addr => addr.addressType === 'billing')?.zipCode}`}
-                                                                                                                                                                                                                     ~~~~
-
-src/components/customers/modals/CustomerDetailsModal.tsx:226:72 - error TS2551: Property 'addresses' does not exist on type 'Customer'. Did you mean 'address'?
-
-226                         {(customer.billingAddress?.country || customer.addresses?.find(addr => addr.addressType === 'billing')?.country) && <p>{customer.billingAddress?.country || customer.addresses?.find(addr => addr.addressType === 'billing')?.country}</p>}
-                                                                           ~~~~~~~~~
-
-  src/lib/features/customers/customersApi.ts:17:3
-    17   address: {
-         ~~~~~~~
-    'address' is declared here.
-
-src/components/customers/modals/CustomerDetailsModal.tsx:226:88 - error TS7006: Parameter 'addr' implicitly has an 'any' type.
-
-226                         {(customer.billingAddress?.country || customer.addresses?.find(addr => addr.addressType === 'billing')?.country) && <p>{customer.billingAddress?.country || customer.addresses?.find(addr => addr.addressType === 'billing')?.country}</p>}
-                                                                                           ~~~~
-
-src/components/customers/modals/CustomerDetailsModal.tsx:226:190 - error TS2551: Property 'addresses' does not exist on type 'Customer'. Did you mean 'address'?
-
-226                         {(customer.billingAddress?.country || customer.addresses?.find(addr => addr.addressType === 'billing')?.country) && <p>{customer.billingAddress?.country || customer.addresses?.find(addr => addr.addressType === 'billing')?.country}</p>}
-                                                                                                                                                                                                 ~~~~~~~~~
-
-  src/lib/features/customers/customersApi.ts:17:3
-    17   address: {
-         ~~~~~~~
-    'address' is declared here.
-
-src/components/customers/modals/CustomerDetailsModal.tsx:226:206 - error TS7006: Parameter 'addr' implicitly has an 'any' type.
-
-226                         {(customer.billingAddress?.country || customer.addresses?.find(addr => addr.addressType === 'billing')?.country) && <p>{customer.billingAddress?.country || customer.addresses?.find(addr => addr.addressType === 'billing')?.country}</p>}
-                                                                                                                                                                                                                 ~~~~
-
-src/components/customers/modals/CustomerDetailsModal.tsx:284:71 - error TS2339: Property 'lastOrderDate' does not exist on type '{ totalOrders?: number | undefined; totalOrderValue?: number | undefined; averageOrderValue?: number | undefined; }'.
-
-284                 {(customer.lastOrderDate || customer.purchaseHistory?.lastOrderDate) && (
-                                                                          ~~~~~~~~~~~~~
-
-src/components/customers/modals/CustomerDetailsModal.tsx:289:174 - error TS2339: Property 'lastOrderDate' does not exist on type '{ totalOrders?: number | undefined; totalOrderValue?: number | undefined; averageOrderValue?: number | undefined; }'.
-
-289                       <p className="text-black dark:text-white font-semibold transition-colors duration-300">{formatDate(customer.lastOrderDate || customer.purchaseHistory?.lastOrderDate || customer.createdAt)}</p>
-                                                                                                                                                                                 ~~~~~~~~~~~~~
-
-src/components/customers/modals/CustomerDetailsModal.tsx:294:52 - error TS2339: Property 'financialInfo' does not exist on type 'Customer'.
-
-294                 {(customer.creditLimit || customer.financialInfo?.creditLimit) && (
-                                                       ~~~~~~~~~~~~~
-
-src/components/customers/modals/CustomerDetailsModal.tsx:299:135 - error TS2339: Property 'financialInfo' does not exist on type 'Customer'.
-
-299                       <p className="text-black dark:text-white font-semibold transition-colors duration-300">{formatCurrency(customer.financialInfo?.creditLimit || customer.creditLimit || 0)}</p>
-                                                                                                                                          ~~~~~~~~~~~~~
-
-src/components/customers/modals/CustomerDetailsModal.tsx:304:53 - error TS2339: Property 'financialInfo' does not exist on type 'Customer'.
-
-304                 {(customer.paymentTerms || customer.financialInfo?.paymentTerms) && (
-                                                        ~~~~~~~~~~~~~
-
-src/components/customers/modals/CustomerDetailsModal.tsx:309:120 - error TS2339: Property 'financialInfo' does not exist on type 'Customer'.
-
-309                       <p className="text-black dark:text-white font-semibold transition-colors duration-300">{customer.financialInfo?.paymentTerms || customer.paymentTerms}</p>
-                                                                                                                           ~~~~~~~~~~~~~
-
-src/components/dispatch/DispatchEditModal.tsx:45:25 - error TS2339: Property 'companyId' does not exist on type 'Partial<UpdateDispatchRequest>'.
-
-45     companyId: formData.companyId || userCompanyId,
-                           ~~~~~~~~~
-
-src/components/dispatch/DispatchEditModal.tsx:51:25 - error TS2339: Property 'companyId' does not exist on type 'Partial<UpdateDispatchRequest>'.
-
-51     companyId: formData.companyId || userCompanyId,
-                           ~~~~~~~~~
-
-src/components/dispatch/DispatchEditModal.tsx:265:7 - error TS2322: Type 'Element' is not assignable to type 'string'.
-
-265       title={
-          ~~~~~
-
-  src/components/ui/Modal.tsx:10:3
-    10   title?: string
-         ~~~~~
-    The expected type comes from property 'title' which is declared here on type 'IntrinsicAttributes & ModalProps'
-
-src/components/dispatch/QuickUpdateModal.tsx:156:7 - error TS2322: Type 'Element' is not assignable to type 'string'.
-
-156       title={
-          ~~~~~
-
-  src/components/ui/Modal.tsx:10:3
-    10   title?: string
-         ~~~~~
-    The expected type comes from property 'title' which is declared here on type 'IntrinsicAttributes & ModalProps'
-
-src/components/suppliers/modals/SupplierFormModal.tsx:688:11 - error TS2322: Type 'string | undefined' is not assignable to type 'string'.
-  Type 'undefined' is not assignable to type 'string'.
-
-688           id: supplier._id,
-              ~~
-
-  src/lib/api/suppliersApi.ts:266:9
-    266       { id: string; data: Partial<Supplier> }
-                ~~
-    The expected type comes from property 'id' which is declared here on type '{ id: string; data: Partial<Supplier>; }'
-
-src/components/suppliers/modals/SupplierFormModal.tsx:693:30 - error TS2345: Argument of type '{ companyId: string; supplierName: string; supplierCode: string; legalName: string; displayName: string; businessInfo: { businessType: string; industry: string; subIndustry: string; businessDescription: string; ... 4 more ...; manufacturingCapacity: string; }; ... 9 more ...; isActive: boolean; }' is not assignable to parameter of type 'Supplier'.
-  Type '{ companyId: string; supplierName: string; supplierCode: string; legalName: string; displayName: string; businessInfo: { businessType: string; industry: string; subIndustry: string; businessDescription: string; ... 4 more ...; manufacturingCapacity: string; }; ... 9 more ...; isActive: boolean; }' is missing the following properties from type 'Supplier': supplierId, partNumber, isPrimary, leadTime, and 5 more.
-
-693         await createSupplier(supplierData).unwrap()
-                                 ~~~~~~~~~~~~
-
-
-Found 42 errors in 4 files.
+Found 24 errors in 2 files.
 
 Errors  Files
-    36  src/components/customers/modals/CustomerDetailsModal.tsx:177
-     3  src/components/dispatch/DispatchEditModal.tsx:45
-     1  src/components/dispatch/QuickUpdateModal.tsx:156
-     2  src/components/suppliers/modals/SupplierFormModal.tsx:688
- ELIFECYCLE  Command failed with exit code 2.
-rajat@Mac client % >....                  
-Errors  Files
-    36  src/components/customers/modals/CustomerDetailsModal.tsx:177
-     3  src/components/dispatch/DispatchEditModal.tsx:45
-     1  src/components/dispatch/QuickUpdateModal.tsx:156
-     2  src/components/suppliers/modals/SupplierFormModal.tsx:688
- ELIFECYCLE  Command failed with exit code 2.
-rajat@Mac client % 
+     4  src/app/production/batches/create/page.tsx:69
+    20  src/components/production/grey-fabric-inward/GreyFabricInwardForm.tsx:57
+ ELIFECYCLE  Command failed with exit code 1.
+rajat@Rajats-MacBook-Pro client % 

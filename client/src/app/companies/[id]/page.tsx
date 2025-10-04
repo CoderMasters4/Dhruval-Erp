@@ -30,7 +30,7 @@ import { useSelector } from 'react-redux'
 import { AppLayout } from '@/components/layout/AppLayout'
 import { PageHeader } from '@/components/ui/PageHeader'
 import { Button } from '@/components/ui/Button'
-import { selectIsSuperAdmin } from '@/lib/features/auth/authSlice'
+import { selectIsSuperAdmin, selectCurrentCompanyId } from '@/lib/features/auth/authSlice'
 import { useGetCompanyByIdQuery, useUpdateCompanyMutation, useGetCompanyDetailedStatsQuery } from '@/lib/features/companies/companiesApi'
 
 // Helper functions for company status with dark mode support
@@ -89,30 +89,49 @@ export default function CompanyDetailPage() {
   const params = useParams()
   const router = useRouter()
   const isSuperAdmin = useSelector(selectIsSuperAdmin)
+  const currentCompanyId = useSelector(selectCurrentCompanyId)
   const companyId = params.id as string
 
   const { data: companyData, isLoading, error, refetch } = useGetCompanyByIdQuery(companyId, {
-    skip: !companyId || !isSuperAdmin
+    skip: !companyId
   })
 
   const { data: statsData, isLoading: statsLoading } = useGetCompanyDetailedStatsQuery(companyId, {
-    skip: !companyId || !isSuperAdmin
+    skip: !companyId
   })
 
   const [updateCompany, { isLoading: updateLoading }] = useUpdateCompanyMutation()
 
   const company = companyData?.data
 
-  // Access control
-  if (!isSuperAdmin) {
+  // Access control: non-superadmin can only view their own company
+  if (!isSuperAdmin && currentCompanyId && companyId !== currentCompanyId) {
+    useEffect(() => {
+      router.replace(`/companies/${currentCompanyId}`)
+    }, [router, currentCompanyId])
+    return (
+      <AppLayout>
+        <div className="min-h-screen bg-gradient-to-br from-white via-sky-50 to-sky-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 transition-all duration-300">
+          <div className="flex items-center justify-center min-h-[60vh]">
+            <div className="text-center">
+              <Shield className="h-12 w-12 text-sky-400 mx-auto mb-4" />
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Loading your company…</h2>
+              <p className="text-gray-600 dark:text-gray-400">Redirecting to your company details</p>
+            </div>
+          </div>
+        </div>
+      </AppLayout>
+    )
+  }
+  if (!isSuperAdmin && !currentCompanyId) {
     return (
       <AppLayout>
         <div className="min-h-screen bg-gradient-to-br from-white via-sky-50 to-sky-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 transition-all duration-300">
           <div className="flex items-center justify-center min-h-[60vh]">
             <div className="text-center">
               <Shield className="h-16 w-16 text-gray-400 dark:text-gray-500 mx-auto mb-4" />
-              <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">Access Denied</h2>
-              <p className="text-gray-600 dark:text-gray-300">You need Super Admin privileges to access this page.</p>
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">Company Access Required</h2>
+              <p className="text-gray-600 dark:text-gray-300">Your account doesn’t have a company assigned.</p>
             </div>
           </div>
         </div>
@@ -268,13 +287,15 @@ export default function CompanyDetailPage() {
                   </div>
                 </div>
               </div>
-              <Button
-                onClick={() => router.push(`/companies/${company._id}/edit`)}
-                className="bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700 text-white shadow-lg hover:shadow-xl transition-all duration-200 px-6 py-3 text-base font-semibold rounded-xl"
-              >
-                <Edit className="w-5 h-5 mr-2" />
-                Edit Company
-              </Button>
+              {isSuperAdmin && (
+                <Button
+                  onClick={() => router.push(`/companies/${company._id}/edit`)}
+                  className="bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700 text-white shadow-lg hover:shadow-xl transition-all duration-200 px-6 py-3 text-base font-semibold rounded-xl"
+                >
+                  <Edit className="w-5 h-5 mr-2" />
+                  Edit Company
+                </Button>
+              )}
             </div>
           </div>
 
@@ -388,7 +409,7 @@ export default function CompanyDetailPage() {
                   <div>
                     <label className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">Registration Date</label>
                     <p className="text-gray-900 dark:text-white">
-                      {company.registrationDetails?.registrationDate 
+                      {company.registrationDetails?.registrationDate
                         ? new Date(company.registrationDetails.registrationDate).toLocaleDateString('en-IN')
                         : 'Not specified'
                       }
@@ -443,9 +464,9 @@ export default function CompanyDetailPage() {
                       <label className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">Website</label>
                       <div className="flex items-center gap-3">
                         <Globe className="w-4 h-4 text-gray-400 dark:text-gray-500" />
-                        <a 
-                          href={company.contactInfo.website} 
-                          target="_blank" 
+                        <a
+                          href={company.contactInfo.website}
+                          target="_blank"
                           rel="noopener noreferrer"
                           className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 underline"
                         >
@@ -460,9 +481,9 @@ export default function CompanyDetailPage() {
                       <label className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">LinkedIn</label>
                       <div className="flex items-center gap-3">
                         <Linkedin className="w-4 h-4 text-gray-400 dark:text-gray-500" />
-                        <a 
-                          href={company.contactInfo.socialMedia.linkedin} 
-                          target="_blank" 
+                        <a
+                          href={company.contactInfo.socialMedia.linkedin}
+                          target="_blank"
                           rel="noopener noreferrer"
                           className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 underline"
                         >
@@ -618,13 +639,15 @@ export default function CompanyDetailPage() {
               <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 transition-colors duration-300">
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Actions</h3>
                 <div className="space-y-3">
-                  <Button
-                    onClick={() => router.push(`/companies/${company._id}/edit`)}
-                    className="w-full bg-sky-500 hover:bg-sky-600 text-white"
-                  >
-                    <Edit className="w-4 h-4 mr-2" />
-                    Edit Company
-                  </Button>
+                  {isSuperAdmin && (
+                    <Button
+                      onClick={() => router.push(`/companies/${company._id}/edit`)}
+                      className="w-full bg-sky-500 hover:bg-sky-600 text-white"
+                    >
+                      <Edit className="w-4 h-4 mr-2" />
+                      Edit Company
+                    </Button>
+                  )}
                   <Button
                     onClick={() => router.push('/companies')}
                     variant="outline"

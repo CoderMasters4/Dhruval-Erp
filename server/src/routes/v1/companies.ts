@@ -427,10 +427,19 @@ router.post('/', authenticate, async (req: Request, res: Response) => {
     const user = (req as any).user;
     logger.info('POST /api/v1/companies - Creating new company', { userId: user.id });
 
-    const { companyName, companyCode, email, phone, website, address, gstin, pan } = req.body;
+    const {
+      companyName,
+      companyCode,
+      legalName,
+      status,
+      registrationDetails,
+      addresses,
+      contactInfo,
+      businessConfig
+    } = req.body;
 
-    // Validation - Only company name and code are required
-    if (!companyName) {
+    // Validation - Both company name and code are required
+    if (!companyName || !companyName.trim()) {
       return res.status(400).json({
         success: false,
         error: 'Validation Error',
@@ -439,7 +448,7 @@ router.post('/', authenticate, async (req: Request, res: Response) => {
       });
     }
 
-    if (!companyCode) {
+    if (!companyCode || !companyCode.trim()) {
       return res.status(400).json({
         success: false,
         error: 'Validation Error',
@@ -448,11 +457,24 @@ router.post('/', authenticate, async (req: Request, res: Response) => {
       });
     }
 
+    // Validate company code format (alphanumeric, 3-20 characters)
+    const companyCodeRegex = /^[A-Z0-9]{3,20}$/;
+    if (!companyCodeRegex.test(companyCode.trim().toUpperCase())) {
+      return res.status(400).json({
+        success: false,
+        error: 'Validation Error',
+        message: 'Company code must be 3-20 characters long and contain only letters and numbers',
+        timestamp: new Date().toISOString()
+      });
+    }
+
+    const finalCompanyCode = companyCode.trim().toUpperCase();
+
     // Check if company already exists
     const existingCompany = await Company.findOne({
       $or: [
         { companyName },
-        { companyCode }
+        { companyCode: finalCompanyCode.toUpperCase() }
       ]
     });
 
@@ -466,66 +488,114 @@ router.post('/', authenticate, async (req: Request, res: Response) => {
     }
 
     // Check email uniqueness if provided
-    if (email) {
-      const existingEmail = await Company.findOne({
-        'contactInfo.emails.type': email
-      });
+    if (contactInfo?.emails && contactInfo.emails.length > 0) {
+      for (const emailObj of contactInfo.emails) {
+        if (emailObj.type && emailObj.type.trim()) {
+          const existingEmail = await Company.findOne({
+            'contactInfo.emails': { $elemMatch: { type: emailObj.type } }
+          });
 
-      if (existingEmail) {
-        return res.status(409).json({
-          success: false,
-          error: 'Conflict',
-          message: 'Company with this email already exists',
-          timestamp: new Date().toISOString()
-        });
+          if (existingEmail) {
+            return res.status(409).json({
+              success: false,
+              error: 'Conflict',
+              message: `Company with email ${emailObj.type} already exists`,
+              timestamp: new Date().toISOString()
+            });
+          }
+        }
       }
     }
 
-    // Create new company with proper structure - only required fields
+    // Build company data structure
     const companyData: any = {
-      companyName,
-      companyCode: companyCode.toUpperCase(),
-      status: 'active',
+      companyName: companyName.trim(),
+      companyCode: finalCompanyCode,
+      status: status || 'active',
       createdBy: new Types.ObjectId(user.id),
       isActive: true
     };
 
-    // Add optional fields only if provided
-    if (req.body.legalName) {
-      companyData.legalName = req.body.legalName;
+    // Add optional fields only if provided and not empty
+    if (legalName && legalName.trim()) {
+      companyData.legalName = legalName.trim();
     }
 
-    if (email) {
+    if (registrationDetails) {
+      companyData.registrationDetails = {};
+      if (registrationDetails.gstin && registrationDetails.gstin.trim()) {
+        companyData.registrationDetails.gstin = registrationDetails.gstin.trim().toUpperCase();
+      }
+      if (registrationDetails.pan && registrationDetails.pan.trim()) {
+        companyData.registrationDetails.pan = registrationDetails.pan.trim().toUpperCase();
+      }
+      if (registrationDetails.cin && registrationDetails.cin.trim()) {
+        companyData.registrationDetails.cin = registrationDetails.cin.trim().toUpperCase();
+      }
+      if (registrationDetails.udyogAadhar && registrationDetails.udyogAadhar.trim()) {
+        companyData.registrationDetails.udyogAadhar = registrationDetails.udyogAadhar.trim();
+      }
+      if (registrationDetails.iecCode && registrationDetails.iecCode.trim()) {
+        companyData.registrationDetails.iecCode = registrationDetails.iecCode.trim().toUpperCase();
+      }
+      if (registrationDetails.registrationDate && registrationDetails.registrationDate.trim()) {
+        companyData.registrationDetails.registrationDate = new Date(registrationDetails.registrationDate);
+      }
+      
+      // If no registration details were added, don't include the object
+      if (Object.keys(companyData.registrationDetails).length === 0) {
+        delete companyData.registrationDetails;
+      }
+    }
+
+    if (addresses) {
+      companyData.addresses = {};
+      if (addresses.registeredOffice) {
+        companyData.addresses.registeredOffice = {
+          street: addresses.registeredOffice.street || '',
+          area: addresses.registeredOffice.area || '',
+          city: addresses.registeredOffice.city || '',
+          state: addresses.registeredOffice.state || '',
+          pincode: addresses.registeredOffice.pincode || '',
+          country: addresses.registeredOffice.country || 'India'
+        };
+      }
+      if (addresses.factoryAddress) {
+        companyData.addresses.factoryAddress = {
+          street: addresses.factoryAddress.street || '',
+          area: addresses.factoryAddress.area || '',
+          city: addresses.factoryAddress.city || '',
+          state: addresses.factoryAddress.state || '',
+          pincode: addresses.factoryAddress.pincode || '',
+          country: addresses.factoryAddress.country || 'India'
+        };
+      }
+      if (addresses.warehouseAddresses && addresses.warehouseAddresses.length > 0) {
+        companyData.addresses.warehouseAddresses = addresses.warehouseAddresses;
+      }
+    }
+
+    if (contactInfo) {
       companyData.contactInfo = {
-        emails: [{ type: email, label: 'Primary' }],
-        phones: phone ? [{ type: phone, label: 'Primary' }] : [],
-        website: website || '',
-        socialMedia: {}
+        phones: contactInfo.phones || [],
+        emails: contactInfo.emails || [],
+        website: contactInfo.website || '',
+        socialMedia: contactInfo.socialMedia || {}
       };
     }
 
-    if (gstin || pan) {
-      companyData.registrationDetails = {
-        gstin: gstin || '',
-        pan: pan || '',
-        registrationDate: new Date()
-      };
-    }
-
-    if (address) {
-      companyData.addresses = {
-        registeredOffice: {
-          street: address.street || '',
-          city: address.city || '',
-          state: address.state || '',
-          country: address.country || 'India',
-          pincode: address.pincode || ''
-        }
+    if (businessConfig) {
+      companyData.businessConfig = {
+        currency: businessConfig.currency || 'INR',
+        timezone: businessConfig.timezone || 'Asia/Kolkata',
+        fiscalYearStart: businessConfig.fiscalYearStart || 'April',
+        workingDays: businessConfig.workingDays || [],
+        workingHours: businessConfig.workingHours || {},
+        gstRates: businessConfig.gstRates || {}
       };
     }
 
     const company = new Company(companyData);
-
     await company.save();
 
     // Get populated company data

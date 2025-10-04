@@ -105,6 +105,21 @@ const uiSlice = createSlice({
       if (typeof window !== 'undefined') {
         localStorage.setItem('theme', newTheme)
         console.log('UI Slice: Saved theme to localStorage:', newTheme)
+
+        // Apply theme class to document and body for immediate effect
+        if (newTheme === 'dark') {
+          document.documentElement.classList.add('dark')
+          document.body.classList.add('dark')
+        } else {
+          document.documentElement.classList.remove('dark')
+          document.body.classList.remove('dark')
+        }
+
+        // Update meta theme-color
+        const metaThemeColor = document.querySelector('meta[name="theme-color"]')
+        if (metaThemeColor) {
+          metaThemeColor.setAttribute('content', newTheme === 'dark' ? '#0f172a' : '#ffffff')
+        }
       }
     },
     
@@ -116,6 +131,21 @@ const uiSlice = createSlice({
       if (typeof window !== 'undefined') {
         localStorage.setItem('theme', action.payload)
         console.log('UI Slice: Saved theme to localStorage:', action.payload)
+
+        // Apply theme class to document and body for immediate effect
+        if (action.payload === 'dark') {
+          document.documentElement.classList.add('dark')
+          document.body.classList.add('dark')
+        } else {
+          document.documentElement.classList.remove('dark')
+          document.body.classList.remove('dark')
+        }
+
+        // Update meta theme-color
+        const metaThemeColor = document.querySelector('meta[name="theme-color"]')
+        if (metaThemeColor) {
+          metaThemeColor.setAttribute('content', action.payload === 'dark' ? '#0f172a' : '#ffffff')
+        }
       }
     },
     

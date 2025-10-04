@@ -9,6 +9,10 @@ import {
 } from 'lucide-react'
 import { useSelector } from 'react-redux'
 import { selectIsSuperAdmin } from '@/lib/features/auth/authSlice'
+import { usePermission } from '@/lib/hooks/usePermission'
+import { RequirePermission } from '@/components/auth/RequirePermission'
+import { ProtectedPage } from '@/components/auth/ProtectedPage'
+import { useCompanyScope } from '@/lib/hooks/useCompanyScope'
 import {
   useGetAllCustomersQuery,
   Customer
@@ -33,6 +37,8 @@ interface CustomerFilters {
 
 export default function CustomersPage() {
   const isSuperAdmin = useSelector(selectIsSuperAdmin)
+  const { has } = usePermission()
+  const { companyParam } = useCompanyScope()
   const { openCustomerForm, openCustomerDetails, openDeleteCustomer } = useModals()
 
   // State management
@@ -56,7 +62,7 @@ export default function CustomersPage() {
     search: filters.search || undefined,
     customerType: filters.customerType !== 'all' ? filters.customerType : undefined,
     status: filters.status !== 'all' ? filters.status : undefined,
-    companyId: filters.companyId !== 'all' ? filters.companyId : undefined,
+    companyId: (filters.companyId !== 'all' ? filters.companyId : undefined) || companyParam,
     sortBy: filters.sortBy,
     sortOrder: filters.sortOrder,
     page: 1,
@@ -121,18 +127,13 @@ export default function CustomersPage() {
     })
   }
 
-  // Access control
-  if (!isSuperAdmin) {
+  // Access control: require customers:view to access
+  const canView = isSuperAdmin || has('customers', 'view')
+  if (!canView) {
     return (
-      <AppLayout>
-        <div className="flex items-center justify-center min-h-[60vh]">
-          <div className="text-center">
-            <Shield className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">Access Restricted</h3>
-            <p className="text-gray-600">You need Super Admin privileges to access this page.</p>
-          </div>
-        </div>
-      </AppLayout>
+      <ProtectedPage module="customers">
+        <></>
+      </ProtectedPage>
     )
   }
 
@@ -178,20 +179,22 @@ export default function CustomersPage() {
                   Manage all customers in the system with comprehensive tools
                 </p>
               </div>
-              <Button
-                onClick={handleCreateNew}
-                className="bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700 text-white shadow-lg hover:shadow-xl transition-all duration-200 px-6 py-3 text-base font-semibold rounded-xl"
-              >
-                <Plus className="w-5 h-5 mr-2" />
-                Add Customer
-              </Button>
+              <RequirePermission module="customers" action="create">
+                <Button
+                  onClick={handleCreateNew}
+                  className="bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700 text-white shadow-lg hover:shadow-xl transition-all duration-200 px-6 py-3 text-base font-semibold rounded-xl"
+                >
+                  <Plus className="w-5 h-5 mr-2" />
+                  Add Customer
+                </Button>
+              </RequirePermission>
             </div>
           </div>
 
           {/* Stats Cards */}
-          <CustomerStats 
-            customers={customers} 
-            isLoading={isLoading} 
+          <CustomerStats
+            customers={customers}
+            isLoading={isLoading}
             currentCompany={filters.companyId !== 'all' ? filters.companyId : undefined}
             isSuperAdmin={isSuperAdmin}
           />

@@ -79,6 +79,27 @@ const CompanyAccessSchema = new Schema<ICompanyAccess>({
       ...ModulePermissionsSchema.obj,
       dispatch: { type: Boolean, default: false }
     },
+
+    // Sales Permissions
+    sales: ModulePermissionsSchema,
+
+    // Customers Permissions
+    customers: ModulePermissionsSchema,
+
+    // Suppliers Permissions
+    suppliers: ModulePermissionsSchema,
+
+    // Purchase (PO) Permissions
+    purchase: ModulePermissionsSchema,
+
+    // Gate Pass Permissions
+    gatePass: ModulePermissionsSchema,
+
+    // Batches Permissions
+    batches: ModulePermissionsSchema,
+
+    // Grey Fabric Inward Permissions
+    greyFabricInward: ModulePermissionsSchema,
     
     // Financial Permissions
     financial: {
@@ -155,6 +176,8 @@ const UserSchema = new Schema<IUser>({
     phone: { 
       type: String, 
       required: true,
+      unique: true,
+      trim: true,
       match: /^[+]?[1-9][\d\s\-\(\)]{7,15}$/
     },
     alternatePhone: { 
@@ -238,7 +261,7 @@ const UserSchema = new Schema<IUser>({
 // Indexes for performance (username and email already have unique indexes)
 // Note: Most indexes are now managed centrally in database-indexes.ts
 // Only keeping unique indexes that are not in the central configuration
-UserSchema.index({ 'personalInfo.phone': 1 });
+UserSchema.index({ 'personalInfo.phone': 1 }, { unique: true });
 UserSchema.index({ 'companyAccess.role': 1 });
 UserSchema.index({ createdAt: -1 });
 
@@ -284,6 +307,15 @@ UserSchema.pre('save', async function(this: any, next) {
 UserSchema.pre('save', function(this: any, next) {
   if (!this.personalInfo.displayName) {
     this.personalInfo.displayName = this.fullName;
+  }
+  // Normalize phone number: keep leading + and digits only
+  if (this.personalInfo?.phone) {
+    const raw: string = this.personalInfo.phone.toString();
+    const normalized = raw
+      .replace(/\s+/g, '')
+      .replace(/(?!^)[^\d]/g, '') // remove non-digits except possibly leading +
+      .replace(/^\+?(.*)$/,(m, g1)=> (raw.startsWith('+') ? '+' : '') + g1);
+    this.personalInfo.phone = normalized;
   }
   next();
 });

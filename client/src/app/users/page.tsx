@@ -9,6 +9,8 @@ import {
 } from 'lucide-react'
 import { useSelector } from 'react-redux'
 import { selectIsSuperAdmin } from '@/lib/features/auth/authSlice'
+import { RequirePermission } from '@/components/auth/RequirePermission'
+import { usePermission } from '@/lib/hooks/usePermission'
 import { useGetAllUsersQuery, useGetCompaniesForFilteringQuery } from '@/lib/features/users/usersApi'
 import { AppLayout } from '@/components/layout/AppLayout'
 import { Button } from '@/components/ui/Button'
@@ -40,6 +42,7 @@ interface PaginationState {
 
 export default function UsersPage() {
   const isSuperAdmin = useSelector(selectIsSuperAdmin)
+  const { has } = usePermission()
   const {
     openUserForm,
     openUserDetails,
@@ -211,15 +214,16 @@ export default function UsersPage() {
     setPagination({ page: 1, limit })
   }
 
-  // Access control
-  if (!isSuperAdmin) {
+  // Access control: require view permission for users module
+  const canView = isSuperAdmin || has('users', 'view') || has('admin', 'userManagement')
+  if (!canView) {
     return (
       <AppLayout>
         <div className="flex items-center justify-center min-h-[60vh]">
           <div className="text-center">
             <Shield className="mx-auto h-12 w-12 text-gray-400 mb-4" />
             <h3 className="text-lg font-medium text-gray-900 mb-2">Access Restricted</h3>
-            <p className="text-gray-600">You need Super Admin privileges to access this page.</p>
+            <p className="text-gray-600">You dont have permission to view users.</p>
           </div>
         </div>
       </AppLayout>
@@ -265,20 +269,22 @@ export default function UsersPage() {
                   Manage all users in the system with comprehensive tools
                 </p>
               </div>
-              <Button
-                onClick={() => openUserForm({
-                  onSuccess: () => {
-                    setTimeout(() => {
-                      refetch()
-                    }, 500)
-                    toast.success('User created successfully!')
-                  }
-                })}
-                className="bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700 text-white shadow-lg hover:shadow-xl transition-all duration-200 px-6 py-3 text-base font-semibold rounded-xl"
-              >
-                <Plus className="w-5 h-5 mr-2" />
-                Add User
-              </Button>
+              <RequirePermission module="users" action="create">
+                <Button
+                  onClick={() => openUserForm({
+                    onSuccess: () => {
+                      setTimeout(() => {
+                        refetch()
+                      }, 500)
+                      toast.success('User created successfully!')
+                    }
+                  })}
+                  className="bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700 text-white shadow-lg hover:shadow-xl transition-all duration-200 px-6 py-3 text-base font-semibold rounded-xl"
+                >
+                  <Plus className="w-5 h-5 mr-2" />
+                  Add User
+                </Button>
+              </RequirePermission>
             </div>
           </div>
 
@@ -298,7 +304,7 @@ export default function UsersPage() {
               ))}
             </div>
           }>
-            <UserStats 
+            <UserStats
               currentCompany={filters.companyId !== 'all' ? filters.companyId : undefined}
               isSuperAdmin={isSuperAdmin}
             />
@@ -387,16 +393,16 @@ export default function UsersPage() {
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 {(filters.search || filters.role !== 'all' || filters.status !== 'all') && (
                   <Button
-                                      onClick={() => setFilters({
-                    search: '',
-                    role: 'all',
-                    status: 'all',
-                    companyId: 'all',
-                    sortBy: 'name',
-                    sortOrder: 'asc',
-                    permissionModule: 'all',
-                    permissionAction: 'all'
-                  })}
+                    onClick={() => setFilters({
+                      search: '',
+                      role: 'all',
+                      status: 'all',
+                      companyId: 'all',
+                      sortBy: 'name',
+                      sortOrder: 'asc',
+                      permissionModule: 'all',
+                      permissionAction: 'all'
+                    })}
                     variant="outline"
                     className="border-blue-300 dark:border-blue-600 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all duration-200"
                   >

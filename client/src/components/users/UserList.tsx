@@ -46,11 +46,11 @@ export default function UserList({
     const date = new Date(dateString)
     const now = new Date()
     const diffInHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60))
-    
+
     if (diffInHours < 1) return 'Just now'
     if (diffInHours < 24) return `${diffInHours}h ago`
     if (diffInHours < 168) return `${Math.floor(diffInHours / 24)}d ago`
-    
+
     return date.toLocaleDateString('en-US', {
       month: 'short',
       day: 'numeric',
@@ -239,7 +239,7 @@ export default function UserList({
                         </span>
                       )}
                     </div>
-                    
+
                     <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600 dark:text-gray-400">
                       <div className="flex items-center gap-1">
                         <Mail className="w-4 h-4" />
@@ -258,11 +258,11 @@ export default function UserList({
                         <div className="flex items-center gap-1">
                           <Building2 className="w-4 h-4" />
                           <span className="truncate max-w-xs font-medium text-gray-800 dark:text-gray-200">
-                            {user.primaryCompany.companyName} ({user.primaryCompany.companyCode})
+                            {user.primaryCompany?.companyName || 'Unknown Company'}{user.primaryCompany?.companyCode ? ` (${user.primaryCompany.companyCode})` : ''}
                           </span>
                         </div>
                       )}
-                      
+
                       {/* Company Access Tags */}
                       {user.companyAccess && user.companyAccess.length > 0 && (
                         <div className="flex flex-wrap items-center gap-2">
@@ -272,7 +272,7 @@ export default function UserList({
                               key={access._id || index}
                               className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200 border border-blue-200 dark:border-blue-700"
                             >
-                              {access.companyId.companyName} ({access.role})
+                              {access.companyId?.companyName || 'Unknown Company'} ({access.role || 'member'})
                             </span>
                           ))}
                         </div>
@@ -287,7 +287,7 @@ export default function UserList({
                             const grantedPermissions = Object.values(permissions).filter(Boolean).length;
                             const totalPermissions = Object.keys(permissions).length;
                             if (grantedPermissions === 0) return null;
-                            
+
                             return (
                               <span
                                 key={module}
@@ -323,7 +323,7 @@ export default function UserList({
                   >
                     <Eye className="h-4 w-4" />
                   </Button>
-                  
+
                   <Button
                     onClick={() => onEdit(user)}
                     className="bg-yellow-500 hover:bg-yellow-600 dark:bg-yellow-600 dark:hover:bg-yellow-700 text-white p-2 rounded-lg transition-colors"
@@ -331,7 +331,7 @@ export default function UserList({
                   >
                     <Edit className="h-4 w-4" />
                   </Button>
-                  
+
                   <Button
                     onClick={() => onChangePassword && onChangePassword(user)}
                     className="bg-green-500 hover:bg-green-600 dark:bg-green-600 dark:hover:bg-green-700 text-white p-2 rounded-lg transition-colors"
@@ -339,7 +339,7 @@ export default function UserList({
                   >
                     <Key className="h-4 w-4" />
                   </Button>
-                  
+
                   <Button
                     onClick={() => onToggle2FA && onToggle2FA(user)}
                     className={clsx(
@@ -352,7 +352,7 @@ export default function UserList({
                   >
                     <Shield className="h-4 w-4" />
                   </Button>
-                  
+
                   <Button
                     onClick={() => onDelete(user)}
                     className="bg-red-500 hover:bg-red-600 dark:bg-red-600 dark:hover:bg-red-700 text-white p-2 rounded-lg transition-colors"

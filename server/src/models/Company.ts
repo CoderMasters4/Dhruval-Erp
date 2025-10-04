@@ -62,7 +62,9 @@ const CompanySchema = new Schema<ICompany>({
     unique: true,
     uppercase: true,
     trim: true,
-    maxlength: 20
+    maxlength: 20,
+    minlength: 3,
+    match: /^[A-Z0-9]{3,20}$/
   },
   companyName: { 
     type: String, 
@@ -85,7 +87,8 @@ const CompanySchema = new Schema<ICompany>({
       unique: true,
       sparse: true,
       uppercase: true,
-      match: /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/
+      match: /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/,
+      default: undefined
     },
     pan: { 
       type: String, 
@@ -212,6 +215,13 @@ CompanySchema.virtual('displayName').get(function() {
 
 // Pre-save middleware
 CompanySchema.pre('save', function(next) {
+  // Handle empty strings for unique fields - convert to undefined to avoid duplicate key errors
+  if (this.registrationDetails) {
+    if (this.registrationDetails.gstin === '' || this.registrationDetails.gstin === null) {
+      this.registrationDetails.gstin = undefined;
+    }
+  }
+  
   // Ensure at least one bank account is primary
   if (this.bankAccounts && this.bankAccounts.length > 0) {
     const primaryAccounts = this.bankAccounts.filter(account => account.isPrimary);

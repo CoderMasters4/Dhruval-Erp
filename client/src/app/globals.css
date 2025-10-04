@@ -68,6 +68,8 @@
   --toast-bg: #ffffff;
   --toast-color: #1f2937;
   --toast-border: #e5e7eb;
+  /* Force light scheme by default to avoid following system theme */
+  color-scheme: light;
 }
 
 .dark {

@@ -1,4 +1,4 @@
-import { Schema, model } from 'mongoose';
+import mongoose, { Schema, model } from 'mongoose';
 import { IInventoryItem, IItemLocation, IItemSupplier } from '@/types/models';
 
 const ItemLocationSchema = new Schema<IItemLocation>({
@@ -294,6 +294,46 @@ const InventoryItemSchema = new Schema<IInventoryItem>({
     completionDate: { type: Date }
   },
 
+  // Batch Output Tracking
+  batchOutputInfo: {
+    sourceBatchId: { type: Schema.Types.ObjectId, ref: 'ProductionBatch' },
+    sourceBatchNumber: { type: String },
+    outputIndex: { type: Number }, // Index in batch outputMaterials array
+    grnId: { type: Schema.Types.ObjectId, ref: 'GreyFabricInward' },
+    grnNumber: { type: String },
+    materialSource: { type: String, enum: ['own_material', 'client_provided', 'job_work_material'] },
+    clientId: { type: Schema.Types.ObjectId, ref: 'Customer' },
+    clientName: { type: String },
+    clientOrderId: { type: Schema.Types.ObjectId, ref: 'CustomerOrder' },
+    clientOrderNumber: { type: String },
+    
+    // Elongation Information
+    elongationInfo: {
+      inputQuantity: { type: Number, min: 0 },
+      inputUnit: { type: String },
+      outputQuantity: { type: Number, min: 0 },
+      outputUnit: { type: String },
+      elongationPercentage: { type: Number, min: 0 },
+      elongationQuantity: { type: Number, min: 0 },
+      elongationReason: { type: String, enum: ['stitching', 'processing', 'finishing', 'natural_stretch', 'other'] },
+      elongationNotes: { type: String },
+      qualityImpact: { type: String, enum: ['positive', 'neutral', 'negative'] },
+      approvedBy: { type: String },
+      approvalDate: { type: Date }
+    },
+    
+    // Client Output Tracking
+    clientOutputInfo: {
+      isClientMaterial: { type: Boolean, default: false },
+      returnToClient: { type: Boolean, default: false },
+      returnQuantity: { type: Number, min: 0 },
+      keepAsStock: { type: Boolean, default: false },
+      stockQuantity: { type: Number, min: 0 },
+      clientReturnDate: { type: Date },
+      clientInstructions: { type: String }
+    }
+  },
+
   // Additional Information
   notes: { type: String },
   tags: [String],
@@ -378,6 +418,158 @@ InventoryItemSchema.methods.getLocationStock = function(warehouseId: string) {
   );
 };
 
+// Batch Output Creation Methods
+InventoryItemSchema.methods.createFromBatchOutput = function(batchOutput: any, batchInfo: any, elongationInfo?: any, clientInfo?: any) {
+  // Set batch output information
+  this.batchOutputInfo = {
+    sourceBatchId: batchInfo.batchId,
+    sourceBatchNumber: batchInfo.batchNumber,
+    outputIndex: batchInfo.outputIndex,
+    grnId: batchInfo.grnId,
+    grnNumber: batchInfo.grnNumber,
+    materialSource: batchInfo.materialSource,
+    clientId: clientInfo?.clientId,
+    clientName: clientInfo?.clientName,
+    clientOrderId: clientInfo?.clientOrderId,
+    clientOrderNumber: clientInfo?.clientOrderNumber,
+    
+    // Elongation information
+    elongationInfo: elongationInfo ? {
+      inputQuantity: elongationInfo.inputQuantity,
+      inputUnit: elongationInfo.inputUnit,
+      outputQuantity: elongationInfo.outputQuantity,
+      outputUnit: elongationInfo.outputUnit,
+      elongationPercentage: elongationInfo.elongationPercentage,
+      elongationQuantity: elongationInfo.elongationQuantity,
+      elongationReason: elongationInfo.elongationReason,
+      elongationNotes: elongationInfo.elongationNotes,
+      qualityImpact: elongationInfo.qualityImpact,
+      approvedBy: elongationInfo.approvedBy,
+      approvalDate: elongationInfo.approvalDate
+    } : undefined,
+    
+    // Client output information
+    clientOutputInfo: clientInfo ? {
+      isClientMaterial: true,
+      returnToClient: clientInfo.returnToClient || false,
+      returnQuantity: clientInfo.returnQuantity || 0,
+      keepAsStock: clientInfo.keepAsStock || false,
+      stockQuantity: clientInfo.stockQuantity || 0,
+      clientReturnDate: clientInfo.clientReturnDate,
+      clientInstructions: clientInfo.clientInstructions
+    } : {
+      isClientMaterial: false,
+      returnToClient: false,
+      returnQuantity: 0,
+      keepAsStock: true,
+      stockQuantity: batchOutput.quantity,
+      clientInstructions: ''
+    }
+  };
+  
+  // Set production information
+  this.productionInfo = {
+    batchId: batchInfo.batchId,
+    batchNumber: batchInfo.batchNumber,
+    producedBy: batchInfo.producedBy,
+    productionDate: new Date(),
+    completionDate: new Date()
+  };
+  
+  // Update stock with elongated quantity
+  const finalQuantity = elongationInfo ? elongationInfo.outputQuantity : batchOutput.quantity;
+  this.stock.currentStock = finalQuantity;
+  this.stock.availableStock = finalQuantity;
+  this.tracking.totalInward = finalQuantity;
+  this.tracking.lastStockUpdate = new Date();
+  this.tracking.lastMovementDate = new Date();
+  
+  // Add elongation tag if applicable
+  if (elongationInfo && elongationInfo.elongationPercentage > 0) {
+    this.tags.push(`elongation-${elongationInfo.elongationPercentage}%`);
+  }
+  
+  // Add client material tag if applicable
+  if (clientInfo) {
+    this.tags.push('client-material-output');
+    this.tags.push(`client-${clientInfo.clientName}`);
+  }
+  
+  return this.save();
+};
+
+InventoryItemSchema.methods.updateClientOutputDecision = function(returnToClient: boolean, returnQuantity: number, keepAsStock: boolean, stockQuantity: number, clientInstructions?: string) {
+  if (!this.batchOutputInfo?.clientOutputInfo) {
+    throw new Error('This item is not a client material output');
+  }
+  
+  this.batchOutputInfo.clientOutputInfo.returnToClient = returnToClient;
+  this.batchOutputInfo.clientOutputInfo.returnQuantity = returnQuantity;
+  this.batchOutputInfo.clientOutputInfo.keepAsStock = keepAsStock;
+  this.batchOutputInfo.clientOutputInfo.stockQuantity = stockQuantity;
+  this.batchOutputInfo.clientOutputInfo.clientInstructions = clientInstructions;
+  
+  if (returnToClient || keepAsStock) {
+    this.batchOutputInfo.clientOutputInfo.clientReturnDate = new Date();
+  }
+  
+  // Update stock based on decision
+  if (keepAsStock) {
+    this.stock.currentStock = stockQuantity;
+    this.stock.availableStock = stockQuantity;
+  } else {
+    this.stock.currentStock = 0;
+    this.stock.availableStock = 0;
+  }
+  
+  this.tracking.lastStockUpdate = new Date();
+  
+  return this.save();
+};
+
+InventoryItemSchema.methods.getElongationSummary = function() {
+  if (!this.batchOutputInfo?.elongationInfo) {
+    return null;
+  }
+  
+  const elongation = this.batchOutputInfo.elongationInfo;
+  return {
+    inputQuantity: elongation.inputQuantity,
+    inputUnit: elongation.inputUnit,
+    outputQuantity: elongation.outputQuantity,
+    outputUnit: elongation.outputUnit,
+    elongationPercentage: elongation.elongationPercentage,
+    elongationQuantity: elongation.elongationQuantity,
+    elongationReason: elongation.elongationReason,
+    qualityImpact: elongation.qualityImpact,
+    approvedBy: elongation.approvedBy,
+    approvalDate: elongation.approvalDate
+  };
+};
+
+InventoryItemSchema.methods.getClientMaterialSummary = function() {
+  if (!this.batchOutputInfo?.clientOutputInfo?.isClientMaterial) {
+    return null;
+  }
+  
+  const clientInfo = this.batchOutputInfo.clientOutputInfo;
+  const batchInfo = this.batchOutputInfo;
+  
+  return {
+    clientId: batchInfo.clientId,
+    clientName: batchInfo.clientName,
+    grnNumber: batchInfo.grnNumber,
+    clientOrderNumber: batchInfo.clientOrderNumber,
+    returnToClient: clientInfo.returnToClient,
+    returnQuantity: clientInfo.returnQuantity,
+    keepAsStock: clientInfo.keepAsStock,
+    stockQuantity: clientInfo.stockQuantity,
+    clientReturnDate: clientInfo.clientReturnDate,
+    clientInstructions: clientInfo.clientInstructions,
+    elongationPercentage: this.batchOutputInfo.elongationInfo?.elongationPercentage || 0
+  };
+};
+
 // Static methods
 InventoryItemSchema.statics.findByCompany = function(companyId: string) {
   return this.find({ companyId, 'status.isActive': true });
@@ -397,6 +589,94 @@ InventoryItemSchema.statics.findByCategory = function(companyId: string, categor
     'category.primary': category,
     'status.isActive': true
   });
+};
+
+InventoryItemSchema.statics.findBatchOutputs = function(companyId: string, batchId?: string) {
+  const query: any = {
+    companyId,
+    'batchOutputInfo.sourceBatchId': { $exists: true },
+    'status.isActive': true
+  };
+  
+  if (batchId) {
+    query['batchOutputInfo.sourceBatchId'] = batchId;
+  }
+  
+  return this.find(query).populate('batchOutputInfo.sourceBatchId', 'batchNumber');
+};
+
+InventoryItemSchema.statics.findClientMaterialOutputs = function(companyId: string, clientId?: string) {
+  const query: any = {
+    companyId,
+    'batchOutputInfo.clientOutputInfo.isClientMaterial': true,
+    'status.isActive': true
+  };
+  
+  if (clientId) {
+    query['batchOutputInfo.clientId'] = clientId;
+  }
+  
+  return this.find(query).populate('batchOutputInfo.clientId', 'name email');
+};
+
+InventoryItemSchema.statics.findElongatedItems = function(companyId: string, minElongationPercentage?: number) {
+  const query: any = {
+    companyId,
+    'batchOutputInfo.elongationInfo.elongationPercentage': { $exists: true },
+    'status.isActive': true
+  };
+  
+  if (minElongationPercentage !== undefined) {
+    query['batchOutputInfo.elongationInfo.elongationPercentage'] = { $gte: minElongationPercentage };
+  }
+  
+  return this.find(query);
+};
+
+InventoryItemSchema.statics.createInventoryFromBatchOutput = async function(batchOutput: any, batchInfo: any, elongationInfo?: any, clientInfo?: any) {
+  const InventoryItem = this;
+  
+  // Create new inventory item
+  const inventoryItem = new InventoryItem({
+    companyId: batchInfo.companyId,
+    itemName: batchOutput.itemName,
+    description: `Production output from batch ${batchInfo.batchNumber}`,
+    category: {
+      primary: batchOutput.category || 'finished_goods',
+      secondary: 'production_output'
+    },
+    unit: batchOutput.unit,
+    stock: {
+      currentStock: elongationInfo ? elongationInfo.outputQuantity : batchOutput.quantity,
+      availableStock: elongationInfo ? elongationInfo.outputQuantity : batchOutput.quantity,
+      unit: batchOutput.unit,
+      averageCost: 0, // Will be calculated based on material source
+      totalValue: 0
+    },
+    pricing: {
+      costPrice: 0,
+      currency: 'INR'
+    },
+    quality: {
+      qualityGrade: batchOutput.qualityGrade || 'A',
+      qualityScore: 100
+    },
+    tracking: {
+      createdBy: batchInfo.createdBy,
+      totalInward: elongationInfo ? elongationInfo.outputQuantity : batchOutput.quantity,
+      lastStockUpdate: new Date(),
+      lastMovementDate: new Date()
+    },
+    tags: ['batch-output', `batch-${batchInfo.batchNumber}`],
+    status: {
+      isActive: true
+    }
+  });
+  
+  // Set batch output information
+  await (inventoryItem as any).createFromBatchOutput(batchOutput, batchInfo, elongationInfo, clientInfo);
+  
+  return inventoryItem;
 };
 
 // Performance Optimization: Additional indexes (non-duplicate)
@@ -462,4 +742,20 @@ InventoryItemSchema.post('save', function() {
   // Example: cache.del(`inventory:${this.companyId}:*`);
 });
 
-export default model<IInventoryItem>('InventoryItem', InventoryItemSchema);
+// Instance Methods Interface
+export interface IInventoryItemMethods {
+  createFromBatchOutput(batchOutput: any, batchInfo: any, elongationInfo?: any, clientInfo?: any): Promise<this>;
+  updateClientOutputDecision(returnToClient: boolean, returnQuantity: number, keepAsStock: boolean, stockQuantity: number, clientInstructions?: string): Promise<this>;
+  getElongationSummary(): any;
+  getClientMaterialSummary(): any;
+}
+
+// Static Methods Interface
+export interface IInventoryItemModel extends mongoose.Model<IInventoryItem> {
+  createInventoryFromBatchOutput(batchOutput: any, batchInfo: any, elongationInfo?: any, clientInfo?: any): Promise<IInventoryItem>;
+  findBatchOutputs(companyId: string, batchId?: string): Promise<IInventoryItem[]>;
+  findClientMaterialOutputs(companyId: string, clientId?: string): Promise<IInventoryItem[]>;
+  findElongatedItems(companyId: string, minElongationPercentage?: number): Promise<IInventoryItem[]>;
+}
+
+export default model<IInventoryItem, IInventoryItemModel>('InventoryItem', InventoryItemSchema);

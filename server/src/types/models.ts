@@ -652,6 +652,46 @@ export interface IInventoryItem extends AuditableDocument {
     completionDate?: Date;
   };
 
+  // Batch Output Tracking
+  batchOutputInfo?: {
+    sourceBatchId?: Types.ObjectId;
+    sourceBatchNumber?: string;
+    outputIndex?: number;
+    grnId?: Types.ObjectId;
+    grnNumber?: string;
+    materialSource?: 'own_material' | 'client_provided' | 'job_work_material';
+    clientId?: Types.ObjectId;
+    clientName?: string;
+    clientOrderId?: Types.ObjectId;
+    clientOrderNumber?: string;
+    
+    // Elongation Information
+    elongationInfo?: {
+      inputQuantity?: number;
+      inputUnit?: string;
+      outputQuantity?: number;
+      outputUnit?: string;
+      elongationPercentage?: number;
+      elongationQuantity?: number;
+      elongationReason?: string;
+      elongationNotes?: string;
+      qualityImpact?: string;
+      approvedBy?: string;
+      approvalDate?: Date;
+    };
+    
+    // Client Output Tracking
+    clientOutputInfo?: {
+      isClientMaterial?: boolean;
+      returnToClient?: boolean;
+      returnQuantity?: number;
+      keepAsStock?: boolean;
+      stockQuantity?: number;
+      clientReturnDate?: Date;
+      clientInstructions?: string;
+    };
+  };
+
   notes?: string;
   tags: string[];
   images: string[];

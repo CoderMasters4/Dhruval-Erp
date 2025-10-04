@@ -20,7 +20,8 @@ import {
   useUpdateUserMutation
 } from '@/lib/features/users/usersApi'
 import { useGetAllCompaniesQuery } from '@/lib/features/companies/companiesApi'
-import { selectCurrentUser } from '@/lib/features/auth/authSlice'
+import { selectCurrentUser, selectIsSuperAdmin, selectCurrentCompanyId } from '@/lib/features/auth/authSlice'
+import { usePermission } from '@/lib/hooks/usePermission'
 
 interface UserFormModalProps {
   isOpen: boolean
@@ -90,7 +91,14 @@ const PERMISSION_PRESETS: { [key: string]: { [module: string]: { [action: string
     financial: { view: false, create: false, edit: false, delete: false, approve: false, viewReports: false, bankTransactions: false },
     security: { gateManagement: false, visitorManagement: false, vehicleTracking: false, cctvAccess: false, emergencyResponse: false },
     hr: { viewEmployees: false, manageAttendance: false, manageSalary: false, viewReports: false },
-    admin: { userManagement: false, systemSettings: false, backupRestore: false, auditLogs: false }
+    admin: { userManagement: false, systemSettings: false, backupRestore: false, auditLogs: false },
+    customers: { view: true, create: false, edit: false, delete: false, viewReports: false },
+    suppliers: { view: false, create: false, edit: false, delete: false, viewReports: false },
+    purchase: { view: false, create: false, edit: false, delete: false, approve: false, viewReports: false },
+    gatePass: { view: false, create: false, approve: false, delete: false },
+    batches: { view: false, create: false, edit: false, delete: false, approve: false, viewReports: false },
+    greyFabricInward: { view: false, create: false, edit: false, delete: false, approve: false, viewReports: false },
+    sales: { view: true, create: false, edit: false, delete: false, viewReports: false }
   },
   operator: {
     inventory: { view: true, create: false, edit: false, delete: false, approve: false, viewReports: false },
@@ -99,7 +107,14 @@ const PERMISSION_PRESETS: { [key: string]: { [module: string]: { [action: string
     financial: { view: false, create: false, edit: false, delete: false, approve: false, viewReports: false, bankTransactions: false },
     security: { gateManagement: false, visitorManagement: false, vehicleTracking: false, cctvAccess: false, emergencyResponse: false },
     hr: { viewEmployees: false, manageAttendance: false, manageSalary: false, viewReports: false },
-    admin: { userManagement: false, systemSettings: false, backupRestore: false, auditLogs: false }
+    admin: { userManagement: false, systemSettings: false, backupRestore: false, auditLogs: false },
+    customers: { view: true, create: false, edit: false, delete: false, viewReports: false },
+    suppliers: { view: false, create: false, edit: false, delete: false, viewReports: false },
+    purchase: { view: false, create: false, edit: false, delete: false, approve: false, viewReports: false },
+    gatePass: { view: false, create: false, approve: false, delete: false },
+    batches: { view: true, create: false, edit: false, delete: false, approve: false, viewReports: false },
+    greyFabricInward: { view: true, create: true, edit: false, delete: false, approve: false, viewReports: false },
+    sales: { view: true, create: false, edit: false, delete: false, viewReports: false }
   },
   production_manager: {
     inventory: { view: true, create: true, edit: true, delete: false, approve: false, viewReports: true },
@@ -108,7 +123,14 @@ const PERMISSION_PRESETS: { [key: string]: { [module: string]: { [action: string
     financial: { view: true, create: false, edit: false, delete: false, approve: false, viewReports: true, bankTransactions: false },
     security: { gateManagement: false, visitorManagement: false, vehicleTracking: false, cctvAccess: false, emergencyResponse: false },
     hr: { viewEmployees: true, manageAttendance: true, manageSalary: false, viewReports: true },
-    admin: { userManagement: false, systemSettings: false, backupRestore: false, auditLogs: false }
+    admin: { userManagement: false, systemSettings: false, backupRestore: false, auditLogs: false },
+    customers: { view: true, create: true, edit: true, delete: false, viewReports: true },
+    suppliers: { view: true, create: true, edit: true, delete: false, viewReports: true },
+    purchase: { view: true, create: true, edit: true, delete: false, approve: false, viewReports: true },
+    gatePass: { view: true, create: true, approve: true, delete: false },
+    batches: { view: true, create: true, edit: true, delete: false, approve: false, viewReports: true },
+    greyFabricInward: { view: true, create: true, edit: true, delete: false, approve: false, viewReports: true },
+    sales: { view: true, create: true, edit: true, delete: false, viewReports: true }
   },
   manager: {
     inventory: { view: true, create: true, edit: true, delete: false, approve: false, viewReports: true },
@@ -117,7 +139,14 @@ const PERMISSION_PRESETS: { [key: string]: { [module: string]: { [action: string
     financial: { view: true, create: false, edit: false, delete: false, approve: false, viewReports: true, bankTransactions: false },
     security: { gateManagement: false, visitorManagement: false, vehicleTracking: false, cctvAccess: false, emergencyResponse: false },
     hr: { viewEmployees: true, manageAttendance: true, manageSalary: false, viewReports: true },
-    admin: { userManagement: false, systemSettings: false, backupRestore: false, auditLogs: false }
+    admin: { userManagement: false, systemSettings: false, backupRestore: false, auditLogs: false },
+    customers: { view: true, create: true, edit: true, delete: false, viewReports: true },
+    suppliers: { view: true, create: true, edit: true, delete: false, viewReports: true },
+    purchase: { view: true, create: true, edit: true, delete: false, approve: false, viewReports: true },
+    gatePass: { view: true, create: true, approve: true, delete: false },
+    batches: { view: true, create: true, edit: true, delete: false, approve: false, viewReports: true },
+    greyFabricInward: { view: true, create: true, edit: true, delete: false, approve: false, viewReports: true },
+    sales: { view: true, create: true, edit: true, delete: false, viewReports: true }
   },
   accountant: {
     inventory: { view: true, create: false, edit: false, delete: false, approve: false, viewReports: true },
@@ -126,7 +155,14 @@ const PERMISSION_PRESETS: { [key: string]: { [module: string]: { [action: string
     financial: { view: true, create: true, edit: true, delete: false, approve: false, viewReports: true, bankTransactions: true },
     security: { gateManagement: false, visitorManagement: false, vehicleTracking: false, cctvAccess: false, emergencyResponse: false },
     hr: { viewEmployees: false, manageAttendance: false, manageSalary: true, viewReports: true },
-    admin: { userManagement: false, systemSettings: false, backupRestore: false, auditLogs: false }
+    admin: { userManagement: false, systemSettings: false, backupRestore: false, auditLogs: false },
+    customers: { view: true, create: false, edit: false, delete: false, viewReports: true },
+    suppliers: { view: true, create: false, edit: false, delete: false, viewReports: true },
+    purchase: { view: true, create: true, edit: true, delete: false, approve: true, viewReports: true },
+    gatePass: { view: false, create: false, approve: false, delete: false },
+    batches: { view: true, create: false, edit: false, delete: false, approve: false, viewReports: true },
+    greyFabricInward: { view: true, create: false, edit: false, delete: false, approve: false, viewReports: true },
+    sales: { view: true, create: false, edit: false, delete: false, viewReports: true }
   },
   sales_executive: {
     inventory: { view: true, create: false, edit: false, delete: false, approve: false, viewReports: true },
@@ -135,7 +171,14 @@ const PERMISSION_PRESETS: { [key: string]: { [module: string]: { [action: string
     financial: { view: true, create: false, edit: false, delete: false, approve: false, viewReports: true, bankTransactions: false },
     security: { gateManagement: false, visitorManagement: false, vehicleTracking: false, cctvAccess: false, emergencyResponse: false },
     hr: { viewEmployees: false, manageAttendance: false, manageSalary: false, viewReports: false },
-    admin: { userManagement: false, systemSettings: false, backupRestore: false, auditLogs: false }
+    admin: { userManagement: false, systemSettings: false, backupRestore: false, auditLogs: false },
+    customers: { view: true, create: true, edit: true, delete: false, viewReports: true },
+    suppliers: { view: false, create: false, edit: false, delete: false, viewReports: false },
+    purchase: { view: false, create: false, edit: false, delete: false, approve: false, viewReports: false },
+    gatePass: { view: false, create: false, approve: false, delete: false },
+    batches: { view: true, create: false, edit: false, delete: false, approve: false, viewReports: true },
+    greyFabricInward: { view: true, create: false, edit: false, delete: false, approve: false, viewReports: true },
+    sales: { view: true, create: true, edit: true, delete: false, viewReports: true }
   },
   security_guard: {
     inventory: { view: false, create: false, edit: false, delete: false, approve: false, viewReports: false },
@@ -144,7 +187,14 @@ const PERMISSION_PRESETS: { [key: string]: { [module: string]: { [action: string
     financial: { view: false, create: false, edit: false, delete: false, approve: false, viewReports: false, bankTransactions: false },
     security: { gateManagement: true, visitorManagement: true, vehicleTracking: true, cctvAccess: true, emergencyResponse: true },
     hr: { viewEmployees: false, manageAttendance: false, manageSalary: false, viewReports: false },
-    admin: { userManagement: false, systemSettings: false, backupRestore: false, auditLogs: false }
+    admin: { userManagement: false, systemSettings: false, backupRestore: false, auditLogs: false },
+    customers: { view: false, create: false, edit: false, delete: false, viewReports: false },
+    suppliers: { view: false, create: false, edit: false, delete: false, viewReports: false },
+    purchase: { view: false, create: false, edit: false, delete: false, approve: false, viewReports: false },
+    gatePass: { view: true, create: true, approve: false, delete: false },
+    batches: { view: false, create: false, edit: false, delete: false, approve: false, viewReports: false },
+    greyFabricInward: { view: false, create: false, edit: false, delete: false, approve: false, viewReports: false },
+    sales: { view: false, create: false, edit: false, delete: false, viewReports: false }
   },
   owner: {
     inventory: { view: true, create: true, edit: true, delete: true, approve: true, viewReports: true },
@@ -153,7 +203,14 @@ const PERMISSION_PRESETS: { [key: string]: { [module: string]: { [action: string
     financial: { view: true, create: true, edit: true, delete: true, approve: true, viewReports: true, bankTransactions: true },
     security: { gateManagement: true, visitorManagement: true, vehicleTracking: true, cctvAccess: true, emergencyResponse: true },
     hr: { viewEmployees: true, manageAttendance: true, manageSalary: true, viewReports: true },
-    admin: { userManagement: true, systemSettings: true, backupRestore: true, auditLogs: true }
+    admin: { userManagement: true, systemSettings: true, backupRestore: true, auditLogs: true },
+    customers: { view: true, create: true, edit: true, delete: true, viewReports: true },
+    suppliers: { view: true, create: true, edit: true, delete: true, viewReports: true },
+    purchase: { view: true, create: true, edit: true, delete: true, approve: true, viewReports: true },
+    gatePass: { view: true, create: true, approve: true, delete: true },
+    batches: { view: true, create: true, edit: true, delete: true, approve: true, viewReports: true },
+    greyFabricInward: { view: true, create: true, edit: true, delete: true, approve: true, viewReports: true },
+    sales: { view: true, create: true, edit: true, delete: true, viewReports: true }
   },
   super_admin: {
     inventory: { view: true, create: true, edit: true, delete: true, approve: true, viewReports: true },
@@ -162,7 +219,14 @@ const PERMISSION_PRESETS: { [key: string]: { [module: string]: { [action: string
     financial: { view: true, create: true, edit: true, delete: true, approve: true, viewReports: true, bankTransactions: true },
     security: { gateManagement: true, visitorManagement: true, vehicleTracking: true, cctvAccess: true, emergencyResponse: true },
     hr: { viewEmployees: true, manageAttendance: true, manageSalary: true, viewReports: true },
-    admin: { userManagement: true, systemSettings: true, backupRestore: true, auditLogs: true }
+    admin: { userManagement: true, systemSettings: true, backupRestore: true, auditLogs: true },
+    customers: { view: true, create: true, edit: true, delete: true, viewReports: true },
+    suppliers: { view: true, create: true, edit: true, delete: true, viewReports: true },
+    purchase: { view: true, create: true, edit: true, delete: true, approve: true, viewReports: true },
+    gatePass: { view: true, create: true, approve: true, delete: true },
+    batches: { view: true, create: true, edit: true, delete: true, approve: true, viewReports: true },
+    greyFabricInward: { view: true, create: true, edit: true, delete: true, approve: true, viewReports: true },
+    sales: { view: true, create: true, edit: true, delete: true, viewReports: true }
   }
 }
 
@@ -200,10 +264,13 @@ export default function UserFormModal({ isOpen, onClose, onSuccess, user }: User
 
   // Get current user for permissions
   const currentUser = useSelector(selectCurrentUser)
+  const isSuperAdmin = useSelector(selectIsSuperAdmin)
+  const currentCompanyId = useSelector(selectCurrentCompanyId)
+  const { has } = usePermission()
 
   // Fetch companies for selection
-  const { data: companiesResponse, isLoading: companiesLoading } = useGetAllCompaniesQuery()
-  const companies = companiesResponse?.data || []
+  const { data: companiesResponse, isLoading: companiesLoading } = useGetAllCompaniesQuery(undefined, { skip: !isSuperAdmin })
+  const companies = isSuperAdmin ? (companiesResponse?.data || []) : []
 
   const isEditing = !!user
   const isLoading = isCreating || isUpdating || showSuccess
@@ -225,7 +292,7 @@ export default function UserFormModal({ isOpen, onClose, onSuccess, user }: User
   // Function to generate username suggestions
   const generateUsernameSuggestions = (firstName: string, email?: string): string[] => {
     const suggestions: string[] = []
-    
+
     // Clean first name
     const cleanFirstName = firstName
       .toLowerCase()
@@ -245,7 +312,7 @@ export default function UserFormModal({ isOpen, onClose, onSuccess, user }: User
         .toLowerCase()
         .replace(/[^a-z0-9]/g, '')
         .substring(0, 10)
-      
+
       if (emailPrefix && emailPrefix.length >= 3) {
         suggestions.push(emailPrefix)
         suggestions.push(`${emailPrefix}1`)
@@ -274,8 +341,8 @@ export default function UserFormModal({ isOpen, onClose, onSuccess, user }: User
           primaryCompanyId: typeof user.primaryCompanyId === 'string'
             ? user.primaryCompanyId
             : (typeof user.companyAccess?.[0]?.companyId === 'string'
-                ? user.companyAccess?.[0]?.companyId
-                : user.companyAccess?.[0]?.companyId?._id || ''),
+              ? user.companyAccess?.[0]?.companyId
+              : user.companyAccess?.[0]?.companyId?._id || ''),
           role: user.companyAccess?.[0]?.role || user.role || 'helper',
           department: user.department || '',
           designation: user.designation || '',
@@ -318,13 +385,13 @@ export default function UserFormModal({ isOpen, onClose, onSuccess, user }: User
     if (!user && companies.length > 0 && !formData.primaryCompanyId) {
       // For super admin, don't auto-select company
       // For regular admin, select their company
-      const defaultCompany = currentUser?.isSuperAdmin ? '' : currentUser?.companyId || companies[0]?._id || ''
+      const defaultCompany = isSuperAdmin ? '' : (currentCompanyId || (currentUser as any)?.companyId || '')
       setFormData(prev => ({
         ...prev,
         primaryCompanyId: defaultCompany
       }))
     }
-  }, [companies, user, formData.primaryCompanyId, currentUser])
+  }, [companies, user, formData.primaryCompanyId, currentUser, isSuperAdmin, currentCompanyId])
 
   // Ensure permissions are always initialized
   useEffect(() => {
@@ -391,10 +458,10 @@ export default function UserFormModal({ isOpen, onClose, onSuccess, user }: User
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    
+
     // Clear previous API errors
     setApiErrors([])
-    
+
     if (!validateForm()) {
       return
     }
@@ -451,9 +518,9 @@ export default function UserFormModal({ isOpen, onClose, onSuccess, user }: User
             gender: formData.gender || undefined,
             displayName: `${formData.firstName} ${formData.lastName}`
           },
-          primaryCompanyId: formData.primaryCompanyId,
+          primaryCompanyId: isSuperAdmin ? formData.primaryCompanyId : (currentCompanyId || formData.primaryCompanyId),
           companyAccess: formData.primaryCompanyId ? [{
-            companyId: formData.primaryCompanyId,
+            companyId: isSuperAdmin ? formData.primaryCompanyId : (currentCompanyId || formData.primaryCompanyId),
             role: formData.role,
             department: formData.department,
             designation: formData.designation,
@@ -461,7 +528,7 @@ export default function UserFormModal({ isOpen, onClose, onSuccess, user }: User
             isActive: true,
             joinedAt: new Date().toISOString()
           }] : [],
-          isSuperAdmin: formData.isSuperAdmin,
+          isSuperAdmin: isSuperAdmin ? formData.isSuperAdmin : false,
           // Legacy fields for backward compatibility
           role: formData.role,
           department: formData.department,
@@ -478,7 +545,7 @@ export default function UserFormModal({ isOpen, onClose, onSuccess, user }: User
 
       // Show success message
       setShowSuccess(true)
-      
+
       // Close modal after a short delay to show success message
       setTimeout(() => {
         onSuccess(isEditing ? 'update' : 'create')
@@ -499,13 +566,13 @@ export default function UserFormModal({ isOpen, onClose, onSuccess, user }: User
       // Handle RTK Query specific error structure
       if (error?.data) {
         console.log('Error data found:', error.data)
-        
+
         // Handle validation errors from server
         if (error.data.errors && Array.isArray(error.data.errors)) {
           error.data.errors.forEach((err: any) => {
             if (err.field && err.message) {
               errorMessages.push(`${err.field}: ${err.message}`)
-              
+
               // Map server field errors to form field errors
               const fieldMap: { [key: string]: keyof FormData } = {
                 'email': 'email',
@@ -515,7 +582,7 @@ export default function UserFormModal({ isOpen, onClose, onSuccess, user }: User
                 'phone': 'phone',
                 'primaryCompanyId': 'primaryCompanyId'
               }
-              
+
               const formField = fieldMap[err.field]
               if (formField) {
                 setErrors(prev => ({
@@ -642,27 +709,12 @@ export default function UserFormModal({ isOpen, onClose, onSuccess, user }: User
     }
   }
 
-  // Function to test server connectivity
-  const testServerConnectivity = async () => {
-    try {
-      const response = await fetch(process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api/v1/health', {
-        method: 'GET',
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      })
-      return response.ok
-    } catch (error) {
-      console.error('Server connectivity test failed:', error)
-      return false
-    }
-  }
+
 
   const updateFormData = (updates: Partial<FormData>) => {
     setFormData(prev => {
       const newData = { ...prev, ...updates }
-      
+
       // If role changes, apply permission preset
       if (updates.role && updates.role !== prev.role) {
         const preset = PERMISSION_PRESETS[updates.role as keyof typeof PERMISSION_PRESETS]
@@ -670,26 +722,26 @@ export default function UserFormModal({ isOpen, onClose, onSuccess, user }: User
           newData.permissions = preset
         }
       }
-      
+
       return newData
     })
-    
+
     // Clear related errors
     const newErrors = { ...errors }
     Object.keys(updates).forEach(key => {
       delete newErrors[key as keyof FormData]
     })
     setErrors(newErrors)
-    
-          // Clear API errors when user starts editing
-      if (apiErrors.length > 0) {
-        setApiErrors([])
-      }
-      
-      // Clear success message when user starts editing
-      if (showSuccess) {
-        setShowSuccess(false)
-      }
+
+    // Clear API errors when user starts editing
+    if (apiErrors.length > 0) {
+      setApiErrors([])
+    }
+
+    // Clear success message when user starts editing
+    if (showSuccess) {
+      setShowSuccess(false)
+    }
   }
 
   return (
@@ -731,31 +783,7 @@ export default function UserFormModal({ isOpen, onClose, onSuccess, user }: User
                   <svg className="w-5 h-5 text-orange-500 dark:text-orange-400 mt-0.5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
                   </svg>
-                  <div className="flex-1">
-                    <h4 className="text-sm font-semibold text-orange-800 dark:text-orange-200 mb-1">
-                      Server Connection Issue
-                    </h4>
-                    <p className="text-sm text-orange-700 dark:text-orange-300 font-medium">
-                      Unable to reach the server. Please check if the server is running and try again.
-                    </p>
-                    <div className="mt-3">
-                      <button
-                        type="button"
-                        onClick={async () => {
-                          const isReachable = await testServerConnectivity()
-                          if (isReachable) {
-                            setIsServerReachable(true)
-                            toast.success('Server connection restored!')
-                          } else {
-                            toast.error('Server still unreachable')
-                          }
-                        }}
-                        className="px-3 py-1 text-xs bg-orange-100 dark:bg-orange-800 text-orange-700 dark:text-orange-200 rounded border border-orange-300 dark:border-orange-600 hover:bg-orange-200 dark:hover:bg-orange-700 transition-colors"
-                      >
-                        Test Connection
-                      </button>
-                    </div>
-                  </div>
+
                 </div>
               </div>
             </div>
@@ -812,7 +840,7 @@ export default function UserFormModal({ isOpen, onClose, onSuccess, user }: User
               </div>
             </div>
           )}
-          
+
           <div className="space-y-6">
             {/* Basic Information */}
             <div className="bg-sky-50 dark:bg-sky-900/20 rounded-xl p-6 border border-sky-200 dark:border-sky-700 transition-all duration-300">
@@ -820,7 +848,7 @@ export default function UserFormModal({ isOpen, onClose, onSuccess, user }: User
                 <User className="w-5 h-5 mr-2 text-sky-600 dark:text-sky-400" />
                 Basic Information
               </h3>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-semibold text-black dark:text-white mb-2">
@@ -845,9 +873,8 @@ export default function UserFormModal({ isOpen, onClose, onSuccess, user }: User
                     required
                     value={formData.firstName}
                     onChange={(e) => updateFormData({ firstName: e.target.value })}
-                    className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-all duration-200 text-gray-900 dark:text-white font-medium placeholder:text-gray-500 dark:placeholder:text-gray-400 ${
-                      errors.firstName ? 'border-red-300 dark:border-red-600 bg-red-50 dark:bg-red-900/20' : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800'
-                    }`}
+                    className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-all duration-200 text-gray-900 dark:text-white font-medium placeholder:text-gray-500 dark:placeholder:text-gray-400 ${errors.firstName ? 'border-red-300 dark:border-red-600 bg-red-50 dark:bg-red-900/20' : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800'
+                      }`}
                     placeholder="Enter first name"
                   />
                   {errors.firstName && (
@@ -864,9 +891,8 @@ export default function UserFormModal({ isOpen, onClose, onSuccess, user }: User
                     required
                     value={formData.lastName}
                     onChange={(e) => updateFormData({ lastName: e.target.value })}
-                    className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-all duration-200 text-gray-900 dark:text-white font-medium placeholder:text-gray-500 dark:placeholder:text-gray-400 ${
-                      errors.lastName ? 'border-red-300 dark:border-red-600 bg-red-50 dark:bg-red-900/20' : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800'
-                    }`}
+                    className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-all duration-200 text-gray-900 dark:text-white font-medium placeholder:text-gray-500 dark:placeholder:text-gray-400 ${errors.lastName ? 'border-red-300 dark:border-red-600 bg-red-50 dark:bg-red-900/20' : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800'
+                      }`}
                     placeholder="Enter last name"
                   />
                   {errors.lastName && (
@@ -884,9 +910,8 @@ export default function UserFormModal({ isOpen, onClose, onSuccess, user }: User
                       type="email"
                       value={formData.email}
                       onChange={(e) => updateFormData({ email: e.target.value.toLowerCase() })}
-                      className={`w-full pl-10 pr-4 py-3 border rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-all duration-200 text-gray-900 dark:text-white font-medium placeholder:text-gray-500 dark:placeholder:text-gray-400 ${
-                        errors.email ? 'border-red-300 dark:border-red-600 bg-red-50 dark:bg-red-900/20' : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800'
-                      }`}
+                      className={`w-full pl-10 pr-4 py-3 border rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-all duration-200 text-gray-900 dark:text-white font-medium placeholder:text-gray-500 dark:placeholder:text-gray-400 ${errors.email ? 'border-red-300 dark:border-red-600 bg-red-50 dark:bg-red-900/20' : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800'
+                        }`}
                       placeholder="Enter email address (optional)"
                     />
                   </div>
@@ -906,9 +931,8 @@ export default function UserFormModal({ isOpen, onClose, onSuccess, user }: User
                       required
                       value={formData.phone}
                       onChange={(e) => updateFormData({ phone: e.target.value })}
-                      className={`w-full pl-10 pr-4 py-3 border rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-all duration-200 text-gray-900 dark:text-white font-medium placeholder:text-gray-500 dark:placeholder:text-gray-400 ${
-                        errors.phone ? 'border-red-300 dark:border-red-600 bg-red-50 dark:bg-red-900/20' : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800'
-                      }`}
+                      className={`w-full pl-10 pr-4 py-3 border rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-all duration-200 text-gray-900 dark:text-white font-medium placeholder:text-gray-500 dark:placeholder:text-gray-400 ${errors.phone ? 'border-red-300 dark:border-red-600 bg-red-50 dark:bg-red-900/20' : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800'
+                        }`}
                       placeholder="Enter phone number"
                     />
                   </div>
@@ -969,20 +993,23 @@ export default function UserFormModal({ isOpen, onClose, onSuccess, user }: User
                     required
                     value={formData.primaryCompanyId}
                     onChange={(e) => updateFormData({ primaryCompanyId: e.target.value })}
-                    className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-all duration-200 bg-white dark:bg-gray-800 text-gray-900 dark:text-white font-medium ${
-                      errors.primaryCompanyId ? 'border-red-300 dark:border-red-600 bg-red-50 dark:bg-red-900/20' : 'border-gray-300 dark:border-gray-600'
-                    }`}
+                    className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-all duration-200 bg-white dark:bg-gray-800 text-gray-900 dark:text-white font-medium ${errors.primaryCompanyId ? 'border-red-300 dark:border-red-600 bg-red-50 dark:bg-red-900/20' : 'border-gray-300 dark:border-gray-600'
+                      }`}
                     disabled={companiesLoading}
                   >
                     <option value="">Select Company</option>
-                    {companies
+                    {isSuperAdmin ? companies
                       .filter(company => company.isActive)
                       .sort((a, b) => a.companyName.localeCompare(b.companyName))
                       .map((company) => (
                         <option key={company._id} value={company._id}>
                           {company.companyName} ({company.companyCode})
                         </option>
-                      ))}
+                      )) : (
+                      <option value={currentCompanyId || ''}>
+                        {currentCompanyId ? 'Current Company' : 'No company assigned'}
+                      </option>
+                    )}
                   </select>
                   {errors.primaryCompanyId && (
                     <p className="mt-1 text-sm text-red-600 dark:text-red-400 font-medium">{errors.primaryCompanyId}</p>
@@ -1016,7 +1043,7 @@ export default function UserFormModal({ isOpen, onClose, onSuccess, user }: User
                 <Shield className="w-5 h-5 mr-2 text-green-600 dark:text-green-400" />
                 Role & Status
               </h3>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-semibold text-black dark:text-white mb-2">
@@ -1032,7 +1059,7 @@ export default function UserFormModal({ isOpen, onClose, onSuccess, user }: User
                     }}
                     className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-all duration-200 bg-white dark:bg-gray-800 text-gray-900 dark:text-white font-medium"
                   >
-                    {ROLES.map((role) => (
+                    {ROLES.filter(r => r.value !== 'super_admin' || isSuperAdmin).map((role) => (
                       <option key={role.value} value={role.value}>
                         {role.label}
                       </option>
@@ -1083,8 +1110,9 @@ export default function UserFormModal({ isOpen, onClose, onSuccess, user }: User
                       <input
                         type="checkbox"
                         checked={formData.isSuperAdmin}
-                        onChange={(e) => updateFormData({ isSuperAdmin: e.target.checked })}
+                        onChange={(e) => updateFormData({ isSuperAdmin: isSuperAdmin ? e.target.checked : false })}
                         className="mr-2 w-4 h-4 text-purple-600 dark:text-purple-400 border-gray-300 dark:border-gray-600 rounded focus:ring-purple-500 dark:focus:ring-purple-400"
+                        disabled={!isSuperAdmin}
                       />
                       <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
                         Grant Super Admin Access
@@ -1104,7 +1132,7 @@ export default function UserFormModal({ isOpen, onClose, onSuccess, user }: User
                 <Shield className="w-5 h-5 mr-2 text-green-600 dark:text-green-400" />
                 Access & Permissions
               </h3>
-              
+
               <div className="space-y-6">
                 {/* Role-based Permission Presets */}
                 <div className="bg-white dark:bg-gray-800 p-4 rounded-lg border border-green-200 dark:border-green-700 transition-all duration-300">
@@ -1127,7 +1155,7 @@ export default function UserFormModal({ isOpen, onClose, onSuccess, user }: User
                       </option>
                     ))}
                   </select>
-                  
+
                   {/* Permission Summary */}
                   <div className="mt-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg transition-all duration-300">
                     <h5 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Permission Summary:</h5>
@@ -1150,7 +1178,7 @@ export default function UserFormModal({ isOpen, onClose, onSuccess, user }: User
                       </div>
                     </div>
                   </div>
-                  
+
                   {/* Quick Actions */}
                   <div className="mt-3 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-700 transition-all duration-300">
                     <h5 className="text-sm font-medium text-blue-700 dark:text-blue-300 mb-2">Quick Actions:</h5>
@@ -1648,7 +1676,7 @@ export default function UserFormModal({ isOpen, onClose, onSuccess, user }: User
                   <Shield className="w-5 h-5 mr-2 text-yellow-600 dark:text-yellow-400" />
                   Security
                 </h3>
-                
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-semibold text-black dark:text-white mb-2">
@@ -1660,9 +1688,8 @@ export default function UserFormModal({ isOpen, onClose, onSuccess, user }: User
                         required
                         value={formData.password}
                         onChange={(e) => updateFormData({ password: e.target.value })}
-                        className={`w-full px-4 py-3 pr-12 border rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-all duration-200 text-gray-900 dark:text-white font-medium placeholder:text-gray-500 dark:placeholder:text-gray-400 ${
-                          errors.password ? 'border-red-300 dark:border-red-600 bg-red-50 dark:bg-red-900/20' : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800'
-                        }`}
+                        className={`w-full px-4 py-3 pr-12 border rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-all duration-200 text-gray-900 dark:text-white font-medium placeholder:text-gray-500 dark:placeholder:text-gray-400 ${errors.password ? 'border-red-300 dark:border-red-600 bg-red-50 dark:bg-red-900/20' : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800'
+                          }`}
                         placeholder="Enter password"
                       />
                       <button
@@ -1688,9 +1715,8 @@ export default function UserFormModal({ isOpen, onClose, onSuccess, user }: User
                         required
                         value={formData.confirmPassword}
                         onChange={(e) => updateFormData({ confirmPassword: e.target.value })}
-                        className={`w-full px-4 py-3 pr-12 border rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-all duration-200 text-gray-900 dark:text-white font-medium placeholder:text-gray-500 dark:placeholder:text-gray-400 ${
-                          errors.confirmPassword ? 'border-red-300 dark:border-red-600 bg-red-50 dark:bg-red-900/20' : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800'
-                        }`}
+                        className={`w-full px-4 py-3 pr-12 border rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-all duration-200 text-gray-900 dark:text-white font-medium placeholder:text-gray-500 dark:placeholder:text-gray-400 ${errors.confirmPassword ? 'border-red-300 dark:border-red-600 bg-red-50 dark:bg-red-900/20' : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800'
+                          }`}
                         placeholder="Confirm password"
                       />
                       <button

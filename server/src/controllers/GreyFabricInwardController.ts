@@ -44,6 +44,7 @@ export class GreyFabricInwardController {
 
   /**
    * Create or update inventory item from GRN data with proper grey stock handling
+   * Handles both own materials and client-provided materials
    */
   private async createOrUpdateInventoryItemFromGRN(grn: any, companyId: string, userId: string): Promise<any> {
     try {
@@ -51,6 +52,9 @@ export class GreyFabricInwardController {
       let totalStock = 0;
       let totalCost = 0;
       let averageCost = 0;
+      
+      // For client-provided materials, cost might be 0 or different handling
+      const isClientMaterial = grn.materialSource === 'client_provided';
       
       if (grn.greyStockLots && grn.greyStockLots.length > 0) {
         // Calculate from lots
@@ -61,12 +65,17 @@ export class GreyFabricInwardController {
           return sum + lot.lotQuantity; // Assume pieces are counted as-is
         }, 0);
         
-        totalCost = grn.greyStockLots.reduce((sum: number, lot: any) => sum + lot.totalCost, 0);
+        // For client materials, cost might be 0 or handling charges
+        if (isClientMaterial) {
+          totalCost = grn.greyStockLots.reduce((sum: number, lot: any) => sum + (lot.totalCost || 0), 0);
+        } else {
+          totalCost = grn.greyStockLots.reduce((sum: number, lot: any) => sum + lot.totalCost, 0);
+        }
         averageCost = totalStock > 0 ? totalCost / totalStock : 0;
       } else {
         // Use quantity from GRN
         totalStock = typeof grn.quantity === 'number' ? grn.quantity : grn.quantity.receivedQuantity;
-        averageCost = grn.financial?.unitPrice || 0;
+        averageCost = isClientMaterial ? 0 : (grn.financial?.unitPrice || 0);
         totalCost = totalStock * averageCost;
       }
 
@@ -386,7 +395,10 @@ export class GreyFabricInwardController {
         // New fields for grey stock
         greyStockLots = [],
         warehouseId,
-        warehouseName = 'Main Warehouse'
+        warehouseName = 'Main Warehouse',
+        // Material source fields
+        materialSource = 'own_material',
+        clientMaterialInfo
       } = req.body;
 
       // Validate required fields based on entry type
@@ -397,6 +409,13 @@ export class GreyFabricInwardController {
       } else {
         if (!fabricType || !fabricColor || !quantity || !unit || !quality) {
           throw new AppError('Missing required fields: fabricType, fabricColor, quantity, unit, quality', 400);
+        }
+      }
+
+      // Validate client material info when material source is client_provided
+      if (materialSource === 'client_provided') {
+        if (!clientMaterialInfo?.clientId || !clientMaterialInfo?.clientName) {
+          throw new AppError('Missing required fields for client-provided material: clientId, clientName', 400);
         }
       }
 
@@ -425,6 +444,54 @@ export class GreyFabricInwardController {
         entryType,
         purchaseOrderId: purchaseOrderId ? new mongoose.Types.ObjectId(purchaseOrderId) : undefined,
         purchaseOrderNumber: purchaseOrder?.poNumber,
+        
+        // Material Source
+        materialSource,
+        
+        // Client Material Information
+        clientMaterialInfo: materialSource === 'client_provided' && clientMaterialInfo ? {
+          clientId: new mongoose.Types.ObjectId(clientMaterialInfo.clientId),
+          clientName: clientMaterialInfo.clientName,
+          clientOrderId: clientMaterialInfo.clientOrderId ? new mongoose.Types.ObjectId(clientMaterialInfo.clientOrderId) : undefined,
+          clientOrderNumber: clientMaterialInfo.clientOrderNumber,
+          clientMaterialCode: clientMaterialInfo.clientMaterialCode,
+          clientBatchNumber: clientMaterialInfo.clientBatchNumber,
+          clientLotNumber: clientMaterialInfo.clientLotNumber,
+          clientProvidedDate: clientMaterialInfo.clientProvidedDate ? new Date(clientMaterialInfo.clientProvidedDate) : undefined,
+          clientInstructions: clientMaterialInfo.clientInstructions,
+          clientQualitySpecs: clientMaterialInfo.clientQualitySpecs,
+          returnRequired: clientMaterialInfo.returnRequired || false,
+          returnDeadline: clientMaterialInfo.returnDeadline ? new Date(clientMaterialInfo.returnDeadline) : undefined,
+          clientContactPerson: clientMaterialInfo.clientContactPerson,
+          clientContactPhone: clientMaterialInfo.clientContactPhone,
+          clientContactEmail: clientMaterialInfo.clientContactEmail,
+          
+          // Initialize production outputs and material consumption tracking
+          productionOutputs: [],
+          materialConsumption: {
+            totalConsumed: 0,
+            wasteQuantity: 0,
+            returnableQuantity: 0,
+            consumedDate: undefined,
+            consumptionNotes: ''
+          },
+          clientMaterialBalance: {
+            totalReceived: Number(quantity),
+            totalConsumed: 0,
+            totalWaste: 0,
+            totalReturned: 0,
+            totalKeptAsStock: 0,
+            currentBalance: Number(quantity),
+            lastUpdated: new Date(),
+            balanceHistory: [{
+              date: new Date(),
+              transactionType: 'received',
+              quantity: Number(quantity),
+              reference: `GRN-${grnCount + 1}`,
+              notes: 'Initial material receipt'
+            }]
+          }
+        } : undefined,
         
         // Supplier info populated from Purchase Order or provided directly
         supplierId: entryType === 'purchase_order' ? purchaseOrder?.supplier?.supplierId : (supplierId ? new mongoose.Types.ObjectId(supplierId) : undefined),
@@ -705,6 +772,509 @@ export class GreyFabricInwardController {
         stack: error?.stack
       });
       throw error;
+    }
+  }
+
+  /**
+   * Handle client material return
+   */
+  async returnClientMaterial(req: Request, res: Response): Promise<void> {
+    try {
+      const { grnId } = req.params;
+      const { returnQuantity, returnReason, returnDate, notes } = req.body;
+      const userId = req.user?.id;
+
+      if (!userId) {
+        res.status(401).json({ success: false, message: 'User not authenticated' });
+        return;
+      }
+
+      const grn = await GreyFabricInward.findById(grnId);
+      if (!grn) {
+        res.status(404).json({ success: false, message: 'GRN not found' });
+        return;
+      }
+
+      if (grn.materialSource !== 'client_provided') {
+        res.status(400).json({ success: false, message: 'This GRN is not for client-provided material' });
+        return;
+      }
+
+      // Update GRN with return information
+      grn.status = 'approved'; // Keep as approved since 'returned' is not in enum
+      // Note: returnedQuantity doesn't exist in quantity schema, using rejectedQuantity instead
+      grn.quantity.rejectedQuantity = returnQuantity;
+      grn.remarks = notes;
+      
+      // Update stock balance
+      grn.stockBalance.availableMeters -= returnQuantity;
+      grn.stockBalance.totalMeters -= returnQuantity;
+
+      await grn.save();
+
+      // Update inventory if needed
+      if (grn.inventoryItemId) {
+        await this.inventoryService.updateStock(
+          grn.inventoryItemId.toString(),
+          grn.storageLocation.warehouseId.toString(),
+          -returnQuantity,
+          'out',
+          `CLIENT-RETURN-${grn.grnNumber}`,
+          `Client material return - ${returnReason}`,
+          userId
+        );
+      }
+
+      logger.info('Client material returned successfully', {
+        grnId,
+        grnNumber: grn.grnNumber,
+        returnQuantity,
+        returnReason,
+        userId
+      });
+
+      res.json({
+        success: true,
+        message: 'Client material returned successfully',
+        data: grn
+      });
+
+    } catch (error) {
+      this.handleError(res, error);
+    }
+  }
+
+  /**
+   * Add production output for client material
+   */
+  async addProductionOutput(req: Request, res: Response): Promise<void> {
+    try {
+      const { grnId } = req.params;
+      const { 
+        productionOrderId, 
+        productionOrderNumber, 
+        outputQuantity, 
+        outputUnit, 
+        outputType, 
+        qualityGrade, 
+        notes 
+      } = req.body;
+      const userId = req.user?.id;
+
+      if (!userId) {
+        res.status(401).json({ success: false, message: 'User not authenticated' });
+        return;
+      }
+
+      const grn = await GreyFabricInward.findById(grnId);
+      if (!grn) {
+        res.status(404).json({ success: false, message: 'GRN not found' });
+        return;
+      }
+
+      if (grn.materialSource !== 'client_provided') {
+        res.status(400).json({ success: false, message: 'Production output can only be added to client-provided materials' });
+        return;
+      }
+
+      const outputData = {
+        productionOrderId: new mongoose.Types.ObjectId(productionOrderId),
+        productionOrderNumber,
+        outputQuantity,
+        outputUnit,
+        outputType,
+        outputDate: new Date(),
+        qualityGrade,
+        outputStatus: 'pending',
+        notes
+      };
+
+      await grn.addProductionOutput(outputData);
+
+      logger.info('Production output added successfully', {
+        grnId,
+        grnNumber: grn.grnNumber,
+        productionOrderId,
+        outputQuantity,
+        outputType,
+        userId
+      });
+
+      res.json({
+        success: true,
+        message: 'Production output added successfully',
+        data: grn
+      });
+
+    } catch (error) {
+      this.handleError(res, error);
+    }
+  }
+
+  /**
+   * Update production output status (return to client or keep as stock)
+   */
+  async updateProductionOutputStatus(req: Request, res: Response): Promise<void> {
+    try {
+      const { grnId, productionOrderId } = req.params;
+      const { 
+        status, 
+        clientReturnQuantity, 
+        keptAsStockQuantity, 
+        notes 
+      } = req.body;
+      const userId = req.user?.id;
+
+      if (!userId) {
+        res.status(401).json({ success: false, message: 'User not authenticated' });
+        return;
+      }
+
+      const grn = await GreyFabricInward.findById(grnId);
+      if (!grn) {
+        res.status(404).json({ success: false, message: 'GRN not found' });
+        return;
+      }
+
+      await grn.updateProductionOutputStatus(
+        productionOrderId, 
+        status, 
+        clientReturnQuantity, 
+        keptAsStockQuantity
+      );
+
+      // If keeping as stock, update inventory
+      if (status === 'kept_as_stock' && keptAsStockQuantity > 0) {
+        // Create inventory item for the output
+        await this.createInventoryItemFromProductionOutput(
+          grn, 
+          productionOrderId, 
+          keptAsStockQuantity, 
+          userId
+        );
+      }
+
+      logger.info('Production output status updated successfully', {
+        grnId,
+        grnNumber: grn.grnNumber,
+        productionOrderId,
+        status,
+        clientReturnQuantity,
+        keptAsStockQuantity,
+        userId
+      });
+
+      res.json({
+        success: true,
+        message: 'Production output status updated successfully',
+        data: grn
+      });
+
+    } catch (error) {
+      this.handleError(res, error);
+    }
+  }
+
+  /**
+   * Update material consumption for client material
+   */
+  async updateMaterialConsumption(req: Request, res: Response): Promise<void> {
+    try {
+      const { grnId } = req.params;
+      const { consumedQuantity, wasteQuantity, notes } = req.body;
+      const userId = req.user?.id;
+
+      if (!userId) {
+        res.status(401).json({ success: false, message: 'User not authenticated' });
+        return;
+      }
+
+      const grn = await GreyFabricInward.findById(grnId);
+      if (!grn) {
+        res.status(404).json({ success: false, message: 'GRN not found' });
+        return;
+      }
+
+      await grn.updateMaterialConsumption(consumedQuantity, wasteQuantity, notes);
+
+      logger.info('Material consumption updated successfully', {
+        grnId,
+        grnNumber: grn.grnNumber,
+        consumedQuantity,
+        wasteQuantity,
+        userId
+      });
+
+      res.json({
+        success: true,
+        message: 'Material consumption updated successfully',
+        data: grn
+      });
+
+    } catch (error) {
+      this.handleError(res, error);
+    }
+  }
+
+  /**
+   * Create inventory item from production output
+   */
+  private async createInventoryItemFromProductionOutput(
+    grn: any, 
+    productionOrderId: string, 
+    quantity: number, 
+    userId: string
+  ): Promise<any> {
+    try {
+      // Find the production order to get product details
+      const ProductionOrder = mongoose.model('ProductionOrder');
+      const productionOrder = await ProductionOrder.findById(productionOrderId);
+      
+      if (!productionOrder) {
+        throw new Error('Production order not found');
+      }
+
+      // Create inventory item for the output
+      const outputItem = {
+        itemName: `${productionOrder.product.productType} - ${productionOrder.product.design || 'Custom'}`,
+        description: `Production output from client material - GRN ${grn.grnNumber}`,
+        category: 'finished_goods',
+        subcategory: productionOrder.product.productType,
+        unit: 'pieces',
+        currentStock: quantity,
+        availableStock: quantity,
+        averageCost: 0, // Client material, no cost
+        totalValue: 0,
+        minStockLevel: 0,
+        maxStockLevel: 1000,
+        reorderLevel: 10,
+        locations: [{
+          warehouseId: grn.storageLocation.warehouseId,
+          warehouseName: grn.storageLocation.warehouseName,
+          rackNumber: grn.storageLocation.rackNumber,
+          shelfNumber: grn.storageLocation.shelfNumber,
+          binNumber: grn.storageLocation.binNumber,
+          currentStock: quantity,
+          availableStock: quantity
+        }],
+        fabricDetails: {
+          fabricType: grn.fabricDetails.fabricType,
+          fabricGrade: grn.fabricDetails.fabricGrade,
+          gsm: grn.fabricDetails.gsm,
+          width: grn.fabricDetails.width,
+          color: grn.fabricDetails.color,
+          design: productionOrder.product.design,
+          pattern: productionOrder.product.pattern,
+          finish: productionOrder.product.finish
+        },
+        productDetails: {
+          productType: productionOrder.product.productType,
+          design: productionOrder.product.design,
+          color: productionOrder.product.color,
+          gsm: productionOrder.product.gsm,
+          width: productionOrder.product.width,
+          length: productionOrder.product.length,
+          pattern: productionOrder.product.pattern,
+          finish: productionOrder.product.finish
+        },
+        tracking: {
+          totalInward: quantity,
+          totalOutward: 0,
+          lastStockUpdate: new Date(),
+          lastMovementDate: new Date()
+        },
+        companyId: grn.companyId,
+        createdBy: userId,
+        updatedBy: userId,
+        tags: ['client-material-output', 'production-output', grn.grnNumber]
+      };
+
+      const InventoryItem = mongoose.model('InventoryItem');
+      const inventoryItem = new InventoryItem(outputItem);
+      await inventoryItem.save();
+
+      logger.info('Inventory item created from production output', {
+        grnId: grn._id,
+        grnNumber: grn.grnNumber,
+        productionOrderId,
+        inventoryItemId: inventoryItem._id,
+        quantity,
+        userId
+      });
+
+      return inventoryItem;
+
+    } catch (error) {
+      logger.error('Error creating inventory item from production output', {
+        grnId: grn._id,
+        grnNumber: grn.grnNumber,
+        productionOrderId,
+        quantity,
+        userId,
+        error: error?.message || error,
+        stack: error?.stack
+      });
+      throw error;
+    }
+  }
+
+  /**
+   * Get client-wise material summary
+   */
+  async getClientMaterialSummary(req: Request, res: Response): Promise<void> {
+    try {
+      const { clientId } = req.query;
+
+      const summary = await GreyFabricInward.getClientMaterialSummary(clientId as string);
+
+      res.json({
+        success: true,
+        data: summary
+      });
+
+    } catch (error) {
+      this.handleError(res, error);
+    }
+  }
+
+  /**
+   * Get client material balance details
+   */
+  async getClientMaterialBalance(req: Request, res: Response): Promise<void> {
+    try {
+      const { clientId } = req.params;
+
+      if (!clientId) {
+        res.status(400).json({ success: false, message: 'Client ID is required' });
+        return;
+      }
+
+      const balance = await GreyFabricInward.getClientMaterialBalance(clientId);
+
+      res.json({
+        success: true,
+        data: balance
+      });
+
+    } catch (error) {
+      this.handleError(res, error);
+    }
+  }
+
+  /**
+   * Get client material history
+   */
+  async getClientMaterialHistory(req: Request, res: Response): Promise<void> {
+    try {
+      const { clientId } = req.params;
+      const { grnId } = req.query;
+
+      if (!clientId) {
+        res.status(400).json({ success: false, message: 'Client ID is required' });
+        return;
+      }
+
+      const history = await GreyFabricInward.getClientMaterialHistory(clientId, grnId as string);
+
+      res.json({
+        success: true,
+        data: history
+      });
+
+    } catch (error) {
+      this.handleError(res, error);
+    }
+  }
+
+  /**
+   * Get all clients with material summary
+   */
+  async getAllClientsMaterialSummary(req: Request, res: Response): Promise<void> {
+    try {
+      const { page = 1, limit = 10 } = req.query;
+      const skip = (Number(page) - 1) * Number(limit);
+
+      // Get all unique clients with material data
+      const clients = await GreyFabricInward.aggregate([
+        { $match: { materialSource: 'client_provided' } },
+        { $group: {
+          _id: '$clientMaterialInfo.clientId',
+          clientName: { $first: '$clientMaterialInfo.clientName' },
+          totalGRNs: { $sum: 1 },
+          totalReceived: { $sum: '$clientMaterialInfo.clientMaterialBalance.totalReceived' },
+          totalConsumed: { $sum: '$clientMaterialInfo.clientMaterialBalance.totalConsumed' },
+          totalWaste: { $sum: '$clientMaterialInfo.clientMaterialBalance.totalWaste' },
+          totalReturned: { $sum: '$clientMaterialInfo.clientMaterialBalance.totalReturned' },
+          totalKeptAsStock: { $sum: '$clientMaterialInfo.clientMaterialBalance.totalKeptAsStock' },
+          currentBalance: { $sum: '$clientMaterialInfo.clientMaterialBalance.currentBalance' },
+          lastActivity: { $max: '$updatedAt' },
+          grns: { $push: {
+            grnNumber: '$grnNumber',
+            fabricType: '$fabricDetails.fabricType',
+            fabricColor: '$fabricDetails.color',
+            receivedQuantity: '$quantity.receivedQuantity',
+            unit: '$quantity.unit',
+            status: '$status',
+            createdAt: '$createdAt'
+          }}
+        }},
+        { $sort: { lastActivity: -1 } },
+        { $skip: skip },
+        { $limit: Number(limit) }
+      ]);
+
+      // Get total count
+      const totalClients = await GreyFabricInward.distinct('clientMaterialInfo.clientId', { 
+        materialSource: 'client_provided' 
+      });
+
+      res.json({
+        success: true,
+        data: {
+          clients,
+          pagination: {
+            page: Number(page),
+            limit: Number(limit),
+            total: totalClients.length,
+            pages: Math.ceil(totalClients.length / Number(limit))
+          }
+        }
+      });
+
+    } catch (error) {
+      this.handleError(res, error);
+    }
+  }
+
+  /**
+   * Get client materials for return
+   */
+  async getClientMaterialsForReturn(req: Request, res: Response): Promise<void> {
+    try {
+      const { clientId } = req.query;
+
+      const query: any = { 
+        materialSource: 'client_provided',
+        'clientMaterialInfo.returnRequired': true,
+        status: { $in: ['approved', 'stock_created'] }
+      };
+
+      if (clientId) {
+        query['clientMaterialInfo.clientId'] = clientId;
+      }
+
+      const clientMaterials = await GreyFabricInward.find(query)
+        .populate('clientMaterialInfo.clientId', 'name email phone')
+        .populate('clientMaterialInfo.clientOrderId', 'orderNumber')
+        .sort({ createdAt: -1 });
+
+      res.json({
+        success: true,
+        data: clientMaterials
+      });
+
+    } catch (error) {
+      this.handleError(res, error);
     }
   }
 

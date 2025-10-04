@@ -251,9 +251,13 @@ export const authenticate = async (req: Request, res: Response, next: NextFuncti
         });
       } else {
         // For regular users, check company access
-        const companyAccess = user.companyAccess?.find(
-          access => access.companyId.toString() === targetCompanyId && access.isActive
-        );
+        const companyAccess = user.companyAccess?.find(access => {
+          const raw = (access as any).companyId as any;
+          const id = (raw && typeof raw === 'object' && 'toString' in raw && (raw as any)._id)
+            ? ((raw as any)._id as any).toString()
+            : raw?.toString?.();
+          return id === targetCompanyId && access.isActive;
+        });
 
         if (!companyAccess) {
           logger.warn('Company access denied for regular user', {
@@ -272,7 +276,7 @@ export const authenticate = async (req: Request, res: Response, next: NextFuncti
         }
 
         req.companyAccess = companyAccess;
-        req.company = companyAccess.companyId;
+        req.company = (companyAccess as any).companyId;
       }
     } else if (user.isSuperAdmin && !is2FARoute) {
       // Super admin without company ID - allow access to everything
@@ -418,9 +422,13 @@ export const requireCompany = async (req: Request, res: Response, next: Function
 
     // Super admin can access any company
     if (!currentUser.isSuperAdmin) {
-      companyAccess = currentUser.companyAccess?.find(
-        access => access.companyId.toString() === companyId && access.isActive
-      );
+      companyAccess = currentUser.companyAccess?.find(access => {
+        const raw = (access as any).companyId as any;
+        const id = (raw && typeof raw === 'object' && (raw as any)._id)
+          ? ((raw as any)._id as any).toString()
+          : raw?.toString?.();
+        return id === companyId && access.isActive;
+      });
 
       if (!companyAccess) {
         return res.status(403).json({

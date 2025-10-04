@@ -77,14 +77,6 @@ export default function DashboardPage() {
   const companyAlerts = dashboardData?.data?.alerts || []
   const performanceMetrics = dashboardData?.data?.performanceMetrics || {}
 
-  // Debug logging for stats
-  console.log('Dashboard Stats Debug:', {
-    dashboardData: dashboardData?.data?.overview,
-    dashboardStats,
-    totalProduction: dashboardStats?.totalProduction,
-    isSuperAdmin,
-    user: user?.username
-  })
 
   // Note: Performance metrics are now calculated from real data instead of dummy values
   const orderCompletion = (performanceMetrics as any)?.orderCompletion || 0
@@ -98,7 +90,7 @@ export default function DashboardPage() {
       const date = new Date(timestamp)
       const now = new Date()
       const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60))
-      
+
       if (diffInMinutes < 1) return 'Just now'
       if (diffInMinutes < 60) return `${diffInMinutes} minutes ago`
       if (diffInMinutes < 1440) return `${Math.floor(diffInMinutes / 60)} hours ago`
