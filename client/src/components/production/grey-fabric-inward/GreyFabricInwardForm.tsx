@@ -409,7 +409,7 @@ export function GreyFabricInwardForm({ grn, onClose, onSuccess }: GreyFabricInwa
       console.log('Form data being sent:', submissionData);
       console.log('Is Edit:', isEdit);
       console.log('GRN exists:', !!grn);
-      
+
       if (isEdit && grn) {
         console.log('Updating GRN with ID:', grn._id);
         await updateGrn({
@@ -452,10 +452,23 @@ export function GreyFabricInwardForm({ grn, onClose, onSuccess }: GreyFabricInwa
   };
 
   const handleInputChange = (field: string, value: any) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: value
-    }));
+    if (field.includes('.')) {
+      // Handle nested object properties
+      const [parent, child] = field.split('.');
+      setFormData(prev => ({
+        ...prev,
+        [parent]: {
+          ...(prev[parent as keyof typeof prev] as any || {}),
+          [child]: value
+        }
+      }));
+    } else {
+      // Handle top-level properties
+      setFormData(prev => ({
+        ...prev,
+        [field]: value
+      }));
+    }
 
     // Clear error when user starts typing
     if (errors[field]) {
@@ -619,9 +632,9 @@ export function GreyFabricInwardForm({ grn, onClose, onSuccess }: GreyFabricInwa
                       value={selectedCompanyId}
                       onValueChange={(value) => {
                         setSelectedCompanyId(value);
-                        setFormData(prev => ({ 
-                          ...prev, 
-                          companyId: value, 
+                        setFormData(prev => ({
+                          ...prev,
+                          companyId: value,
                           purchaseOrderId: 'none',
                           greyStockLots: [] // Reset lots when company changes
                         }));

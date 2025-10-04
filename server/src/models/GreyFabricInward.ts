@@ -84,7 +84,7 @@ export interface IGreyFabricInward extends AuditableDocument {
   // Fabric Details
   fabricDetails: {
     fabricType: 'cotton' | 'polyester' | 'viscose' | 'blend' | 'other';
-    fabricGrade: 'A' | 'B' | 'C' | 'D';
+    fabricGrade: 'A+' | 'A' | 'B+' | 'B' | 'C' | 'D';
     gsm: number;
     width: number;
     color: string;
@@ -209,7 +209,7 @@ export interface IGreyFabricInward extends AuditableDocument {
     inspectedByName: string;
     inspectionDate: Date;
     inspectionNotes?: string;
-    qualityGrade: 'A' | 'B' | 'C' | 'D';
+    qualityGrade: 'A+' | 'A' | 'B+' | 'B' | 'C' | 'D';
     recommendedAction: 'accept' | 'reject' | 'conditional_accept' | 'return_to_supplier';
   };
   
@@ -379,7 +379,7 @@ const GreyFabricInwardSchema = new Schema<IGreyFabricInward>({
     },
     fabricGrade: { 
       type: String, 
-      enum: ['A', 'B', 'C', 'D'], 
+      enum: ['A+', 'A', 'B+', 'B', 'C', 'D'], 
       required: true 
     },
     gsm: { type: Number, required: true, min: 0 },
@@ -422,7 +422,7 @@ const GreyFabricInwardSchema = new Schema<IGreyFabricInward>({
     expiryDate: { type: Date },
     qualityGrade: { 
       type: String, 
-      enum: ['A+', 'A', 'B+', 'B', 'C'], 
+      enum: ['A+', 'A', 'B+', 'B', 'C', 'D'], 
       required: true 
     },
     storageLocation: {
@@ -563,7 +563,7 @@ const GreyFabricInwardSchema = new Schema<IGreyFabricInward>({
     inspectionNotes: { type: String },
     qualityGrade: { 
       type: String, 
-      enum: ['A', 'B', 'C', 'D']
+      enum: ['A+', 'A', 'B+', 'B', 'C', 'D']
     },
     recommendedAction: { 
       type: String, 

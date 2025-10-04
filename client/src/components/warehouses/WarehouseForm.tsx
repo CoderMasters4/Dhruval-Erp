@@ -5,12 +5,12 @@ import { useCreateWarehouseMutation, useUpdateWarehouseMutation } from '@/lib/ap
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { Badge } from '@/components/ui/badge'
-import { 
-  X, 
-  MapPin, 
-  Building2, 
-  Package, 
-  Users, 
+import {
+  X,
+  MapPin,
+  Building2,
+  Package,
+  Users,
   Calendar,
   Clock,
   Phone,
@@ -45,7 +45,7 @@ export function WarehouseForm({ warehouse, companyId, onClose, onSubmit }: Wareh
   const [showCompanyDropdown, setShowCompanyDropdown] = useState(false)
   const [companies, setCompanies] = useState<Company[]>([])
   const [loadingCompanies, setLoadingCompanies] = useState(false)
-  
+
   const user = useSelector(selectCurrentUser)
   const isSuperAdmin = useSelector(selectIsSuperAdmin)
 
@@ -135,17 +135,18 @@ export function WarehouseForm({ warehouse, companyId, onClose, onSubmit }: Wareh
   useEffect(() => {
     const fetchCompanies = async () => {
       if (!isSuperAdmin) return
-      
+
       setLoadingCompanies(true)
       try {
-        // Use the correct endpoint without /all
-        const response = await fetch('/api/v1/companies', {
+        // Use the correct API URL from environment variable
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api/v1'
+        const response = await fetch(`${apiUrl}/companies`, {
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('token')}`,
             'Content-Type': 'application/json'
           }
         })
-        
+
         if (response.ok) {
           const data = await response.json()
           if (data.success) {
@@ -422,7 +423,7 @@ export function WarehouseForm({ warehouse, companyId, onClose, onSubmit }: Wareh
               <MapPin className="w-5 h-5 mr-2 text-blue-600" />
               Address Information
             </h3>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -504,7 +505,7 @@ export function WarehouseForm({ warehouse, companyId, onClose, onSubmit }: Wareh
               <Phone className="w-5 h-5 mr-2 text-green-600" />
               Contact Information
             </h3>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -538,7 +539,7 @@ export function WarehouseForm({ warehouse, companyId, onClose, onSubmit }: Wareh
               <Building2 className="w-5 h-5 mr-2 text-purple-600" />
               Warehouse Configuration
             </h3>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -596,7 +597,7 @@ export function WarehouseForm({ warehouse, companyId, onClose, onSubmit }: Wareh
               <Package className="w-5 h-5 mr-2 text-orange-600" />
               Specifications
             </h3>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -642,7 +643,7 @@ export function WarehouseForm({ warehouse, companyId, onClose, onSubmit }: Wareh
               <Package className="w-5 h-5 mr-2 text-indigo-600" />
               Capacity
             </h3>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -676,7 +677,7 @@ export function WarehouseForm({ warehouse, companyId, onClose, onSubmit }: Wareh
               <Users className="w-5 h-5 mr-2 text-teal-600" />
               Management
             </h3>
-            
+
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Total Staff

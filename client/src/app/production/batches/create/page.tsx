@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { ArrowLeft, Save, Package, AlertCircle } from 'lucide-react';
 import { useCreateBatchMutation, CreateBatchRequest } from '@/lib/api/productionBatches';
-import { useGetCompaniesQuery } from '@/lib/api/baseApi';
+import { useGetAllCompaniesQuery } from '@/lib/features/companies/companiesApi';
 import { useGetInventoryItemsQuery } from '@/lib/api/inventoryApi';
 import { useGetGreyFabricInwardsQuery } from '@/lib/api/greyFabricInwardApi';
 import { useSelector, useDispatch } from 'react-redux';
@@ -14,12 +14,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/Input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
 } from '@/components/ui/select';
 import { AppLayout } from '@/components/layout/AppLayout';
 // import { useToast } from '@/hooks/use-toast';
@@ -30,10 +30,10 @@ function CreateBatchPageContent() {
   const dispatch = useDispatch();
   // const { toast } = useToast();
   const [createBatch, { isLoading: loading }] = useCreateBatchMutation();
-  
+
   // Check authentication state
   const { isAuthenticated, user, token } = useSelector((state: any) => state.auth);
-  
+
   // Company selection state
   const [selectedCompanyId, setSelectedCompanyId] = useState<string>('');
   const [selectedMaterials, setSelectedMaterials] = useState<Array<{
@@ -52,11 +52,11 @@ function CreateBatchPageContent() {
       clientOrderNumber?: string;
     };
   }>>([]);
-  
+
   // Get companies list
-  const { data: companiesData, isLoading: companiesLoading } = useGetCompaniesQuery();
+  const { data: companiesData, isLoading: companiesLoading } = useGetAllCompaniesQuery();
   const companies = companiesData?.data || [];
-  
+
   // Get inventory items for selected company
   const { data: inventoryData, isLoading: inventoryLoading } = useGetInventoryItemsQuery({
     companyId: selectedCompanyId,
@@ -76,7 +76,7 @@ function CreateBatchPageContent() {
   // GRN mapping state
   const [showGRNMapping, setShowGRNMapping] = useState(false);
   const [selectedMaterialForGRN, setSelectedMaterialForGRN] = useState<number | null>(null);
-  
+
   const [formData, setFormData] = useState<CreateBatchRequest>({
     companyId: selectedCompanyId,
     productSpecifications: {
@@ -159,15 +159,15 @@ function CreateBatchPageContent() {
 
   const handleGRNSelection = (grnId: string, grnNumber: string, materialSource: 'own_material' | 'client_provided' | 'job_work_material', clientInfo?: any) => {
     if (selectedMaterialForGRN !== null) {
-      setSelectedMaterials(prev => prev.map((material, index) => 
-        index === selectedMaterialForGRN 
-          ? { 
-              ...material, 
-              grnId, 
-              grnNumber, 
-              materialSource,
-              clientInfo: materialSource === 'client_provided' ? clientInfo : undefined
-            }
+      setSelectedMaterials(prev => prev.map((material, index) =>
+        index === selectedMaterialForGRN
+          ? {
+            ...material,
+            grnId,
+            grnNumber,
+            materialSource,
+            clientInfo: materialSource === 'client_provided' ? clientInfo : undefined
+          }
           : material
       ));
     }
@@ -176,15 +176,15 @@ function CreateBatchPageContent() {
   };
 
   const removeGRNMapping = (materialIndex: number) => {
-    setSelectedMaterials(prev => prev.map((material, index) => 
-      index === materialIndex 
-        ? { 
-            ...material, 
-            grnId: undefined, 
-            grnNumber: undefined, 
-            materialSource: undefined,
-            clientInfo: undefined
-          }
+    setSelectedMaterials(prev => prev.map((material, index) =>
+      index === materialIndex
+        ? {
+          ...material,
+          grnId: undefined,
+          grnNumber: undefined,
+          materialSource: undefined,
+          clientInfo: undefined
+        }
         : material
     ));
   };
@@ -211,7 +211,7 @@ function CreateBatchPageContent() {
 
   // Update material quantity
   const updateMaterialQuantity = (itemId: string, quantity: number) => {
-    setSelectedMaterials(prev => prev.map(material => 
+    setSelectedMaterials(prev => prev.map(material =>
       material.itemId === itemId ? { ...material, quantity } : material
     ));
   };
@@ -236,7 +236,7 @@ function CreateBatchPageContent() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     // Check authentication before submitting
     if (!isAuthenticated || !user || !token) {
       console.error('User not authenticated');
@@ -244,7 +244,7 @@ function CreateBatchPageContent() {
       router.push('/auth/login');
       return;
     }
-    
+
     if (!selectedCompanyId) {
       console.error('Please select a company');
       return;
@@ -257,15 +257,15 @@ function CreateBatchPageContent() {
     }
 
     // Validate that all selected materials have valid quantities
-    const invalidMaterials = selectedMaterials.filter(material => 
+    const invalidMaterials = selectedMaterials.filter(material =>
       !material.quantity || material.quantity <= 0
     );
-    
+
     if (invalidMaterials.length > 0) {
       alert('Please enter valid quantities for all selected materials');
       return;
     }
-    
+
     try {
       // Include selected materials in the batch data
       const batchData = {
@@ -284,7 +284,7 @@ function CreateBatchPageContent() {
           };
         })
       };
-      
+
       console.log('Creating batch with data:', {
         companyId: selectedCompanyId,
         inputMaterials: batchData.inputMaterials,
@@ -293,13 +293,13 @@ function CreateBatchPageContent() {
         userId: user._id,
         fullBatchData: batchData
       });
-      
+
       const batch = await createBatch(batchData).unwrap();
-      
+
       console.log('Production batch created successfully:', batch);
       console.log('Batch ID:', batch._id);
       console.log('Batch data structure:', JSON.stringify(batch, null, 2));
-      
+
       if (batch._id) {
         router.push(`/production/batches/${batch._id}`);
       } else {
@@ -308,7 +308,7 @@ function CreateBatchPageContent() {
       }
     } catch (error: any) {
       console.error('Error creating batch:', error);
-      
+
       // Handle authentication errors
       if (error?.status === 401 || error?.data?.message?.includes('not authenticated')) {
         console.error('Authentication failed, logging out user');
@@ -316,11 +316,11 @@ function CreateBatchPageContent() {
         router.push('/auth/login');
         return;
       }
-      
+
       // Handle other errors
       const errorMessage = error?.data?.message || error?.message || 'Failed to create production batch';
       console.error('Failed to create production batch:', errorMessage);
-      
+
       // Show error message to user
       alert(`Error: ${errorMessage}`);
     }
@@ -340,14 +340,14 @@ function CreateBatchPageContent() {
 
   return (
     <div className="space-y-6">
-     
+
 
 
       {/* Header */}
       <div className="flex items-center space-x-4">
-        <Button 
-          variant="ghost" 
-          size="sm" 
+        <Button
+          variant="ghost"
+          size="sm"
           onClick={() => router.back()}
         >
           <ArrowLeft className="w-4 h-4 mr-2" />
@@ -373,8 +373,8 @@ function CreateBatchPageContent() {
           <CardContent>
             <div className="space-y-2">
               <Label htmlFor="company">Company</Label>
-              <Select 
-                value={selectedCompanyId} 
+              <Select
+                value={selectedCompanyId}
                 onValueChange={handleCompanyChange}
                 disabled={companiesLoading}
               >
@@ -412,21 +412,21 @@ function CreateBatchPageContent() {
                   </span>
                 </div>
                 <div className="relative border border-gray-200 rounded-md p-2 bg-white">
-                  <Select 
+                  <Select
                     onValueChange={addMaterial}
                     disabled={inventoryLoading || inventoryItems.length === 0}
                   >
                     <SelectTrigger className="w-full bg-white border border-gray-300 hover:border-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-200">
                       <SelectValue placeholder={
-                        inventoryLoading 
-                          ? "Loading inventory..." 
-                          : inventoryItems.length === 0 
-                            ? "No items available" 
+                        inventoryLoading
+                          ? "Loading inventory..."
+                          : inventoryItems.length === 0
+                            ? "No items available"
                             : "Select a material to add"
                       } />
                     </SelectTrigger>
-                    <SelectContent 
-                      className="max-h-60 overflow-y-auto bg-white border border-gray-200 shadow-lg rounded-md z-[9999]" 
+                    <SelectContent
+                      className="max-h-60 overflow-y-auto bg-white border border-gray-200 shadow-lg rounded-md z-[9999]"
                       position="popper"
                       side="bottom"
                       align="start"
@@ -441,21 +441,21 @@ function CreateBatchPageContent() {
                           return ['raw_material', 'component', 'spare_parts'].includes(category);
                         })
                         .map((item) => (
-                          <SelectItem 
-                            key={item._id} 
-                            value={item._id} 
+                          <SelectItem
+                            key={item._id}
+                            value={item._id}
                             className="bg-white hover:bg-gray-50 cursor-pointer focus:bg-blue-50 active:bg-blue-100 py-2 px-3">
-                          <div className="flex flex-col">
-                            <span className="font-medium text-gray-900">{item.itemName}</span>
-                            <div className="flex items-center space-x-2">
-                              <span className="text-sm text-gray-500">
-                                {item.stock.availableStock} {item.stock.unit} available
-                              </span>
-                              <span className="text-xs px-2 py-1 bg-blue-100 text-blue-800 rounded-full">
-                                {item.category?.primary || 'raw_material'}
-                              </span>
+                            <div className="flex flex-col">
+                              <span className="font-medium text-gray-900">{item.itemName}</span>
+                              <div className="flex items-center space-x-2">
+                                <span className="text-sm text-gray-500">
+                                  {item.stock.availableStock} {item.stock.unit} available
+                                </span>
+                                <span className="text-xs px-2 py-1 bg-blue-100 text-blue-800 rounded-full">
+                                  {item.category?.primary || 'raw_material'}
+                                </span>
+                              </div>
                             </div>
-                          </div>
                           </SelectItem>
                         ))}
                     </SelectContent>
@@ -468,10 +468,10 @@ function CreateBatchPageContent() {
                     const category = item.category?.primary || '';
                     return ['raw_material', 'component', 'spare_parts'].includes(category);
                   }).length === 0 && !inventoryLoading && (
-                  <p className="text-sm text-gray-500 mt-1">
-                    No available raw materials to add. Only raw materials, components, and spare parts can be used as input materials.
-                  </p>
-                )}
+                    <p className="text-sm text-gray-500 mt-1">
+                      No available raw materials to add. Only raw materials, components, and spare parts can be used as input materials.
+                    </p>
+                  )}
               </div>
 
               {/* Selected Materials */}
@@ -492,7 +492,7 @@ function CreateBatchPageContent() {
                             <div className="flex-1 min-w-0">
                               <div className="font-medium truncate">{material.itemName}</div>
                               <div className="text-sm text-gray-500">
-                                Available: {inventoryItem?.stock.availableStock} {material.unit} | 
+                                Available: {inventoryItem?.stock.availableStock} {material.unit} |
                                 Cost: ₹{material.unitCost}/{material.unit}
                               </div>
                               {/* GRN Mapping Info */}
@@ -501,11 +501,10 @@ function CreateBatchPageContent() {
                                   <span className="inline-flex items-center px-2 py-1 rounded-full bg-blue-100 text-blue-800 mr-2">
                                     GRN: {material.grnNumber}
                                   </span>
-                                  <span className={`inline-flex items-center px-2 py-1 rounded-full ${
-                                    material.materialSource === 'client_provided' 
-                                      ? 'bg-green-100 text-green-800' 
+                                  <span className={`inline-flex items-center px-2 py-1 rounded-full ${material.materialSource === 'client_provided'
+                                      ? 'bg-green-100 text-green-800'
                                       : 'bg-gray-100 text-gray-800'
-                                  }`}>
+                                    }`}>
                                     {material.materialSource === 'client_provided' ? 'Client Material' : 'Own Material'}
                                   </span>
                                   {material.clientInfo && (
@@ -630,8 +629,8 @@ function CreateBatchPageContent() {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="unit">Unit *</Label>
-                  <Select 
-                    value={formData.unit} 
+                  <Select
+                    value={formData.unit}
                     onValueChange={(value) => handleInputChange('unit', value)}
                   >
                     <SelectTrigger>
@@ -650,8 +649,8 @@ function CreateBatchPageContent() {
 
               <div className="space-y-2">
                 <Label htmlFor="priority">Priority *</Label>
-                <Select 
-                  value={formData.priority} 
+                <Select
+                  value={formData.priority}
                   onValueChange={(value) => handleInputChange('priority', value)}
                 >
                   <SelectTrigger>
@@ -743,7 +742,7 @@ function CreateBatchPageContent() {
                   onChange={(e) => handleInputChange('productSpecifications.productType', e.target.value)}
                 />
               </div>
-              
+
               <div className="space-y-2">
                 <Label htmlFor="fabricType">Fabric Type *</Label>
                 <Input
@@ -882,21 +881,21 @@ function CreateBatchPageContent() {
 
         {/* Actions */}
         <div className="flex justify-end space-x-4">
-          <Button 
-            type="button" 
-            variant="outline" 
+          <Button
+            type="button"
+            variant="outline"
             onClick={() => router.back()}
           >
             Cancel
           </Button>
-          <Button 
-            type="submit" 
+          <Button
+            type="submit"
             disabled={loading || !selectedCompanyId || selectedMaterials.length === 0}
             title={
-              !selectedCompanyId 
-                ? 'Please select a company' 
-                : selectedMaterials.length === 0 
-                  ? 'Please add at least one input material' 
+              !selectedCompanyId
+                ? 'Please select a company'
+                : selectedMaterials.length === 0
+                  ? 'Please add at least one input material'
                   : 'Create batch'
             }
           >
@@ -924,12 +923,12 @@ function CreateBatchPageContent() {
                 ×
               </Button>
             </div>
-            
+
             <div className="space-y-4">
               <p className="text-sm text-gray-600">
                 Select a GRN to map to the selected material. This will help track material source and client information.
               </p>
-              
+
               <div className="space-y-2">
                 <Label>Available GRNs</Label>
                 <div className="max-h-60 overflow-y-auto border rounded-md">
@@ -958,15 +957,14 @@ function CreateBatchPageContent() {
                           <div>
                             <div className="font-medium">{grn.grnNumber}</div>
                             <div className="text-sm text-gray-500">
-                              {grn.fabricDetails?.fabricType} - {grn.fabricDetails?.color} | 
+                              {grn.fabricDetails?.fabricType} - {grn.fabricDetails?.color} |
                               {grn.quantity} {grn.unit}
                             </div>
                             <div className="text-xs">
-                              <span className={`inline-flex items-center px-2 py-1 rounded-full mr-2 ${
-                                grn.materialSource === 'client_provided' 
-                                  ? 'bg-green-100 text-green-800' 
+                              <span className={`inline-flex items-center px-2 py-1 rounded-full mr-2 ${grn.materialSource === 'client_provided'
+                                  ? 'bg-green-100 text-green-800'
                                   : 'bg-gray-100 text-gray-800'
-                              }`}>
+                                }`}>
                                 {grn.materialSource === 'client_provided' ? 'Client Material' : 'Own Material'}
                               </span>
                               {grn.materialSource === 'client_provided' && grn.clientMaterialInfo?.clientName && (
