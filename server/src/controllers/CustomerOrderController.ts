@@ -322,4 +322,72 @@ export class CustomerOrderController extends BaseController<ICustomerOrder> {
       this.sendError(res, error, "Operation failed");
     }
   }
+
+  /**
+   * Cancel order
+   */
+  async cancelOrder(req: Request, res: Response): Promise<void> {
+    try {
+      const { orderId } = req.params;
+      const { reason } = req.body;
+      const cancelledBy = (req.user?.userId || req.user?._id)?.toString();
+
+      const order = await this.customerOrderService.cancelOrder(orderId, reason, cancelledBy);
+
+      res.json({
+        success: true,
+        message: 'Order cancelled successfully',
+        data: order
+      });
+    } catch (error) {
+      this.sendError(res, error, "Operation failed");
+    }
+  }
+
+  /**
+   * Get stock impact summary
+   */
+  async getStockImpactSummary(req: Request, res: Response): Promise<void> {
+    try {
+      const { orderId } = req.params;
+
+      const summary = await this.customerOrderService.getStockImpactSummary(orderId);
+
+      res.json({
+        success: true,
+        data: summary
+      });
+    } catch (error) {
+      this.sendError(res, error, "Operation failed");
+    }
+  }
+
+  /**
+   * Dispatch order (triggers stock deduction)
+   */
+  async dispatchOrder(req: Request, res: Response): Promise<void> {
+    try {
+      const { orderId } = req.params;
+      const { dispatchDetails } = req.body;
+      const dispatchedBy = (req.user?.userId || req.user?._id)?.toString();
+
+      // Update order status to dispatched (this will trigger stock deduction)
+      const order = await this.customerOrderService.updateOrderStatus(orderId, 'dispatched', dispatchedBy);
+
+      // You can add additional dispatch details here if needed
+      if (dispatchDetails) {
+        await this.customerOrderService.update(orderId, {
+          'delivery.shippingDetails': dispatchDetails
+        }, dispatchedBy);
+      }
+
+      res.json({
+        success: true,
+        message: 'Order dispatched successfully and stock deducted',
+        data: order
+      });
+    } catch (error) {
+      this.sendError(res, error, "Operation failed");
+    }
+  }
 }

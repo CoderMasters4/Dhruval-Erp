@@ -60,6 +60,8 @@ export interface SalesOrder {
     deliveryPriority?: string;
     specifications?: any;
     qualityRequirements?: any;
+    materialSource?: 'own_stock' | 'client_provided' | 'job_work' | 'purchase_required';
+    workAmount?: number;
   }>;
   payment: {
     paymentStatus: 'pending' | 'paid' | 'overdue' | 'partial';
@@ -168,6 +170,8 @@ export interface CreateSalesOrderRequest {
     quantity: number;
     unitPrice: number;
     category?: string;
+    materialSource?: 'own_stock' | 'client_provided' | 'job_work' | 'purchase_required';
+    workAmount?: number;
   }>;
   orderSummary: {
     subtotal: number;
@@ -200,6 +204,8 @@ export interface UpdateSalesOrderRequest {
     quantity: number;
     unitPrice: number;
     category?: string;
+    materialSource?: 'own_stock' | 'client_provided' | 'job_work' | 'purchase_required';
+    workAmount?: number;
   }>;
   orderSummary?: {
     subtotal: number;
@@ -232,6 +238,7 @@ export interface SalesFilters {
   search?: string;
   page?: number;
   limit?: number;
+  companyId?: string;
 }
 
 export interface CustomerSalesReport {

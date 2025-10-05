@@ -24,6 +24,27 @@ export default function ProfilePage() {
     phone: user?.phone || '',
   })
 
+  // Show loading if user is not loaded yet
+  if (!user) {
+    return (
+      <AppLayout>
+        <ResponsiveContainer className="space-y-8">
+          <div className="bg-slate-900 rounded-2xl p-8 text-white">
+            <div className="flex items-center gap-4">
+              <div className="w-16 h-16 bg-blue-600 rounded-2xl flex items-center justify-center">
+                <User className="h-8 w-8 text-white" />
+              </div>
+              <div>
+                <h1 className="text-2xl font-bold">Loading Profile...</h1>
+                <p className="text-slate-300 mt-1">Please wait while we load your profile</p>
+              </div>
+            </div>
+          </div>
+        </ResponsiveContainer>
+      </AppLayout>
+    )
+  }
+
   // Check PWA installation status
   useEffect(() => {
     const checkPWAStatus = () => {
@@ -254,7 +275,10 @@ export default function ProfilePage() {
                 <div className="bg-slate-50 rounded-lg px-4 py-3 border border-slate-200">
                   <div className="flex items-center gap-3">
                     <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-600 text-white">
-                      {typeof user?.roles?.[0] === 'string' ? user.roles[0] : user?.roles[0]?.roleId || 'Helper'}
+                      {user?.roles && user.roles.length > 0 
+                        ? (typeof user.roles[0] === 'string' ? user.roles[0] : user.roles[0]?.roleId || 'Helper')
+                        : 'Helper'
+                      }
                     </span>
                     {user?.isActive && (
                       <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-600 text-white">
@@ -346,7 +370,10 @@ export default function ProfilePage() {
                   </label>
                   <div className="bg-slate-50 rounded-lg px-4 py-3 border border-slate-200">
                     <p className="text-slate-900 font-medium">
-                      {user?.companyAccess?.[0]?.role?.replace('_', ' ').toUpperCase() || 'Helper'}
+                      {user?.companyAccess && user.companyAccess.length > 0 
+                        ? user.companyAccess[0]?.role?.replace('_', ' ').toUpperCase() || 'Helper'
+                        : 'Helper'
+                      }
                     </p>
                   </div>
                 </div>

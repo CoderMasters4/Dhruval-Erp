@@ -24,11 +24,11 @@ interface SalesOrderModalProps {
 }
 
 // Simple Searchable Dropdown Component
-function SearchableDropdown({ 
-  options, 
-  value, 
-  onSelect, 
-  placeholder, 
+function SearchableDropdown({
+  options,
+  value,
+  onSelect,
+  placeholder,
   searchPlaceholder = "Search...",
   displayKey = "name",
   valueKey = "id",
@@ -52,7 +52,7 @@ function SearchableDropdown({
     const codeValue = option.customerCode || option.itemCode || ''
     const phoneValue = option.contactInfo?.primaryPhone || ''
     const emailValue = option.contactInfo?.primaryEmail || ''
-    
+
     const searchLower = searchTerm.toLowerCase()
     return (
       displayValue.toLowerCase().includes(searchLower) ||
@@ -189,7 +189,7 @@ export default function SalesOrderModal({ isOpen, onClose, order, mode, onSucces
         }
       }
     }))
-    
+
     // If user manually edits, mark as not auto-populated
     if (isAddressAutoPopulated) {
       setIsAddressAutoPopulated(false)
@@ -197,14 +197,16 @@ export default function SalesOrderModal({ isOpen, onClose, order, mode, onSucces
   }
   const [formData, setFormData] = useState({
     customerId: '',
-    orderItems: [{ 
-      itemId: '', 
-      itemName: '', 
-      quantity: 1, 
+    orderItems: [{
+      itemId: '',
+      itemName: '',
+      quantity: 1,
       rate: 0, // Changed from unitPrice to rate to match backend
-      category: '', 
+      category: '',
       stockInfo: null as any,
-      productType: 'saree' // Added required productType
+      productType: 'saree', // Added required productType
+      materialSource: 'own_stock', // Added material source
+      workAmount: 0 // Added work/processing amount
     }],
     orderSummary: {
       subtotal: 0,
@@ -253,28 +255,28 @@ export default function SalesOrderModal({ isOpen, onClose, order, mode, onSucces
 
   const [createSalesOrder] = useCreateSalesOrderMutation()
   const [updateSalesOrder] = useUpdateSalesOrderMutation()
-  
+
   // Get companies for superadmin
   const { data: companiesData } = useGetAllCompaniesQuery()
-  
+
   const companies = companiesData?.data || []
-  
+
   // Check if user is superadmin (has access to multiple companies)
   const isSuperAdmin = companies.length > 1
-  
+
   // Set company ID for non-superadmin users
   useEffect(() => {
     if (!isSuperAdmin && currentUser?.companyId) {
       setSelectedCompanyId(currentUser.companyId)
     }
   }, [isSuperAdmin, currentUser?.companyId])
-  
+
   // Get customers based on selected company (or all if not superadmin)
   const { data: customersData } = useGetCustomersQuery(
     isSuperAdmin ? { companyId: selectedCompanyId } : {},
     { skip: isSuperAdmin && !selectedCompanyId }
   )
-  
+
   // Get inventory items based on selected company (or all if not superadmin)
   const { data: inventoryData } = useGetInventoryItemsQuery(
     isSuperAdmin ? { companyId: selectedCompanyId } : {},
@@ -294,14 +296,26 @@ export default function SalesOrderModal({ isOpen, onClose, order, mode, onSucces
     if (order && mode === 'edit') {
       setFormData({
         customerId: order.customerId || '',
-        orderItems: order.orderItems || [{ 
-          itemId: '', 
-          itemName: '', 
-          quantity: 1, 
-          rate: 0, // Changed from unitPrice to rate
-          category: '', 
+        orderItems: order.orderItems?.map((item: any) => ({
+          itemId: item.productId || item.itemId || '',
+          itemName: item.itemName || '',
+          quantity: item.quantity || 1,
+          rate: item.rate || item.unitPrice || 0,
+          category: item.category || '',
           stockInfo: null as any,
-          productType: 'saree'
+          productType: item.productType || 'saree',
+          materialSource: item.materialSource || 'own_stock',
+          workAmount: item.workAmount || 0
+        })) || [{
+          itemId: '',
+          itemName: '',
+          quantity: 1,
+          rate: 0,
+          category: '',
+          stockInfo: null as any,
+          productType: 'saree',
+          materialSource: 'own_stock',
+          workAmount: 0
         }],
         orderSummary: order.orderSummary || {
           subtotal: 0,
@@ -339,7 +353,7 @@ export default function SalesOrderModal({ isOpen, onClose, order, mode, onSucces
         orderType: order.orderType || 'local',
         orderSource: order.orderSource || 'direct'
       })
-      
+
       // Set company ID for edit mode
       if (order.companyId) {
         setSelectedCompanyId(order.companyId)
@@ -348,7 +362,7 @@ export default function SalesOrderModal({ isOpen, onClose, order, mode, onSucces
   }, [order, mode])
 
   const calculateTotals = () => {
-    const subtotal = formData.orderItems.reduce((sum, item) => sum + (item.quantity * item.rate), 0)
+    const subtotal = formData.orderItems.reduce((sum, item) => sum + (item.quantity * item.rate) + (item.workAmount || 0), 0)
     const tax = subtotal * 0.18 // 18% GST
     const discount = 0 // Can be made configurable
     const finalAmount = subtotal + tax - discount
@@ -367,14 +381,16 @@ export default function SalesOrderModal({ isOpen, onClose, order, mode, onSucces
   const addOrderItem = () => {
     setFormData(prev => ({
       ...prev,
-      orderItems: [...prev.orderItems, { 
-        itemId: '', 
-        itemName: '', 
-        quantity: 1, 
+      orderItems: [...prev.orderItems, {
+        itemId: '',
+        itemName: '',
+        quantity: 1,
         rate: 0, // Changed from unitPrice to rate
-        category: '', 
+        category: '',
         stockInfo: null as any,
-        productType: 'saree'
+        productType: 'saree',
+        materialSource: 'own_stock',
+        workAmount: 0
       }]
     }))
   }
@@ -390,13 +406,13 @@ export default function SalesOrderModal({ isOpen, onClose, order, mode, onSucces
 
   const updateOrderItem = (index: number, field: string, value: any) => {
     console.log('updateOrderItem called:', { index, field, value })
-    
+
     setFormData(prev => ({
       ...prev,
       orderItems: prev.orderItems.map((item, i) => {
         if (i === index) {
           const updatedItem = { ...item, [field]: value }
-          
+
           // If itemId is selected, auto-fill item details
           if (field === 'itemId' && value) {
             console.log('Item ID selected:', value)
@@ -406,23 +422,23 @@ export default function SalesOrderModal({ isOpen, onClose, order, mode, onSucces
               updatedItem.itemName = selectedItem.itemName
               updatedItem.rate = selectedItem.pricing.sellingPrice || 0 // Changed from unitPrice to rate
               updatedItem.category = selectedItem.category.primary || ''
-              
+
               // Add stock information
               const availableStock = selectedItem.stock?.availableStock || 0
               const currentStock = selectedItem.stock?.currentStock || 0
               const reservedStock = selectedItem.stock?.reservedStock || 0
-              
+
               updatedItem.stockInfo = {
                 available: availableStock,
                 current: currentStock,
                 reserved: reservedStock,
                 unit: selectedItem.stock?.unit || 'pcs'
               }
-              
+
               console.log('Updated item with details:', updatedItem)
             }
           }
-          
+
           return updatedItem
         }
         return item
@@ -432,30 +448,41 @@ export default function SalesOrderModal({ isOpen, onClose, order, mode, onSucces
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    
+
     if (isSuperAdmin && !selectedCompanyId) {
       toast.error('Please select a company')
       return
     }
-    
+
     if (!formData.customerId) {
       toast.error('Please select a customer')
       return
     }
-    
-    // Validate stock availability
-    const insufficientStockItems = formData.orderItems.filter(item => 
-      item.stockInfo && item.stockInfo.available < item.quantity
+
+    // Check stock availability (only for own stock items)
+    const insufficientStockItems = formData.orderItems.filter(item =>
+      item.materialSource === 'own_stock' &&
+      item.stockInfo &&
+      item.stockInfo.available < item.quantity
     )
-    
+
+    // Show warning for insufficient stock but allow order creation
     if (insufficientStockItems.length > 0) {
-      const errorMessage = insufficientStockItems.map(item => 
+      const errorMessage = insufficientStockItems.map(item =>
         `${item.itemName}: Requested ${item.quantity}, Available ${item.stockInfo?.available}`
       ).join('; ')
-      toast.error(`Insufficient stock for: ${errorMessage}`)
-      return
+
+      const shouldContinue = window.confirm(
+        `Warning: Insufficient stock for some items:\n${errorMessage}\n\nDo you want to create the order anyway? You can arrange stock later or change material source to client-provided.`
+      )
+
+      if (!shouldContinue) {
+        return
+      }
+
+      toast.error('Order created with insufficient stock items. Please arrange stock or update material source.')
     }
-    
+
     try {
       // Create data that matches the backend API requirements
       const backendOrderData = {
@@ -472,7 +499,9 @@ export default function SalesOrderModal({ isOpen, onClose, order, mode, onSucces
           rate: item.rate, // Backend expects 'rate'
           unit: 'pieces',
           productType: item.productType || 'saree', // Required field
-          category: item.category
+          category: item.category,
+          materialSource: item.materialSource || 'own_stock', // Include material source
+          workAmount: item.workAmount || 0 // Include work amount
         })),
         orderSummary: formData.orderSummary,
         payment: formData.payment,
@@ -509,7 +538,7 @@ export default function SalesOrderModal({ isOpen, onClose, order, mode, onSucces
           toast.success('Sales order updated successfully!')
         }
       }
-      
+
       onClose()
     } catch (error: any) {
       toast.error(error?.data?.message || 'Failed to save sales order')
@@ -530,7 +559,7 @@ export default function SalesOrderModal({ isOpen, onClose, order, mode, onSucces
             <div className="absolute -top-2 -right-2 w-16 h-16 bg-gradient-to-br from-blue-400/10 to-indigo-500/10 rounded-full blur-lg animate-pulse"></div>
             <div className="absolute -bottom-2 -left-2 w-20 h-20 bg-gradient-to-tr from-purple-400/10 to-pink-500/10 rounded-full blur-lg animate-pulse delay-1000"></div>
           </div>
-          
+
           <div className="relative z-10 flex items-center justify-between">
             <div className="flex items-center gap-4">
               <div className="relative group/icon">
@@ -541,7 +570,7 @@ export default function SalesOrderModal({ isOpen, onClose, order, mode, onSucces
                   </svg>
                 </div>
               </div>
-              
+
               <div>
                 <h2 className="text-2xl font-bold bg-gradient-to-r from-gray-900 via-blue-800 to-indigo-900 dark:from-white dark:via-blue-200 dark:to-indigo-200 bg-clip-text text-transparent transition-all duration-300">
                   {mode === 'create' ? 'Create New Sales Order' : 'Edit Sales Order'}
@@ -551,10 +580,10 @@ export default function SalesOrderModal({ isOpen, onClose, order, mode, onSucces
                 </p>
               </div>
             </div>
-            
-            <Button 
-              variant="ghost" 
-              size="sm" 
+
+            <Button
+              variant="ghost"
+              size="sm"
               onClick={onClose}
               className="relative group/btn overflow-hidden border-2 border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 hover:border-gray-400 dark:hover:border-gray-500 p-3 rounded-xl transition-all duration-300 transform hover:scale-105 hover:-translate-y-1 shadow-lg hover:shadow-gray-500/10"
             >
@@ -565,6 +594,29 @@ export default function SalesOrderModal({ isOpen, onClose, order, mode, onSucces
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-8">
+          {/* Material Source Information */}
+          {/* <div className="bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50 dark:from-blue-900/20 dark:via-indigo-900/20 dark:to-purple-900/20 rounded-xl border border-blue-200 dark:border-blue-700 p-6 transition-all duration-300">
+            <div className="flex items-start gap-3">
+              <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
+                <svg className="h-5 w-5 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <div>
+                <h4 className="font-semibold text-blue-900 dark:text-blue-100 mb-2">Enhanced Material Source Management</h4>
+                <p className="text-sm text-blue-800 dark:text-blue-200 mb-3">
+                  For each order item, you can now specify the material source:
+                </p>
+                <ul className="text-sm text-blue-700 dark:text-blue-300 space-y-1 list-disc list-inside">
+                  <li><strong>Own Stock:</strong> Deducts from your inventory (default)</li>
+                  <li><strong>Client Provided:</strong> No stock deduction - client supplies material</li>
+                  <li><strong>Job Work:</strong> Material provided by job work partner</li>
+                  <li><strong>Purchase Required:</strong> Material needs to be purchased</li>
+                </ul>
+              </div>
+            </div>
+          </div> */}
+
           {/* Company Selection (for superadmin) */}
           {isSuperAdmin && (
             <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 p-6 transition-all duration-300">
@@ -610,7 +662,7 @@ export default function SalesOrderModal({ isOpen, onClose, order, mode, onSucces
                 <p className="text-sm text-gray-600 dark:text-gray-300">Set the order type and source</p>
               </div>
             </div>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
@@ -665,7 +717,7 @@ export default function SalesOrderModal({ isOpen, onClose, order, mode, onSucces
                 <p className="text-sm text-gray-600 dark:text-gray-300">Choose the customer for this order</p>
               </div>
             </div>
-            
+
             <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
               Customer *
             </label>
@@ -679,16 +731,16 @@ export default function SalesOrderModal({ isOpen, onClose, order, mode, onSucces
                 console.log('Customer selected:', value)
                 // Find the selected customer
                 const selectedCustomer = customers?.find(customer => customer._id === value) || null
-                
+
                 if (selectedCustomer) {
                   // Auto-populate delivery address with customer's primary address
                   const primaryAddress = selectedCustomer.addresses?.find(addr => addr.isPrimary) || selectedCustomer.addresses?.[0]
                   const primaryContact = selectedCustomer.contactPersons?.find(cp => cp.isPrimary) || selectedCustomer.contactPersons?.[0]
-                  
+
                   // Ensure we have safe access to customer properties
                   const customerName = selectedCustomer.customerName || ''
                   const contactInfo = selectedCustomer.contactInfo || {}
-                  
+
                   setFormData(prev => ({
                     ...prev,
                     customerId: value,
@@ -708,10 +760,10 @@ export default function SalesOrderModal({ isOpen, onClose, order, mode, onSucces
                       }
                     }
                   }))
-                  
+
                   // Set flag to indicate address was auto-populated
                   setIsAddressAutoPopulated(true)
-                  
+
                   console.log('Auto-populated delivery address:', {
                     customer: selectedCustomer.customerName,
                     address: primaryAddress,
@@ -782,8 +834,8 @@ export default function SalesOrderModal({ isOpen, onClose, order, mode, onSucces
                       </Button>
                     )}
                   </div>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+
+                  <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
                     {/* Item Selection */}
                     <div className="md:col-span-2">
                       <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
@@ -832,6 +884,23 @@ export default function SalesOrderModal({ isOpen, onClose, order, mode, onSucces
                         className="w-full bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white"
                       />
                     </div>
+
+                    {/* Work Amount */}
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
+                        Work Amount (₹)
+                        <span className="text-xs text-gray-500 dark:text-gray-400 ml-1">(Optional)</span>
+                      </label>
+                      <Input
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        value={item.workAmount || 0}
+                        onChange={(e) => updateOrderItem(index, 'workAmount', parseFloat(e.target.value) || 0)}
+                        placeholder="Processing/work charges"
+                        className="w-full bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white"
+                      />
+                    </div>
                   </div>
 
                   {/* Item Details */}
@@ -860,26 +929,78 @@ export default function SalesOrderModal({ isOpen, onClose, order, mode, onSucces
                     </div>
                   </div>
 
-                  {/* Product Type */}
-                  <div className="mt-6">
-                    <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
-                      Product Type
-                    </label>
-                    <select
-                      value={item.productType}
-                      onChange={(e) => updateOrderItem(index, 'productType', e.target.value)}
-                      className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 dark:text-white font-medium transition-all duration-200"
-                    >
-                      <option value="saree">Saree</option>
-                      <option value="african_cotton">African Cotton</option>
-                      <option value="garment_fabric">Garment Fabric</option>
-                      <option value="digital_print">Digital Print</option>
-                      <option value="custom">Custom</option>
-                    </select>
+                  <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* Product Type */}
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
+                        Product Type
+                      </label>
+                      <select
+                        value={item.productType}
+                        onChange={(e) => updateOrderItem(index, 'productType', e.target.value)}
+                        className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 dark:text-white font-medium transition-all duration-200"
+                      >
+                        <option value="saree">Saree</option>
+                        <option value="african_cotton">African Cotton</option>
+                        <option value="garment_fabric">Garment Fabric</option>
+                        <option value="digital_print">Digital Print</option>
+                        <option value="custom">Custom</option>
+                      </select>
+                    </div>
+
+                    {/* Material Source */}
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
+                        Material Source *
+                      </label>
+                      <select
+                        value={item.materialSource || 'own_stock'}
+                        onChange={(e) => updateOrderItem(index, 'materialSource', e.target.value)}
+                        className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 dark:text-white font-medium transition-all duration-200"
+                      >
+                        <option value="own_stock">Own Stock</option>
+                        <option value="client_provided">Client Provided</option>
+                        <option value="job_work">Job Work</option>
+                        <option value="purchase_required">Purchase Required</option>
+                      </select>
+                    </div>
                   </div>
 
-                  {/* Stock Information */}
-                  {item.stockInfo && (
+                  {/* Material Source Information */}
+                  {item.materialSource === 'client_provided' && (
+                    <div className="mt-4 p-4 bg-gradient-to-r from-green-50 via-emerald-50 to-teal-50 dark:from-green-900/20 dark:via-emerald-900/20 dark:to-teal-900/20 rounded-xl border border-green-200 dark:border-green-700 transition-all duration-300">
+                      <div className="flex items-center gap-3 mb-3">
+                        <div className="p-2 bg-green-100 dark:bg-green-900/30 rounded-lg">
+                          <svg className="h-4 w-4 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                        </div>
+                        <h5 className="text-sm font-semibold text-green-900 dark:text-green-100">Client Provided Material</h5>
+                      </div>
+                      <p className="text-sm text-green-800 dark:text-green-200">
+                        This item will use material provided by the client. No stock will be deducted from inventory.
+                      </p>
+                    </div>
+                  )}
+
+                  {item.materialSource === 'purchase_required' && (
+                    <div className="mt-4 p-4 bg-gradient-to-r from-yellow-50 via-amber-50 to-orange-50 dark:from-yellow-900/20 dark:via-amber-900/20 dark:to-orange-900/20 rounded-xl border border-yellow-200 dark:border-yellow-700 transition-all duration-300">
+                      <div className="flex items-center gap-3 mb-3">
+                        <div className="p-2 bg-yellow-100 dark:bg-yellow-900/30 rounded-lg">
+                          <svg className="h-4 w-4 text-yellow-600 dark:text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                          </svg>
+                        </div>
+                        <h5 className="text-sm font-semibold text-yellow-900 dark:text-yellow-100">Purchase Required</h5>
+                      </div>
+                      <p className="text-sm text-yellow-800 dark:text-yellow-200">
+                        Material needs to be purchased for this item. Create a purchase order before production.
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Stock Information - Only show for own stock items */}
+                  {item.stockInfo && item.materialSource === 'own_stock' && (
                     <div className="mt-6 p-4 bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50 dark:from-blue-900/20 dark:via-indigo-900/20 dark:to-purple-900/20 rounded-xl border border-blue-200 dark:border-blue-700 transition-all duration-300">
                       <div className="flex items-center gap-3 mb-4">
                         <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
@@ -941,7 +1062,7 @@ export default function SalesOrderModal({ isOpen, onClose, order, mode, onSucces
                 <p className="text-sm text-gray-600 dark:text-gray-300">Review the order totals</p>
               </div>
             </div>
-            
+
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700 shadow-sm">
                 <div className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">Subtotal</div>
@@ -975,7 +1096,7 @@ export default function SalesOrderModal({ isOpen, onClose, order, mode, onSucces
                 <p className="text-sm text-gray-600 dark:text-gray-300">Configure payment method and terms</p>
               </div>
             </div>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Payment Method</label>
@@ -1028,7 +1149,7 @@ export default function SalesOrderModal({ isOpen, onClose, order, mode, onSucces
                 <p className="text-sm text-gray-600 dark:text-gray-300">Set delivery type and expected date</p>
               </div>
             </div>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Delivery Type</label>
@@ -1081,17 +1202,16 @@ export default function SalesOrderModal({ isOpen, onClose, order, mode, onSucces
                 </div>
               </div>
               {formData.customerId && (
-                <div className={`flex items-center gap-2 text-sm px-4 py-2 rounded-xl border ${
-                  isAddressAutoPopulated 
-                    ? 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 border-blue-200 dark:border-blue-700' 
-                    : 'text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/30 border-green-200 dark:border-green-700'
-                }`}>
+                <div className={`flex items-center gap-2 text-sm px-4 py-2 rounded-xl border ${isAddressAutoPopulated
+                  ? 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 border-blue-200 dark:border-blue-700'
+                  : 'text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/30 border-green-200 dark:border-green-700'
+                  }`}>
                   <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
                   </svg>
                   <span className="font-medium">
-                    {isAddressAutoPopulated 
-                      ? 'Auto-populated from customer • Editable' 
+                    {isAddressAutoPopulated
+                      ? 'Auto-populated from customer • Editable'
                       : 'Manually entered • Editable'
                     }
                   </span>
@@ -1206,7 +1326,7 @@ export default function SalesOrderModal({ isOpen, onClose, order, mode, onSucces
                 <p className="text-sm text-gray-600 dark:text-gray-300">Add any special delivery instructions</p>
               </div>
             </div>
-            
+
             <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Instructions</label>
             <Textarea
               value={formData.delivery.deliveryInstructions}
@@ -1233,7 +1353,7 @@ export default function SalesOrderModal({ isOpen, onClose, order, mode, onSucces
                 <p className="text-sm text-gray-600 dark:text-gray-300">Set priority level and current status</p>
               </div>
             </div>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Priority</label>
@@ -1292,7 +1412,7 @@ export default function SalesOrderModal({ isOpen, onClose, order, mode, onSucces
                 <p className="text-sm text-gray-600 dark:text-gray-300">Add any special notes or instructions</p>
               </div>
             </div>
-            
+
             <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Instructions</label>
             <Textarea
               value={formData.specialInstructions}
@@ -1306,17 +1426,17 @@ export default function SalesOrderModal({ isOpen, onClose, order, mode, onSucces
           {/* Action Buttons */}
           <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 p-6 transition-all duration-300">
             <div className="flex items-center justify-end gap-4">
-              <Button 
-                type="button" 
-                variant="outline" 
+              <Button
+                type="button"
+                variant="outline"
                 onClick={onClose}
                 className="relative group/btn overflow-hidden border-2 border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 hover:border-gray-400 dark:hover:border-gray-500 px-8 py-3 rounded-xl font-medium transition-all duration-300 transform hover:scale-105 hover:-translate-y-1 shadow-lg hover:shadow-gray-500/10"
               >
                 <div className="absolute inset-0 bg-gradient-to-r from-gray-500/10 to-transparent opacity-0 group-hover/btn:opacity-100 transition-opacity duration-300"></div>
                 <span className="relative z-10">Cancel</span>
               </Button>
-              <Button 
-                type="submit" 
+              <Button
+                type="submit"
                 className="relative group/btn overflow-hidden bg-gradient-to-r from-blue-500 via-indigo-600 to-purple-600 hover:from-blue-600 hover:via-indigo-700 hover:to-purple-700 text-white shadow-2xl hover:shadow-blue-500/25 transition-all duration-300 px-8 py-3 text-lg font-bold rounded-xl transform hover:scale-105 hover:-translate-y-1"
               >
                 <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover/btn:opacity-100 transition-opacity duration-300"></div>

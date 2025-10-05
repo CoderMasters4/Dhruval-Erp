@@ -395,7 +395,7 @@ export default function LoginPage() {
           </form>
 
           {/* Demo Login Section */}
-          <div className="mt-6 p-5 bg-gradient-to-br from-sky-50 to-blue-50 border-2 border-sky-300 rounded-xl shadow-sm">
+          {/* <div className="mt-6 p-5 bg-gradient-to-br from-sky-50 to-blue-50 border-2 border-sky-300 rounded-xl shadow-sm">
             <div className="text-center mb-4">
               <p className="text-lg font-bold text-sky-700 mb-1">🚀 Try Demo Login</p>
               <p className="text-xs text-sky-600">Click any role to auto-fill verified credentials & explore the system</p>
@@ -465,7 +465,7 @@ export default function LoginPage() {
                 ✅ All demo credentials verified and working!
               </p>
             </div>
-          </div>
+          </div> */}
         </div>
 
         {/* Footer */}

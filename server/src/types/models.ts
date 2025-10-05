@@ -1170,6 +1170,15 @@ export interface ICustomerOrder extends AuditableDocument {
   attachments: string[];
 
   approvedBy?: Types.ObjectId;
+
+  // Status Timestamps
+  confirmedAt?: Date;
+  productionStartedAt?: Date;
+  completedAt?: Date;
+  dispatchedAt?: Date;
+  deliveredAt?: Date;
+  cancelledAt?: Date;
+  cancellationReason?: string;
 }
 
 export interface IOrderItem {
@@ -1216,6 +1225,10 @@ export interface IOrderItem {
     packingRequirements?: string;
     labelingRequirements?: string;
   };
+
+  // Material Source Management
+  materialSource?: 'own_stock' | 'client_provided' | 'job_work' | 'purchase_required';
+  workAmount?: number; // Processing/work charges
 
   notes?: string;
 }

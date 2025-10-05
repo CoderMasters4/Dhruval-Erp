@@ -31,6 +31,11 @@ export interface GreyFabricInward {
     clientContactPerson?: string;
     clientContactPhone?: string;
     clientContactEmail?: string;
+    // Sales Order Integration
+    salesOrderId?: string;
+    salesOrderNumber?: string;
+    salesOrderDate?: string;
+    salesOrderStatus?: string;
   };
   
   fabricType: string;
@@ -153,6 +158,11 @@ export interface CreateGreyFabricInwardRequest {
     clientContactPerson?: string;
     clientContactPhone?: string;
     clientContactEmail?: string;
+    // Sales Order Integration
+    salesOrderId?: string;
+    salesOrderNumber?: string;
+    salesOrderDate?: string;
+    salesOrderStatus?: string;
   };
   
   greyStockLots?: Array<{

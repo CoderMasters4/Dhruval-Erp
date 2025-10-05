@@ -98,6 +98,14 @@ const OrderItemSchema = new Schema<IOrderItem>({
     labelingRequirements: { type: String }
   },
 
+  // Material Source Management
+  materialSource: { 
+    type: String, 
+    enum: ['own_stock', 'client_provided', 'job_work', 'purchase_required'], 
+    default: 'own_stock' 
+  },
+  workAmount: { type: Number, default: 0, min: 0 }, // Processing/work charges
+
   notes: { type: String }
 });
 
@@ -288,7 +296,16 @@ const CustomerOrderSchema = new Schema<ICustomerOrder>({
 
   // Tracking
   createdBy: { type: Schema.Types.ObjectId, ref: 'User', required: true },
-  approvedBy: { type: Schema.Types.ObjectId, ref: 'User' }
+  approvedBy: { type: Schema.Types.ObjectId, ref: 'User' },
+
+  // Status Timestamps
+  confirmedAt: { type: Date },
+  productionStartedAt: { type: Date },
+  completedAt: { type: Date },
+  dispatchedAt: { type: Date },
+  deliveredAt: { type: Date },
+  cancelledAt: { type: Date },
+  cancellationReason: { type: String }
 }, {
   timestamps: true,
   collection: 'customer_orders'
