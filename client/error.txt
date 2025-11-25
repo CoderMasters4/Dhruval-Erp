@@ -1,0 +1,149 @@
+pnpm er
+ror
+
+> client@0.1.0 error /Users/rajat/Downloads/projects/erp/client
+> npx tsc --noEmit --skipLibCheck
+
+npm warn Unknown env config "verify-deps-before-run". This will stop working in the next major version of npm.
+npm warn Unknown env config "_jsr-registry". This will stop working in the next major version of npm.
+src/app/production/batches/create/page.tsx:69:5 - error TS2353: Object literal may only specify known properties, and 'companyId' does not exist in type '{ page?: number | undefined; limit?: number | undefined; filters?: GreyFabricInwardFilters | undefined; }'.
+
+69     companyId: selectedCompanyId,
+       ~~~~~~~~~
+
+src/app/production/batches/create/page.tsx:72:32 - error TS2339: Property 'data' does not exist on type 'GreyFabricInward[]'.
+
+72   const grns = grnsData?.data?.data || [];
+                                  ~~~~
+
+src/app/production/batches/create/page.tsx:160:28 - error TS2345: Argument of type '(prev: { itemId: string; itemName: string; quantity: number; unit: string; unitCost: number; grnId?: string | undefined; grnNumber?: string | undefined; materialSource?: "own_material" | "client_provided" | "job_work_material" | undefined; clientInfo?: { ...; } | undefined; }[]) => ({ ...; } | { ...; })[]' is not assignable to parameter of type 'SetStateAction<{ itemId: string; itemName: string; quantity: number; unit: string; unitCost: number; grnId?: string | undefined; grnNumber?: string | undefined; materialSource?: "own_material" | "client_provided" | "job_work_material" | undefined; clientInfo?: { ...; } | undefined; }[]>'.
+  Type '(prev: { itemId: string; itemName: string; quantity: number; unit: string; unitCost: number; grnId?: string | undefined; grnNumber?: string | undefined; materialSource?: "own_material" | "client_provided" | "job_work_material" | undefined; clientInfo?: { ...; } | undefined; }[]) => ({ ...; } | { ...; })[]' is not assignable to type '(prevState: { itemId: string; itemName: string; quantity: number; unit: string; unitCost: number; grnId?: string | undefined; grnNumber?: string | undefined; materialSource?: "own_material" | "client_provided" | "job_work_material" | undefined; clientInfo?: { ...; } | undefined; }[]) => { ...; }[]'.
+    Type '({ itemId: string; itemName: string; quantity: number; unit: string; unitCost: number; grnId?: string | undefined; grnNumber?: string | undefined; materialSource?: "own_material" | "client_provided" | "job_work_material" | undefined; clientInfo?: { ...; } | undefined; } | { ...; })[]' is not assignable to type '{ itemId: string; itemName: string; quantity: number; unit: string; unitCost: number; grnId?: string | undefined; grnNumber?: string | undefined; materialSource?: "own_material" | "client_provided" | "job_work_material" | undefined; clientInfo?: { ...; } | undefined; }[]'.
+      Type '{ itemId: string; itemName: string; quantity: number; unit: string; unitCost: number; grnId?: string | undefined; grnNumber?: string | undefined; materialSource?: "own_material" | "client_provided" | "job_work_material" | undefined; clientInfo?: { ...; } | undefined; } | { ...; }' is not assignable to type '{ itemId: string; itemName: string; quantity: number; unit: string; unitCost: number; grnId?: string | undefined; grnNumber?: string | undefined; materialSource?: "own_material" | "client_provided" | "job_work_material" | undefined; clientInfo?: { ...; } | undefined; }'.
+        Type '{ grnId: string; grnNumber: string; materialSource: string; clientInfo: any; itemId: string; itemName: string; quantity: number; unit: string; unitCost: number; }' is not assignable to type '{ itemId: string; itemName: string; quantity: number; unit: string; unitCost: number; grnId?: string | undefined; grnNumber?: string | undefined; materialSource?: "own_material" | "client_provided" | "job_work_material" | undefined; clientInfo?: { ...; } | undefined; }'.
+          Types of property 'materialSource' are incompatible.
+            Type 'string' is not assignable to type '"own_material" | "client_provided" | "job_work_material" | undefined'.
+
+160       setSelectedMaterials(prev => prev.map((material, index) =>
+                               ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+161         index === selectedMaterialForGRN
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+... 
+169           : material
+    ~~~~~~~~~~~~~~~~~~~~
+170       ));
+    ~~~~~~~
+
+src/app/production/batches/create/page.tsx:939:31 - error TS7006: Parameter 'grn' implicitly has an 'any' type.
+
+939                     grns.map((grn) => (
+                                  ~~~
+
+src/components/production/grey-fabric-inward/GreyFabricInwardForm.tsx:57:5 - error TS2353: Object literal may only specify known properties, and 'materialSource' does not exist in type 'CreateGreyFabricInwardRequest | (() => CreateGreyFabricInwardRequest)'.
+
+57     materialSource: 'own_material',
+       ~~~~~~~~~~~~~~
+
+src/components/production/grey-fabric-inward/GreyFabricInwardForm.tsx:1029:16 - error TS2304: Cannot find name 'CardDescription'.
+
+1029               <CardDescription className="text-gray-600 dark:text-gray-400">
+                    ~~~~~~~~~~~~~~~
+
+src/components/production/grey-fabric-inward/GreyFabricInwardForm.tsx:1031:17 - error TS2304: Cannot find name 'CardDescription'.
+
+1031               </CardDescription>
+                     ~~~~~~~~~~~~~~~
+
+src/components/production/grey-fabric-inward/GreyFabricInwardForm.tsx:1037:35 - error TS2339: Property 'materialSource' does not exist on type 'CreateGreyFabricInwardRequest'.
+
+1037                   value={formData.materialSource}
+                                       ~~~~~~~~~~~~~~
+
+src/components/production/grey-fabric-inward/GreyFabricInwardForm.tsx:1055:25 - error TS2339: Property 'materialSource' does not exist on type 'CreateGreyFabricInwardRequest'.
+
+1055               {formData.materialSource === 'client_provided' && (
+                             ~~~~~~~~~~~~~~
+
+src/components/production/grey-fabric-inward/GreyFabricInwardForm.tsx:1064:41 - error TS2339: Property 'clientMaterialInfo' does not exist on type 'CreateGreyFabricInwardRequest'.
+
+1064                         value={formData.clientMaterialInfo.clientId}
+                                             ~~~~~~~~~~~~~~~~~~
+
+src/components/production/grey-fabric-inward/GreyFabricInwardForm.tsx:1077:41 - error TS2339: Property 'clientMaterialInfo' does not exist on type 'CreateGreyFabricInwardRequest'.
+
+1077                         value={formData.clientMaterialInfo.clientName}
+                                             ~~~~~~~~~~~~~~~~~~
+
+src/components/production/grey-fabric-inward/GreyFabricInwardForm.tsx:1093:41 - error TS2339: Property 'clientMaterialInfo' does not exist on type 'CreateGreyFabricInwardRequest'.
+
+1093                         value={formData.clientMaterialInfo.clientOrderId}
+                                             ~~~~~~~~~~~~~~~~~~
+
+src/components/production/grey-fabric-inward/GreyFabricInwardForm.tsx:1103:41 - error TS2339: Property 'clientMaterialInfo' does not exist on type 'CreateGreyFabricInwardRequest'.
+
+1103                         value={formData.clientMaterialInfo.clientOrderNumber}
+                                             ~~~~~~~~~~~~~~~~~~
+
+src/components/production/grey-fabric-inward/GreyFabricInwardForm.tsx:1116:41 - error TS2339: Property 'clientMaterialInfo' does not exist on type 'CreateGreyFabricInwardRequest'.
+
+1116                         value={formData.clientMaterialInfo.clientMaterialCode}
+                                             ~~~~~~~~~~~~~~~~~~
+
+src/components/production/grey-fabric-inward/GreyFabricInwardForm.tsx:1126:41 - error TS2339: Property 'clientMaterialInfo' does not exist on type 'CreateGreyFabricInwardRequest'.
+
+1126                         value={formData.clientMaterialInfo.clientBatchNumber}
+                                             ~~~~~~~~~~~~~~~~~~
+
+src/components/production/grey-fabric-inward/GreyFabricInwardForm.tsx:1139:39 - error TS2339: Property 'clientMaterialInfo' does not exist on type 'CreateGreyFabricInwardRequest'.
+
+1139                       value={formData.clientMaterialInfo.clientProvidedDate}
+                                           ~~~~~~~~~~~~~~~~~~
+
+src/components/production/grey-fabric-inward/GreyFabricInwardForm.tsx:1149:39 - error TS2339: Property 'clientMaterialInfo' does not exist on type 'CreateGreyFabricInwardRequest'.
+
+1149                       value={formData.clientMaterialInfo.clientInstructions}
+                                           ~~~~~~~~~~~~~~~~~~
+
+src/components/production/grey-fabric-inward/GreyFabricInwardForm.tsx:1161:39 - error TS2339: Property 'clientMaterialInfo' does not exist on type 'CreateGreyFabricInwardRequest'.
+
+1161                       value={formData.clientMaterialInfo.clientQualitySpecs}
+                                           ~~~~~~~~~~~~~~~~~~
+
+src/components/production/grey-fabric-inward/GreyFabricInwardForm.tsx:1173:41 - error TS2339: Property 'clientMaterialInfo' does not exist on type 'CreateGreyFabricInwardRequest'.
+
+1173                       checked={formData.clientMaterialInfo.returnRequired}
+                                             ~~~~~~~~~~~~~~~~~~
+
+src/components/production/grey-fabric-inward/GreyFabricInwardForm.tsx:1180:29 - error TS2339: Property 'clientMaterialInfo' does not exist on type 'CreateGreyFabricInwardRequest'.
+
+1180                   {formData.clientMaterialInfo.returnRequired && (
+                                 ~~~~~~~~~~~~~~~~~~
+
+src/components/production/grey-fabric-inward/GreyFabricInwardForm.tsx:1186:41 - error TS2339: Property 'clientMaterialInfo' does not exist on type 'CreateGreyFabricInwardRequest'.
+
+1186                         value={formData.clientMaterialInfo.returnDeadline}
+                                             ~~~~~~~~~~~~~~~~~~
+
+src/components/production/grey-fabric-inward/GreyFabricInwardForm.tsx:1198:41 - error TS2339: Property 'clientMaterialInfo' does not exist on type 'CreateGreyFabricInwardRequest'.
+
+1198                         value={formData.clientMaterialInfo.clientContactPerson}
+                                             ~~~~~~~~~~~~~~~~~~
+
+src/components/production/grey-fabric-inward/GreyFabricInwardForm.tsx:1208:41 - error TS2339: Property 'clientMaterialInfo' does not exist on type 'CreateGreyFabricInwardRequest'.
+
+1208                         value={formData.clientMaterialInfo.clientContactPhone}
+                                             ~~~~~~~~~~~~~~~~~~
+
+src/components/production/grey-fabric-inward/GreyFabricInwardForm.tsx:1221:39 - error TS2339: Property 'clientMaterialInfo' does not exist on type 'CreateGreyFabricInwardRequest'.
+
+1221                       value={formData.clientMaterialInfo.clientContactEmail}
+                                           ~~~~~~~~~~~~~~~~~~
+
+
+Found 24 errors in 2 files.
+
+Errors  Files
+     4  src/app/production/batches/create/page.tsx:69
+    20  src/components/production/grey-fabric-inward/GreyFabricInwardForm.tsx:57
+ ELIFECYCLE  Command failed with exit code 1.
+rajat@Rajats-MacBook-Pro client % 
