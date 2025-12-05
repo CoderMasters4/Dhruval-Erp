@@ -1,142 +1,81 @@
-'use client';
-
-import React from 'react';
-import { Button } from '@/components/ui/Button';
-import { Badge } from '@/components/ui/badge';
-import { Filter, X } from 'lucide-react';
+import { Search } from 'lucide-react'
+import { ViewToggle, ViewMode } from '@/components/ui/ViewToggle'
 
 interface InventoryFiltersProps {
-  categoryFilter: string;
-  statusFilter: string;
-  onCategoryChange: (category: string) => void;
-  onStatusChange: (status: string) => void;
-  onClearFilters: () => void;
-  theme: 'light' | 'dark';
+  searchTerm: string
+  onSearchChange: (value: string) => void
+  categoryFilter: string
+  onCategoryFilterChange: (value: string) => void
+  statusFilter: string
+  onStatusFilterChange: (value: string) => void
+  viewMode: ViewMode
+  onViewModeChange: (mode: ViewMode) => void
 }
 
-export const InventoryFilters: React.FC<InventoryFiltersProps> = ({
+export function InventoryFilters({
+  searchTerm,
+  onSearchChange,
   categoryFilter,
+  onCategoryFilterChange,
   statusFilter,
-  onCategoryChange,
-  onStatusChange,
-  onClearFilters,
-  theme
-}) => {
-  const categories = [
-    { value: 'raw_material', label: 'Raw Material', color: 'bg-blue-100 text-blue-800' },
-    { value: 'finished_goods', label: 'Finished Goods', color: 'bg-green-100 text-green-800' },
-    { value: 'consumables', label: 'Consumables', color: 'bg-yellow-100 text-yellow-800' },
-    { value: 'spare_parts', label: 'Spare Parts', color: 'bg-purple-100 text-purple-800' }
-  ];
-
-  const statuses = [
-    { value: 'low_stock', label: 'Low Stock', color: 'bg-red-100 text-red-800' },
-    { value: 'normal', label: 'Normal', color: 'bg-green-100 text-green-800' },
-    { value: 'overstock', label: 'Overstock', color: 'bg-orange-100 text-orange-800' }
-  ];
-
-  const hasActiveFilters = categoryFilter || statusFilter;
-
+  onStatusFilterChange,
+  viewMode,
+  onViewModeChange
+}: InventoryFiltersProps) {
   return (
-    <div className={`rounded-xl border p-4 shadow-sm transition-theme ${
-      theme === 'dark' 
-        ? 'bg-gray-800 border-gray-700' 
-        : 'bg-white border-gray-200'
-    }`}>
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-2">
-          <Filter className="w-5 h-5 text-gray-600" />
-          <h3 className="font-semibold text-gray-800">Filters</h3>
-        </div>
-        
-        {hasActiveFilters && (
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={onClearFilters}
-            className="text-gray-600 hover:text-gray-800"
-          >
-            <X className="w-4 h-4 mr-1" />
-            Clear All
-          </Button>
-        )}
-      </div>
-
-      <div className="space-y-4">
-        {/* Category Filter */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Category
-          </label>
-          <div className="flex flex-wrap gap-2">
-            {categories.map((category) => (
-              <button
-                key={category.value}
-                onClick={() => onCategoryChange(categoryFilter === category.value ? '' : category.value)}
-                className={`px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
-                  categoryFilter === category.value
-                    ? category.color + ' ring-2 ring-offset-2 ring-blue-500'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
-              >
-                {category.label}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Status Filter */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Stock Status
-          </label>
-          <div className="flex flex-wrap gap-2">
-            {statuses.map((status) => (
-              <button
-                key={status.value}
-                onClick={() => onStatusChange(statusFilter === status.value ? '' : status.value)}
-                className={`px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
-                  statusFilter === status.value
-                    ? status.color + ' ring-2 ring-offset-2 ring-blue-500'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
-              >
-                {status.label}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Active Filters Display */}
-        {hasActiveFilters && (
-          <div className="pt-3 border-t border-gray-200">
-            <div className="flex flex-wrap gap-2">
-              {categoryFilter && (
-                <Badge variant="secondary" className="bg-blue-100 text-blue-800">
-                  Category: {categories.find(c => c.value === categoryFilter)?.label}
-                  <button
-                    onClick={() => onCategoryChange('')}
-                    className="ml-2 hover:text-blue-600"
-                  >
-                    <X className="w-3 h-3" />
-                  </button>
-                </Badge>
-              )}
-              {statusFilter && (
-                <Badge variant="secondary" className="bg-green-100 text-green-800">
-                  Status: {statuses.find(s => s.value === statusFilter)?.label}
-                  <button
-                    onClick={() => onStatusChange('')}
-                    className="ml-2 hover:text-green-600"
-                  >
-                    <X className="w-3 h-3" />
-                  </button>
-                </Badge>
-              )}
+    <div className="bg-white rounded-xl border-2 border-sky-500 p-4 sm:p-6">
+      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 flex-1">
+          {/* Search */}
+          <div className="lg:col-span-1">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-sky-500" />
+              <input
+                type="text"
+                placeholder="Search items..."
+                value={searchTerm}
+                onChange={(e) => onSearchChange(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 border-2 border-sky-200 rounded-lg focus:outline-none focus:border-sky-500 bg-white text-black"
+              />
             </div>
           </div>
-        )}
+
+          {/* Category Filter */}
+          <div>
+            <select
+              value={categoryFilter}
+              onChange={(e) => onCategoryFilterChange(e.target.value)}
+              className="w-full px-3 py-2 border-2 border-sky-200 rounded-lg focus:outline-none focus:border-sky-500 bg-white text-black"
+            >
+              <option value="all">All Categories</option>
+              <option value="raw_material">Raw Materials</option>
+              <option value="finished_goods">Finished Goods</option>
+              <option value="semi_finished">Work in Progress</option>
+              <option value="consumables">Consumables</option>
+              <option value="spare_parts">Tools & Equipment</option>
+            </select>
+          </div>
+
+          {/* Status Filter */}
+          <div>
+            <select
+              value={statusFilter}
+              onChange={(e) => onStatusFilterChange(e.target.value)}
+              className="w-full px-3 py-2 border-2 border-sky-200 rounded-lg focus:outline-none focus:border-sky-500 bg-white text-black"
+            >
+              <option value="all">All Status</option>
+              <option value="normal">Normal Stock</option>
+              <option value="low_stock">Low Stock</option>
+              <option value="overstock">Overstock</option>
+            </select>
+          </div>
+        </div>
+
+        {/* View Toggle */}
+        <div className="flex items-center space-x-3">
+          <ViewToggle viewMode={viewMode} onViewModeChange={onViewModeChange} />
+        </div>
       </div>
     </div>
-  );
-};
+  )
+}

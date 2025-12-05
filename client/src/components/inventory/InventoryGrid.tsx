@@ -11,7 +11,9 @@ import {
   Package,
   Tag,
   TrendingUp,
-  TrendingDown
+  TrendingDown,
+  AlertTriangle,
+  RotateCcw
 } from 'lucide-react';
 import { Can } from '@/lib/casl/Can';
 
@@ -20,10 +22,12 @@ interface InventoryGridProps {
   onViewDetails: (item: any) => void;
   onEditItem: (item: any) => void;
   onDeleteItem: (id: string) => void;
+  onMoveToScrap?: (item: any) => void;
+  onGoodsReturn?: (item: any) => void;
   theme: 'light' | 'dark';
 }
 
-export function InventoryGrid({ items, onViewDetails, onEditItem, onDeleteItem, theme }: InventoryGridProps) {
+export function InventoryGrid({ items, onViewDetails, onEditItem, onDeleteItem, onMoveToScrap, onGoodsReturn, theme }: InventoryGridProps) {
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-IN', {
       style: 'currency',
@@ -135,6 +139,7 @@ export function InventoryGrid({ items, onViewDetails, onEditItem, onDeleteItem, 
                       size="sm"
                       onClick={() => onViewDetails(item)}
                       className="text-gray-600 hover:text-gray-900 p-1 h-8 w-8"
+                      title="View Details"
                     >
                       <Eye className="w-4 h-4" />
                     </Button>
@@ -146,10 +151,35 @@ export function InventoryGrid({ items, onViewDetails, onEditItem, onDeleteItem, 
                       size="sm"
                       onClick={() => onEditItem(item)}
                       className="text-blue-600 hover:text-blue-900 p-1 h-8 w-8"
+                      title="Edit Item"
                     >
                       <Edit className="w-4 h-4" />
                     </Button>
                   </Can>
+                  
+                  {onMoveToScrap && (item.stock?.currentStock || 0) > 0 && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => onMoveToScrap(item)}
+                      className="text-orange-600 hover:text-orange-900 p-1 h-8 w-8"
+                      title="Move to Scrap"
+                    >
+                      <AlertTriangle className="w-4 h-4" />
+                    </Button>
+                  )}
+                  
+                  {onGoodsReturn && (item.stock?.currentStock || 0) > 0 && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => onGoodsReturn(item)}
+                      className="text-blue-600 hover:text-blue-900 p-1 h-8 w-8"
+                      title="Goods Return"
+                    >
+                      <RotateCcw className="w-4 h-4" />
+                    </Button>
+                  )}
                   
                   <Can I="delete" a="InventoryItem">
                     <Button
@@ -157,6 +187,7 @@ export function InventoryGrid({ items, onViewDetails, onEditItem, onDeleteItem, 
                       size="sm"
                       onClick={() => onDeleteItem(item._id)}
                       className="text-red-600 hover:text-red-900 p-1 h-8 w-8"
+                      title="Delete Item"
                     >
                       <Trash2 className="w-4 h-4" />
                     </Button>

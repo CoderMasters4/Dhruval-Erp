@@ -31,6 +31,9 @@ import Hospitality from './Hospitality';
 import { Dispatch } from './Dispatch';
 import Report from './Report';
 import Spare from './Spare';
+import Scrap from './Scrap';
+import GoodsReturn from './GoodsReturn';
+import Design from './Design';
 import ProductionDashboard from './ProductionDashboard';
 import AdvancedReport from './AdvancedReport';
 import DocumentManagement from './DocumentManagement';
@@ -71,6 +74,8 @@ export {
   Dispatch, // ✅ FIXED: TypeScript errors resolved
   Report,
   Spare,
+  Scrap,
+  Design,
   ProductionDashboard,
   AdvancedReport,
   DocumentManagement,
@@ -115,6 +120,8 @@ export default {
   Dispatch,
   Report,
   Spare,
+  Scrap,
+  Design,
   ProductionDashboard,
   AdvancedReport,
   DocumentManagement,
@@ -161,6 +168,9 @@ export const registerModels = () => {
     'Dispatch',
     'Report',
     'Spare',
+    'Scrap',
+    'GoodsReturn',
+    'Design',
     'ProductionDashboard',
     'AdvancedReport',
     'DocumentManagement'

@@ -18,6 +18,7 @@ interface DataViewProps<T> {
   renderGridCard?: (item: T, index: number) => React.ReactNode;
   gridClassName?: string;
   tableClassName?: string;
+  theme?: 'light' | 'dark';
 }
 
 export function DataView<T extends { _id?: string; id?: string }>({
@@ -29,7 +30,8 @@ export function DataView<T extends { _id?: string; id?: string }>({
   onItemClick,
   renderGridCard,
   gridClassName = 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6',
-  tableClassName = 'min-w-full divide-y divide-gray-200'
+  tableClassName = 'min-w-full divide-y divide-gray-200',
+  theme = 'light'
 }: DataViewProps<T>) {
   if (loading) {
     return (
@@ -72,48 +74,58 @@ export function DataView<T extends { _id?: string; id?: string }>({
 
   // List view (table)
   return (
-    <div className="bg-white rounded-lg shadow overflow-hidden">
-      <table className={tableClassName}>
-        <thead className="bg-gray-50">
-          <tr>
-            {columns.map((column) => (
-              <th
-                key={column.key}
-                className={`px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider ${
-                  column.className || ''
-                }`}
-              >
-                {column.label}
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody className="bg-white divide-y divide-gray-200">
-          {data.map((item, index) => {
-            const key = item._id || item.id || index;
-            return (
-              <tr
-                key={key}
-                className={`hover:bg-gray-50 ${onItemClick ? 'cursor-pointer' : ''}`}
-                onClick={() => onItemClick?.(item)}
-              >
-                {columns.map((column) => (
-                  <td
-                    key={column.key}
-                    className={`px-6 py-4 whitespace-nowrap text-sm text-gray-900 ${
-                      column.className || ''
-                    }`}
-                  >
-                    {column.render
-                      ? column.render(getNestedValue(item, column.key), item)
-                      : getNestedValue(item, column.key) || 'N/A'}
-                  </td>
-                ))}
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
+    <div className={`rounded-lg shadow ${
+      theme === 'dark' ? 'bg-gray-800' : 'bg-white'
+    }`}>
+      <div className="w-full overflow-x-auto">
+        <table className={tableClassName}>
+          <thead className={theme === 'dark' ? 'bg-gray-700' : 'bg-gray-50'}>
+            <tr>
+              {columns.map((column) => (
+                <th
+                  key={column.key}
+                  className={`px-6 py-3 text-left text-xs font-medium uppercase tracking-wider ${
+                    theme === 'dark' 
+                      ? 'text-gray-300' 
+                      : 'text-gray-500'
+                  } ${column.className || ''}`}
+                >
+                  {column.label}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody className={`${
+            theme === 'dark' ? 'bg-gray-800 divide-gray-700' : 'bg-white divide-gray-200'
+          } divide-y`}>
+            {data.map((item, index) => {
+              const key = item._id || item.id || index;
+              return (
+                <tr
+                  key={key}
+                  className={`${
+                    theme === 'dark' ? 'hover:bg-gray-700' : 'hover:bg-gray-50'
+                  } ${onItemClick ? 'cursor-pointer' : ''}`}
+                  onClick={() => onItemClick?.(item)}
+                >
+                  {columns.map((column) => (
+                    <td
+                      key={column.key}
+                      className={`px-6 py-4 whitespace-nowrap text-sm ${
+                        theme === 'dark' ? 'text-gray-300' : 'text-gray-900'
+                      } ${column.className || ''}`}
+                    >
+                      {column.render
+                        ? column.render(getNestedValue(item, column.key), item)
+                        : getNestedValue(item, column.key) || 'N/A'}
+                    </td>
+                  ))}
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }

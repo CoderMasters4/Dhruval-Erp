@@ -24,7 +24,7 @@ export function InventoryDetailsModal({ item, onClose, onEdit, onDelete, theme }
 
   return (
     <div className={`fixed inset-0 flex items-center justify-center z-50 transition-theme ${
-      theme === 'dark' ? 'bg-black/70' : 'bg-black bg-opacity-50'
+      theme === 'dark' ? 'bg-gray-900/80 backdrop-blur-sm' : 'bg-gray-500/50 backdrop-blur-sm'
     }`}>
       <div className={`p-6 rounded-lg w-full max-w-4xl max-h-[90vh] overflow-y-auto transition-theme ${
         theme === 'dark' ? 'bg-gray-800' : 'bg-white'

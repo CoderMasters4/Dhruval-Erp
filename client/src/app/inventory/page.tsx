@@ -2,36 +2,27 @@
 
 import { useState, useEffect } from 'react'
 import { useSelector } from 'react-redux'
-import {
-  Package,
-  Plus,
-  Search,
-  Filter,
-  Eye,
-  Edit,
-  AlertTriangle,
-  TrendingUp,
-  TrendingDown,
-  BarChart3,
-  Warehouse,
-  ShoppingCart,
-  Tag,
-  Calendar
-} from 'lucide-react'
+import { Package, Plus, Search } from 'lucide-react'
 import { AppLayout } from '@/components/layout/AppLayout'
 import { PageHeader } from '@/components/ui/PageHeader'
 import { selectCurrentUser, selectIsSuperAdmin } from '@/lib/features/auth/authSlice'
 import {
   useGetInventoryItemsQuery,
   useGetInventoryStatsQuery,
-  useGetInventoryAlertsQuery
+  useGetInventoryAlertsQuery,
+  useCreateInventoryItemMutation,
+  useUpdateInventoryItemMutation,
+  useGetInventoryItemByIdQuery,
+  useDeleteInventoryItemMutation
 } from '@/lib/api/inventoryApi'
-import { ViewToggle, ViewMode } from '@/components/ui/ViewToggle'
-import { DataView } from '@/components/ui/DataView'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
+import { ViewMode } from '@/components/ui/ViewToggle'
 import { Button } from '@/components/ui/Button'
-import clsx from 'clsx'
+import { InventoryItemForm } from '@/components/inventory/InventoryItemForm'
+import { InventoryItemDetailsModal } from '@/components/inventory/InventoryItemDetailsModal'
+import { InventoryStatsCards } from '@/components/inventory/InventoryStatsCards'
+import { InventoryAlerts } from '@/components/inventory/InventoryAlerts'
+import { InventoryFilters } from '@/components/inventory/InventoryFilters'
+import { InventoryList } from '@/components/inventory/InventoryList'
 
 export default function InventoryPage() {
   const user = useSelector(selectCurrentUser)
@@ -41,7 +32,11 @@ export default function InventoryPage() {
   const [statusFilter, setStatusFilter] = useState('all')
   const [page, setPage] = useState(1)
   const [viewMode, setViewMode] = useState<ViewMode>('list')
-  
+  const [showCreateModal, setShowCreateModal] = useState(false)
+  const [showViewModal, setShowViewModal] = useState(false)
+  const [selectedItem, setSelectedItem] = useState<any>(null)
+  const [viewingItemId, setViewingItemId] = useState<string | null>(null)
+
   // Add client-side state to prevent hydration mismatch
   const [isClient, setIsClient] = useState(false)
 
@@ -61,49 +56,84 @@ export default function InventoryPage() {
 
   // Fetch inventory statistics
   const { data: inventoryStats } = useGetInventoryStatsQuery({})
-  
+
   // Fetch inventory alerts
   const { data: inventoryAlerts } = useGetInventoryAlertsQuery({})
 
+  // Create inventory item mutation
+  const [createInventoryItem, { isLoading: isCreating }] = useCreateInventoryItemMutation()
+
+  // Update inventory item mutation
+  const [updateInventoryItem, { isLoading: isUpdating }] = useUpdateInventoryItemMutation()
+
+  // Delete inventory item mutation
+  const [deleteInventoryItem, { isLoading: isDeleting }] = useDeleteInventoryItemMutation()
+
+  // Get item by ID for viewing
+  const { data: itemDetails } = useGetInventoryItemByIdQuery(viewingItemId || '', {
+    skip: !viewingItemId
+  })
+
   const items = inventoryData?.data?.data || []
   const pagination = inventoryData?.data?.pagination
-  const alerts = inventoryAlerts?.data || []
+  // Ensure alerts is always an array
+  const alerts = Array.isArray(inventoryAlerts?.data) ? inventoryAlerts.data : []
 
-  const formatCurrency = (amount: number) => {
-    if (!isClient) return '₹0' // Return default value on server
-    return new Intl.NumberFormat('en-IN', {
-      style: 'currency',
-      currency: 'INR',
-      minimumFractionDigits: 0
-    }).format(amount)
-  }
-
-  const getStatusBadge = (status: string) => {
-    const baseClasses = "px-2 py-1 text-xs font-medium rounded-full flex items-center"
-    switch (status) {
-      case 'low_stock':
-        return `${baseClasses} bg-red-100 text-red-600`
-      case 'overstock':
-        return `${baseClasses} bg-orange-100 text-orange-600`
-      case 'normal':
-        return `${baseClasses} bg-green-100 text-green-600`
-      default:
-        return `${baseClasses} bg-gray-100 text-gray-600`
+  const handleCreateOrUpdateItem = async (formData: any) => {
+    try {
+      if (selectedItem?._id) {
+        // Update existing item
+        await updateInventoryItem({
+          itemId: selectedItem._id,
+          itemData: formData
+        }).unwrap()
+      } else {
+        // Create new item
+        await createInventoryItem(formData).unwrap()
+      }
+      setShowCreateModal(false)
+      setSelectedItem(null)
+      // Refetch inventory data
+      window.location.reload()
+    } catch (error) {
+      console.error('Failed to save inventory item:', error)
+      alert('Failed to save inventory item. Please try again.')
     }
   }
 
-  const getStockIcon = (status: string) => {
-    switch (status) {
-      case 'low_stock':
-        return <TrendingDown className="h-3 w-3 mr-1" />
-      case 'overstock':
-        return <TrendingUp className="h-3 w-3 mr-1" />
-      case 'normal':
-        return <BarChart3 className="h-3 w-3 mr-1" />
-      default:
-        return null
+  const handleEditItem = (item: any) => {
+    setSelectedItem(item)
+    setShowCreateModal(true)
+  }
+
+  const handleViewItem = (item: any) => {
+    setViewingItemId(item._id)
+    setShowViewModal(true)
+  }
+
+  const handleDeleteItem = async (itemId: string) => {
+    if (window.confirm('Are you sure you want to delete this inventory item?')) {
+      try {
+        await deleteInventoryItem(itemId).unwrap()
+        window.location.reload()
+      } catch (error) {
+        console.error('Failed to delete inventory item:', error)
+        alert('Failed to delete inventory item. Please try again.')
+      }
     }
   }
+
+  const handleFormClose = () => {
+    setShowCreateModal(false)
+    setSelectedItem(null)
+  }
+
+  const handleViewModalClose = () => {
+    setShowViewModal(false)
+    setViewingItemId(null)
+  }
+
+  const theme = useSelector((state: any) => state.ui?.theme || 'light')
 
   // Don't render until client-side hydration is complete
   if (!isClient) {
@@ -145,6 +175,7 @@ export default function InventoryPage() {
             </Button>
             <Button
               className="bg-white text-indigo-600 hover:bg-gray-50"
+              onClick={() => setShowCreateModal(true)}
             >
               <Plus className="h-4 w-4 mr-2" />
               Add Item
@@ -153,343 +184,78 @@ export default function InventoryPage() {
         </PageHeader>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="bg-white rounded-xl border-2 border-sky-500 p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-black">Total Items</p>
-                <p className="text-2xl font-bold text-black">{inventoryStats?.data?.totalItems || 0}</p>
-              </div>
-              <Package className="h-8 w-8 text-sky-500" />
-            </div>
-          </div>
-          
-          <div className="bg-white rounded-xl border-2 border-sky-500 p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-black">Low Stock</p>
-                <p className="text-2xl font-bold text-red-600">{inventoryStats?.data?.lowStockItems || 0}</p>
-              </div>
-              <AlertTriangle className="h-8 w-8 text-red-500" />
-            </div>
-          </div>
-          
-          <div className="bg-white rounded-xl border-2 border-sky-500 p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-black">Total Value</p>
-                <p className="text-2xl font-bold text-sky-600">
-                  {inventoryStats?.data?.totalValue ? formatCurrency(inventoryStats.data.totalValue) : '₹0'}
-                </p>
-              </div>
-              <TrendingUp className="h-8 w-8 text-sky-500" />
-            </div>
-          </div>
-          
-          <div className="bg-white rounded-xl border-2 border-sky-500 p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-black">Movements</p>
-                <p className="text-2xl font-bold text-green-600">{inventoryStats?.data?.recentMovements || 0}</p>
-              </div>
-              <Warehouse className="h-8 w-8 text-green-500" />
-            </div>
-          </div>
-        </div>
+        <InventoryStatsCards stats={inventoryStats?.data} isClient={isClient} />
 
         {/* Alerts Section */}
-        {alerts.length > 0 && (
-          <div className="bg-white rounded-xl border-2 border-red-500 p-4 sm:p-6">
-            <div className="flex items-center mb-4">
-              <AlertTriangle className="h-5 w-5 text-red-500 mr-2" />
-              <h3 className="text-lg font-semibold text-black">Low Stock Alerts ({alerts.length})</h3>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {alerts.slice(0, 6).map((alert) => (
-                <div key={alert._id} className="p-3 bg-red-50 rounded-lg border border-red-200">
-                  <div className="flex items-center justify-between mb-2">
-                    <h4 className="font-medium text-black text-sm">{alert.itemName}</h4>
-                    <span className={clsx(
-                      "px-2 py-1 text-xs rounded-full",
-                      alert.urgency === 'critical' 
-                        ? "bg-red-100 text-red-600" 
-                        : "bg-orange-100 text-orange-600"
-                    )}>
-                      {alert.urgency}
-                    </span>
-                  </div>
-                  <div className="text-xs text-black opacity-75">
-                    <p>Current: {alert.currentStock} {alert.itemCode}</p>
-                    <p>Minimum: {alert.minStock}</p>
-                    <p>Shortage: {alert.shortage}</p>
-                  </div>
-                </div>
-              ))}
+        <InventoryAlerts alerts={alerts} />
+
+        {/* Filters */}
+        <InventoryFilters
+          searchTerm={searchTerm}
+          onSearchChange={setSearchTerm}
+          categoryFilter={categoryFilter}
+          onCategoryFilterChange={setCategoryFilter}
+          statusFilter={statusFilter}
+          onStatusFilterChange={setStatusFilter}
+          viewMode={viewMode}
+          onViewModeChange={setViewMode}
+        />
+
+        {/* Inventory List */}
+        <InventoryList
+          items={items}
+          viewMode={viewMode}
+          isLoading={isLoading}
+          searchTerm={searchTerm}
+          categoryFilter={categoryFilter}
+          statusFilter={statusFilter}
+          isClient={isClient}
+          pagination={pagination}
+          currentPage={page}
+          onPageChange={setPage}
+          onViewItem={handleViewItem}
+          onEditItem={handleEditItem}
+        />
+
+        {/* Create Inventory Item Modal */}
+        {showCreateModal && (
+          <div className={`fixed inset-0 flex items-center justify-center z-[9999] ${theme === 'dark' ? 'bg-gray-900/80 backdrop-blur-sm' : 'bg-gray-500/50 backdrop-blur-sm'
+            }`}>
+            <div className={`rounded-xl p-6 max-w-5xl w-full mx-4 max-h-[90vh] overflow-y-auto shadow-2xl ${theme === 'dark' ? 'bg-gray-800 text-white border border-gray-700' : 'bg-white text-gray-900 border border-gray-200'
+              }`}>
+              <div className={`flex items-center justify-between mb-6 pb-4 border-b ${theme === 'dark' ? 'border-gray-700' : 'border-gray-200'}`}>
+                <h2 className={`text-2xl font-bold ${theme === 'dark' ? 'text-white' : 'text-gray-900'
+                  }`}>
+                  {selectedItem ? 'Edit Inventory Item' : 'Create New Inventory Item'}
+                </h2>
+                <button
+                  onClick={handleFormClose}
+                  className={`text-2xl leading-none transition-colors rounded-full p-1 ${theme === 'dark' ? 'text-gray-400 hover:text-white hover:bg-gray-700' : 'text-gray-400 hover:text-gray-900 hover:bg-gray-100'
+                    }`}
+                >
+                  ✕
+                </button>
+              </div>
+              <InventoryItemForm
+                item={selectedItem}
+                onSubmit={handleCreateOrUpdateItem}
+                onCancel={handleFormClose}
+                isSubmitting={isCreating || isUpdating}
+                theme={theme}
+              />
             </div>
           </div>
         )}
 
-        {/* Filters */}
-        <div className="bg-white rounded-xl border-2 border-sky-500 p-4 sm:p-6">
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 flex-1">
-              {/* Search */}
-              <div className="lg:col-span-1">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-sky-500" />
-                  <input
-                    type="text"
-                    placeholder="Search items..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2 border-2 border-sky-200 rounded-lg focus:outline-none focus:border-sky-500 bg-white text-black"
-                  />
-                </div>
-              </div>
-
-              {/* Category Filter */}
-              <div>
-                <select
-                  value={categoryFilter}
-                  onChange={(e) => setCategoryFilter(e.target.value)}
-                  className="w-full px-3 py-2 border-2 border-sky-200 rounded-lg focus:outline-none focus:border-sky-500 bg-white text-black"
-                >
-                  <option value="all">All Categories</option>
-                  <option value="raw_material">Raw Materials</option>
-                  <option value="finished_goods">Finished Goods</option>
-                  <option value="semi_finished">Work in Progress</option>
-                  <option value="consumables">Consumables</option>
-                  <option value="spare_parts">Tools & Equipment</option>
-                </select>
-              </div>
-
-              {/* Status Filter */}
-              <div>
-                <select
-                  value={statusFilter}
-                  onChange={(e) => setStatusFilter(e.target.value)}
-                  className="w-full px-3 py-2 border-2 border-sky-200 rounded-lg focus:outline-none focus:border-sky-500 bg-white text-black"
-                >
-                  <option value="all">All Status</option>
-                  <option value="normal">Normal Stock</option>
-                  <option value="low_stock">Low Stock</option>
-                  <option value="overstock">Overstock</option>
-                </select>
-              </div>
-            </div>
-
-            {/* View Toggle */}
-            <div className="flex items-center space-x-3">
-              <ViewToggle
-                viewMode={viewMode}
-                onViewModeChange={setViewMode}
-              />
-            </div>
-          </div>
-        </div>
-
-        {/* Inventory List */}
-        <div className="bg-white rounded-xl border-2 border-sky-500 overflow-hidden">
-          <DataView
-            data={items || []}
-            viewMode={viewMode}
-            loading={isLoading}
-            emptyMessage={
-              searchTerm || categoryFilter !== 'all' || statusFilter !== 'all'
-                ? 'No items match your search criteria.'
-                : 'No inventory items have been added yet.'
-            }
-            columns={[
-              {
-                key: 'itemName',
-                label: 'Item',
-                render: (itemName, item) => (
-                  <div className="flex items-center">
-                    <div className="flex-shrink-0 h-10 w-10">
-                      <div className="h-10 w-10 rounded-lg bg-sky-500 flex items-center justify-center">
-                        <Package className="w-5 h-5 text-white" />
-                      </div>
-                    </div>
-                    <div className="ml-4">
-                      <div className="text-sm font-medium text-black">{itemName}</div>
-                      <div className="text-sm text-black opacity-60">{item.itemCode}</div>
-                    </div>
-                  </div>
-                )
-              },
-              {
-                key: 'category',
-                label: 'Category',
-                render: (category) => (
-                  <div className="flex items-center">
-                    <Tag className="w-4 h-4 text-sky-500 mr-2" />
-                    <span className="text-sm text-black">{category?.primary || 'N/A'}</span>
-                  </div>
-                )
-              },
-              {
-                key: 'stock',
-                label: 'Stock',
-                render: (stock) => (
-                  <div className="text-sm text-black">
-                    <div className="font-medium">{stock.currentStock} {stock.unit}</div>
-                    <div className="text-xs opacity-60">Available: {stock.availableStock}</div>
-                  </div>
-                )
-              },
-              {
-                key: 'pricing',
-                label: 'Value',
-                render: (pricing) => (
-                  <div className="text-sm text-black">
-                    <div className="font-medium">{formatCurrency(pricing.costPrice || 0)}</div>
-                    <div className="text-xs opacity-60">MRP: {formatCurrency(pricing.mrp || 0)}</div>
-                  </div>
-                )
-              },
-              {
-                key: 'quality',
-                label: 'Quality',
-                render: (quality) => (
-                  <div className="flex items-center">
-                    <Badge 
-                      variant={quality.qualityGrade === 'A' ? 'default' : 'secondary'}
-                      className={clsx(
-                        quality.qualityGrade === 'A' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
-                      )}
-                    >
-                      {quality.qualityGrade}
-                    </Badge>
-                  </div>
-                )
-              },
-              {
-                key: 'actions',
-                label: 'Actions',
-                render: (_, item) => (
-                  <div className="flex items-center space-x-2">
-                    <Button variant="outline" size="sm">
-                      <Eye className="h-4 w-4" />
-                    </Button>
-                    <Button variant="outline" size="sm">
-                      <Edit className="h-4 w-4" />
-                    </Button>
-                  </div>
-                )
-              }
-            ]}
-            renderGridCard={(item) => (
-              <div className="bg-white rounded-lg border border-sky-200 p-4 hover:shadow-md transition-shadow">
-                <div className="flex items-center mb-3">
-                  <div className="h-12 w-12 rounded-lg bg-sky-500 flex items-center justify-center mr-3">
-                    <Package className="w-6 h-6 text-white" />
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="font-medium text-black text-sm">{item.itemName}</h3>
-                    <p className="text-xs text-black opacity-60">{item.itemCode}</p>
-                  </div>
-                </div>
-
-                <div className="space-y-2 mb-3">
-                  <div className="flex items-center">
-                    <Tag className="w-4 h-4 text-sky-500 mr-2" />
-                    <span className="text-sm text-black">{item.category?.primary || 'N/A'}</span>
-                  </div>
-                  <div className="flex items-center">
-                    <Warehouse className="w-4 h-4 text-sky-500 mr-3" />
-                    <span className="text-sm text-black">{item.locations?.length > 0 ? item.locations[0] : 'No Location'}</span>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4 pt-3 border-t border-sky-200">
-                  <div>
-                    <div className="text-xs text-black opacity-60 uppercase tracking-wider">Stock</div>
-                    <div className="text-sm font-medium text-black">
-                      {item.stock?.currentStock || 0} {item.stock?.unit || 'units'}
-                    </div>
-                  </div>
-                  <div>
-                    <div className="text-xs text-black opacity-60 uppercase tracking-wider">Value</div>
-                    <div className="text-sm font-medium text-black">
-                      {formatCurrency(item.pricing?.costPrice || 0)}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="flex items-center justify-between pt-3 border-t border-sky-200">
-                  <span className={getStatusBadge(item.stock?.currentStock <= (item.stock?.reorderLevel || 0) ? 'low_stock' : 'normal')}>
-                    {getStockIcon(item.stock?.currentStock <= (item.stock?.reorderLevel || 0) ? 'low_stock' : 'normal')}
-                    {item.stock?.currentStock <= (item.stock?.reorderLevel || 0) ? 'Low Stock' : 'Normal'}
-                  </span>
-                  <span className="text-xs text-black opacity-60">
-                    @ {formatCurrency(item.pricing?.costPrice || 0)}/{item.stock?.unit || 'unit'}
-                  </span>
-                </div>
-              </div>
-            )}
-            tableClassName="min-w-full divide-y divide-sky-200"
-            gridClassName="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 p-6"
+        {/* View Details Modal */}
+        {showViewModal && itemDetails?.data && (
+          <InventoryItemDetailsModal
+            item={itemDetails.data}
+            onClose={handleViewModalClose}
+            onEdit={handleEditItem}
+            theme={theme}
           />
-
-          {/* Pagination */}
-          {pagination && pagination.totalPages > 1 && (
-            <div className="bg-indigo-50 px-6 py-4 flex items-center justify-between border-t border-indigo-200 rounded-b-xl">
-              <div className="text-sm text-gray-700">
-                Showing {((pagination.page - 1) * pagination.limit) + 1} to {Math.min(pagination.page * pagination.limit, pagination.total)} of {pagination.total} items
-              </div>
-              <div className="flex items-center space-x-2">
-                <Button
-                  onClick={() => setPage(page - 1)}
-                  disabled={page <= 1}
-                  variant="outline"
-                  size="sm"
-                >
-                  Previous
-                </Button>
-
-                <div className="flex items-center space-x-1">
-                  {/* Page numbers */}
-                  {Array.from({ length: Math.min(5, pagination.totalPages) }, (_, i) => {
-                    const pageNum = i + 1
-                    return (
-                      <Button
-                        key={pageNum}
-                        onClick={() => setPage(pageNum)}
-                        variant={page === pageNum ? "default" : "outline"}
-                        size="sm"
-                        className="w-8 h-8 p-0"
-                      >
-                        {pageNum}
-                      </Button>
-                    )
-                  })}
-                  {pagination.totalPages > 5 && (
-                    <>
-                      <span className="text-gray-500">...</span>
-                      <Button
-                        onClick={() => setPage(pagination.totalPages)}
-                        variant={page === pagination.totalPages ? "default" : "outline"}
-                        size="sm"
-                        className="w-8 h-8 p-0"
-                      >
-                        {pagination.totalPages}
-                      </Button>
-                    </>
-                  )}
-                </div>
-
-                <Button
-                  onClick={() => setPage(page + 1)}
-                  disabled={page >= pagination.totalPages}
-                  variant="outline"
-                  size="sm"
-                >
-                  Next
-                </Button>
-              </div>
-            </div>
-          )}
-        </div>
+        )}
       </div>
     </AppLayout>
   )

@@ -356,7 +356,7 @@ export class InventoryController extends BaseController<IInventoryItem> {
       const item = await this.inventoryService.update(id, {
         'status.isActive': false,
         'status.deletedAt': new Date()
-      }, deletedBy);
+      } as any, deletedBy);
 
       if (!item) {
         this.sendError(res, new Error('Item not found'), 'Inventory item not found', 404);

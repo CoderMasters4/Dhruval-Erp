@@ -493,14 +493,17 @@ export interface IInventoryItem extends AuditableDocument {
   internalSKU?: string;
   
   category: {
-    primary: 'raw_material' | 'working_inventory' | 'semi_finished' | 'finished_goods' | 'consumables' | 'spare_parts';
+    primary: string;
     secondary?: string;
     tertiary?: string;
   };
   
   productType?: 'saree' | 'african' | 'garment' | 'digital_print' | 'custom' | 'chemical' | 'dye' | 'machinery' | 'yarn' | 'thread';
 
-  // Design and Pattern Information
+  // Design Reference - Linked to Design Model
+  designId?: Types.ObjectId;
+
+  // Design and Pattern Information (Legacy - kept for backward compatibility)
   designInfo?: {
     designNumber?: string;
     designName?: string;
@@ -534,8 +537,17 @@ export interface IInventoryItem extends AuditableDocument {
     phLevel?: number;
     batchNumber?: string;
     lotNumber?: string;
+    challan?: string;
     manufacturingDate?: Date;
     expiryDate?: Date;
+    hsnCode?: string;
+    attributeName?: string;
+    grossQuantity?: number;
+    tareWeight?: number;
+    fold?: number;
+    date?: Date;
+    lrNumber?: string;
+    transportNumber?: string;
     customAttributes?: any;
   };
   
@@ -548,6 +560,7 @@ export interface IInventoryItem extends AuditableDocument {
     unit: string;
     alternateUnit?: string;
     conversionFactor?: number;
+    netQuantity?: number;
     reorderLevel: number;
     minStockLevel: number;
     maxStockLevel: number;
@@ -567,8 +580,20 @@ export interface IInventoryItem extends AuditableDocument {
     sellingPrice?: number;
     mrp?: number;
     marginPercentage?: number;
+    pricePerNetQty?: number;
+    gst?: number;
+    finalPrice?: number;
     currency: string;
   };
+
+  priceHistory?: Array<{
+    price: number;
+    previousPrice?: number;
+    changedBy?: Types.ObjectId;
+    changedAt: Date;
+    reason?: string;
+    notes?: string;
+  }>;
   
   suppliers: IItemSupplier[];
 
@@ -830,6 +855,210 @@ export interface IMovementLocation {
 }
 
 // =============================================
+// SCRAP INTERFACES
+// =============================================
+
+export interface IScrap extends AuditableDocument {
+  scrapNumber: string;
+  scrapDate: Date;
+  
+  // Reference to original inventory item
+  inventoryItemId: Types.ObjectId;
+  itemCode: string;
+  itemName: string;
+  itemDescription?: string;
+  
+  // Scrap details
+  quantity: number;
+  unit: string;
+  scrapReason: 'damaged' | 'defective' | 'expired' | 'obsolete' | 'production_waste' | 'quality_reject' | 'other';
+  scrapReasonDetails?: string;
+  
+  // Location information
+  warehouseId?: Types.ObjectId;
+  warehouseName?: string;
+  zone?: string;
+  rack?: string;
+  bin?: string;
+  
+  // Stock impact
+  stockImpact: {
+    inventoryStockBefore: number;
+    inventoryStockAfter: number;
+    scrapStockBefore: number;
+    scrapStockAfter: number;
+  };
+  
+  // Valuation
+  unitCost?: number;
+  totalValue?: number;
+  
+  // Quality details
+  qualityGrade?: string;
+  defectDetails?: string;
+  
+  // Batch/Lot information (if applicable)
+  batchNumber?: string;
+  lotNumber?: string;
+  manufacturingDate?: Date;
+  expiryDate?: Date;
+  
+  // Approval workflow
+  approval?: {
+    isRequired: boolean;
+    requestedBy?: Types.ObjectId;
+    requestedAt?: Date;
+    approvedBy?: Types.ObjectId;
+    approvedAt?: Date;
+    status: 'pending' | 'approved' | 'rejected';
+    approvalNotes?: string;
+  };
+  
+  // Disposal information
+  disposal?: {
+    disposed: boolean;
+    disposalDate?: Date;
+    disposalMethod?: 'sold' | 'donated' | 'recycled' | 'destroyed' | 'other';
+    disposalValue?: number;
+    disposalNotes?: string;
+    disposedBy?: Types.ObjectId;
+  };
+  
+  // Tracking
+  status: 'active' | 'disposed' | 'cancelled';
+  notes?: string;
+  tags: string[];
+  attachments: string[];
+}
+
+// =============================================
+// GOODS RETURN INTERFACES
+// =============================================
+
+export interface IGoodsReturn extends AuditableDocument {
+  returnNumber: string;
+  returnDate: Date;
+  
+  // Reference to original inventory item
+  inventoryItemId: Types.ObjectId;
+  itemCode: string;
+  itemName: string;
+  itemDescription?: string;
+  
+  // Original challan information
+  originalChallanNumber: string;
+  originalChallanDate?: Date;
+  
+  // Return details
+  damagedQuantity: number;
+  returnedQuantity: number;
+  totalQuantity: number; // damagedQuantity + returnedQuantity
+  unit: string;
+  returnReason: 'damaged' | 'defective' | 'quality_issue' | 'wrong_item' | 'expired' | 'other';
+  returnReasonDetails?: string;
+  
+  // Location information
+  warehouseId?: Types.ObjectId;
+  warehouseName?: string;
+  zone?: string;
+  rack?: string;
+  bin?: string;
+  
+  // Stock impact
+  stockImpact: {
+    inventoryStockBefore: number;
+    inventoryStockAfter: number;
+    damagedStockBefore: number;
+    damagedStockAfter: number;
+    returnedStockBefore: number;
+    returnedStockAfter: number;
+  };
+  
+  // Valuation
+  unitCost?: number;
+  damagedValue?: number;
+  returnedValue?: number;
+  totalValue?: number;
+  
+  // Quality details
+  qualityGrade?: string;
+  defectDetails?: string;
+  
+  // Batch/Lot information (if applicable)
+  batchNumber?: string;
+  lotNumber?: string;
+  manufacturingDate?: Date;
+  expiryDate?: Date;
+  
+  // Supplier/Party information (if returning to supplier)
+  supplierId?: Types.ObjectId;
+  supplierName?: string;
+  supplierCode?: string;
+  
+  // Approval workflow
+  approval?: {
+    isRequired: boolean;
+    requestedBy?: Types.ObjectId;
+    requestedAt?: Date;
+    approvedBy?: Types.ObjectId;
+    approvedAt?: Date;
+    status: 'pending' | 'approved' | 'rejected';
+    approvalNotes?: string;
+  };
+  
+  // Return status
+  returnStatus: 'pending' | 'approved' | 'processed' | 'rejected' | 'cancelled';
+  
+  // Tracking
+  status: 'active' | 'completed' | 'cancelled';
+  notes?: string;
+  tags: string[];
+  attachments: string[];
+}
+
+// =============================================
+// DESIGN INTERFACES
+// =============================================
+
+export interface IDesign extends AuditableDocument {
+  designNumber: string;
+  designName: string;
+  
+  designDescription?: string;
+  designCategory?: string;
+  season?: 'spring' | 'summer' | 'monsoon' | 'winter' | 'all_season';
+  designCollection?: string;
+  
+  // Artwork and Files
+  artworkFile?: string;
+  designImage?: string;
+  designFiles?: string[];
+  
+  // Variants
+  colorVariants?: string[];
+  sizeVariants?: string[];
+  
+  // Design Specifications
+  specifications?: {
+    pattern?: string;
+    technique?: string;
+    complexity?: 'simple' | 'moderate' | 'complex' | 'very_complex';
+    estimatedProductionTime?: number;
+    notes?: string;
+  };
+  
+  // Usage Tracking
+  usageCount?: number;
+  lastUsedDate?: Date;
+  
+  // Status
+  status: 'active' | 'inactive' | 'archived';
+  
+  notes?: string;
+  tags: string[];
+}
+
+// =============================================
 // PRODUCTION ORDER INTERFACES
 // =============================================
 
@@ -1034,6 +1263,62 @@ export interface IJobWork {
   actualDelivery?: Date;
   jobWorkCost?: number;
   qualityAgreement?: string;
+  jobWorkType: string;
+  status?: 'pending' | 'in_progress' | 'completed' | 'on_hold' | 'cancelled' | 'quality_check';
+  productionOrderId?: Types.ObjectId;
+  batchId?: Types.ObjectId;
+  quantity: number;
+  unit: string;
+  // Challan Information
+  challanNumber?: string;
+  challanDate?: Date;
+  categoryId?: Types.ObjectId;
+  categoryName?: string;
+  subcategoryId?: Types.ObjectId;
+  subcategoryName?: string;
+  itemName?: string;
+  attributeName?: string;
+  price?: number;
+  lotNumber?: string;
+  // Party Details
+  partyName?: string;
+  partyGstNumber?: string;
+  partyAddress?: string;
+  // Transport Details
+  transportName?: string;
+  transportNumber?: string;
+  materialProvided?: Array<{
+    itemId?: Types.ObjectId;
+    itemName?: string;
+    quantity?: number;
+    unit?: string;
+  }>;
+  materialReturned?: Array<{
+    itemId?: Types.ObjectId;
+    itemName?: string;
+    quantity?: number;
+    unit?: string;
+  }>;
+  materialUsed?: Array<{
+    itemId?: Types.ObjectId;
+    itemName?: string;
+    quantity?: number;
+    unit?: string;
+  }>;
+  materialWasted?: Array<{
+    itemId?: Types.ObjectId;
+    itemName?: string;
+    quantity?: number;
+    unit?: string;
+  }>;
+  outputQuantity?: number;
+  wasteQuantity?: number;
+  qualityStatus?: 'pending' | 'approved' | 'rejected' | 'rework';
+  qualityNotes?: string;
+  paymentStatus?: 'pending' | 'partial' | 'paid';
+  paymentAmount?: number;
+  paymentDate?: Date;
+  remarks?: string;
 }
 
 export interface IMaterialConsumption {

@@ -25,7 +25,7 @@ export function BrowserInstallButton() {
       const isStandaloneMode = window.matchMedia('(display-mode: standalone)').matches
       const isIOSStandalone = (window.navigator as any).standalone === true
       const isAndroidApp = document.referrer.includes('android-app://')
-      
+
       setIsInstalled(isStandaloneMode || isIOSStandalone || isAndroidApp)
     }
 
@@ -33,7 +33,7 @@ export function BrowserInstallButton() {
     const handleBeforeInstallPrompt = (e: Event) => {
       e.preventDefault()
       setDeferredPrompt(e as BeforeInstallPromptEvent)
-      
+
       // Show button if not installed
       if (!isInstalled) {
         setShowButton(true)
@@ -63,7 +63,7 @@ export function BrowserInstallButton() {
     if (!deferredPrompt) {
       // For iOS or browsers without install prompt
       const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent)
-      
+
       if (isIOS) {
         toast((t) => (
           <div className="flex flex-col gap-2">
@@ -93,14 +93,14 @@ export function BrowserInstallButton() {
     try {
       await deferredPrompt.prompt()
       const choiceResult = await deferredPrompt.userChoice
-      
+
       if (choiceResult.outcome === 'accepted') {
         console.log('User accepted the install prompt')
         toast.success('Installing app...')
       } else {
         console.log('User dismissed the install prompt')
       }
-      
+
       setDeferredPrompt(null)
       setShowButton(false)
     } catch (error) {
@@ -115,14 +115,6 @@ export function BrowserInstallButton() {
   }
 
   return (
-    <Button
-      onClick={handleInstall}
-      size="sm"
-      className="bg-blue-600 hover:bg-blue-700 text-white border-0 shadow-sm"
-      title="Install ERP App"
-    >
-      <Download className="h-4 w-4 mr-1.5" />
-      Install
-    </Button>
+    <></>
   )
 }

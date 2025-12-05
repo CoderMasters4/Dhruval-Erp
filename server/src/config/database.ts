@@ -15,7 +15,7 @@ class DatabaseManager {
   private maxRetries: number = 5;
   private retryDelay: number = 5000;
 
-  private constructor() {}
+  private constructor() { }
 
   public static getInstance(): DatabaseManager {
     if (!DatabaseManager.instance) {
@@ -25,8 +25,8 @@ class DatabaseManager {
   }
 
   private getConnectionConfig(): DatabaseConfig {
-    const uri = config.NODE_ENV === 'development' ? config.MONGODB_URI_TEST : config.MONGODB_URI;
-    
+    const uri = config.MONGODB_URI;
+
     const options: mongoose.ConnectOptions = {
       // Connection Pool Settings
       maxPoolSize: config.DB_MAX_POOL_SIZE || 10,
@@ -48,13 +48,13 @@ class DatabaseManager {
 
       // Read Preference
       readPreference: 'primary',
-      
+
       // Compression
       compressors: ['zlib'],
-      
+
       // Authentication
       authSource: 'admin',
-      
+
       // SSL/TLS (for production) - Updated for MongoDB Atlas
       ...(config.NODE_ENV === 'production' && {
         tls: true,
@@ -92,10 +92,10 @@ class DatabaseManager {
       logger.debug('About to call mongoose.connect...');
       await mongoose.connect(uri, options);
       logger.debug('mongoose.connect completed successfully');
-      
+
       this.isConnected = true;
       this.connectionRetries = 0;
-      
+
       logger.info('MongoDB connected successfully', {
         host: mongoose.connection.host,
         port: mongoose.connection.port,
@@ -107,7 +107,7 @@ class DatabaseManager {
       this.setupIndexes();
 
     } catch (error) {
-      logger.error('MongoDB connection failed', { 
+      logger.error('MongoDB connection failed', {
         error: error instanceof Error ? error.message : 'Unknown error',
         retries: this.connectionRetries,
         maxRetries: this.maxRetries
@@ -116,7 +116,7 @@ class DatabaseManager {
       if (this.connectionRetries < this.maxRetries) {
         this.connectionRetries++;
         logger.info(`Retrying connection in ${this.retryDelay}ms... (${this.connectionRetries}/${this.maxRetries})`);
-        
+
         setTimeout(() => {
           this.connect();
         }, this.retryDelay);
@@ -137,8 +137,8 @@ class DatabaseManager {
       this.isConnected = false;
       logger.info('MongoDB disconnected successfully');
     } catch (error) {
-      logger.error('Error disconnecting from MongoDB', { 
-        error: error instanceof Error ? error.message : 'Unknown error' 
+      logger.error('Error disconnecting from MongoDB', {
+        error: error instanceof Error ? error.message : 'Unknown error'
       });
     }
   }
@@ -229,8 +229,8 @@ class DatabaseManager {
       await mongoose.connection.db?.admin().ping();
       return true;
     } catch (error) {
-      logger.error('Database health check failed', { 
-        error: error instanceof Error ? error.message : 'Unknown error' 
+      logger.error('Database health check failed', {
+        error: error instanceof Error ? error.message : 'Unknown error'
       });
       return false;
     }
@@ -253,8 +253,8 @@ class DatabaseManager {
         indexSize: stats?.indexSize || 0
       };
     } catch (error) {
-      logger.error('Error getting database stats', { 
-        error: error instanceof Error ? error.message : 'Unknown error' 
+      logger.error('Error getting database stats', {
+        error: error instanceof Error ? error.message : 'Unknown error'
       });
       return null;
     }

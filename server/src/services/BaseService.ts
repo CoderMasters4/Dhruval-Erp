@@ -34,16 +34,118 @@ export abstract class BaseService<T extends Document> implements IBaseService<T>
    */
   async create(data: Partial<T>, userId?: string): Promise<T> {
     try {
+      // Defensive check: ensure data.name (if present) is a string, not an object
+      if (data && 'name' in data && data.name != null) {
+        if (typeof data.name !== 'string') {
+          logger.error(`Invalid name type in ${this.modelName} create`, {
+            name: data.name,
+            type: typeof data.name,
+            isObject: typeof data.name === 'object',
+            hasRegex: typeof data.name === 'object' && '$regex' in (data.name as any)
+          });
+          throw new AppError(`Name must be a string, received ${typeof data.name}`, 400);
+        }
+      }
+      
       logger.info(`Creating new ${this.modelName}`, { data, userId });
       
       if (!userId) {
         throw new AppError('User ID is required for creating documents', 400);
       }
       
-      const document = new this.model({
-        ...data,
-        createdBy: new Types.ObjectId(userId)
+      // Create a completely fresh plain object to avoid any getter/setter or reference issues
+      // Use Object.entries() to get key-value pairs directly, avoiding property access
+      const cleanData: any = {};
+      
+      // Iterate over entries to get actual values, not through property access
+      for (const [key, value] of Object.entries(data || {})) {
+        // For 'name' field, ensure it's always a string primitive
+        if (key === 'name') {
+          if (value == null) {
+            // Skip null/undefined names - let Mongoose validation handle it
+            continue;
+          }
+          
+          // CRITICAL: Check if it's an object FIRST (before any conversion)
+          if (typeof value === 'object' && value !== null) {
+            // Check specifically for regex objects
+            const valueObj = value as any;
+            if ('$regex' in valueObj || valueObj.constructor?.name === 'RegExp') {
+              logger.error(`Name field is a regex/query object in ${this.modelName}`, {
+                value,
+                type: typeof value,
+                hasRegex: '$regex' in valueObj,
+                constructor: valueObj.constructor?.name,
+                keys: Object.keys(valueObj)
+              });
+              throw new AppError(`Name field must be a string, received query object with keys: ${Object.keys(valueObj).join(', ')}`, 400);
+            }
+            // Any other object type is also invalid
+            logger.error(`Name field is an object in ${this.modelName}`, {
+              value,
+              type: typeof value,
+              constructor: valueObj.constructor?.name,
+              keys: Object.keys(valueObj)
+            });
+            throw new AppError(`Name field must be a string, received ${typeof value} with keys: ${Object.keys(valueObj).join(', ')}`, 400);
+          }
+          
+          // Check if it's already a string
+          if (typeof value !== 'string') {
+            // Try to convert to string, but log a warning
+            logger.warn(`Name field is not a string, converting: ${typeof value}`, { value });
+            const stringValue = String(value);
+            
+            // Final check - if String() conversion resulted in "[object Object]", reject it
+            if (stringValue === '[object Object]') {
+              logger.error(`Name field converted to [object Object] in ${this.modelName}`, {
+                originalValue: value,
+                originalType: typeof value
+              });
+              throw new AppError('Name field cannot be an object', 400);
+            }
+            cleanData[key] = stringValue;
+          } else {
+            // It's already a string, use it directly
+            cleanData[key] = value;
+          }
+        } else {
+          // For other fields, copy the value as-is
+          cleanData[key] = value;
+        }
+      }
+      
+      cleanData.createdBy = new Types.ObjectId(userId);
+      
+      // Final validation before creating Mongoose document
+      if (cleanData.name != null) {
+        if (typeof cleanData.name !== 'string') {
+          logger.error(`Final validation failed: name is not a string in ${this.modelName}`, {
+            name: cleanData.name,
+            type: typeof cleanData.name,
+            isObject: typeof cleanData.name === 'object',
+            value: cleanData.name
+          });
+          throw new AppError(`Name must be a string before creating ${this.modelName}, got ${typeof cleanData.name}`, 400);
+        }
+        
+        // Additional check - ensure it's not "[object Object]"
+        if (cleanData.name === '[object Object]') {
+          logger.error(`Name is [object Object] string in ${this.modelName}`, {
+            name: cleanData.name
+          });
+          throw new AppError('Name cannot be "[object Object]"', 400);
+        }
+      }
+      
+      // Log the clean data before creating the document
+      logger.debug(`Creating ${this.modelName} with clean data`, {
+        name: cleanData.name,
+        nameType: typeof cleanData.name,
+        allKeys: Object.keys(cleanData)
       });
+      
+      const document = new this.model(cleanData);
       
       const savedDocument = await document.save();
       logger.info(`${this.modelName} created successfully`, { id: savedDocument._id, userId });
@@ -108,7 +210,13 @@ export abstract class BaseService<T extends Document> implements IBaseService<T>
 
       const document = await query.exec();
       return document;
-    } catch (error) {
+    } catch (error: any) {
+      // If it's a validation or query error, log but return null instead of throwing
+      // This allows the caller to handle "not found" vs "error" cases
+      if (error.name === 'CastError' || error.name === 'ValidationError') {
+        logger.warn(`Query error finding ${this.modelName}`, { error: error.message, filter });
+        return null;
+      }
       logger.error(`Error finding ${this.modelName}`, { error, filter });
       throw new AppError(`Failed to find ${this.modelName}`, 500, error);
     }

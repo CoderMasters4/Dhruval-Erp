@@ -55,13 +55,30 @@ export class InventoryService extends BaseService<IInventoryItem> {
       let category = itemData.category;
       if (typeof category === 'string') {
         category = { primary: category };
+      } else if (category && typeof category === 'object') {
+        // Handle nested category objects (e.g., { primary: { primary: "Chemicals" } })
+        const categoryPrimary = category.primary;
+        if (categoryPrimary && typeof categoryPrimary === 'object' && categoryPrimary !== null) {
+          category = {
+            primary: (categoryPrimary as any).primary || (categoryPrimary as any).name || '',
+            secondary: (categoryPrimary as any).secondary || category.secondary || '',
+            tertiary: (categoryPrimary as any).tertiary || category.tertiary || ''
+          };
+        } else {
+          // Ensure category.primary is a string
+          category = {
+            primary: typeof categoryPrimary === 'string' ? categoryPrimary : '',
+            secondary: category.secondary || '',
+            tertiary: category.tertiary || ''
+          };
+        }
       }
       
       // Set default values
       const itemToCreate = {
         ...itemData,
-        itemCode: itemData.itemCode.toUpperCase(),
-        companyItemCode: itemData.companyItemCode.toUpperCase(),
+        itemCode: itemData.itemCode ? itemData.itemCode.toUpperCase() : undefined,
+        companyItemCode: itemData.companyItemCode ? itemData.companyItemCode.toUpperCase() : undefined,
         category: category, // Use the processed category
         stock: {
           ...itemData.stock,
@@ -104,9 +121,61 @@ export class InventoryService extends BaseService<IInventoryItem> {
         createdBy 
       });
 
+      // Add initial price to price history if price is provided
+      if (itemData.pricing?.costPrice && itemData.pricing.costPrice > 0) {
+        await InventoryItem.findByIdAndUpdate(item._id, {
+          $push: {
+            priceHistory: {
+              price: itemData.pricing.costPrice,
+              changedAt: new Date(),
+              changedBy: createdBy ? new Types.ObjectId(createdBy) : undefined
+            }
+          }
+        });
+      }
+
       return item;
     } catch (error) {
       logger.error('Error creating inventory item', { error, itemData, createdBy });
+      throw error;
+    }
+  }
+
+  /**
+   * Update inventory item with price history tracking
+   */
+  async update(id: string, data: Partial<IInventoryItem>, userId?: string): Promise<IInventoryItem | null> {
+    try {
+      const existingItem = await this.findById(id);
+      if (!existingItem) {
+        throw new AppError('Inventory item not found', 404);
+      }
+
+      // Track price change if price is being updated
+      const newPrice = data.pricing?.costPrice || (data as any).price;
+      const oldPrice = existingItem.pricing?.costPrice || 0;
+
+      if (newPrice && newPrice !== oldPrice && newPrice > 0) {
+        // Add price history entry
+        const priceHistoryEntry = {
+          price: newPrice,
+          previousPrice: oldPrice,
+          changedAt: new Date(),
+          changedBy: userId ? new Types.ObjectId(userId) : undefined,
+          reason: (data as any).priceChangeReason || 'Price updated',
+          notes: (data as any).priceChangeNotes || ''
+        };
+
+        // Update with price history
+        await InventoryItem.findByIdAndUpdate(id, {
+          $push: { priceHistory: priceHistoryEntry }
+        });
+      }
+
+      // Call parent update method
+      return await super.update(id, data, userId);
+    } catch (error) {
+      logger.error('Error updating inventory item', { error, id, userId });
       throw error;
     }
   }
@@ -158,12 +227,28 @@ export class InventoryService extends BaseService<IInventoryItem> {
         'stock.currentStock': newCurrentStock,
         'stock.availableStock': newAvailableStock,
         'stock.totalValue': newCurrentStock * (item.pricing?.costPrice || 0)
-      }, updatedBy);
+      } as any, updatedBy);
 
       // Create stock movement record
       const mappedMovementType = movementType === 'in' ? 'inward' :
                                  movementType === 'out' ? 'outward' :
                                  movementType as 'transfer' | 'adjustment';
+
+      // Determine document type based on reference
+      let documentType: 'purchase_order' | 'sales_order' | 'production_order' | 'transfer_note' | 'adjustment_note' | 'return_note' = 'adjustment_note';
+      if (reference) {
+        if (reference.includes('RETURN') || reference.includes('return')) {
+          documentType = 'return_note';
+        } else if (reference.includes('PO-') || reference.includes('PURCHASE')) {
+          documentType = 'purchase_order';
+        } else if (reference.includes('SO-') || reference.includes('SALES')) {
+          documentType = 'sales_order';
+        } else if (reference.includes('PROD-') || reference.includes('PRODUCTION')) {
+          documentType = 'production_order';
+        } else if (reference.includes('TRANSFER')) {
+          documentType = 'transfer_note';
+        }
+      }
 
       await this.createStockMovement({
         companyId: item.companyId,
@@ -179,7 +264,7 @@ export class InventoryService extends BaseService<IInventoryItem> {
           isExternal: false
         },
         referenceDocument: reference ? {
-          documentType: 'adjustment_note',
+          documentType,
           documentNumber: reference
         } : undefined,
         notes,
@@ -223,7 +308,7 @@ export class InventoryService extends BaseService<IInventoryItem> {
       const updatedItem = await this.update(itemId, {
         'stock.reservedStock': newReservedStock,
         'stock.availableStock': newAvailableStock
-      }, reservedBy);
+      } as any, reservedBy);
 
       logger.info('Stock reserved successfully', { 
         itemId, 
@@ -262,7 +347,7 @@ export class InventoryService extends BaseService<IInventoryItem> {
       const updatedItem = await this.update(itemId, {
         'stock.reservedStock': newReservedStock,
         'stock.availableStock': newAvailableStock
-      }, releasedBy);
+      } as any, releasedBy);
 
       logger.info('Reserved stock released successfully', { 
         itemId, 

@@ -473,7 +473,7 @@ export class PurchaseService extends BaseService<IPurchaseOrder> {
                 unitRate: item.rate
               }
             }
-          }, createdBy);
+          } as any, createdBy);
           continue;
         }
 

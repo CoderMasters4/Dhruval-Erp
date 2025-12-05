@@ -161,6 +161,11 @@ export interface CreateInventoryItemRequest {
     design?: string
     finish?: string
     length?: number
+    batchNumber?: string
+    lotNumber?: string
+    challan?: string
+    manufacturingDate?: string
+    expiryDate?: string
   }
   pricing?: {
     costPrice?: number

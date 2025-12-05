@@ -39,6 +39,8 @@ import v1ReportsRoutes from './v1/reports';
 import v1SparesRoutes from './v1/spares';
 import v1AttendanceRoutes from './v1/attendance';
 import v1BatchesRoutes from './v1/batches';
+import v1ScrapRoutes from './v1/scrap';
+import v1GoodsReturnsRoutes from './v1/goods-returns';
 import v1EmployeesRoutes from './v1/employees';
 import v1ShiftsRoutes from './v1/shifts';
 import v1ProductionDashboardRoutes from './v1/production-dashboard';
@@ -48,6 +50,7 @@ import v1DashboardRoutes from './v1/dashboard';
 import v1OrdersRoutes from './v1/orders';
 import v1FileAccessRoutes from './v1/file-access';
 import v1CustomerVisitsRoutes from './v1/customer-visits';
+import v1JobWorkRoutes from './v1/job-work';
 import productionFlowRoutes from './productionFlow';
 import productionStagesRoutes from './productionStages';
 import greyFabricInwardRoutes from './greyFabricInward';
@@ -59,6 +62,13 @@ import maintenanceRoutes from './maintenance';
 import qualityRoutes from './quality';
 import compatibilityRoutes from './compatibility';
 import suppliersRoutes from './suppliers';
+
+// Import feature-based routes
+import categoryRoutes from '../features/category/routes/category.routes';
+import unitRoutes from '../features/unit/routes/unit.routes';
+import subcategoryRoutes from '../features/subcategory/routes/subcategory';
+import jobWorkerRoutes from '../features/job-worker/routes/job-worker.routes';
+import jobWorkTypeRoutes from '../features/job-work-type/routes/job-work-type.routes';
 
 const router = Router();
 
@@ -168,11 +178,18 @@ router.use('/dashboard', v1DashboardRoutes);
 router.use('/orders', v1OrdersRoutes);
 
 // // Inventory and production
-router.use ('/inventory', v1InventoryRoutes);
+router.use('/categories', categoryRoutes);
+router.use('/subcategories', subcategoryRoutes);
+router.use('/job-work-types', jobWorkTypeRoutes);
+router.use('/units', unitRoutes);
+router.use('/job-workers', jobWorkerRoutes);
+router.use('/inventory', v1InventoryRoutes);
 router.use('/production', v1ProductionRoutes);
 router.use('/warehouses', v1WarehousesRoutes);
 router.use('/stock-movements', v1StockMovementsRoutes);
 router.use('/spares', v1SparesRoutes);
+router.use('/scrap', v1ScrapRoutes);
+router.use('/goods-returns', v1GoodsReturnsRoutes);
 
 // // New feature routes
 router.use('/maintenance', maintenanceRoutes);
@@ -184,7 +201,7 @@ router.use('/batches', v1BatchesRoutes);
 
 // // Orders and financial - Using fixed routes with lazy loading
 router.use('/customer-orders', v1CustomerOrdersRoutes);
-router.use('/purchase-orders', v1PurchaseOrdersRoutes); 
+router.use('/purchase-orders', v1PurchaseOrdersRoutes);
 router.use('/purchase', v1PurchaseRoutes); // ENABLED WITH SIMPLIFIED HANDLERS
 
 router.use('/invoices', v1InvoicesRoutes);
@@ -210,6 +227,7 @@ router.use('/sales-analytics', v1SalesAnalyticsRoutes);
 router.use('/sales', v1SalesRoutes);
 router.use('/purchase-analytics', v1PurchaseAnalyticsRoutes);
 router.use('/production-tracking', v1ProductionTrackingRoutes);
+router.use('/job-work', v1JobWorkRoutes);
 router.use('/production-flow', productionFlowRoutes);
 router.use('/production-stages', productionStagesRoutes);
 router.use('/grey-fabric-inward', greyFabricInwardRoutes);

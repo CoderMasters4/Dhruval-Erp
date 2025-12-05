@@ -227,17 +227,17 @@ export function ItemsSection({ formData, updateFormData }: ItemsSectionProps) {
                         </SelectTrigger>
                         <SelectContent className="z-50 bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
                           {inventoryLoading ? (
-                            <SelectItem value="" disabled className="bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-900 dark:text-white">
+                            <div className="px-2 py-1.5 text-sm text-gray-500 dark:text-gray-400">
                               Loading inventory items...
-                            </SelectItem>
+                            </div>
                           ) : inventoryError ? (
-                            <SelectItem value="" disabled className="bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-900 dark:text-white">
+                            <div className="px-2 py-1.5 text-sm text-red-500 dark:text-red-400">
                               Error loading inventory items
-                            </SelectItem>
+                            </div>
                           ) : inventoryItems.length === 0 ? (
-                            <SelectItem value="" disabled className="bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-900 dark:text-white">
+                            <div className="px-2 py-1.5 text-sm text-gray-500 dark:text-gray-400">
                               No inventory items available for this company
-                            </SelectItem>
+                            </div>
                           ) : (
                             inventoryItems.map((invItem) => (
                               <SelectItem key={invItem._id} value={invItem._id} className="bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-900 dark:text-white">

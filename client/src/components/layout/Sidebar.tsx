@@ -64,7 +64,8 @@ import {
   Palette,
   Printer,
   CheckCircle,
-  Scissors
+  Scissors,
+  Briefcase
 } from 'lucide-react'
 import { selectSidebarCollapsed, selectSidebarOpen, toggleSidebar, setSidebarCollapsed, selectTheme } from '@/lib/features/ui/uiSlice'
 import { selectCurrentUser, selectIsSuperAdmin } from '@/lib/features/auth/authSlice'
@@ -219,13 +220,39 @@ const navigationItems: NavigationItem[] = [
         icon: Package,
         permission: 'view:InventoryItem'
       },
+      {
+        name: 'Categories',
+        href: '/inventory/categories',
+        icon: Layers,
+        permission: 'view:InventoryItem'
+      },
+      {
+        name: 'Units',
+        href: '/inventory/units',
+        icon: Activity,
+        permission: 'view:InventoryItem'
+      },
+      {
+        name: 'Job Work',
+        href: '/job-work',
+        icon: Briefcase,
+        permission: 'view:ProductionOrder',
+        roles: ['admin', 'manager', 'production']
+      },
+      {
+        name: 'Job Workers',
+        href: '/job-workers',
+        icon: Users,
+        permission: 'view:JobWorker',
+        roles: ['admin', 'manager', 'production']
+      },
       // {
       //   name: 'Advanced Inventory',
       //   href: '/inventory/advanced',
       //   icon: Layers,
       //   permission: 'view:InventoryItem'
       // }
-      
+
       // {
       //   name: 'Process-wise Stock',
       //   href: '/process-wise-stock',
@@ -238,6 +265,18 @@ const navigationItems: NavigationItem[] = [
         href: '/inventory/movements',
         icon: BarChart3,
         permission: 'view:StockMovement'
+      },
+      {
+        name: 'Scrap Management',
+        href: '/scrap',
+        icon: AlertTriangle,
+        permission: 'view:InventoryItem'
+      },
+      {
+        name: 'Goods Returns',
+        href: '/goods-returns',
+        icon: RotateCcw,
+        permission: 'view:InventoryItem'
       },
       {
         name: 'Spares',
@@ -303,7 +342,7 @@ const navigationItems: NavigationItem[] = [
     icon: Factory,
     permission: 'view:ProductionOrder',
     children: [
-      
+
       {
         name: 'Grey Fabric Inward',
         href: '/production/grey-fabric-inward',
@@ -311,7 +350,8 @@ const navigationItems: NavigationItem[] = [
         permission: 'view:ProductionOrder',
         roles: ['admin', 'manager', 'production']
       },
-      
+
+
       // {
       //   name: 'Dyeing Process',
       //   href: '/production/dyeing',
@@ -452,7 +492,7 @@ const navigationItems: NavigationItem[] = [
   //   ]
   // },
 
- 
+
 
   // Security & Monitoring
   {
@@ -461,7 +501,7 @@ const navigationItems: NavigationItem[] = [
     icon: Shield,
     permission: 'view:SecurityLog',
     children: [
-     
+
       // {
       //   name: 'Visitor Management',
       //   href: '/visitors',
@@ -585,9 +625,9 @@ export function Sidebar() {
 
     // Show basic business modules for all authenticated users
     const basicModules = [
-      'Dashboard', 'Companies', 'Users & Access', 'Customers', 'Sales', 'Purchase', 
-      'Inventory', 'Human Resources', 'Production', 'Dispatch & Logistics', 
-      'Quality Management', 'Financial', 'Security & Monitoring', 
+      'Dashboard', 'Companies', 'Users & Access', 'Customers', 'Sales', 'Purchase',
+      'Inventory', 'Human Resources', 'Production', 'Dispatch & Logistics',
+      'Quality Management', 'Financial', 'Security & Monitoring',
       'Operations & Monitoring', 'Analytics & Reports'
     ]
     if (basicModules.includes(item.name)) return true
@@ -622,8 +662,8 @@ export function Sidebar() {
   ]
 
   const toggleExpanded = (itemName: string) => {
-    setExpandedItems(prev => 
-      prev.includes(itemName) 
+    setExpandedItems(prev =>
+      prev.includes(itemName)
         ? prev.filter(name => name !== itemName)
         : [...prev, itemName]
     )
@@ -718,7 +758,7 @@ export function Sidebar() {
           <Link href="/dashboard" className="flex items-center space-x-2 group">
             <SidebarLogo collapsed={isCollapsed} />
           </Link>
-          
+
           <button
             onClick={() => dispatch(setSidebarCollapsed(!isCollapsed))}
             className="p-1.5 rounded-lg hover:bg-sky-100 dark:hover:bg-gray-700 transition-all duration-200 lg:block hidden text-sky-600 dark:text-sky-400 hover:text-sky-700 dark:hover:text-sky-300 group border border-sky-200 dark:border-gray-600 hover:border-sky-300 dark:hover:border-gray-500"

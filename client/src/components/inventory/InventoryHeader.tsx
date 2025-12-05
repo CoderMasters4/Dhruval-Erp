@@ -40,73 +40,147 @@ export const InventoryHeader: React.FC<InventoryHeaderProps> = ({
   onSearchChange,
   theme
 }) => {
+  const isDark = theme === 'dark';
+
   return (
-    <div className={`rounded-xl p-6 shadow-lg transition-theme ${
-      theme === 'dark' 
-        ? 'bg-gradient-to-r from-blue-800 via-purple-800 to-indigo-800' 
-        : 'bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600'
-    } text-white`}>
+    <div
+      className={`rounded-xl p-4 sm:p-6 shadow-lg border transition-theme ${
+        isDark
+          ? 'bg-gray-900 border-gray-800 text-gray-50'
+          : 'bg-white border-gray-200 text-gray-900'
+      }`}
+    >
       {/* Main Header */}
       <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 mb-6">
         <div>
-          <h1 className="text-3xl font-bold mb-2">Inventory Management</h1>
-          <p className="text-blue-100 text-lg">
+          <h1 className="text-2xl sm:text-3xl font-bold mb-1 sm:mb-2">
+            Inventory Management
+          </h1>
+          <p
+            className={`text-sm sm:text-base ${
+              isDark ? 'text-gray-300' : 'text-gray-600'
+            }`}
+          >
             Manage your textile inventory with precision and efficiency
           </p>
         </div>
         
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-4">
           <div className="text-right">
-            <div className="text-2xl font-bold">{totalItems}</div>
-            <div className="text-blue-100 text-sm">Total Items</div>
+            <div className="text-xl sm:text-2xl font-bold">{totalItems}</div>
+            <div className={`text-xs sm:text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+              Total Items
+            </div>
           </div>
           {lowStockCount > 0 && (
             <div className="text-right">
-              <div className="text-2xl font-bold text-yellow-300">{lowStockCount}</div>
-              <div className="text-blue-100 text-sm">Low Stock</div>
+              <div className="text-xl sm:text-2xl font-bold text-amber-500">
+                {lowStockCount}
+              </div>
+              <div className={`text-xs sm:text-sm ${isDark ? 'text-amber-300' : 'text-amber-600'}`}>
+                Low Stock
+              </div>
             </div>
           )}
         </div>
       </div>
 
       {/* Quick Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-        <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-white/20">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-3 sm:gap-4 mb-5 sm:mb-6">
+        <div
+          className={`rounded-lg p-3 sm:p-4 border transition-theme ${
+            isDark ? 'bg-gray-800 border-gray-700' : 'bg-sky-50 border-sky-100'
+          }`}
+        >
           <div className="flex items-center gap-3">
-            <Package className="w-8 h-8 text-blue-200" />
+            <Package
+              className={`w-7 h-7 ${
+                isDark ? 'text-sky-300' : 'text-sky-500'
+              }`}
+            />
             <div>
-              <div className="text-2xl font-bold">{totalItems}</div>
-              <div className="text-blue-100 text-sm">Items</div>
+              <div className="text-lg sm:text-xl font-bold">{totalItems}</div>
+              <div
+                className={`text-xs sm:text-sm ${
+                  isDark ? 'text-gray-300' : 'text-gray-600'
+                }`}
+              >
+                Items
+              </div>
             </div>
           </div>
         </div>
         
-        <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-white/20">
+        <div
+          className={`rounded-lg p-3 sm:p-4 border transition-theme ${
+            isDark ? 'bg-gray-800 border-gray-700' : 'bg-emerald-50 border-emerald-100'
+          }`}
+        >
           <div className="flex items-center gap-3">
-            <TrendingUp className="w-8 h-8 text-green-200" />
+            <TrendingUp
+              className={`w-7 h-7 ${
+                isDark ? 'text-emerald-300' : 'text-emerald-600'
+              }`}
+            />
             <div>
-              <div className="text-2xl font-bold">{totalItems - lowStockCount}</div>
-              <div className="text-blue-100 text-sm">In Stock</div>
+              <div className="text-lg sm:text-xl font-bold">
+                {totalItems - lowStockCount}
+              </div>
+              <div
+                className={`text-xs sm:text-sm ${
+                  isDark ? 'text-gray-300' : 'text-gray-600'
+                }`}
+              >
+                In Stock
+              </div>
             </div>
           </div>
         </div>
         
-        <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-white/20">
+        <div
+          className={`rounded-lg p-3 sm:p-4 border transition-theme ${
+            isDark ? 'bg-gray-800 border-gray-700' : 'bg-amber-50 border-amber-100'
+          }`}
+        >
           <div className="flex items-center gap-3">
-            <AlertTriangle className="w-8 h-8 text-yellow-200" />
+            <AlertTriangle
+              className={`w-7 h-7 ${
+                isDark ? 'text-amber-300' : 'text-amber-600'
+              }`}
+            />
             <div>
-              <div className="text-2xl font-bold">{lowStockCount}</div>
-              <div className="text-blue-100 text-sm">Low Stock</div>
+              <div className="text-lg sm:text-xl font-bold">{lowStockCount}</div>
+              <div
+                className={`text-xs sm:text-sm ${
+                  isDark ? 'text-gray-300' : 'text-gray-600'
+                }`}
+              >
+                Low Stock
+              </div>
             </div>
           </div>
         </div>
         
-        <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-white/20">
+        <div
+          className={`rounded-lg p-3 sm:p-4 border transition-theme ${
+            isDark ? 'bg-gray-800 border-gray-700' : 'bg-indigo-50 border-indigo-100'
+          }`}
+        >
           <div className="flex items-center gap-3">
-            <BarChart3 className="w-8 h-8 text-purple-200" />
+            <BarChart3
+              className={`w-7 h-7 ${
+                isDark ? 'text-indigo-300' : 'text-indigo-600'
+              }`}
+            />
             <div>
-              <div className="text-2xl font-bold">₹0</div>
-              <div className="text-blue-100 text-sm">Total Value</div>
+              <div className="text-lg sm:text-xl font-bold">₹0</div>
+              <div
+                className={`text-xs sm:text-sm ${
+                  isDark ? 'text-gray-300' : 'text-gray-600'
+                }`}
+              >
+                Total Value
+              </div>
             </div>
           </div>
         </div>
@@ -123,13 +197,17 @@ export const InventoryHeader: React.FC<InventoryHeaderProps> = ({
               placeholder="Search items by name, code, or description..."
               value={searchTerm}
               onChange={(e) => onSearchChange(e.target.value)}
-              className="w-full pl-10 pr-4 py-3 bg-white/10 backdrop-blur-sm border border-white/20 rounded-lg text-white placeholder-blue-200 focus:outline-none focus:ring-2 focus:ring-white/50 focus:border-white/50"
+              className={`w-full pl-10 pr-4 py-2.5 rounded-lg border text-sm sm:text-base focus:outline-none focus:ring-2 transition-theme ${
+                isDark
+                  ? 'bg-gray-800 border-gray-700 text-gray-100 placeholder-gray-500 focus:ring-sky-500 focus:border-sky-500'
+                  : 'bg-white border-gray-300 text-gray-900 placeholder-gray-400 focus:ring-sky-500 focus:border-sky-500'
+              }`}
             />
           </div>
         </div>
 
         {/* Action Buttons */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3">
           <Can I="create" a="InventoryItem">
             <Button
               onClick={() => {
@@ -137,7 +215,11 @@ export const InventoryHeader: React.FC<InventoryHeaderProps> = ({
                 onAddItem();
                 console.log('onAddItem function called');
               }}
-              className="bg-white text-blue-600 hover:bg-gray-50 font-semibold px-6 py-3"
+              className={`font-semibold px-4 sm:px-6 py-2 sm:py-2.5 rounded-lg ${
+                isDark
+                  ? 'bg-sky-500 hover:bg-sky-400 text-white'
+                  : 'bg-sky-600 hover:bg-sky-700 text-white'
+              }`}
             >
               <Plus className="w-5 h-5 mr-2" />
               Add Item
@@ -147,28 +229,14 @@ export const InventoryHeader: React.FC<InventoryHeaderProps> = ({
           <Button
             variant="outline"
             onClick={onRefresh}
-            className="border-white/30 text-white hover:bg-white/10"
+            className={`px-3 sm:px-4 py-2 rounded-lg border text-sm transition-theme ${
+              isDark
+                ? 'border-gray-700 text-gray-100 hover:bg-gray-800'
+                : 'border-gray-300 text-gray-700 hover:bg-gray-50'
+            }`}
           >
             <RefreshCw className="w-5 h-5 mr-2" />
             Refresh
-          </Button>
-          
-          <Button
-            variant="outline"
-            onClick={onExport}
-            className="border-white/30 text-white hover:bg-white/10"
-          >
-            <Download className="w-5 h-5 mr-2" />
-            Export
-          </Button>
-          
-          <Button
-            variant="outline"
-            onClick={onImport}
-            className="border-white/30 text-white hover:bg-white/10"
-          >
-            <Upload className="w-5 h-5 mr-2" />
-            Import
           </Button>
         </div>
       </div>

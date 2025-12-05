@@ -35,6 +35,7 @@
       "db:seed:user-companies": "ts-node -r tsconfig-paths/register src/scripts/seedUserCompanies.ts",
       "db:seed:comprehensive": "ts-node -r tsconfig-paths/register src/scripts/comprehensive-seed.ts",
       "db:seed:erp": "dotenvx run --env-file=.env.local -- ts-node -r tsconfig-paths/register src/scripts/comprehensive-erp-seed.ts",
+      "db:seed:categories-units": "ts-node -r tsconfig-paths/register src/scripts/seed-categories-units.ts",
       "db:migrate": "ts-node src/scripts/migrate.ts",
       "health": "curl http://localhost:4000/health",
       "reports:setup": "chmod +x scripts/setup-automated-reports.sh && ./scripts/setup-automated-reports.sh",

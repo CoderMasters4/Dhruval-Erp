@@ -116,59 +116,7 @@ The app will then appear on your home screen like a native app!`)
   }
 
   return (
-    <div className="fixed bottom-4 left-4 right-4 z-50 md:left-auto md:right-4 md:max-w-sm">
-      <div className="bg-white border border-slate-200 rounded-2xl shadow-xl p-4 relative">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center">
-              <Download className="h-5 w-5 text-white" />
-            </div>
-            <div>
-              <h3 className="font-semibold text-slate-900 text-base">Install ERP App</h3>
-              <p className="text-xs text-slate-600">Quick access & offline mode</p>
-            </div>
-          </div>
-          <button
-            onClick={handleDismiss}
-            className="text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg p-1.5 transition-colors"
-          >
-            <X className="h-4 w-4" />
-          </button>
-        </div>
-
-        {/* Action Buttons */}
-        <div className="flex gap-2">
-
-          {isIOS ? (
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-              <div className="flex items-center gap-2 mb-2">
-                <Share className="h-4 w-4 text-blue-600" />
-                <span className="text-sm font-semibold text-blue-900">
-                  Tap Share → Add to Home Screen
-                </span>
-              </div>
-            </div>
-          ) : (
-            <Button
-              onClick={handleInstall}
-              disabled={!deferredPrompt}
-              className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 rounded-lg"
-            >
-              <Download className="h-4 w-4 mr-2" />
-              Download
-            </Button>
-          )}
-
-          <Button
-            onClick={handleDismiss}
-            className="bg-slate-600 hover:bg-slate-700 text-white font-semibold py-2.5 rounded-lg px-4"
-          >
-            Later
-          </Button>
-        </div>
-      </div>
-    </div>
+   <></>
   )
 }
 

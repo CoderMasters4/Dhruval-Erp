@@ -1,149 +1,149 @@
-pnpm er
-ror
+ pnpm error
 
-> client@0.1.0 error /Users/rajat/Downloads/projects/erp/client
+> client@0.1.0 error /Users/rajat/Downloads/erp/client
 > npx tsc --noEmit --skipLibCheck
 
 npm warn Unknown env config "verify-deps-before-run". This will stop working in the next major version of npm.
 npm warn Unknown env config "_jsr-registry". This will stop working in the next major version of npm.
-src/app/production/batches/create/page.tsx:69:5 - error TS2353: Object literal may only specify known properties, and 'companyId' does not exist in type '{ page?: number | undefined; limit?: number | undefined; filters?: GreyFabricInwardFilters | undefined; }'.
+src/app/inventory/movements/[id]/page.tsx:55:30 - error TS2339: Property 'movementNumber' does not exist on type 'StockMovement'.
 
-69     companyId: selectedCompanyId,
-       ~~~~~~~~~
+55     movementNumber: movement.movementNumber || '',
+                                ~~~~~~~~~~~~~~
 
-src/app/production/batches/create/page.tsx:72:32 - error TS2339: Property 'data' does not exist on type 'GreyFabricInward[]'.
+src/app/inventory/movements/[id]/page.tsx:56:28 - error TS2339: Property 'movementType' does not exist on type 'StockMovement'.
 
-72   const grns = grnsData?.data?.data || [];
-                                  ~~~~
+56     movementType: movement.movementType || 'inward',
+                              ~~~~~~~~~~~~
 
-src/app/production/batches/create/page.tsx:160:28 - error TS2345: Argument of type '(prev: { itemId: string; itemName: string; quantity: number; unit: string; unitCost: number; grnId?: string | undefined; grnNumber?: string | undefined; materialSource?: "own_material" | "client_provided" | "job_work_material" | undefined; clientInfo?: { ...; } | undefined; }[]) => ({ ...; } | { ...; })[]' is not assignable to parameter of type 'SetStateAction<{ itemId: string; itemName: string; quantity: number; unit: string; unitCost: number; grnId?: string | undefined; grnNumber?: string | undefined; materialSource?: "own_material" | "client_provided" | "job_work_material" | undefined; clientInfo?: { ...; } | undefined; }[]>'.
-  Type '(prev: { itemId: string; itemName: string; quantity: number; unit: string; unitCost: number; grnId?: string | undefined; grnNumber?: string | undefined; materialSource?: "own_material" | "client_provided" | "job_work_material" | undefined; clientInfo?: { ...; } | undefined; }[]) => ({ ...; } | { ...; })[]' is not assignable to type '(prevState: { itemId: string; itemName: string; quantity: number; unit: string; unitCost: number; grnId?: string | undefined; grnNumber?: string | undefined; materialSource?: "own_material" | "client_provided" | "job_work_material" | undefined; clientInfo?: { ...; } | undefined; }[]) => { ...; }[]'.
-    Type '({ itemId: string; itemName: string; quantity: number; unit: string; unitCost: number; grnId?: string | undefined; grnNumber?: string | undefined; materialSource?: "own_material" | "client_provided" | "job_work_material" | undefined; clientInfo?: { ...; } | undefined; } | { ...; })[]' is not assignable to type '{ itemId: string; itemName: string; quantity: number; unit: string; unitCost: number; grnId?: string | undefined; grnNumber?: string | undefined; materialSource?: "own_material" | "client_provided" | "job_work_material" | undefined; clientInfo?: { ...; } | undefined; }[]'.
-      Type '{ itemId: string; itemName: string; quantity: number; unit: string; unitCost: number; grnId?: string | undefined; grnNumber?: string | undefined; materialSource?: "own_material" | "client_provided" | "job_work_material" | undefined; clientInfo?: { ...; } | undefined; } | { ...; }' is not assignable to type '{ itemId: string; itemName: string; quantity: number; unit: string; unitCost: number; grnId?: string | undefined; grnNumber?: string | undefined; materialSource?: "own_material" | "client_provided" | "job_work_material" | undefined; clientInfo?: { ...; } | undefined; }'.
-        Type '{ grnId: string; grnNumber: string; materialSource: string; clientInfo: any; itemId: string; itemName: string; quantity: number; unit: string; unitCost: number; }' is not assignable to type '{ itemId: string; itemName: string; quantity: number; unit: string; unitCost: number; grnId?: string | undefined; grnNumber?: string | undefined; materialSource?: "own_material" | "client_provided" | "job_work_material" | undefined; clientInfo?: { ...; } | undefined; }'.
-          Types of property 'materialSource' are incompatible.
-            Type 'string' is not assignable to type '"own_material" | "client_provided" | "job_work_material" | undefined'.
+src/app/inventory/movements/[id]/page.tsx:57:25 - error TS2339: Property 'createdAt' does not exist on type 'StockMovement'.
 
-160       setSelectedMaterials(prev => prev.map((material, index) =>
-                               ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-161         index === selectedMaterialForGRN
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-... 
-169           : material
-    ~~~~~~~~~~~~~~~~~~~~
-170       ));
-    ~~~~~~~
+57     createdAt: movement.createdAt || new Date().toISOString(),
+                           ~~~~~~~~~
 
-src/app/production/batches/create/page.tsx:939:31 - error TS7006: Parameter 'grn' implicitly has an 'any' type.
+src/app/inventory/movements/[id]/page.tsx:202:11 - error TS2322: Type 'StockMovement | { movementNumber: any; movementType: any; createdAt: any; itemId: InventoryItem | undefined; _id: string; type: "in" | "out" | "adjustment"; ... 4 more ...; recordedBy: string; }' is not assignable to type 'StockMovement'.
+  Type 'StockMovement' is missing the following properties from type 'StockMovement': movementNumber, movementType, createdAt
 
-939                     grns.map((grn) => (
-                                  ~~~
+202           movement={movementWithItem || movement}
+              ~~~~~~~~
 
-src/components/production/grey-fabric-inward/GreyFabricInwardForm.tsx:57:5 - error TS2353: Object literal may only specify known properties, and 'materialSource' does not exist in type 'CreateGreyFabricInwardRequest | (() => CreateGreyFabricInwardRequest)'.
+  src/components/inventory/movements/details/MovementDetailsHeader.tsx:10:3
+    10   movement: StockMovement
+         ~~~~~~~~
+    The expected type comes from property 'movement' which is declared here on type 'IntrinsicAttributes & MovementDetailsHeaderProps'
 
-57     materialSource: 'own_material',
-       ~~~~~~~~~~~~~~
+src/app/inventory/movements/[id]/page.tsx:210:11 - error TS2322: Type 'StockMovement | { movementNumber: any; movementType: any; createdAt: any; itemId: InventoryItem | undefined; _id: string; type: "in" | "out" | "adjustment"; ... 4 more ...; recordedBy: string; }' is not assignable to type 'StockMovement'.
+  Type 'StockMovement' is missing the following properties from type 'StockMovement': movementNumber, movementType, createdAt
 
-src/components/production/grey-fabric-inward/GreyFabricInwardForm.tsx:1029:16 - error TS2304: Cannot find name 'CardDescription'.
+210           movement={movementWithItem || movement}
+              ~~~~~~~~
 
-1029               <CardDescription className="text-gray-600 dark:text-gray-400">
-                    ~~~~~~~~~~~~~~~
+  src/components/inventory/movements/details/MovementOverviewCard.tsx:9:3
+    9   movement: StockMovement
+        ~~~~~~~~
+    The expected type comes from property 'movement' which is declared here on type 'IntrinsicAttributes & MovementOverviewCardProps'
 
-src/components/production/grey-fabric-inward/GreyFabricInwardForm.tsx:1031:17 - error TS2304: Cannot find name 'CardDescription'.
+src/app/inventory/movements/[id]/page.tsx:224:11 - error TS2322: Type 'StockMovement | { movementNumber: any; movementType: any; createdAt: any; itemId: InventoryItem | undefined; _id: string; type: "in" | "out" | "adjustment"; ... 4 more ...; recordedBy: string; }' is not assignable to type 'StockMovement'.
+  Type 'StockMovement' is missing the following properties from type 'StockMovement': movementNumber, movementType, createdAt
 
-1031               </CardDescription>
-                     ~~~~~~~~~~~~~~~
+224           movement={movementWithItem || movement}
+              ~~~~~~~~
 
-src/components/production/grey-fabric-inward/GreyFabricInwardForm.tsx:1037:35 - error TS2339: Property 'materialSource' does not exist on type 'CreateGreyFabricInwardRequest'.
+  src/components/inventory/movements/details/MovementItemInfo.tsx:8:3
+    8   movement: StockMovement
+        ~~~~~~~~
+    The expected type comes from property 'movement' which is declared here on type 'IntrinsicAttributes & MovementItemInfoProps'
 
-1037                   value={formData.materialSource}
-                                       ~~~~~~~~~~~~~~
+src/app/inventory/movements/[id]/page.tsx:230:11 - error TS2322: Type 'StockMovement | { movementNumber: any; movementType: any; createdAt: any; itemId: InventoryItem | undefined; _id: string; type: "in" | "out" | "adjustment"; ... 4 more ...; recordedBy: string; }' is not assignable to type 'StockMovement'.
+  Type 'StockMovement' is missing the following properties from type 'StockMovement': movementNumber, movementType, createdAt
 
-src/components/production/grey-fabric-inward/GreyFabricInwardForm.tsx:1055:25 - error TS2339: Property 'materialSource' does not exist on type 'CreateGreyFabricInwardRequest'.
+230           movement={movementWithItem || movement}
+              ~~~~~~~~
 
-1055               {formData.materialSource === 'client_provided' && (
-                             ~~~~~~~~~~~~~~
+  src/components/inventory/movements/details/MovementLocationInfo.tsx:9:3
+    9   movement: StockMovement
+        ~~~~~~~~
+    The expected type comes from property 'movement' which is declared here on type 'IntrinsicAttributes & MovementLocationInfoProps'
 
-src/components/production/grey-fabric-inward/GreyFabricInwardForm.tsx:1064:41 - error TS2339: Property 'clientMaterialInfo' does not exist on type 'CreateGreyFabricInwardRequest'.
+src/app/inventory/movements/[id]/page.tsx:236:11 - error TS2322: Type 'StockMovement | { movementNumber: any; movementType: any; createdAt: any; itemId: InventoryItem | undefined; _id: string; type: "in" | "out" | "adjustment"; ... 4 more ...; recordedBy: string; }' is not assignable to type 'StockMovement'.
+  Type 'StockMovement' is missing the following properties from type 'StockMovement': movementNumber, movementType, createdAt
 
-1064                         value={formData.clientMaterialInfo.clientId}
-                                             ~~~~~~~~~~~~~~~~~~
+236           movement={movementWithItem || movement}
+              ~~~~~~~~
 
-src/components/production/grey-fabric-inward/GreyFabricInwardForm.tsx:1077:41 - error TS2339: Property 'clientMaterialInfo' does not exist on type 'CreateGreyFabricInwardRequest'.
+  src/components/inventory/movements/details/MovementReferenceInfo.tsx:9:3
+    9   movement: StockMovement
+        ~~~~~~~~
+    The expected type comes from property 'movement' which is declared here on type 'IntrinsicAttributes & MovementReferenceInfoProps'
 
-1077                         value={formData.clientMaterialInfo.clientName}
-                                             ~~~~~~~~~~~~~~~~~~
+src/app/inventory/movements/[id]/page.tsx:242:11 - error TS2322: Type 'StockMovement | { movementNumber: any; movementType: any; createdAt: any; itemId: InventoryItem | undefined; _id: string; type: "in" | "out" | "adjustment"; ... 4 more ...; recordedBy: string; }' is not assignable to type 'StockMovement'.
+  Type 'StockMovement' is missing the following properties from type 'StockMovement': movementNumber, movementType, createdAt
 
-src/components/production/grey-fabric-inward/GreyFabricInwardForm.tsx:1093:41 - error TS2339: Property 'clientMaterialInfo' does not exist on type 'CreateGreyFabricInwardRequest'.
+242           movement={movementWithItem || movement}
+              ~~~~~~~~
 
-1093                         value={formData.clientMaterialInfo.clientOrderId}
-                                             ~~~~~~~~~~~~~~~~~~
+  src/components/inventory/movements/details/MovementApprovalInfo.tsx:10:3
+    10   movement: StockMovement
+         ~~~~~~~~
+    The expected type comes from property 'movement' which is declared here on type 'IntrinsicAttributes & MovementApprovalInfoProps'
 
-src/components/production/grey-fabric-inward/GreyFabricInwardForm.tsx:1103:41 - error TS2339: Property 'clientMaterialInfo' does not exist on type 'CreateGreyFabricInwardRequest'.
+src/app/inventory/movements/[id]/page.tsx:248:11 - error TS2322: Type 'StockMovement | { movementNumber: any; movementType: any; createdAt: any; itemId: InventoryItem | undefined; _id: string; type: "in" | "out" | "adjustment"; ... 4 more ...; recordedBy: string; }' is not assignable to type 'StockMovement'.
+  Type 'StockMovement' is missing the following properties from type 'StockMovement': movementNumber, movementType, createdAt
 
-1103                         value={formData.clientMaterialInfo.clientOrderNumber}
-                                             ~~~~~~~~~~~~~~~~~~
+248           movement={movementWithItem || movement}
+              ~~~~~~~~
 
-src/components/production/grey-fabric-inward/GreyFabricInwardForm.tsx:1116:41 - error TS2339: Property 'clientMaterialInfo' does not exist on type 'CreateGreyFabricInwardRequest'.
+  src/components/inventory/movements/details/MovementNotes.tsx:8:3
+    8   movement: StockMovement
+        ~~~~~~~~
+    The expected type comes from property 'movement' which is declared here on type 'IntrinsicAttributes & MovementNotesProps'
 
-1116                         value={formData.clientMaterialInfo.clientMaterialCode}
-                                             ~~~~~~~~~~~~~~~~~~
+src/app/inventory/movements/[id]/page.tsx:254:11 - error TS2322: Type 'StockMovement | { movementNumber: any; movementType: any; createdAt: any; itemId: InventoryItem | undefined; _id: string; type: "in" | "out" | "adjustment"; ... 4 more ...; recordedBy: string; }' is not assignable to type 'StockMovement'.
+  Type 'StockMovement' is missing the following properties from type 'StockMovement': movementNumber, movementType, createdAt
 
-src/components/production/grey-fabric-inward/GreyFabricInwardForm.tsx:1126:41 - error TS2339: Property 'clientMaterialInfo' does not exist on type 'CreateGreyFabricInwardRequest'.
+254           movement={movementWithItem || movement}
+              ~~~~~~~~
 
-1126                         value={formData.clientMaterialInfo.clientBatchNumber}
-                                             ~~~~~~~~~~~~~~~~~~
+  src/components/inventory/movements/details/MovementAuditInfo.tsx:9:3
+    9   movement: StockMovement
+        ~~~~~~~~
+    The expected type comes from property 'movement' which is declared here on type 'IntrinsicAttributes & MovementAuditInfoProps'
 
-src/components/production/grey-fabric-inward/GreyFabricInwardForm.tsx:1139:39 - error TS2339: Property 'clientMaterialInfo' does not exist on type 'CreateGreyFabricInwardRequest'.
+src/app/inventory/movements/[id]/page.tsx:275:40 - error TS2339: Property 'movementNumber' does not exist on type 'StockMovement'.
 
-1139                       value={formData.clientMaterialInfo.clientProvidedDate}
-                                           ~~~~~~~~~~~~~~~~~~
+275               movementNumber: movement.movementNumber || '',
+                                           ~~~~~~~~~~~~~~
 
-src/components/production/grey-fabric-inward/GreyFabricInwardForm.tsx:1149:39 - error TS2339: Property 'clientMaterialInfo' does not exist on type 'CreateGreyFabricInwardRequest'.
+src/app/inventory/movements/[id]/page.tsx:276:38 - error TS2339: Property 'movementType' does not exist on type 'StockMovement'.
 
-1149                       value={formData.clientMaterialInfo.clientInstructions}
-                                           ~~~~~~~~~~~~~~~~~~
+276               movementType: movement.movementType || 'inward',
+                                         ~~~~~~~~~~~~
 
-src/components/production/grey-fabric-inward/GreyFabricInwardForm.tsx:1161:39 - error TS2339: Property 'clientMaterialInfo' does not exist on type 'CreateGreyFabricInwardRequest'.
+src/app/inventory/movements/[id]/page.tsx:277:35 - error TS2339: Property 'createdAt' does not exist on type 'StockMovement'.
 
-1161                       value={formData.clientMaterialInfo.clientQualitySpecs}
-                                           ~~~~~~~~~~~~~~~~~~
+277               createdAt: movement.createdAt || new Date().toISOString()
+                                      ~~~~~~~~~
 
-src/components/production/grey-fabric-inward/GreyFabricInwardForm.tsx:1173:41 - error TS2339: Property 'clientMaterialInfo' does not exist on type 'CreateGreyFabricInwardRequest'.
+src/components/inventory/InventoryList.tsx:150:28 - error TS2722: Cannot invoke an object which is possibly 'undefined'.
 
-1173                       checked={formData.clientMaterialInfo.returnRequired}
-                                             ~~~~~~~~~~~~~~~~~~
+150             onClick={() => onViewItem(item)}
+                               ~~~~~~~~~~
 
-src/components/production/grey-fabric-inward/GreyFabricInwardForm.tsx:1180:29 - error TS2339: Property 'clientMaterialInfo' does not exist on type 'CreateGreyFabricInwardRequest'.
+src/components/inventory/InventoryList.tsx:269:11 - error TS2322: Type '((page: number) => void) | undefined' is not assignable to type '(page: number) => void'.
+  Type 'undefined' is not assignable to type '(page: number) => void'.
 
-1180                   {formData.clientMaterialInfo.returnRequired && (
-                                 ~~~~~~~~~~~~~~~~~~
+269           onPageChange={onPageChange}
+              ~~~~~~~~~~~~
 
-src/components/production/grey-fabric-inward/GreyFabricInwardForm.tsx:1186:41 - error TS2339: Property 'clientMaterialInfo' does not exist on type 'CreateGreyFabricInwardRequest'.
-
-1186                         value={formData.clientMaterialInfo.returnDeadline}
-                                             ~~~~~~~~~~~~~~~~~~
-
-src/components/production/grey-fabric-inward/GreyFabricInwardForm.tsx:1198:41 - error TS2339: Property 'clientMaterialInfo' does not exist on type 'CreateGreyFabricInwardRequest'.
-
-1198                         value={formData.clientMaterialInfo.clientContactPerson}
-                                             ~~~~~~~~~~~~~~~~~~
-
-src/components/production/grey-fabric-inward/GreyFabricInwardForm.tsx:1208:41 - error TS2339: Property 'clientMaterialInfo' does not exist on type 'CreateGreyFabricInwardRequest'.
-
-1208                         value={formData.clientMaterialInfo.clientContactPhone}
-                                             ~~~~~~~~~~~~~~~~~~
-
-src/components/production/grey-fabric-inward/GreyFabricInwardForm.tsx:1221:39 - error TS2339: Property 'clientMaterialInfo' does not exist on type 'CreateGreyFabricInwardRequest'.
-
-1221                       value={formData.clientMaterialInfo.clientContactEmail}
-                                           ~~~~~~~~~~~~~~~~~~
+  src/components/inventory/InventoryPagination.tsx:13:3
+    13   onPageChange: (page: number) => void
+         ~~~~~~~~~~~~
+    The expected type comes from property 'onPageChange' which is declared here on type 'IntrinsicAttributes & InventoryPaginationProps'
 
 
-Found 24 errors in 2 files.
+Found 16 errors in 2 files.
 
 Errors  Files
-     4  src/app/production/batches/create/page.tsx:69
-    20  src/components/production/grey-fabric-inward/GreyFabricInwardForm.tsx:57
- ELIFECYCLE  Command failed with exit code 1.
-rajat@Rajats-MacBook-Pro client % 
+    14  src/app/inventory/movements/[id]/page.tsx:55
+     2  src/components/inventory/InventoryList.tsx:150
+ ELIFECYCLE  Command failed with exit code 2.
+rajat@Mac client % 

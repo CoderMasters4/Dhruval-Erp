@@ -14,7 +14,7 @@ const baseQuery = fetchBaseQuery({
     if (typeof window !== 'undefined') {
       token = localStorage.getItem('token')
     }
-    
+
     // Fallback to Redux state if localStorage doesn't have token
     if (!token) {
       token = state.auth.token
@@ -31,7 +31,7 @@ const baseQuery = fetchBaseQuery({
 
     // Add company ID header - super admin can switch companies, others use their company
     let companyId = null
-    
+
     if (currentCompanyId) {
       companyId = currentCompanyId
     } else if (user?.companyAccess?.[0]?.companyId) {
@@ -50,7 +50,7 @@ const baseQuery = fetchBaseQuery({
         }
       }
     }
-    
+
     if (companyId) {
       headers.set('X-Company-ID', companyId)
       console.log('baseApi: Company ID set in headers:', companyId)
@@ -83,7 +83,7 @@ const baseQueryWithoutAuth = fetchBaseQuery({
   prepareHeaders: (headers) => {
     // For refresh endpoint, do NOT send Authorization header or company ID, rely only on HTTP-only cookie
     headers.set('Content-Type', 'application/json')
-    
+
     // No additional headers - just rely on the refresh token cookie
     return headers
   },
@@ -104,26 +104,26 @@ const baseQueryWithReauth = async (args: any, api: any, extraOptions: any) => {
 
       if (refreshResult?.data) {
         console.log('baseApi: Token refresh successful, retrying original request...')
-        
+
         // Extract the new access token from the response
         const newAccessToken = (refreshResult.data as any)?.accessToken
-        
+
         if (newAccessToken) {
           // Store the new token in localStorage and Redux state
           if (typeof window !== 'undefined') {
             localStorage.setItem('token', newAccessToken)
             console.log('baseApi: New token stored in localStorage')
           }
-          
+
           // Update Redux state with new token
-          api.dispatch({ 
-            type: 'auth/setCredentials', 
-            payload: { 
+          api.dispatch({
+            type: 'auth/setCredentials',
+            payload: {
               user: api.getState().auth.user,
               token: newAccessToken,
               companies: api.getState().auth.companies,
               permissions: api.getState().auth.permissions
-            } 
+            }
           })
 
           // Retry the original query with new token
@@ -165,11 +165,16 @@ export const baseApi = createApi({
     'Supplier',
     'InventoryItem',
     'StockMovement',
+    'Scrap',
+    'GoodsReturn',
     'Warehouse',
     'WarehouseStats',
-      'Batch',
-      'ProductionOrder',
-      'CustomerOrder',
+    'Batch',
+    'ProductionOrder',
+    'JobWork',
+    'JobWorker',
+    'JobWorkerAssignment',
+    'CustomerOrder',
     'PurchaseOrder',
     'PurchaseReport',
     'Order',
@@ -270,7 +275,13 @@ export const baseApi = createApi({
     "GreyFabricInwardAnalytics",
     "PreProcessingBatch",
     "PreProcessingAnalytics",
-    "Dyeing"
+    "Dyeing",
+
+    // Feature-based modules
+    "Categories",
+    "Subcategories",
+    "Units",
+    "JobWorkType"
 
   ],
   endpoints: (builder) => ({

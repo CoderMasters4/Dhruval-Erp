@@ -76,11 +76,11 @@ const InventoryItemSchema = new Schema<IInventoryItem>({
   category: {
     primary: {
       type: String,
-      enum: ['raw_material', 'working_inventory', 'semi_finished', 'finished_goods', 'consumables', 'spare_parts'],
-      required: true
+      required: true,
+      trim: true
     },
-    secondary: { type: String },
-    tertiary: { type: String }
+    secondary: { type: String, trim: true },
+    tertiary: { type: String, trim: true }
   },
 
   productType: {
@@ -88,16 +88,23 @@ const InventoryItemSchema = new Schema<IInventoryItem>({
     enum: ['saree', 'african', 'garment', 'digital_print', 'custom', 'chemical', 'dye', 'machinery', 'yarn', 'thread', 'fent_bleach', 'longation_bleach']
   },
 
-  // Design and Pattern Information
+  // Design Reference - Linked to Design Model
+  designId: {
+    type: Schema.Types.ObjectId,
+    ref: 'Design',
+    index: true
+  },
+  
+  // Legacy design info fields (kept for backward compatibility, can be populated from Design)
   designInfo: {
     designNumber: { type: String, trim: true, index: true },
     designName: { type: String, trim: true },
     designCategory: { type: String, trim: true },
     season: { type: String, enum: ['spring', 'summer', 'monsoon', 'winter', 'all_season'] },
     collection: { type: String, trim: true },
-    artworkFile: { type: String }, // File path for design artwork
-    colorVariants: [{ type: String }], // Array of available colors
-    sizeVariants: [{ type: String }], // Array of available sizes
+    artworkFile: { type: String },
+    colorVariants: [{ type: String }],
+    sizeVariants: [{ type: String }],
   },
 
   // Technical Specifications
@@ -145,8 +152,19 @@ const InventoryItemSchema = new Schema<IInventoryItem>({
     // Batch Information
     batchNumber: { type: String, trim: true, index: true },
     lotNumber: { type: String, trim: true },
+    challan: { type: String, trim: true },
     manufacturingDate: { type: Date },
     expiryDate: { type: Date },
+    
+    // Additional Fields
+    hsnCode: { type: String, trim: true },
+    attributeName: { type: String, trim: true },
+    grossQuantity: { type: Number, min: 0 },
+    tareWeight: { type: Number, min: 0, max: 100 }, // Percentage
+    fold: { type: Number }, // Can be positive or negative
+    date: { type: Date },
+    lrNumber: { type: String, trim: true },
+    transportNumber: { type: String, trim: true },
 
     // Custom Attributes
     customAttributes: { type: Schema.Types.Mixed }
@@ -163,6 +181,7 @@ const InventoryItemSchema = new Schema<IInventoryItem>({
     unit: { type: String, required: true, trim: true },
     alternateUnit: { type: String, trim: true },
     conversionFactor: { type: Number, default: 1, min: 0 },
+    netQuantity: { type: Number, min: 0 },
 
     // Stock Levels
     reorderLevel: { type: Number, default: 0, min: 0 },
@@ -192,8 +211,21 @@ const InventoryItemSchema = new Schema<IInventoryItem>({
     sellingPrice: { type: Number, min: 0 },
     mrp: { type: Number, min: 0 },
     marginPercentage: { type: Number, min: 0, max: 100 },
+    pricePerNetQty: { type: Number, min: 0 },
+    gst: { type: Number, min: 0, max: 100 }, // Percentage
+    finalPrice: { type: Number, min: 0 },
     currency: { type: String, default: 'INR' }
   },
+
+  // Price History - Track all price changes
+  priceHistory: [{
+    price: { type: Number, required: true, min: 0 },
+    previousPrice: { type: Number, min: 0 },
+    changedBy: { type: Schema.Types.ObjectId, ref: 'User' },
+    changedAt: { type: Date, default: Date.now },
+    reason: { type: String, trim: true },
+    notes: { type: String, trim: true }
+  }],
 
   // Supplier Information
   suppliers: [ItemSupplierSchema],
@@ -351,6 +383,7 @@ InventoryItemSchema.index({ companyId: 1, productType: 1 });
 InventoryItemSchema.index({ companyId: 1, 'stock.currentStock': 1 });
 
 // Enhanced indexes for textile industry
+InventoryItemSchema.index({ companyId: 1, designId: 1 });
 InventoryItemSchema.index({ companyId: 1, 'designInfo.designNumber': 1 });
 InventoryItemSchema.index({ companyId: 1, 'specifications.gsm': 1 });
 InventoryItemSchema.index({ companyId: 1, 'specifications.color': 1 });
@@ -384,7 +417,7 @@ InventoryItemSchema.index({ barcode: 1 }, { sparse: true, unique: true });
 InventoryItemSchema.index({ qrCode: 1 }, { sparse: true, unique: true });
 
 // Pre-save middleware
-InventoryItemSchema.pre('save', function(next) {
+InventoryItemSchema.pre('save', async function(next) {
   // Calculate available stock
   this.stock.availableStock = Math.max(0, this.stock.currentStock - this.stock.reservedStock);
   
@@ -394,6 +427,39 @@ InventoryItemSchema.pre('save', function(next) {
   // Update last stock update timestamp
   if (this.isModified('stock.currentStock')) {
     this.tracking.lastStockUpdate = new Date();
+  }
+  
+  // Auto-populate designInfo from Design model if designId is set
+  if (this.isModified('designId') && this.designId) {
+    try {
+      const Design = (await import('./Design')).default;
+      const design = await Design.findById(this.designId);
+      if (design) {
+        this.designInfo = {
+          designNumber: design.designNumber,
+          designName: design.designName,
+          designCategory: design.designCategory,
+          season: design.season,
+          collection: design.designCollection,
+          artworkFile: design.artworkFile,
+          colorVariants: design.colorVariants,
+          sizeVariants: design.sizeVariants
+        };
+        
+        // Increment design usage count
+        if ((design as any).incrementUsage) {
+          await (design as any).incrementUsage();
+        } else {
+          // Fallback: manually increment usage
+          design.usageCount = (design.usageCount || 0) + 1;
+          design.lastUsedDate = new Date();
+          await design.save();
+        }
+      }
+    } catch (error) {
+      // If design not found, continue without updating designInfo
+      console.warn('Design not found for designId:', this.designId);
+    }
   }
   
   next();

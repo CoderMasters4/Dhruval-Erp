@@ -125,7 +125,7 @@ export default function LoginPage() {
         // Set primary company as current
         const primaryCompanyId = (userData as any).primaryCompanyId
         const primaryCompany = companies.find(c => c._id === primaryCompanyId) || companies[0]
-        
+
         const currentCompany = companies.length > 0 ? {
           id: primaryCompany._id,
           name: primaryCompany.companyName,
@@ -137,12 +137,12 @@ export default function LoginPage() {
         // Extract and transform permissions from first company access
         const rawPermissions = (userData.companyAccess?.[0]?.permissions as any) || {}
         const permissions: { [module: string]: string[] } = {}
-        
+
         // Transform boolean permissions to string arrays
         Object.keys(rawPermissions).forEach(module => {
           const modulePermissions = rawPermissions[module]
           if (typeof modulePermissions === 'object' && modulePermissions !== null) {
-            permissions[module] = Object.keys(modulePermissions).filter(key => 
+            permissions[module] = Object.keys(modulePermissions).filter(key =>
               (modulePermissions as any)[key] === true
             )
           }
@@ -164,25 +164,25 @@ export default function LoginPage() {
           localStorage.setItem('token', tokens.accessToken)
           console.log('Login: Token stored in localStorage, length:', tokens.accessToken.length);
         }
-        
+
         // Store user data
         if (typeof window !== 'undefined' && userWithCompany) {
           localStorage.setItem('user', JSON.stringify(userWithCompany))
           console.log('Login: User data stored in localStorage');
         }
-        
+
         // Store companies if available
         if (typeof window !== 'undefined' && companies.length > 0) {
           localStorage.setItem('companies', JSON.stringify(companies))
           console.log('Login: Companies stored in localStorage, count:', companies.length);
         }
-        
+
         // Store permissions if available
         if (typeof window !== 'undefined' && Object.keys(permissions).length > 0) {
           localStorage.setItem('permissions', JSON.stringify(permissions))
           console.log('Login: Permissions stored in localStorage, modules:', Object.keys(permissions));
         }
-        
+
         // Set current company if available
         if (typeof window !== 'undefined' && currentCompany) {
           localStorage.setItem('currentCompany', JSON.stringify(currentCompany))
@@ -212,14 +212,14 @@ export default function LoginPage() {
         // Test if cookies are being received
         if (typeof document !== 'undefined') {
           console.log('Login: Available cookies after login:', document.cookie);
-          
+
           // Test the server's cookie endpoint
-        
+
         }
 
         // Wait for state to be updated
         await new Promise(resolve => setTimeout(resolve, 1000));
-        
+
         // Redirect to dashboard
         router.push('/dashboard')
       } else {
@@ -300,189 +300,140 @@ export default function LoginPage() {
               <p className="text-black text-lg">Sign in to your Factory ERP account</p>
             </div>
 
-        {/* Login Form */}
-        <div className="bg-white rounded-2xl border-2 border-sky-500 p-8">
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-            {/* Email or Phone Field */}
-            <div>
-              <label htmlFor="emailOrPhone" className="block text-sm font-medium text-black mb-2">
-                Email or Phone Number
-              </label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Mail className="h-5 w-5 text-black" />
+            {/* Login Form */}
+            <div className="bg-white rounded-2xl border-2 border-sky-500 p-8">
+              <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+                {/* Email or Phone Field */}
+                <div>
+                  <label htmlFor="emailOrPhone" className="block text-sm font-medium text-black mb-2">
+                    Email or Phone Number
+                  </label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <Mail className="h-5 w-5 text-black" />
+                    </div>
+                    <input
+                      {...register('emailOrPhone')}
+                      type="text"
+                      className="block w-full pl-10 pr-3 py-3 border-2 border-sky-500 rounded-lg focus:outline-none focus:border-black bg-white text-black"
+                      placeholder="Enter your email or phone number"
+                    />
+                  </div>
+                  {errors.emailOrPhone && (
+                    <p className="mt-1 text-sm text-black">{errors.emailOrPhone.message}</p>
+                  )}
                 </div>
-                <input
-                  {...register('emailOrPhone')}
-                  type="text"
-                  className="block w-full pl-10 pr-3 py-3 border-2 border-sky-500 rounded-lg focus:outline-none focus:border-black bg-white text-black"
-                  placeholder="Enter your email or phone number"
-                />
-              </div>
-              {errors.emailOrPhone && (
-                <p className="mt-1 text-sm text-black">{errors.emailOrPhone.message}</p>
-              )}
-            </div>
 
-            {/* Password Field */}
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium text-black mb-2">
-                Password
-              </label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Lock className="h-5 w-5 text-black" />
+                {/* Password Field */}
+                <div>
+                  <label htmlFor="password" className="block text-sm font-medium text-black mb-2">
+                    Password
+                  </label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <Lock className="h-5 w-5 text-black" />
+                    </div>
+                    <input
+                      {...register('password')}
+                      type={showPassword ? 'text' : 'password'}
+                      className="block w-full pl-10 pr-10 py-3 border-2 border-sky-500 rounded-lg focus:outline-none focus:border-black bg-white text-black"
+                      placeholder="Enter your password"
+                    />
+                    <button
+                      type="button"
+                      className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                      onClick={() => setShowPassword(!showPassword)}
+                    >
+                      {showPassword ? (
+                        <EyeOff className="h-5 w-5 text-black hover:text-sky-500" />
+                      ) : (
+                        <Eye className="h-5 w-5 text-black hover:text-sky-500" />
+                      )}
+                    </button>
+                  </div>
+                  {errors.password && (
+                    <p className="mt-1 text-sm text-black">{errors.password.message}</p>
+                  )}
                 </div>
-                <input
-                  {...register('password')}
-                  type={showPassword ? 'text' : 'password'}
-                  className="block w-full pl-10 pr-10 py-3 border-2 border-sky-500 rounded-lg focus:outline-none focus:border-black bg-white text-black"
-                  placeholder="Enter your password"
-                />
+
+                {/* Remember Me & Forgot Password */}
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center">
+                    <input
+                      {...register('rememberMe')}
+                      type="checkbox"
+                      className="h-4 w-4 text-sky-500 focus:ring-sky-500 border-sky-500 rounded"
+                    />
+                    <label htmlFor="rememberMe" className="ml-2 block text-sm text-black">
+                      Remember me
+                    </label>
+                  </div>
+                  <button
+                    type="button"
+                    className="text-sm text-sky-500 hover:text-black font-medium"
+                    onClick={() => router.push('/forgot-password')}
+                  >
+                    Forgot password?
+                  </button>
+                </div>
+
+                {/* Submit Button */}
                 <button
-                  type="button"
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center"
-                  onClick={() => setShowPassword(!showPassword)}
+                  type="submit"
+                  disabled={isLoading}
+                  className="w-full flex justify-center items-center py-3 px-4 border-2 border-sky-500 rounded-lg text-sm font-medium text-white bg-sky-500 hover:bg-black hover:border-black focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {showPassword ? (
-                    <EyeOff className="h-5 w-5 text-black hover:text-sky-500" />
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="animate-spin -ml-1 mr-2 h-4 w-4" />
+                      Signing in...
+                    </>
                   ) : (
-                    <Eye className="h-5 w-5 text-black hover:text-sky-500" />
+                    'Sign In'
                   )}
                 </button>
+              </form>
+
+              {/* Demo Login Section */}
+              {/* Demo Login Section */}
+              <div className="mt-6 p-5 bg-gradient-to-br from-sky-50 to-blue-50 border-2 border-sky-300 rounded-xl shadow-sm">
+                <div className="text-center mb-4">
+                  <p className="text-lg font-bold text-sky-700 mb-1">🚀 Try Demo Login</p>
+                  <p className="text-xs text-sky-600">Click to auto-fill verified credentials & explore the system</p>
+                </div>
+                <div className="grid grid-cols-1 gap-3">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setValue('emailOrPhone', 'superadmin');
+                      setValue('password', 'password123');
+                      toast.success('Super Admin credentials loaded! Click "Sign In" to login.');
+                    }}
+                    className="flex flex-col items-center p-4 bg-white border-2 border-sky-200 rounded-xl hover:border-sky-500 hover:bg-sky-50 hover:shadow-md transition-all duration-200 group"
+                  >
+                    <div className="text-3xl mb-2 group-hover:scale-110 transition-transform">🔑</div>
+                    <div className="text-sm font-bold text-black">Super Admin</div>
+                    <div className="text-xs text-sky-600 text-center">Full System Access</div>
+                  </button>
+                </div>
               </div>
-              {errors.password && (
-                <p className="mt-1 text-sm text-black">{errors.password.message}</p>
-              )}
             </div>
 
-            {/* Remember Me & Forgot Password */}
-            <div className="flex items-center justify-between">
-              <div className="flex items-center">
-                <input
-                  {...register('rememberMe')}
-                  type="checkbox"
-                  className="h-4 w-4 text-sky-500 focus:ring-sky-500 border-sky-500 rounded"
-                />
-                <label htmlFor="rememberMe" className="ml-2 block text-sm text-black">
-                  Remember me
-                </label>
-              </div>
-              <button
-                type="button"
-                className="text-sm text-sky-500 hover:text-black font-medium"
-                onClick={() => router.push('/forgot-password')}
-              >
-                Forgot password?
-              </button>
-            </div>
-
-            {/* Submit Button */}
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="w-full flex justify-center items-center py-3 px-4 border-2 border-sky-500 rounded-lg text-sm font-medium text-white bg-sky-500 hover:bg-black hover:border-black focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {isLoading ? (
-                <>
-                  <Loader2 className="animate-spin -ml-1 mr-2 h-4 w-4" />
-                  Signing in...
-                </>
-              ) : (
-                'Sign In'
-              )}
-            </button>
-          </form>
-
-          {/* Demo Login Section */}
-          {/* <div className="mt-6 p-5 bg-gradient-to-br from-sky-50 to-blue-50 border-2 border-sky-300 rounded-xl shadow-sm">
-            <div className="text-center mb-4">
-              <p className="text-lg font-bold text-sky-700 mb-1">🚀 Try Demo Login</p>
-              <p className="text-xs text-sky-600">Click any role to auto-fill verified credentials & explore the system</p>
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <button
-                type="button"
-                onClick={() => {
-                  setValue('emailOrPhone', 'superadmin@testcompany.com');
-                  setValue('password', 'SuperAdmin123!');
-                  toast.success('Super Admin credentials loaded! Click "Sign In" to login.');
-                }}
-                className="flex flex-col items-center p-4 bg-white border-2 border-sky-200 rounded-xl hover:border-sky-500 hover:bg-sky-50 hover:shadow-md transition-all duration-200 group"
-              >
-                <div className="text-3xl mb-2 group-hover:scale-110 transition-transform">🔑</div>
-                <div className="text-sm font-bold text-black">Super Admin</div>
-                <div className="text-xs text-sky-600 text-center">All Companies<br/>Full Access</div>
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setValue('emailOrPhone', 'admin@testcompany.com');
-                  setValue('password', 'Admin123!');
-                  toast.success('Company Admin credentials loaded! Click "Sign In" to login.');
-                }}
-                className="flex flex-col items-center p-4 bg-white border-2 border-sky-200 rounded-xl hover:border-sky-500 hover:bg-sky-50 hover:shadow-md transition-all duration-200 group"
-              >
-                <div className="text-3xl mb-2 group-hover:scale-110 transition-transform">👨‍💼</div>
-                <div className="text-sm font-bold text-black">Company Admin</div>
-                <div className="text-xs text-sky-600 text-center">Single Company<br/>Business Access</div>
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setValue('emailOrPhone', 'manager@testcompany.com');
-                  setValue('password', 'Manager123!');
-                  toast.success('Manager credentials loaded! Click "Sign In" to login.');
-                }}
-                className="flex flex-col items-center p-4 bg-white border-2 border-sky-200 rounded-xl hover:border-sky-500 hover:bg-sky-50 hover:shadow-md transition-all duration-200 group"
-              >
-                <div className="text-3xl mb-2 group-hover:scale-110 transition-transform">👩‍💼</div>
-                <div className="text-sm font-bold text-black">Manager</div>
-                <div className="text-xs text-sky-600 text-center">Production &<br/>Operations</div>
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setValue('emailOrPhone', 'operator@testcompany.com');
-                  setValue('password', 'Operator123!');
-                  toast.success('Operator credentials loaded! Click "Sign In" to login.');
-                }}
-                className="flex flex-col items-center p-4 bg-white border-2 border-sky-200 rounded-xl hover:border-sky-500 hover:bg-sky-50 hover:shadow-md transition-all duration-200 group"
-              >
-                <div className="text-3xl mb-2 group-hover:scale-110 transition-transform">👨‍🔧</div>
-                <div className="text-sm font-bold text-black">Operator</div>
-                <div className="text-xs text-sky-600 text-center">Basic<br/>Operations</div>
-              </button>
-            </div>
-            <div className="mt-4 p-3 bg-white/70 rounded-lg border border-sky-200">
-              <p className="text-xs text-sky-700 text-center font-medium">
-                ✨ System includes 1,017+ records with complete business data
+            {/* Footer */}
+            <div className="text-center mt-8">
+              <p className="text-sm text-black">
+                Need access?{' '}
+                <button
+                  onClick={() => router.push('/register')}
+                  className="font-medium text-sky-500 hover:text-black underline"
+                >
+                  Contact Administrator
+                </button>
               </p>
-              <p className="text-xs text-sky-600 text-center mt-1">
-                3 Companies • 60 Users • Full Production Workflows • Real-time Analytics
-              </p>
-              <p className="text-xs text-green-600 text-center mt-1 font-medium">
-                ✅ All demo credentials verified and working!
+              <p className="text-xs text-black opacity-75 mt-2">
+                © 2024 Factory ERP. All rights reserved.
               </p>
             </div>
-          </div> */}
-        </div>
-
-        {/* Footer */}
-        <div className="text-center mt-8">
-          <p className="text-sm text-black">
-            Need access?{' '}
-            <button
-              onClick={() => router.push('/register')}
-              className="font-medium text-sky-500 hover:text-black underline"
-            >
-              Contact Administrator
-            </button>
-          </p>
-          <p className="text-xs text-black opacity-75 mt-2">
-            © 2024 Factory ERP. All rights reserved.
-          </p>
-        </div>
           </div>
         </div>
       </div>

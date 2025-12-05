@@ -257,18 +257,38 @@ export class StockMovementController extends BaseController<IStockMovement> {
    */
   async getMovementsByCompany(req: Request, res: Response): Promise<void> {
     try {
-      const companyId = req.company?._id || req.user?.primaryCompanyId;
-      const { page = 1, limit = 10, movementType, startDate, endDate, search } = req.query;
+      const companyId = (req as any).company?._id || (req as any).user?.primaryCompanyId;
+      const user = (req as any).user;
+      const isSuperAdmin = user?.isSuperAdmin;
+      const { page = 1, limit = 10, movementType, type, startDate, endDate, search, status } = req.query;
 
-      if (!companyId) {
+      // For regular users, companyId is required. Super admins can see all companies.
+      if (!companyId && !isSuperAdmin) {
         this.sendError(res, new Error('Company ID is required'), 'Company ID is required', 400);
         return;
       }
 
-      let query: any = { companyId: companyId.toString() };
+      // Base query
+      const query: any = {};
 
-      if (movementType) {
-        query.movementType = movementType;
+      // Apply company filter only for non-super-admins, or when an explicit company is requested
+      const explicitCompanyId = (req.query as any).companyId;
+      if (!isSuperAdmin) {
+        query.companyId = companyId.toString();
+      } else if (explicitCompanyId) {
+        // Super admin can optionally filter by a specific company via query param
+        query.companyId = explicitCompanyId;
+      }
+
+      // Handle both 'movementType' and 'type' query parameters
+      const movementTypeFilter = movementType || type;
+      if (movementTypeFilter) {
+        query.movementType = movementTypeFilter;
+      }
+
+      // Handle status filter
+      if (status) {
+        query.status = status;
       }
 
       if (startDate && endDate) {
@@ -286,9 +306,9 @@ export class StockMovementController extends BaseController<IStockMovement> {
       }
 
       const options = {
-        page: parseInt(page as string),
-        limit: parseInt(limit as string),
-        sort: { movementDate: -1 },
+        page: parseInt(page as string) || 1,
+        limit: Math.min(parseInt(limit as string) || 20, 100), // Max 100 per page
+        sort: { movementDate: -1, createdAt: -1 },
         populate: [
           {
             path: 'itemId',
@@ -297,6 +317,14 @@ export class StockMovementController extends BaseController<IStockMovement> {
           {
             path: 'createdBy',
             select: 'personalInfo.firstName personalInfo.lastName username'
+          },
+          {
+            path: 'toLocation.warehouseId',
+            select: 'warehouseName'
+          },
+          {
+            path: 'fromLocation.warehouseId',
+            select: 'warehouseName'
           }
         ]
       };
@@ -308,7 +336,17 @@ export class StockMovementController extends BaseController<IStockMovement> {
         success: true,
         message: 'Stock movements retrieved successfully',
         data: {
-          spares: result.documents,  // Use "spares" field to match frontend expectations
+          data: result.documents,  // Main data array
+          spares: result.documents,  // Keep for backward compatibility
+          pagination: {
+            page: result.pagination.page,
+            limit: result.pagination.limit,
+            total: result.pagination.total,
+            totalPages: result.pagination.totalPages,
+            hasNext: result.pagination.page < result.pagination.totalPages,
+            hasPrev: result.pagination.page > 1
+          },
+          // Also include flat structure for compatibility
           total: result.pagination.total,
           page: result.pagination.page,
           limit: result.pagination.limit,

@@ -119,76 +119,11 @@ export default function PWAManager() {
       // For iOS or browsers without install prompt
       const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent)
       
-      if (isIOS) {
-        toast((t) => (
-          <div className="flex flex-col gap-2">
-            <div className="font-semibold">Install ERP App</div>
-            <div className="text-sm">
-              Tap <strong>Share</strong> → <strong>Add to Home Screen</strong>
-            </div>
-            <button
-              onClick={() => toast.dismiss(t.id)}
-              className="text-blue-600 text-sm font-medium"
-            >
-              Got it
-            </button>
-          </div>
-        ), {
-          duration: 8000,
-          icon: '📱'
-        })
-      } else {
-        // toast('Install option not available in this browser', {
-        //   icon: 'ℹ️'
-        // })
-      }
+   
       return
     }
 
-    toast((t) => (
-      <div className="flex items-center gap-3">
-        <div className="flex-1">
-          <div className="font-semibold">Install ERP App</div>
-          <div className="text-sm text-gray-600">
-            Get faster access and offline features
-          </div>
-        </div>
-        <div className="flex gap-2">
-          <button
-            onClick={() => {
-              toast.dismiss(t.id)
-              handleInstallClick()
-            }}
-            className="bg-blue-600 text-white px-3 py-1 rounded text-sm font-medium"
-          >
-            Install
-          </button>
-          <button
-            onClick={() => {
-              toast.dismiss(t.id)
-              // Only dismiss for this session, not permanently
-              sessionStorage.setItem('pwa-prompt-dismissed', 'true')
-            }}
-            className="text-gray-600 px-3 py-1 rounded text-sm"
-          >
-            Later
-          </button>
-          <button
-            onClick={() => {
-              toast.dismiss(t.id)
-              // Permanently dismiss
-              localStorage.setItem('pwa-prompt-permanently-dismissed', 'true')
-            }}
-            className="text-red-600 px-2 py-1 rounded text-xs"
-          >
-            Never
-          </button>
-        </div>
-      </div>
-    ), {
-      duration: 10000,
-      icon: '📱'
-    })
+ 
   }
 
   const handleInstallClick = async () => {

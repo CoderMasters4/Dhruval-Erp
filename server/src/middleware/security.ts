@@ -21,13 +21,22 @@ export const corsOptions = {
       return callback(null, true);
     }
 
-    // In development, be more permissive
+    // In development, allow all localhost origins (any port)
     if (config.NODE_ENV === 'development') {
-      console.log('CORS: Allowing request from origin:', origin);
-      return callback(null, true);
+      // Allow localhost on any port
+      if (origin.includes('localhost') || origin.includes('127.0.0.1')) {
+        console.log('CORS: Allowing localhost origin:', origin);
+        return callback(null, true);
+      }
+      // Also check configured origins
+      if (config.CORS_ORIGIN.includes(origin) || config.CORS_ORIGIN.includes('*')) {
+        console.log('CORS: Allowing configured origin:', origin);
+        return callback(null, true);
+      }
     }
 
-    if (config.CORS_ORIGIN.includes(origin)) {
+    // In production, strictly check configured origins
+    if (config.CORS_ORIGIN.includes(origin) || config.CORS_ORIGIN.includes('*')) {
       console.log('CORS: Allowing request from allowed origin:', origin);
       callback(null, true);
     } else {
@@ -86,18 +95,18 @@ export const helmetOptions = {
       workerSrc: ["'self'", "blob:"]
     }
   } : false,
-  
+
   crossOriginEmbedderPolicy: false, // Disable for file uploads
-  
+
   hsts: config.ENABLE_HSTS ? {
     maxAge: 31536000, // 1 year
     includeSubDomains: true,
     preload: true
   } : false,
-  
+
   noSniff: config.ENABLE_NOSNIFF,
   xssFilter: config.ENABLE_XSS_FILTER,
-  
+
   referrerPolicy: {
     policy: "same-origin" as const
   }
@@ -109,14 +118,14 @@ export const helmetOptions = {
 export const createRateLimit = (windowMs: number, max: number, message?: string, extraOptions?: Record<string, any>) => {
   // More lenient limits for development
   const isDev = process.env.NODE_ENV === 'development'
-  const adjustedMax = isDev ? max * 1000 : max*1000 // 10x more requests in dev
+  const adjustedMax = isDev ? max * 1000 : max * 1000 // 10x more requests in dev
 
   return rateLimit({
     windowMs,
     max: adjustedMax,
     message: message || {
       error: 'Too many requests',
-      message: `Too many requests from this IP, please try again later. (${adjustedMax} requests per ${Math.round(windowMs/1000)}s)`,
+      message: `Too many requests from this IP, please try again later. (${adjustedMax} requests per ${Math.round(windowMs / 1000)}s)`,
       retryAfter: Math.ceil(windowMs / 1000)
     },
     standardHeaders: true,
@@ -268,7 +277,7 @@ export const securityMiddleware = [
 // =============================================
 export const requestLogger = (req: Request, res: Response, next: NextFunction) => {
   const startTime = Date.now();
-  
+
   // Generate request ID
   const requestId = `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
   (req as any).requestId = requestId;
@@ -290,9 +299,9 @@ export const requestLogger = (req: Request, res: Response, next: NextFunction) =
 
   // Log response
   const originalSend = res.send;
-  res.send = function(data) {
+  res.send = function (data) {
     const duration = Date.now() - startTime;
-    
+
     logger.info('Outgoing response', {
       requestId,
       method: req.method,
@@ -324,7 +333,7 @@ export const securityErrorHandler = (err: any, req: Request, res: Response, next
       method: req.method,
       contentLength: req.get('Content-Length')
     });
-    
+
     return res.status(413).json({
       error: 'Request entity too large',
       message: 'The request payload is too large',
@@ -347,7 +356,7 @@ export const securityErrorHandler = (err: any, req: Request, res: Response, next
       path: req.path,
       method: req.method
     });
-    
+
     return res.status(403).json({
       error: 'CSRF token mismatch',
       message: 'Invalid CSRF token',
@@ -365,7 +374,7 @@ export const securityErrorHandler = (err: any, req: Request, res: Response, next
 export const ipWhitelist = (allowedIPs: string[]) => {
   return (req: Request, res: Response, next: NextFunction) => {
     const clientIP = req.ip;
-    
+
     if (!allowedIPs.includes(clientIP)) {
       logger.warn('IP not whitelisted', {
         ip: clientIP,
@@ -373,13 +382,13 @@ export const ipWhitelist = (allowedIPs: string[]) => {
         method: req.method,
         userAgent: req.get('User-Agent')
       });
-      
+
       return res.status(403).json({
         error: 'Access denied',
         message: 'Your IP address is not authorized to access this resource'
       });
     }
-    
+
     next();
   };
 };
@@ -389,18 +398,18 @@ export const ipWhitelist = (allowedIPs: string[]) => {
 // =============================================
 export const validateApiKey = (req: Request, res: Response, next: NextFunction) => {
   const apiKey = req.headers['x-api-key'] as string;
-  
+
   if (!apiKey) {
     return res.status(401).json({
       error: 'API key required',
       message: 'X-API-Key header is required'
     });
   }
-  
+
   // Validate API key (implement your logic here)
   // This is a simple example - in production, use proper API key management
   const validApiKeys = process.env.VALID_API_KEYS?.split(',') || [];
-  
+
   if (!validApiKeys.includes(apiKey)) {
     logger.warn('Invalid API key', {
       ip: req.ip,
@@ -408,12 +417,12 @@ export const validateApiKey = (req: Request, res: Response, next: NextFunction) 
       method: req.method,
       apiKey: apiKey.substring(0, 8) + '...' // Log only first 8 characters
     });
-    
+
     return res.status(401).json({
       error: 'Invalid API key',
       message: 'The provided API key is not valid'
     });
   }
-  
+
   next();
 };

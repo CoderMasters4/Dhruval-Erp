@@ -80,54 +80,7 @@ export default function ProfilePage() {
 
   const handleInstallPWA = () => {
     // Try to use the global install function from PWAManager
-    if ((window as any).installPWA) {
-      (window as any).installPWA()
-      toast.success('Install prompt triggered!')
-    } else {
-      // Fallback instructions
-      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent)
-
-      if (isIOS) {
-        toast((t) => (
-          <div className="flex flex-col gap-2">
-            <div className="font-semibold">Install ERP App on iOS</div>
-            <div className="text-sm">
-              1. Tap the <strong>Share</strong> button (□↗)<br/>
-              2. Scroll down and tap <strong>"Add to Home Screen"</strong><br/>
-              3. Tap <strong>"Add"</strong> to confirm
-            </div>
-            <button
-              onClick={() => toast.dismiss(t.id)}
-              className="text-blue-600 text-sm font-medium mt-2"
-            >
-              Got it!
-            </button>
-          </div>
-        ), {
-          duration: 10000,
-          icon: '📱'
-        })
-      } else {
-        toast((t) => (
-          <div className="flex flex-col gap-2">
-            <div className="font-semibold">Install ERP App</div>
-            <div className="text-sm">
-              Look for the install icon (⊕) in your browser's address bar,<br/>
-              or check the browser menu for "Install" or "Add to Home Screen"
-            </div>
-            <button
-              onClick={() => toast.dismiss(t.id)}
-              className="text-blue-600 text-sm font-medium mt-2"
-            >
-              Got it!
-            </button>
-          </div>
-        ), {
-          duration: 8000,
-          icon: '💻'
-        })
-      }
-    }
+   
   }
 
   return (
