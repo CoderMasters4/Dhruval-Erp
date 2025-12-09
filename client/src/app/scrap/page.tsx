@@ -621,3 +621,5 @@ const ScrapPage = () => {
 
 export default ScrapPage;
 
+
+

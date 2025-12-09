@@ -170,19 +170,13 @@ const navigationItems: NavigationItem[] = [
 
   {
     name: 'Purchase',
-    href: '/purchase',
+    href: '/purchase-orders',
     icon: ShoppingCart,
     permission: 'view:Purchase',
     children: [
       {
-        name: 'Purchase Dashboard',
-        href: '/purchase',
-        icon: ShoppingCart,
-        permission: 'view:Purchase'
-      },
-      {
         name: 'Create Purchase Order',
-        href: '/purchase?action=create',
+        href: '/purchase/create',
         icon: Plus,
         permission: 'view:Purchase'
       },
@@ -197,6 +191,12 @@ const navigationItems: NavigationItem[] = [
         href: '/suppliers',
         icon: Truck,
         permission: 'view:Supplier'
+      },
+      {
+        name: 'Purchase Reports',
+        href: '/purchase/reports',
+        icon: FileSearch,
+        permission: 'view:Purchase'
       },
       // {
       //   name: 'Purchase Quotations',

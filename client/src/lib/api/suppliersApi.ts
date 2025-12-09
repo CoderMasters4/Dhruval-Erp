@@ -47,6 +47,15 @@ export interface Supplier {
     country: string
   }>
   
+  // Contact Persons
+  contactPersons?: Array<{
+    name: string
+    designation?: string
+    phone?: string
+    email?: string
+    isPrimary?: boolean
+  }>
+  
   // Business Information
   businessInfo?: {
     industry?: string

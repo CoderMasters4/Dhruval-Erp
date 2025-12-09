@@ -5,8 +5,8 @@ import { useSelector } from 'react-redux'
 import { selectCurrentUser } from '@/lib/features/auth/authSlice'
 import { AppLayout } from '@/components/layout/AppLayout'
 import { 
-  useGetSupplierWisePurchaseReportQuery,
-  useExportSupplierWisePurchaseReportMutation 
+  useGetVendorWiseSummaryQuery,
+  useExportReportMutation 
 } from '@/lib/api/purchaseReportsApi'
 import { useGetSuppliersQuery } from '@/lib/api/suppliersApi'
 import { Pagination } from '@/components/ui/Pagination'
@@ -62,14 +62,14 @@ export default function SupplierWisePurchaseReportPage() {
     isLoading: reportLoading, 
     error: reportError,
     refetch: refetchReport 
-  } = useGetSupplierWisePurchaseReportQuery(filters)
+  } = useGetVendorWiseSummaryQuery(filters)
 
   const { data: suppliersData } = useGetSuppliersQuery({ 
     page: 1, 
     limit: 100 
   })
 
-  const [exportReport, { isLoading: exportLoading }] = useExportSupplierWisePurchaseReportMutation()
+  const [exportReport, { isLoading: exportLoading }] = useExportReportMutation()
 
   // Handle filter changes
   const handleFilterChange = (key: keyof ReportFilters, value: any) => {
@@ -99,19 +99,26 @@ export default function SupplierWisePurchaseReportPage() {
 
   const handleExport = async (format: 'pdf' | 'excel' | 'csv') => {
     try {
-      const blob = await exportReport({ ...filters, format }).unwrap()
+      const exportFormat = format === 'excel' ? 'xlsx' : format
+      const result = await exportReport({
+        reportType: 'vendor-wise',
+        format: exportFormat as 'pdf' | 'xlsx',
+        filters: {
+          companyId: user?.companyId || user?.companyAccess?.[0]?.companyId,
+          dateFrom: filters.startDate,
+          dateTo: filters.endDate,
+          vendorId: filters.supplierId
+        }
+      }).unwrap()
       
-      // Create download link
-      const url = window.URL.createObjectURL(blob)
-      const link = document.createElement('a')
-      link.href = url
-      link.download = `supplier-wise-purchase-report-${filters.startDate}-to-${filters.endDate}.${format}`
-      document.body.appendChild(link)
-      link.click()
-      document.body.removeChild(link)
-      window.URL.revokeObjectURL(url)
+      // Handle the response (could be a URL or blob)
+      if (result.data?.downloadUrl) {
+        window.open(result.data.downloadUrl, '_blank')
+      } else {
+        toast.error('Export completed but download URL not available')
+      }
       
-      toast.success(`Report exported as ${format.toUpperCase()}`)
+      toast.success(`Report exported as ${exportFormat.toUpperCase()}`)
     } catch (error) {
       toast.error('Failed to export report')
     }
@@ -162,9 +169,17 @@ export default function SupplierWisePurchaseReportPage() {
     return colors[category as keyof typeof colors] || 'bg-gray-100 text-gray-800'
   }
 
-  const summary = reportData?.data?.summary
-  const supplierWiseData = reportData?.data?.supplierWiseData || []
-  const pagination = reportData?.data?.pagination
+  // The API returns an array of VendorWisePurchaseSummary directly
+  const supplierWiseData = reportData?.data || []
+  
+  // Calculate summary from the data
+  const summary = supplierWiseData.length > 0 ? {
+    totalPurchaseOrders: supplierWiseData.reduce((sum, s) => sum + (s.totalOrders || 0), 0),
+    totalPurchaseAmount: supplierWiseData.reduce((sum, s) => sum + (s.totalPurchases || 0), 0),
+    uniqueSuppliersCount: supplierWiseData.length,
+    avgOrderValue: supplierWiseData.reduce((sum, s) => sum + (s.averageOrderValue || 0), 0) / supplierWiseData.length
+  } : null
+  const pagination = undefined // Vendor-wise report doesn't have pagination in the current API
 
   return (
     <AppLayout>
@@ -501,8 +516,9 @@ export default function SupplierWisePurchaseReportPage() {
               </table>
             </div>
 
-            {/* Pagination */}
-            {pagination && pagination.pages > 1 && (
+            {/* Pagination - Not available in current API implementation */}
+            {/* Uncomment when pagination is implemented in the backend */}
+            {/* {pagination && pagination.pages > 1 && (
               <div className="p-6 border-t border-gray-200">
                 <Pagination
                   currentPage={pagination.page}
@@ -513,7 +529,7 @@ export default function SupplierWisePurchaseReportPage() {
                   onLimitChange={handleItemsPerPageChange}
                 />
               </div>
-            )}
+            )} */}
           </div>
         )}
 

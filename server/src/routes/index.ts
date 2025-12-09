@@ -10,11 +10,13 @@ import v1ManpowerRoutes from './v1/manpower';
 import v1StickerRoutes from './v1/stickers';
 import v1CustomersRoutes from './v1/customers';
 import v1SuppliersRoutes from './v1/suppliers';
+import v1AgentsRoutes from './v1/agents';
 import v1InventoryRoutes from './v1/inventory';
 import v1ProductionRoutes from './v1/production';
 import v1CustomerOrdersRoutes from './v1/customer-orders';
 import v1PurchaseOrdersRoutes from './v1/purchase-orders';
 import v1PurchaseRoutes from './v1/purchase';
+import v1PurchaseReportsRoutes from './v1/purchase-reports';
 import v1InvoicesRoutes from './v1/invoices';
 import v1WarehousesRoutes from './v1/warehouses';
 import v1StockMovementsRoutes from './v1/stock-movements';
@@ -172,6 +174,7 @@ router.use('/companies', v1CompaniesRoutes); // ❌ HANGING: Companies route cau
 router.use('/users', v1UsersRoutes); // ✅ WORKING: Users route working
 router.use('/customers', v1CustomersRoutes); // 
 router.use('/suppliers', v1SuppliersRoutes); // ✅ TESTING: Testing suppliers separately
+router.use('/agents', v1AgentsRoutes); // ✅ Agents routes
 
 // // Dashboard and orders
 router.use('/dashboard', v1DashboardRoutes);
@@ -203,6 +206,7 @@ router.use('/batches', v1BatchesRoutes);
 router.use('/customer-orders', v1CustomerOrdersRoutes);
 router.use('/purchase-orders', v1PurchaseOrdersRoutes);
 router.use('/purchase', v1PurchaseRoutes); // ENABLED WITH SIMPLIFIED HANDLERS
+router.use('/purchase/reports', v1PurchaseReportsRoutes);
 
 router.use('/invoices', v1InvoicesRoutes);
 router.use('/quotations', v1QuotationsRoutes);

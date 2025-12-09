@@ -352,3 +352,5 @@ export interface IScrapModel extends mongoose.Model<IScrap> {
 export default model<IScrap, IScrapModel>('Scrap', ScrapSchema);
 
 
+
+

@@ -162,6 +162,41 @@ export class SupplierService extends BaseService<ISupplier> {
   }
 
   /**
+   * Generate unique supplier code
+   */
+  private async generateSupplierCode(companyId: string): Promise<string> {
+    let supplierCode: string;
+    let isUnique = false;
+    let attempts = 0;
+    const maxAttempts = 10;
+
+    while (!isUnique && attempts < maxAttempts) {
+      // Generate code: SUPP + timestamp last 6 digits
+      const timestamp = Date.now().toString();
+      supplierCode = `SUPP${timestamp.slice(-6)}`;
+
+      const existing = await this.findOne({
+        supplierCode,
+        companyId
+      });
+
+      if (!existing) {
+        isUnique = true;
+      } else {
+        attempts++;
+        // Add random suffix if duplicate
+        supplierCode = `SUPP${timestamp.slice(-6)}${Math.floor(Math.random() * 100)}`;
+      }
+    }
+
+    if (!isUnique) {
+      throw new AppError('Failed to generate unique supplier code', 500);
+    }
+
+    return supplierCode!;
+  }
+
+  /**
    * Create a new supplier
    */
   async createSupplier(supplierData: Partial<ISupplier>, createdBy?: string): Promise<ISupplier> {
@@ -169,10 +204,14 @@ export class SupplierService extends BaseService<ISupplier> {
       // Validate supplier data
       this.validateSupplierData(supplierData);
 
-      // Check for duplicate supplier code
-      if (supplierData.supplierCode) {
+      // Auto-generate supplier code if not provided
+      let supplierCode = supplierData.supplierCode?.trim();
+      if (!supplierCode) {
+        supplierCode = await this.generateSupplierCode(supplierData.companyId!.toString());
+      } else {
+        // Check for duplicate supplier code if provided
         const existingSupplier = await this.findOne({ 
-          supplierCode: supplierData.supplierCode,
+          supplierCode: supplierCode,
           companyId: supplierData.companyId
         });
 
@@ -181,9 +220,25 @@ export class SupplierService extends BaseService<ISupplier> {
         }
       }
 
+      // Check for duplicate GST number (if provided)
+      if (supplierData.registrationDetails?.gstin) {
+        const gstin = supplierData.registrationDetails.gstin.trim();
+        if (gstin) {
+          const existingGstSupplier = await this.findOne({ 
+            'registrationDetails.gstin': gstin,
+            companyId: supplierData.companyId
+          });
+
+          if (existingGstSupplier) {
+            throw new AppError('Supplier with this GST number already exists', 400);
+          }
+        }
+      }
+
       // Create supplier
       const supplier = await this.create({
         ...supplierData,
+        supplierCode,
         isActive: true,
         supplyHistory: {
           firstOrderDate: new Date(),
@@ -434,16 +489,77 @@ export class SupplierService extends BaseService<ISupplier> {
    * Validate supplier data
    */
   private validateSupplierData(supplierData: Partial<ISupplier>): void {
-    if (!supplierData.supplierName) {
-      throw new AppError('Supplier name is required', 400);
-    }
-
-    if (!supplierData.supplierCode) {
-      throw new AppError('Supplier code is required', 400);
-    }
-
     if (!supplierData.companyId) {
       throw new AppError('Company ID is required', 400);
+    }
+
+    // Supplier code is optional - will be auto-generated if not provided
+    // But if provided, validate it's not empty
+    if (supplierData.supplierCode && !supplierData.supplierCode.trim()) {
+      throw new AppError('Supplier code cannot be empty', 400);
+    }
+
+    if (!supplierData.supplierName || !supplierData.supplierName.trim()) {
+      throw new AppError('Firm name is required', 400);
+    }
+
+    // Validate contact person name
+    if (!supplierData.contactPersons || supplierData.contactPersons.length === 0) {
+      throw new AppError('Contact person name is required', 400);
+    }
+
+    const primaryContactPerson = supplierData.contactPersons.find(cp => cp.isPrimary) || supplierData.contactPersons[0];
+    if (!primaryContactPerson.name || !primaryContactPerson.name.trim()) {
+      throw new AppError('Contact person name is required', 400);
+    }
+
+    if (!supplierData.contactInfo?.primaryPhone || !supplierData.contactInfo.primaryPhone.trim()) {
+      throw new AppError('Contact number is required', 400);
+    }
+
+    if (!supplierData.contactInfo?.primaryEmail || !supplierData.contactInfo.primaryEmail.trim()) {
+      throw new AppError('Email address is required', 400);
+    }
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(supplierData.contactInfo.primaryEmail)) {
+      throw new AppError('Invalid email format', 400);
+    }
+
+    // Validate phone format (10 digits starting with 6-9)
+    const phoneRegex = /^[6-9]\d{9}$/;
+    const phoneDigits = supplierData.contactInfo.primaryPhone.replace(/\D/g, '');
+    if (!phoneRegex.test(phoneDigits)) {
+      throw new AppError('Invalid phone number format. Must be 10 digits starting with 6-9', 400);
+    }
+
+    // Validate address fields if address is provided
+    if (supplierData.addresses && supplierData.addresses.length > 0) {
+      const address = supplierData.addresses[0];
+      if (!address.addressLine1 || !address.addressLine1.trim()) {
+        throw new AppError('Address is required', 400);
+      }
+      if (!address.city || !address.city.trim()) {
+        throw new AppError('City is required', 400);
+      }
+      if (!address.state || !address.state.trim()) {
+        throw new AppError('State is required', 400);
+      }
+      if (!address.pincode || !address.pincode.trim()) {
+        throw new AppError('Pincode is required', 400);
+      }
+    }
+
+    // Validate GST number format if provided
+    if (supplierData.registrationDetails?.gstin) {
+      const gstin = supplierData.registrationDetails.gstin.trim();
+      if (gstin) {
+        const gstinRegex = /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/;
+        if (!gstinRegex.test(gstin)) {
+          throw new AppError('Invalid GST number format', 400);
+        }
+      }
     }
 
     if (supplierData.quality?.qualityRating !== undefined && 
