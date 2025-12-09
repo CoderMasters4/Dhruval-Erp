@@ -65,3 +65,5 @@ router.delete('/:id', goodsReturnController.delete.bind(goodsReturnController));
 
 export default router;
 
+
+

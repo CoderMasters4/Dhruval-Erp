@@ -30,7 +30,8 @@ import {
   Loader2,
   Factory,
   Briefcase,
-  Settings
+  Settings,
+  User
 } from 'lucide-react'
 import { AppLayout } from '@/components/layout/AppLayout'
 import { Button } from '@/components/ui/Button'
@@ -39,6 +40,9 @@ import { useGetSuppliersQuery } from '@/lib/api/suppliersApi'
 import { useGetAllCompaniesQuery } from '@/lib/api/authApi'
 import { SupplierFormModal } from '@/components/suppliers/modals/SupplierFormModal'
 import { SupplierDetailsModal } from '@/components/suppliers/modals/SupplierDetailsModal'
+import { AgentFormModal } from '@/components/agents/modals/AgentFormModal'
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
+import { useGetAgentsQuery } from '@/lib/api/agentsApi'
 import clsx from 'clsx'
 
 interface SupplierFilters {
@@ -55,12 +59,16 @@ export default function SuppliersPage() {
   const router = useRouter()
 
   // State management
+  const [activeTab, setActiveTab] = useState<'suppliers' | 'agents'>('suppliers')
   const [viewMode, setViewMode] = useState<ViewMode>('list')
   const [showFilters, setShowFilters] = useState(false)
   const [selectedSupplier, setSelectedSupplier] = useState<any>(null)
+  const [selectedAgent, setSelectedAgent] = useState<any>(null)
   const [showSupplierDetails, setShowSupplierDetails] = useState(false)
   const [showSupplierForm, setShowSupplierForm] = useState(false)
+  const [showAgentForm, setShowAgentForm] = useState(false)
   const [editingSupplier, setEditingSupplier] = useState<any>(null)
+  const [editingAgent, setEditingAgent] = useState<any>(null)
 
   const [filters, setFilters] = useState<SupplierFilters>({
     search: '',
@@ -70,19 +78,47 @@ export default function SuppliersPage() {
     limit: 10
   })
 
+  // Agent filters
+  const [agentFilters, setAgentFilters] = useState({
+    search: '',
+    status: 'all',
+    page: 1,
+    limit: 10
+  })
+
   // API queries
   const {
     data: suppliersData,
-    isLoading,
-    error,
-    refetch
+    isLoading: suppliersLoading,
+    error: suppliersError,
+    refetch: refetchSuppliers
   } = useGetSuppliersQuery({
     page: filters.page,
     limit: filters.limit,
     search: filters.search || undefined,
     status: filters.status !== 'all' ? filters.status : undefined,
     category: filters.category !== 'all' ? filters.category : undefined
+  }, {
+    skip: activeTab !== 'suppliers'
   })
+
+  const {
+    data: agentsData,
+    isLoading: agentsLoading,
+    error: agentsError,
+    refetch: refetchAgents
+  } = useGetAgentsQuery({
+    page: agentFilters.page,
+    limit: agentFilters.limit,
+    search: agentFilters.search || undefined,
+    status: agentFilters.status !== 'all' ? agentFilters.status : undefined
+  }, {
+    skip: activeTab !== 'agents'
+  })
+
+  const isLoading = activeTab === 'suppliers' ? suppliersLoading : agentsLoading
+  const error = activeTab === 'suppliers' ? suppliersError : agentsError
+  const refetch = activeTab === 'suppliers' ? refetchSuppliers : refetchAgents
 
   // Get companies data for displaying company names
   const { data: companiesData } = useGetAllCompaniesQuery(undefined, {
@@ -97,7 +133,16 @@ export default function SuppliersPage() {
     : Array.isArray(suppliersData?.data) 
     ? suppliersData.data 
     : []) as any[]
-  const pagination = suppliersData?.data?.pagination
+  const suppliersPagination = suppliersData?.data?.pagination
+
+  const agents = (Array.isArray(agentsData?.data?.data) 
+    ? agentsData.data.data 
+    : Array.isArray(agentsData?.data) 
+    ? agentsData.data 
+    : []) as any[]
+  const agentsPagination = agentsData?.data?.pagination
+
+  const pagination = activeTab === 'suppliers' ? suppliersPagination : agentsPagination
 
   // Helper functions
   const getCompanyName = (companyId: string | any) => {
@@ -220,8 +265,8 @@ export default function SuppliersPage() {
           <div className="mb-8">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div>
-                <h1 className="text-3xl font-bold text-gray-900 dark:text-white transition-theme">Supplier Management</h1>
-                <p className="text-gray-600 dark:text-gray-300 mt-1 transition-theme">Manage supplier relationships and procurement</p>
+                <h1 className="text-3xl font-bold text-gray-900 dark:text-white transition-theme">Supplier & Agent Management</h1>
+                <p className="text-gray-600 dark:text-gray-300 mt-1 transition-theme">Manage supplier and agent relationships and procurement</p>
                 <div className="flex items-center gap-4 mt-3">
                   <div className="flex items-center gap-2 px-3 py-1 bg-white dark:bg-gray-800 rounded-full shadow-sm border border-sky-200 dark:border-gray-700 transition-theme">
                     <Building className="h-4 w-4 text-sky-600 dark:text-sky-400" />
@@ -282,13 +327,18 @@ export default function SuppliersPage() {
 
                 <Button
                   onClick={() => {
-                    setEditingSupplier(null)
-                    setShowSupplierForm(true)
+                    if (activeTab === 'suppliers') {
+                      setEditingSupplier(null)
+                      setShowSupplierForm(true)
+                    } else {
+                      setEditingAgent(null)
+                      setShowAgentForm(true)
+                    }
                   }}
                   className="bg-sky-500 hover:bg-sky-600 text-white px-6 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-200"
                 >
                   <Plus className="h-5 w-5 mr-2" />
-                  Add Supplier
+                  Add {activeTab === 'suppliers' ? 'Supplier' : 'Agent'}
                 </Button>
               </div>
             </div>
@@ -527,8 +577,30 @@ export default function SuppliersPage() {
             </div>
           )}
 
+          {/* Tabs */}
+          <div className="mb-6">
+            <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'suppliers' | 'agents')}>
+              <TabsList className="grid w-full max-w-md grid-cols-2 bg-white dark:bg-gray-800 border border-sky-200 dark:border-gray-700">
+                <TabsTrigger 
+                  value="suppliers" 
+                  className="data-[state=active]:bg-sky-500 data-[state=active]:text-white"
+                >
+                  Suppliers
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="agents"
+                  className="data-[state=active]:bg-sky-500 data-[state=active]:text-white"
+                >
+                  Agents
+                </TabsTrigger>
+              </TabsList>
+            </Tabs>
+          </div>
+
           {/* Suppliers Content */}
-          {!isLoading && !error && suppliers.length > 0 && (
+          <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'suppliers' | 'agents')}>
+            <TabsContent value="suppliers" className="mt-0">
+              {!isLoading && !error && suppliers.length > 0 && (
             <>
               {/* List View */}
               {viewMode === 'list' && (
@@ -820,7 +892,211 @@ export default function SuppliersPage() {
               </div>
             )}
             </>
-          )}
+              )}
+            </TabsContent>
+
+            {/* Agents Content */}
+            <TabsContent value="agents" className="mt-0">
+              {!isLoading && !error && agents.length > 0 && (
+                <>
+                  {/* List View for Agents */}
+                  {viewMode === 'list' && (
+                    <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-sky-200 dark:border-gray-700 overflow-hidden transition-theme">
+                      <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Agents Directory</h3>
+                            <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">
+                              Showing {agents.length} of {pagination?.total || agents.length} agents
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="overflow-x-auto">
+                        <table className="w-full">
+                          <thead className="bg-gray-50 dark:bg-gray-700">
+                            <tr>
+                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                Agent
+                              </th>
+                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                Contact
+                              </th>
+                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                Address
+                              </th>
+                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                Status
+                              </th>
+                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                Actions
+                              </th>
+                            </tr>
+                          </thead>
+                          <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                            {agents.map((agent: any) => (
+                              <tr
+                                key={agent._id}
+                                className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200"
+                              >
+                                <td className="px-6 py-4 whitespace-nowrap">
+                                  <div className="flex items-center">
+                                    <div className="h-10 w-10 bg-sky-100 dark:bg-sky-900/30 rounded-full flex items-center justify-center">
+                                      <span className="text-sky-600 dark:text-sky-400 font-semibold text-sm">
+                                        {agent.agentName?.charAt(0)?.toUpperCase() || 'A'}
+                                      </span>
+                                    </div>
+                                    <div className="ml-4">
+                                      <div className="text-sm font-medium text-gray-900 dark:text-white">
+                                        {agent.agentName}
+                                      </div>
+                                      <div className="text-sm text-gray-500 dark:text-gray-400">
+                                        {agent.agentCode}
+                                      </div>
+                                      <div className="text-xs text-gray-400 dark:text-gray-500">
+                                        {agent.contactPersonName}
+                                      </div>
+                                    </div>
+                                  </div>
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap">
+                                  <div className="text-sm text-gray-900 dark:text-white">
+                                    <div className="font-medium">{agent.contactInfo?.primaryEmail || 'N/A'}</div>
+                                    <div className="text-gray-500 dark:text-gray-400">{agent.contactInfo?.primaryPhone || 'N/A'}</div>
+                                  </div>
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap">
+                                  <div className="text-sm text-gray-900 dark:text-white">
+                                    <div className="font-medium">{agent.addresses?.[0]?.city || 'N/A'}, {agent.addresses?.[0]?.state || 'N/A'}</div>
+                                    <div className="text-gray-500 dark:text-gray-400">{agent.addresses?.[0]?.addressLine1 || 'N/A'}</div>
+                                  </div>
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap">
+                                  <span className={clsx(
+                                    'inline-flex px-2 py-1 text-xs font-semibold rounded-full',
+                                    getStatusColor(agent.isActive ? 'active' : 'inactive')
+                                  )}>
+                                    {agent.isActive ? 'ACTIVE' : 'INACTIVE'}
+                                  </span>
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                  <div className="flex items-center gap-1">
+                                    <Button
+                                      onClick={() => {
+                                        setSelectedAgent(agent)
+                                        setEditingAgent(agent)
+                                        setShowAgentForm(true)
+                                      }}
+                                      className="p-2 text-green-600 dark:text-green-400 hover:text-green-900 dark:hover:text-green-300 hover:bg-green-50 dark:hover:bg-green-900/20 rounded-lg transition-colors bg-transparent border-0"
+                                      title="Edit Agent"
+                                    >
+                                      <Edit className="h-4 w-4" />
+                                    </Button>
+                                  </div>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Grid View for Agents */}
+                  {viewMode === 'grid' && (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                      {agents.map((agent: any) => (
+                        <div
+                          key={agent._id}
+                          className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-sky-200 dark:border-gray-700 p-6 hover:shadow-xl transition-all duration-200"
+                        >
+                          <div className="flex items-start justify-between mb-4">
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-3 mb-2">
+                                <div className="h-12 w-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-md">
+                                  <span className="text-white font-semibold">
+                                    {agent.agentName?.charAt(0)?.toUpperCase() || 'A'}
+                                  </span>
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white truncate">
+                                    {agent.agentName}
+                                  </h3>
+                                  <p className="text-sm text-blue-600 dark:text-blue-400 font-medium">
+                                    {agent.agentCode}
+                                  </p>
+                                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                                    {agent.contactPersonName}
+                                  </p>
+                                </div>
+                              </div>
+                            </div>
+                            <span className={clsx(
+                              'px-2 py-1 rounded-full text-xs font-medium',
+                              getStatusColor(agent.isActive ? 'active' : 'inactive')
+                            )}>
+                              {agent.isActive ? 'ACTIVE' : 'INACTIVE'}
+                            </span>
+                          </div>
+
+                          <div className="space-y-2 mb-4">
+                            {agent.contactInfo?.primaryEmail && (
+                              <div className="flex items-center text-sm text-gray-600 dark:text-gray-300">
+                                <Mail className="h-4 w-4 mr-2 text-gray-400 dark:text-gray-500" />
+                                <span className="truncate">{agent.contactInfo.primaryEmail}</span>
+                              </div>
+                            )}
+
+                            {agent.contactInfo?.primaryPhone && (
+                              <div className="flex items-center text-sm text-gray-600 dark:text-gray-300">
+                                <Phone className="h-4 w-4 mr-2 text-gray-400 dark:text-gray-500" />
+                                <span>{agent.contactInfo.primaryPhone}</span>
+                              </div>
+                            )}
+
+                            {agent.addresses?.[0] && (
+                              <div className="flex items-center text-sm text-gray-600 dark:text-gray-300">
+                                <MapPin className="h-4 w-4 mr-2 text-gray-400 dark:text-gray-500" />
+                                <span className="truncate">{agent.addresses[0].city}, {agent.addresses[0].state}</span>
+                              </div>
+                            )}
+                          </div>
+
+                          <div className="flex items-center justify-between pt-4 border-t border-gray-200 dark:border-gray-700">
+                            <Button
+                              onClick={() => {
+                                setSelectedAgent(agent)
+                                setEditingAgent(agent)
+                                setShowAgentForm(true)
+                              }}
+                              className="p-2 text-green-600 dark:text-green-400 hover:text-green-900 dark:hover:text-green-300 hover:bg-green-50 dark:hover:bg-green-900/20 rounded-lg transition-colors bg-transparent border-0"
+                              title="Edit Agent"
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </>
+              )}
+
+              {/* No Agents State */}
+              {!isLoading && !error && agents.length === 0 && (
+                <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-sky-200 dark:border-gray-700 p-12 transition-theme">
+                  <div className="flex flex-col items-center justify-center">
+                    <User className="h-12 w-12 text-gray-400 dark:text-gray-500 mb-4" />
+                    <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">No Agents Found</h3>
+                    <p className="text-gray-600 dark:text-gray-300 text-center">
+                      No agents have been added yet. Click "Add Agent" to get started.
+                    </p>
+                  </div>
+                </div>
+              )}
+            </TabsContent>
+          </Tabs>
 
           {/* Pagination */}
           {pagination && pagination.pages > 1 && (
@@ -848,7 +1124,7 @@ export default function SuppliersPage() {
                 setEditingSupplier(null)
               }}
               onSuccess={() => {
-                refetch()
+                refetchSuppliers()
                 setShowSupplierForm(false)
                 setEditingSupplier(null)
               }}
@@ -866,6 +1142,23 @@ export default function SuppliersPage() {
               }}
               supplier={selectedSupplier}
               onEdit={handleEditFromDetails}
+            />
+          )}
+
+          {/* Agent Form Modal */}
+          {showAgentForm && (
+            <AgentFormModal
+              isOpen={showAgentForm}
+              onClose={() => {
+                setShowAgentForm(false)
+                setEditingAgent(null)
+              }}
+              onSuccess={() => {
+                refetchAgents()
+                setShowAgentForm(false)
+                setEditingAgent(null)
+              }}
+              agent={editingAgent}
             />
           )}
         </div>

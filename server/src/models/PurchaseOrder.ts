@@ -132,6 +132,14 @@ const PurchaseOrderSchema = new Schema<IPurchaseOrder>({
     }
   },
 
+  // Agent Information (PO Level)
+  agent: {
+    agentId: { type: Schema.Types.ObjectId, ref: 'Agent' },
+    agentCode: { type: String },
+    agentName: { type: String },
+    agentContactNumber: { type: String }
+  },
+
   // Delivery Information
   deliveryInfo: {
     deliveryAddress: {

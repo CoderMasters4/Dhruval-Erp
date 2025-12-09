@@ -1,195 +1,201 @@
 import { baseApi } from './baseApi'
 
-// Purchase Report Types
-export interface PurchaseReportSummary {
-  totalPurchaseOrders: number
-  totalPurchaseAmount: number
-  totalTaxAmount: number
-  avgOrderValue: number
-  uniqueSuppliersCount: number
+// Report Types
+export interface ReportFilters {
+  companyId?: string
+  vendorId?: string
+  itemId?: string
+  category?: string
+  dateFrom?: string
+  dateTo?: string
 }
 
-export interface SupplierWiseData {
-  supplierId: string
-  supplierName: string
-  supplierCode: string
-  contactInfo?: {
-    primaryEmail?: string
-    primaryPhone?: string
-  }
-  businessInfo?: {
-    businessType?: string
-    industry?: string
-  }
+export interface VendorWisePurchaseSummary {
+  vendorId: string
+  vendorName: string
+  contactPerson?: string
+  contactNumber?: string
+  email?: string
+  gstin?: string
+  totalPurchases: number
   totalOrders: number
+  totalQuantity: number
+  averageOrderValue: number
+  items: Array<{
+    itemId: string
+    itemName: string
+    itemCode: string
+    category?: string
+    totalQuantity: number
+    totalAmount: number
+    averageRate: number
+    orderDates: string[]
+  }>
+}
+
+export interface ItemWisePurchaseReport {
+  itemId: string
+  itemName: string
+  itemCode: string
+  category?: string
+  subcategory?: string
+  totalQuantity: number
   totalAmount: number
-  totalTaxAmount: number
-  avgOrderValue: number
-  orders: Array<{
+  averageRate: number
+  minRate: number
+  maxRate: number
+  purchaseCount: number
+  purchases: Array<{
     poNumber: string
     poDate: string
-    status: string
-    category: string
-    priority: string
-    expectedDeliveryDate: string
-    grandTotal: number
-    taxAmount: number
-    itemCount: number
+    vendorName: string
+    vendorId: string
+    quantity: number
+    rate: number
+    amount: number
+    unit: string
   }>
-  performance: {
-    onTimeDeliveryRate: number
-    totalSpent: number
-  }
 }
 
-export interface StatusBreakdown {
-  _id: string
-  count: number
-  totalAmount: number
-}
-
-export interface CategoryBreakdown {
-  _id: string
-  count: number
-  totalAmount: number
-}
-
-export interface SupplierWisePurchaseReport {
-  summary: PurchaseReportSummary
-  statusBreakdown: StatusBreakdown[]
-  categoryBreakdown: CategoryBreakdown[]
-  supplierWiseData: SupplierWiseData[]
-  pagination: {
-    page: number
-    limit: number
-    total: number
-    pages: number
-  }
-  filters: {
-    supplierId?: string
-    status?: string
-    category?: string
-  }
-  dateRange: {
-    start: string
-    end: string
-  }
-  generatedAt: string
-}
-
-export interface PurchaseSummaryReport {
-  summary: {
+export interface CategoryWisePurchaseReport {
+  category: string
+  totalPurchases: number
+  totalQuantity: number
+  totalOrders: number
+  averageOrderValue: number
+  items: Array<{
+    itemId: string
+    itemName: string
+    itemCode: string
+    totalQuantity: number
+    totalAmount: number
+    averageRate: number
+  }>
+  vendors: Array<{
+    vendorId: string
+    vendorName: string
     totalPurchases: number
     totalOrders: number
-    avgOrderValue: number
-    totalTax: number
-  }
-  monthlyTrends: Array<{
-    month: string
-    totalAmount: number
-    orderCount: number
   }>
-  topSuppliers: Array<{
-    _id: string
-    supplierName: string
-    totalAmount: number
-    orderCount: number
-  }>
-  categoryBreakdown: CategoryBreakdown[]
-  dateRange: {
-    start: string
-    end: string
-  }
-  generatedAt: string
 }
 
-export interface PurchaseReportFilters {
-  startDate: string
-  endDate: string
-  supplierId?: string
-  status?: string
-  category?: string
-  page?: number
-  limit?: number
-  format?: string
+export interface DateRangeReport {
+  dateFrom: string
+  dateTo: string
+  totalAmount: number
+  totalQuantity: number
+  totalOrders: number
+  averageOrderValue: number
+  vendorDetails: Array<{
+    vendorId: string
+    vendorName: string
+    totalPurchases: number
+    totalOrders: number
+  }>
+  itemDetails: Array<{
+    itemId: string
+    itemName: string
+    itemCode: string
+    totalQuantity: number
+    totalAmount: number
+  }>
+  poEntries: Array<{
+    poNumber: string
+    poDate: string
+    vendorName: string
+    vendorId: string
+    totalAmount: number
+    totalQuantity: number
+    itemCount: number
+    status: string
+    paymentStatus?: string
+  }>
 }
 
+export interface ExportReportRequest {
+  reportType: 'vendor-wise' | 'item-wise' | 'category-wise' | 'date-range'
+  format: 'xlsx' | 'pdf'
+  filters: ReportFilters
+}
+
+export interface ExportReportResponse {
+  success: boolean
+  data: {
+    downloadUrl: string
+    fileName: string
+    format: string
+    reportType: string
+    recordCount: number
+  }
+}
+
+// API Endpoints
 export const purchaseReportsApi = baseApi.injectEndpoints({
-  overrideExisting: true,
+  overrideExisting: false,
   endpoints: (builder) => ({
-    // Get supplier-wise purchase report
-    getSupplierWisePurchaseReport: builder.query<
-      {
-        success: boolean
-        data: SupplierWisePurchaseReport
-        message: string
-      },
-      PurchaseReportFilters
+    // Get Vendor-wise Purchase Summary
+    getVendorWiseSummary: builder.query<
+      { success: boolean; data: VendorWisePurchaseSummary[] },
+      ReportFilters
     >({
-      query: (params) => ({
-        url: '/reports/generate/purchase/supplier-wise',
-        method: 'GET',
-        params,
+      query: (filters) => ({
+        url: '/purchase/reports/vendor-wise',
+        params: filters,
       }),
-      providesTags: ['PurchaseReport'],
+      providesTags: ['PurchaseReports'],
     }),
 
-    // Get purchase summary report
-    getPurchaseSummaryReport: builder.query<
-      {
-        success: boolean
-        data: PurchaseSummaryReport
-        message: string
-      },
-      {
-        startDate: string
-        endDate: string
-        format?: string
-      }
+    // Get Item-wise Purchase Report
+    getItemWiseReport: builder.query<
+      { success: boolean; data: ItemWisePurchaseReport[] },
+      ReportFilters
     >({
-      query: (params) => ({
-        url: '/reports/generate/purchase/summary',
-        method: 'GET',
-        params,
+      query: (filters) => ({
+        url: '/purchase/reports/item-wise',
+        params: filters,
       }),
-      providesTags: ['PurchaseReport'],
+      providesTags: ['PurchaseReports'],
     }),
 
-    // Export supplier-wise purchase report
-    exportSupplierWisePurchaseReport: builder.mutation<
-      Blob,
-      PurchaseReportFilters & { format: 'pdf' | 'excel' | 'csv' }
+    // Get Category-wise Purchase Report
+    getCategoryWiseReport: builder.query<
+      { success: boolean; data: CategoryWisePurchaseReport[] },
+      ReportFilters
     >({
-      query: (params) => ({
-        url: '/reports/generate/purchase/supplier-wise',
-        method: 'GET',
-        params,
-        responseHandler: (response: Response) => response.blob(),
+      query: (filters) => ({
+        url: '/purchase/reports/category-wise',
+        params: filters,
       }),
+      providesTags: ['PurchaseReports'],
     }),
 
-    // Export purchase summary report
-    exportPurchaseSummaryReport: builder.mutation<
-      Blob,
-      {
-        startDate: string
-        endDate: string
-        format: 'pdf' | 'excel' | 'csv'
-      }
+    // Get Date Range Report
+    getDateRangeReport: builder.query<
+      { success: boolean; data: DateRangeReport },
+      ReportFilters
     >({
-      query: (params) => ({
-        url: '/reports/generate/purchase/summary',
-        method: 'GET',
-        params,
-        responseHandler: (response: Response) => response.blob(),
+      query: (filters) => ({
+        url: '/purchase/reports/date-range',
+        params: filters,
+      }),
+      providesTags: ['PurchaseReports'],
+    }),
+
+    // Export Report (Excel or PDF)
+    exportReport: builder.mutation<ExportReportResponse, ExportReportRequest>({
+      query: ({ reportType, format, filters }) => ({
+        url: `/purchase/reports/export/${reportType}/${format}`,
+        method: 'POST',
+        body: filters,
       }),
     }),
   }),
 })
 
 export const {
-  useGetSupplierWisePurchaseReportQuery,
-  useGetPurchaseSummaryReportQuery,
-  useExportSupplierWisePurchaseReportMutation,
-  useExportPurchaseSummaryReportMutation,
+  useGetVendorWiseSummaryQuery,
+  useGetItemWiseReportQuery,
+  useGetCategoryWiseReportQuery,
+  useGetDateRangeReportQuery,
+  useExportReportMutation,
 } = purchaseReportsApi

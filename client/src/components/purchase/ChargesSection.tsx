@@ -13,9 +13,9 @@ interface ChargesSectionProps {
 
 export function ChargesSection({ formData, updateFormData }: ChargesSectionProps) {
   return (
-    <Card>
+    <Card className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 shadow-sm">
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
+        <CardTitle className="flex items-center gap-2 text-gray-900 dark:text-white">
           <DollarSign className="h-5 w-5" />
           Additional Charges
         </CardTitle>
@@ -23,7 +23,7 @@ export function ChargesSection({ formData, updateFormData }: ChargesSectionProps
       <CardContent>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="space-y-2">
-            <Label>Freight Charges (₹)</Label>
+            <Label className="text-gray-900 dark:text-white">Freight Charges (₹)</Label>
             <Input
               type="number"
               value={formData.freightCharges}
@@ -31,11 +31,12 @@ export function ChargesSection({ formData, updateFormData }: ChargesSectionProps
               placeholder="0.00"
               min="0"
               step="0.01"
+              className="bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
             />
           </div>
 
           <div className="space-y-2">
-            <Label>Packing Charges (₹)</Label>
+            <Label className="text-gray-900 dark:text-white">Packing Charges (₹)</Label>
             <Input
               type="number"
               value={formData.packingCharges}
@@ -43,11 +44,12 @@ export function ChargesSection({ formData, updateFormData }: ChargesSectionProps
               placeholder="0.00"
               min="0"
               step="0.01"
+              className="bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
             />
           </div>
 
           <div className="space-y-2">
-            <Label>Other Charges (₹)</Label>
+            <Label className="text-gray-900 dark:text-white">Other Charges (₹)</Label>
             <Input
               type="number"
               value={formData.otherCharges}
@@ -55,6 +57,7 @@ export function ChargesSection({ formData, updateFormData }: ChargesSectionProps
               placeholder="0.00"
               min="0"
               step="0.01"
+              className="bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
             />
           </div>
         </div>

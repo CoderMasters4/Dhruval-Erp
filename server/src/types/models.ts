@@ -3540,6 +3540,7 @@ export interface IPurchaseOrder extends AuditableDocument {
   priority: 'low' | 'medium' | 'high' | 'urgent';
   category: 'raw_material' | 'finished_goods' | 'consumables' | 'services' | 'capital_goods' | 'maintenance';
   supplier: IPOSupplier;
+  agent?: IPOAgent;
   deliveryInfo: IPODeliveryInfo;
   references: IPOReferences;
   items: IPurchaseOrderItem[];
@@ -3601,6 +3602,13 @@ export interface IPOSupplier {
   phone?: string;
   email?: string;
   address: IInvoiceAddress;
+}
+
+export interface IPOAgent {
+  agentId?: Types.ObjectId;
+  agentCode?: string;
+  agentName?: string;
+  agentContactNumber?: string;
 }
 
 export interface IPODeliveryInfo {

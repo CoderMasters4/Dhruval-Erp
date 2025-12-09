@@ -73,3 +73,5 @@ router.delete('/:id', scrapController.deleteScrap.bind(scrapController));
 export default router;
 
 
+
+
