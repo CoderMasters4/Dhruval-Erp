@@ -114,7 +114,7 @@ export interface DateRangeReport {
 
 export interface ExportReportRequest {
   reportType: 'vendor-wise' | 'item-wise' | 'category-wise' | 'date-range'
-  format: 'xlsx' | 'pdf'
+  format: 'xlsx' | 'pdf' | 'csv'
   filters: ReportFilters
 }
 
@@ -181,12 +181,13 @@ export const purchaseReportsApi = baseApi.injectEndpoints({
       providesTags: ['PurchaseReports'],
     }),
 
-    // Export Report (Excel or PDF)
-    exportReport: builder.mutation<ExportReportResponse, ExportReportRequest>({
+    // Export Report (Excel, PDF, or CSV)
+    exportReport: builder.mutation<Blob, ExportReportRequest>({
       query: ({ reportType, format, filters }) => ({
         url: `/purchase/reports/export/${reportType}/${format}`,
         method: 'POST',
         body: filters,
+        responseHandler: (response: Response) => response.blob(),
       }),
     }),
   }),

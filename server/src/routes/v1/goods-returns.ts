@@ -43,6 +43,13 @@ router.get(
 );
 
 /**
+ * @route   GET /api/v1/goods-returns/:id/challan/pdf
+ * @desc    Generate goods return challan PDF
+ * @access  Private
+ */
+router.get('/:id/challan/pdf', goodsReturnController.generateChallanPDF.bind(goodsReturnController));
+
+/**
  * @route   GET /api/v1/goods-returns/:id
  * @desc    Get goods return by ID
  * @access  Private

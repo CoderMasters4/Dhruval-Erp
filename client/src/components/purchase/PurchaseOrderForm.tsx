@@ -326,33 +326,28 @@ export function PurchaseOrderForm({ onSuccess, onCancel, isSubmitting, setIsSubm
         poDate: formData.poDate,
         expectedDeliveryDate: formData.expectedDeliveryDate,
         financialYear: formData.financialYear,
-        poType: 'standard' as const, // Default
-        priority: 'medium' as const, // Default
-        category: 'raw_material' as const, // Default
+        poType: 'standard' as 'standard' | 'blanket' | 'contract' | 'planned' | 'emergency' | 'service' | 'capital',
+        priority: 'medium' as 'low' | 'medium' | 'high' | 'urgent',
+        category: 'raw_material' as 'raw_material' | 'finished_goods' | 'consumables' | 'services' | 'capital_goods' | 'maintenance',
         // Supplier OR Agent (not both)
-        supplier: (() => {
-          if (!formData.selectedSupplierId || !formData.selectedSupplier) {
-            throw new Error('Supplier is required. Please select a supplier.')
+        supplier: formData.selectedSupplierId && formData.selectedSupplier ? {
+          supplierId: formData.selectedSupplier._id || '',
+          supplierCode: formData.selectedSupplier.supplierCode,
+          supplierName: formData.selectedSupplier.supplierName,
+          gstin: formData.selectedSupplier.registrationDetails?.gstin || '',
+          pan: formData.selectedSupplier.registrationDetails?.pan || '',
+          contactPerson: formData.selectedSupplier.contactPersons?.[0]?.name || '',
+          phone: formData.selectedSupplier.contactInfo?.primaryPhone || '',
+          email: formData.selectedSupplier.contactInfo?.primaryEmail || '',
+          address: {
+            addressLine1: formData.selectedSupplier.addresses?.[0]?.addressLine1 || '',
+            addressLine2: formData.selectedSupplier.addresses?.[0]?.addressLine2 || '',
+            city: formData.selectedSupplier.addresses?.[0]?.city || '',
+            state: formData.selectedSupplier.addresses?.[0]?.state || '',
+            pincode: formData.selectedSupplier.addresses?.[0]?.pincode || '',
+            country: formData.selectedSupplier.addresses?.[0]?.country || 'India'
           }
-          return {
-            supplierId: formData.selectedSupplier._id || '',
-            supplierCode: formData.selectedSupplier.supplierCode,
-            supplierName: formData.selectedSupplier.supplierName,
-            gstin: formData.selectedSupplier.registrationDetails?.gstin || '',
-            pan: formData.selectedSupplier.registrationDetails?.pan || '',
-            contactPerson: formData.selectedSupplier.contactPersons?.[0]?.name || '',
-            phone: formData.selectedSupplier.contactInfo?.primaryPhone || '',
-            email: formData.selectedSupplier.contactInfo?.primaryEmail || '',
-            address: {
-              addressLine1: formData.selectedSupplier.addresses?.[0]?.addressLine1 || '',
-              addressLine2: formData.selectedSupplier.addresses?.[0]?.addressLine2 || '',
-              city: formData.selectedSupplier.addresses?.[0]?.city || '',
-              state: formData.selectedSupplier.addresses?.[0]?.state || '',
-              pincode: formData.selectedSupplier.addresses?.[0]?.pincode || '',
-              country: formData.selectedSupplier.addresses?.[0]?.country || 'India'
-            }
-          }
-        })(),
+        } : undefined,
         deliveryInfo: {
           deliveryAddress: {
             addressLine1: formData.selectedWarehouse?.address?.addressLine1 || '',
@@ -461,12 +456,12 @@ export function PurchaseOrderForm({ onSuccess, onCancel, isSubmitting, setIsSubm
         if (item.itemType === 'new') {
           try {
             // Resolve categoryId to category name
-            let categoryPrimary = 'raw_material'
+            let categoryPrimary: string = 'raw_material'
             let categorySecondary = ''
             if (item.categoryId) {
               const selectedCategory = categories.find((cat: any) => cat._id === item.categoryId)
               if (selectedCategory) {
-                categoryPrimary = selectedCategory.name
+                categoryPrimary = typeof selectedCategory.name === 'string' ? selectedCategory.name : 'raw_material'
               }
             }
 

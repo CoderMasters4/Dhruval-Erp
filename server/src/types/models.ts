@@ -3539,7 +3539,7 @@ export interface IPurchaseOrder extends AuditableDocument {
   poType: 'standard' | 'blanket' | 'contract' | 'planned' | 'emergency' | 'service' | 'capital';
   priority: 'low' | 'medium' | 'high' | 'urgent';
   category: 'raw_material' | 'finished_goods' | 'consumables' | 'services' | 'capital_goods' | 'maintenance';
-  supplier: IPOSupplier;
+  supplier?: IPOSupplier; // Optional - can have either supplier OR agent
   agent?: IPOAgent;
   deliveryInfo: IPODeliveryInfo;
   references: IPOReferences;
@@ -3593,15 +3593,15 @@ export interface IPurchaseOrder extends AuditableDocument {
 }
 
 export interface IPOSupplier {
-  supplierId: Types.ObjectId;
-  supplierCode: string;
-  supplierName: string;
+  supplierId?: Types.ObjectId;
+  supplierCode?: string;
+  supplierName?: string;
   gstin?: string;
   pan?: string;
   contactPerson?: string;
   phone?: string;
   email?: string;
-  address: IInvoiceAddress;
+  address?: IInvoiceAddress;
 }
 
 export interface IPOAgent {

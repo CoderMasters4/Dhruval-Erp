@@ -3,6 +3,8 @@ import { BaseController } from './BaseController';
 import { JobWorkService, CreateJobWorkData, UpdateJobWorkData } from '../services/JobWorkService';
 import { IJobWorkDocument } from '../models/JobWork';
 import { PDFDocument, StandardFonts, rgb } from 'pdf-lib';
+import * as fs from 'fs';
+import * as path from 'path';
 
 export class JobWorkController extends BaseController<IJobWorkDocument> {
   private jobWorkService: JobWorkService;
@@ -225,7 +227,7 @@ export class JobWorkController extends BaseController<IJobWorkDocument> {
 
   /**
    * Generate Job Work Challan PDF
-   * Excludes party details (only job worker, materials, dates, and job work info)
+   * Professional format with logo matching the provided design
    */
   async generateChallanPDF(req: Request, res: Response): Promise<void> {
     try {
@@ -246,169 +248,399 @@ export class JobWorkController extends BaseController<IJobWorkDocument> {
       let page = pdfDoc.addPage();
       const { width, height } = page.getSize();
       const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
+      const boldFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
 
-      let y = height - 50;
-      const lineHeight = 16;
+      // Try to load and embed logo
+      let logoImage: any = null;
+      try {
+        // Try multiple possible paths for the logo
+        const possiblePaths = [
+          path.join(process.cwd(), '..', 'client', 'public', 'logo.png'), // From server directory
+          path.join(process.cwd(), 'client', 'public', 'logo.png'), // If running from root
+          path.join(__dirname, '..', '..', '..', 'client', 'public', 'logo.png'), // From compiled dist
+        ];
+        
+        let logoPath: string | null = null;
+        for (const possiblePath of possiblePaths) {
+          if (fs.existsSync(possiblePath)) {
+            logoPath = possiblePath;
+            break;
+          }
+        }
+        
+        if (logoPath) {
+          const logoBytes = fs.readFileSync(logoPath);
+          logoImage = await pdfDoc.embedPng(logoBytes);
+        }
+      } catch (logoError) {
+        console.warn('Logo not found, continuing without logo:', logoError);
+      }
 
-      const drawLine = (text: string, size = 12, x: number = 50) => {
-        page.drawText(text, {
+      let y = height - 30;
+      const lineHeight = 14;
+      const margin = 50;
+      const rightMargin = width - margin;
+
+      // Draw border
+      page.drawRectangle({
+        x: margin - 5,
+        y: margin - 5,
+        width: width - 2 * (margin - 5),
+        height: height - 2 * (margin - 5),
+        borderColor: rgb(0, 0, 0),
+        borderWidth: 1,
+      });
+
+      // Header Section with Logo at Top Center
+      const headerY = y;
+      if (logoImage) {
+        const logoSize = 50;
+        const logoX = (width - logoSize) / 2; // Center the logo
+        page.drawImage(logoImage, {
+          x: logoX,
+          y: headerY - logoSize,
+          width: logoSize,
+          height: logoSize,
+        });
+        y -= logoSize + 10; // Space after logo
+      }
+
+      // Title centered below logo
+      const title = 'JOB WORK CHALLAN';
+      const titleSize = 20;
+      const titleWidth = boldFont.widthOfTextAtSize(title, titleSize);
+      const titleX = (width - titleWidth) / 2;
+      page.drawText(title, {
+        x: titleX,
+        y: y - 5,
+        size: titleSize,
+        font: boldFont,
+        color: rgb(0, 0, 0),
+      });
+
+      y = headerY - 50;
+
+      // Draw horizontal line after header
+      page.drawLine({
+        start: { x: margin, y },
+        end: { x: rightMargin, y },
+        thickness: 1,
+        color: rgb(0, 0, 0),
+      });
+      y -= 20;
+
+      // Challan Details Section
+      const drawLabelValue = (label: string, value: string, x: number, yPos: number, labelSize = 10, valueSize = 10) => {
+        page.drawText(label, {
           x,
-          y,
-          size,
+          y: yPos,
+          size: labelSize,
+          font: boldFont,
+          color: rgb(0, 0, 0),
+        });
+        const labelWidth = boldFont.widthOfTextAtSize(label, labelSize);
+        page.drawText(value, {
+          x: x + labelWidth + 5,
+          y: yPos,
+          size: valueSize,
           font,
           color: rgb(0, 0, 0),
         });
-        y -= lineHeight;
       };
 
-      const ensureSpace = () => {
-        if (y < 80) {
-          page = pdfDoc.addPage();
-          y = height - 50;
-        }
-      };
+      // Left Column - Challan Info
+      const leftColX = margin;
+      let currentY = y;
 
-      // Header - centered title
-      const title = 'JOB WORK CHALLAN';
-      const titleSize = 18;
-      const titleWidth = font.widthOfTextAtSize(title, titleSize);
-      page.drawText(title, {
-        x: (width - titleWidth) / 2,
+      drawLabelValue('Challan Number:', jobWork.challanNumber || '-', leftColX, currentY);
+      currentY -= lineHeight + 5;
+
+      const challanDate = jobWork.challanDate
+        ? new Date(jobWork.challanDate).toLocaleDateString('en-IN', {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+          })
+        : '-';
+      drawLabelValue('Challan Date:', challanDate, leftColX, currentY);
+      currentY -= lineHeight + 5;
+
+      // Right Column - Job Work Info
+      const rightColX = width / 2 + 20;
+      let rightY = y;
+
+      drawLabelValue('Job Worker:', jobWork.jobWorkerName || '-', rightColX, rightY);
+      rightY -= lineHeight + 5;
+
+      drawLabelValue('Job Work Type:', jobWork.jobWorkType || '-', rightColX, rightY);
+      rightY -= lineHeight + 5;
+
+      y = Math.min(currentY, rightY) - 15;
+
+      // Draw horizontal line
+      page.drawLine({
+        start: { x: margin, y },
+        end: { x: rightMargin, y },
+        thickness: 0.5,
+        color: rgb(0.5, 0.5, 0.5),
+      });
+      y -= 20;
+
+      // Material Details Section
+      page.drawText('MATERIAL DETAILS', {
+        x: margin,
         y,
-        size: titleSize,
-        font,
+        size: 14,
+        font: boldFont,
         color: rgb(0, 0, 0),
       });
-      y -= lineHeight + 4;
+      y -= lineHeight + 10;
 
-      // Basic details (left column)
-      drawLine(`Challan Number : ${jobWork.challanNumber || '-'}`);
-      drawLine(
-        `Challan Date   : ${
-          jobWork.challanDate ? new Date(jobWork.challanDate).toLocaleDateString('en-IN') : '-'
-        }`,
-      );
-      drawLine(`Job Work ID    : ${jobWork._id.toString()}`);
+      // Material Table Header
+      const tableTopY = y;
+      const col1X = margin;
+      const col2X = margin + 80;
+      const col3X = margin + 280;
+      const col4X = margin + 350;
+      const col5X = margin + 420;
+
+      // Draw table header background
+      page.drawRectangle({
+        x: margin,
+        y: y - 5,
+        width: rightMargin - margin,
+        height: lineHeight + 10,
+        color: rgb(0.9, 0.9, 0.9),
+      });
+
+      page.drawText('S.No', { x: col1X, y, size: 11, font: boldFont, color: rgb(0, 0, 0) });
+      page.drawText('Item Name', { x: col2X, y, size: 11, font: boldFont, color: rgb(0, 0, 0) });
+      page.drawText('Quantity', { x: col3X, y, size: 11, font: boldFont, color: rgb(0, 0, 0) });
+      page.drawText('Unit', { x: col4X, y, size: 11, font: boldFont, color: rgb(0, 0, 0) });
+      page.drawText('Rate', { x: col5X, y, size: 11, font: boldFont, color: rgb(0, 0, 0) });
+
+      y -= lineHeight + 10;
+
+      // Draw header underline
+      page.drawLine({
+        start: { x: margin, y },
+        end: { x: rightMargin, y },
+        thickness: 1,
+        color: rgb(0, 0, 0),
+      });
       y -= 10;
 
-      drawLine(`Job Worker     : ${jobWork.jobWorkerName || '-'}`);
-      drawLine(`Job Work Type  : ${jobWork.jobWorkType || '-'}`);
-      drawLine(`Quantity       : ${jobWork.quantity} ${jobWork.unit || ''}`);
-      drawLine(`Rate           : ${jobWork.jobWorkerRate || 0}`);
-      drawLine(
-        `Expected Delivery : ${
-          jobWork.expectedDelivery
-            ? new Date(jobWork.expectedDelivery).toLocaleDateString('en-IN')
-            : '-'
-        }`,
-      );
+      // Material rows
+      if (jobWork.materialProvided && jobWork.materialProvided.length > 0) {
+        jobWork.materialProvided.forEach((m: any, index: number) => {
+          if (y < 150) {
+            page = pdfDoc.addPage();
+            y = height - 50;
+            // Redraw header on new page
+            page.drawRectangle({
+              x: margin,
+              y: y - 5,
+              width: rightMargin - margin,
+              height: lineHeight + 10,
+              color: rgb(0.9, 0.9, 0.9),
+            });
+            page.drawText('S.No', { x: col1X, y, size: 11, font: boldFont, color: rgb(0, 0, 0) });
+            page.drawText('Item Name', { x: col2X, y, size: 11, font: boldFont, color: rgb(0, 0, 0) });
+            page.drawText('Quantity', { x: col3X, y, size: 11, font: boldFont, color: rgb(0, 0, 0) });
+            page.drawText('Unit', { x: col4X, y, size: 11, font: boldFont, color: rgb(0, 0, 0) });
+            page.drawText('Rate', { x: col5X, y, size: 11, font: boldFont, color: rgb(0, 0, 0) });
+            y -= lineHeight + 10;
+            page.drawLine({
+              start: { x: margin, y },
+              end: { x: rightMargin, y },
+              thickness: 1,
+              color: rgb(0, 0, 0),
+            });
+            y -= 10;
+          }
+
+          page.drawText(`${index + 1}.`, { x: col1X, y, size: 10, font, color: rgb(0, 0, 0) });
+          page.drawText(m.itemName || '-', { x: col2X, y, size: 10, font, color: rgb(0, 0, 0) });
+          page.drawText(String(m.quantity ?? '-'), { x: col3X, y, size: 10, font, color: rgb(0, 0, 0) });
+          page.drawText(m.unit || '-', { x: col4X, y, size: 10, font, color: rgb(0, 0, 0) });
+          page.drawText(m.rate ? `Rs. ${m.rate}` : '-', { x: col5X, y, size: 10, font, color: rgb(0, 0, 0) });
+          y -= lineHeight + 5;
+        });
+      } else {
+        page.drawText('No materials provided', { x: margin, y, size: 10, font, color: rgb(0.5, 0.5, 0.5) });
+        y -= lineHeight;
+      }
+
+      y -= 15;
+
+      // Draw horizontal line
+      page.drawLine({
+        start: { x: margin, y },
+        end: { x: rightMargin, y },
+        thickness: 0.5,
+        color: rgb(0.5, 0.5, 0.5),
+      });
+      y -= 20;
+
+      // Job Work Details Section
+      page.drawText('JOB WORK INFORMATION', {
+        x: margin,
+        y,
+        size: 14,
+        font: boldFont,
+        color: rgb(0, 0, 0),
+      });
+      y -= lineHeight + 10;
+
+      const detailsLeftX = margin;
+      const detailsRightX = width / 2 + 20;
+      let detailsY = y;
+
+      drawLabelValue('Quantity:', `${jobWork.quantity} ${jobWork.unit || ''}`, detailsLeftX, detailsY);
+      detailsY -= lineHeight + 5;
+
+      drawLabelValue('Rate:', `Rs. ${jobWork.jobWorkerRate || 0}`, detailsLeftX, detailsY);
+      detailsY -= lineHeight + 5;
+
+      const expectedDelivery = jobWork.expectedDelivery
+        ? new Date(jobWork.expectedDelivery).toLocaleDateString('en-IN', {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+          })
+        : '-';
+      drawLabelValue('Expected Delivery:', expectedDelivery, detailsLeftX, detailsY);
+      detailsY -= lineHeight + 5;
+
       if (jobWork.actualDelivery) {
-        drawLine(
-          `Actual Delivery   : ${new Date(jobWork.actualDelivery).toLocaleDateString('en-IN')}`,
-        );
+        const actualDelivery = new Date(jobWork.actualDelivery).toLocaleDateString('en-IN', {
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit',
+        });
+        drawLabelValue('Actual Delivery:', actualDelivery, detailsLeftX, detailsY);
+        detailsY -= lineHeight + 5;
       }
-      y -= 10;
 
-      drawLine(`Status         : ${jobWork.status}`);
-      drawLine(
-        `Payment        : ${jobWork.paymentStatus || 'pending'}${
-          jobWork.paymentAmount ? ` (Rs. ${jobWork.paymentAmount})` : ''
-        }`,
-      );
+      let detailsRightY = y;
+      drawLabelValue('Status:', jobWork.status || '-', detailsRightX, detailsRightY);
+      detailsRightY -= lineHeight + 5;
+
+      drawLabelValue('Payment Status:', jobWork.paymentStatus || 'pending', detailsRightX, detailsRightY);
+      detailsRightY -= lineHeight + 5;
+
       if (jobWork.jobWorkCost) {
-        drawLine(`Job Work Cost  : Rs. ${jobWork.jobWorkCost}`);
+        drawLabelValue('Total Cost:', `Rs. ${jobWork.jobWorkCost}`, detailsRightX, detailsRightY);
+        detailsRightY -= lineHeight + 5;
       }
-      y -= 10;
 
-      // Transport Details section
+      y = Math.min(detailsY, detailsRightY) - 15;
+
+      // Transport Details (if available)
       if (jobWork.transportName || jobWork.transportNumber) {
-        drawLine('TRANSPORT DETAILS:', 14);
-        ensureSpace();
+        page.drawLine({
+          start: { x: margin, y },
+          end: { x: rightMargin, y },
+          thickness: 0.5,
+          color: rgb(0.5, 0.5, 0.5),
+        });
+        y -= 20;
+
+        page.drawText('TRANSPORT DETAILS', {
+          x: margin,
+          y,
+          size: 14,
+          font: boldFont,
+          color: rgb(0, 0, 0),
+        });
+        y -= lineHeight + 10;
+
         if (jobWork.transportName) {
-          drawLine(`Transport Name   : ${jobWork.transportName}`);
+          drawLabelValue('Transport Name:', jobWork.transportName, margin, y);
+          y -= lineHeight + 5;
         }
         if (jobWork.transportNumber) {
-          drawLine(`Transport Number : ${jobWork.transportNumber}`);
+          drawLabelValue('Transport Number:', jobWork.transportNumber, margin, y);
+          y -= lineHeight + 5;
         }
-        y -= 10;
       }
 
-      // Material Provided section
-      drawLine('MATERIAL PROVIDED:', 14);
-      ensureSpace();
+      y -= 15;
 
-      const drawMaterialsHeader = () => {
-        // Table header: S.No | Item | Qty | Unit
-        page.drawText('S.No', { x: 50, y, size: 11, font, color: rgb(0, 0, 0) });
-        page.drawText('Item', { x: 90, y, size: 11, font, color: rgb(0, 0, 0) });
-        page.drawText('Qty', { x: 360, y, size: 11, font, color: rgb(0, 0, 0) });
-        page.drawText('Unit', { x: 420, y, size: 11, font, color: rgb(0, 0, 0) });
-        y -= lineHeight;
-      };
+      // Remarks Section
+      if (jobWork.remarks) {
+        page.drawLine({
+          start: { x: margin, y },
+          end: { x: rightMargin, y },
+          thickness: 0.5,
+          color: rgb(0.5, 0.5, 0.5),
+        });
+        y -= 20;
 
-      if (jobWork.materialProvided && jobWork.materialProvided.length > 0) {
-        drawMaterialsHeader();
-        jobWork.materialProvided.forEach((m: any, index: number) => {
-          ensureSpace();
-          if (y === height - 50) {
-            // New page: re-draw header
-            drawMaterialsHeader();
+        page.drawText('REMARKS', {
+          x: margin,
+          y,
+          size: 14,
+          font: boldFont,
+          color: rgb(0, 0, 0),
+        });
+        y -= lineHeight + 10;
+
+        const remarkLines = jobWork.remarks.split('\n');
+        remarkLines.forEach((line: string) => {
+          if (y < 100) {
+            page = pdfDoc.addPage();
+            y = height - 50;
           }
-          page.drawText(`${index + 1}.`, {
-            x: 50,
+          page.drawText(line || '-', {
+            x: margin,
             y,
-            size: 11,
-            font,
-            color: rgb(0, 0, 0),
-          });
-          page.drawText(m.itemName || '', {
-            x: 90,
-            y,
-            size: 11,
-            font,
-            color: rgb(0, 0, 0),
-          });
-          page.drawText(String(m.quantity ?? ''), {
-            x: 360,
-            y,
-            size: 11,
-            font,
-            color: rgb(0, 0, 0),
-          });
-          page.drawText(m.unit || '', {
-            x: 420,
-            y,
-            size: 11,
+            size: 10,
             font,
             color: rgb(0, 0, 0),
           });
           y -= lineHeight;
         });
-      } else {
-        drawLine('No materials provided');
       }
 
-      y -= 10;
-      ensureSpace();
-      drawLine('Remarks:', 14);
-      if (jobWork.remarks) {
-        // Simple multi-line wrap for remarks
-        const remarkLines = jobWork.remarks.split('\n');
-        remarkLines.forEach((line: string) => {
-          ensureSpace();
-          drawLine(line, 11);
-        });
-      } else {
-        drawLine('-', 11);
+      // Ensure space for signatures
+      if (y > 120) {
+        y = 120;
+      } else if (y < 80) {
+        page = pdfDoc.addPage();
+        y = height - 50;
       }
 
-      // Signatures at bottom
-      y -= 20;
-      ensureSpace();
-      const sigY = y;
-      drawLine('For Company:', 12, 50);
-      drawLine('Job Worker Signature:', 12, width / 2);
-      y = sigY - 40;
+      // Signature Section
+      page.drawLine({
+        start: { x: margin, y },
+        end: { x: rightMargin, y },
+        thickness: 1,
+        color: rgb(0, 0, 0),
+      });
+      y -= 30;
+
+      const sigLeftX = margin;
+      const sigRightX = width / 2 + 20;
+
+      // Company Signature
+      page.drawText('For Company', {
+        x: sigLeftX,
+        y,
+        size: 12,
+        font: boldFont,
+        color: rgb(0, 0, 0),
+      });
+      y -= 50;
+
+      // Job Worker Signature
+      page.drawText('Job Worker Signature', {
+        x: sigRightX,
+        y: y + 50,
+        size: 12,
+        font: boldFont,
+        color: rgb(0, 0, 0),
+      });
 
       const pdfBytes = await pdfDoc.save();
 

@@ -30,6 +30,7 @@ function ItemRow({
   index,
   formData,
   updateItem,
+  updateFormData,
   removeItem,
   inventoryItems,
   inventoryLoading,
@@ -44,6 +45,7 @@ function ItemRow({
   index: number
   formData: PurchaseOrderFormData
   updateItem: (index: number, field: string, value: any) => void
+  updateFormData: (updates: Partial<PurchaseOrderFormData>) => void
   removeItem: (index: number) => void
   inventoryItems: any[]
   inventoryLoading: boolean
@@ -122,24 +124,44 @@ function ItemRow({
           <Select
             value={item.itemType || 'new'}
             onValueChange={(value) => {
+              console.log('Item type changed to:', value, 'for item index:', index)
               if (value === 'new' || value === 'existing') {
-                updateItem(index, 'itemType', value)
-                if (value === 'existing') {
-                  updateItem(index, 'itemCode', '')
-                  updateItem(index, 'itemName', '')
-                  updateItem(index, 'rate', 0)
+                const updatedItems = [...formData.items]
+                updatedItems[index] = {
+                  ...updatedItems[index],
+                  itemType: value as 'new' | 'existing'
                 }
+                if (value === 'existing') {
+                  updatedItems[index] = {
+                    ...updatedItems[index],
+                    itemCode: '',
+                    itemName: '',
+                    rate: 0,
+                    selectedInventoryItemId: undefined
+                  }
+                }
+                updateFormData({ items: updatedItems })
               }
             }}
           >
             <SelectTrigger className="bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white">
-              <SelectValue />
+              <SelectValue placeholder="Select item type" />
             </SelectTrigger>
-            <SelectContent className="!z-[10060] bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 shadow-lg" position="popper">
-              <SelectItem value="new" className="bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-900 dark:text-white cursor-pointer">
+            <SelectContent
+              className="!z-[10060] bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 shadow-lg"
+              position="popper"
+              sideOffset={4}
+            >
+              <SelectItem
+                value="new"
+                className="bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-900 dark:text-white cursor-pointer"
+              >
                 New Item
               </SelectItem>
-              <SelectItem value="existing" className="bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-900 dark:text-white cursor-pointer">
+              <SelectItem
+                value="existing"
+                className="bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-900 dark:text-white cursor-pointer"
+              >
                 Existing Item
               </SelectItem>
             </SelectContent>
@@ -153,6 +175,7 @@ function ItemRow({
             <Select
               value={item.selectedInventoryItemId || 'none'}
               onValueChange={(value) => {
+                console.log('Existing item changed to:', value, 'for item index:', index)
                 if (value === 'none') {
                   const updatedItems = [...formData.items]
                   updatedItems[index] = {
@@ -164,12 +187,7 @@ function ItemRow({
                     rate: 0,
                     unitId: ''
                   }
-                  updateItem(index, 'selectedInventoryItemId', undefined)
-                  updateItem(index, 'itemId', undefined)
-                  updateItem(index, 'itemCode', '')
-                  updateItem(index, 'itemName', '')
-                  updateItem(index, 'rate', 0)
-                  updateItem(index, 'unitId', '')
+                  updateFormData({ items: updatedItems })
                 } else {
                   const selectedItem = inventoryItems.find(inv => inv._id === value)
                   if (selectedItem) {
@@ -197,25 +215,26 @@ function ItemRow({
                       totalTaxAmount: totalTaxAmt,
                       lineTotal: taxableAmt + totalTaxAmt
                     }
-                    // Update all fields at once
-                    Object.keys(updatedItems[index]).forEach(key => {
-                      if (key !== 'discountAmount' && key !== 'taxableAmount' && key !== 'totalTaxAmount' && key !== 'lineTotal') {
-                        updateItem(index, key, (updatedItems[index] as any)[key])
-                      }
-                    })
-                    // Then update totals
-                    updateItem(index, 'discountAmount', discountAmt)
-                    updateItem(index, 'taxableAmount', taxableAmt)
-                    updateItem(index, 'totalTaxAmount', totalTaxAmt)
-                    updateItem(index, 'lineTotal', taxableAmt + totalTaxAmt)
+                    // Batch update all fields at once
+                    updateFormData({ items: updatedItems })
                   }
                 }
               }}
             >
-              <SelectTrigger className="bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white">
+              <SelectTrigger
+                className="bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white"
+                onClick={(e) => {
+                  console.log('Existing item SelectTrigger clicked')
+                  e.stopPropagation()
+                }}
+              >
                 <SelectValue placeholder="Select existing item" />
               </SelectTrigger>
-              <SelectContent className="!z-[10060] bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 shadow-lg max-h-[300px]" position="popper">
+              <SelectContent
+                className="!z-[10060] bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 shadow-lg max-h-[300px]"
+                position="popper"
+                onCloseAutoFocus={(e) => e.preventDefault()}
+              >
                 {inventoryLoading ? (
                   <div className="px-2 py-1.5 text-sm text-gray-500 dark:text-gray-400">
                     Loading inventory items...
@@ -230,14 +249,25 @@ function ItemRow({
                   </div>
                 ) : (
                   <>
-                    <SelectItem value="none" className="bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-900 dark:text-white cursor-pointer">
+                    <SelectItem
+                      value="none"
+                      className="bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-900 dark:text-white cursor-pointer"
+                      onClick={(e) => {
+                        console.log('None item clicked')
+                        e.stopPropagation()
+                      }}
+                    >
                       None
                     </SelectItem>
                     {inventoryItems.map((invItem) => (
                       <SelectItem
                         key={invItem._id}
-                        value={invItem._id}
+                        value={invItem._id || ''}
                         className="bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-900 dark:text-white cursor-pointer"
+                        onClick={(e) => {
+                          console.log('Inventory item clicked:', invItem._id, invItem.itemName)
+                          e.stopPropagation()
+                        }}
                       >
                         {invItem.itemName} ({invItem.itemCode}) - Stock: {invItem.stock?.currentStock || 0} {invItem.stock?.unit || 'pcs'} - ₹{invItem.pricing?.costPrice || 0}
                       </SelectItem>
@@ -271,23 +301,74 @@ function ItemRow({
               <Select
                 value={item.categoryId || ''}
                 onValueChange={(value) => {
-                  updateItem(index, 'categoryId', value)
-                  updateItem(index, 'subcategoryId', '') // Clear subcategory when category changes
+                  console.log('Category changed to:', value, 'for item index:', index)
+                  if (!value) return
+
+                  // Batch update: update category and clear subcategory in a single operation
+                  const updatedItems = [...formData.items]
+                  updatedItems[index] = {
+                    ...updatedItems[index],
+                    categoryId: value,
+                    subcategoryId: '' // Clear subcategory when category changes
+                  }
+
+                  // Recalculate totals for display
+                  const itemToUpdate = updatedItems[index]
+                  const discountAmount = (itemToUpdate.discount?.type === 'percentage')
+                    ? (itemToUpdate.quantity * itemToUpdate.rate * (itemToUpdate.discount?.value || 0) / 100)
+                    : (itemToUpdate.discount?.value || 0)
+
+                  const discountAmt = discountAmount || 0
+                  const taxableAmt = (itemToUpdate.quantity * itemToUpdate.rate) - discountAmt
+                  const taxRate = 18
+                  const totalTaxAmt = taxableAmt * taxRate / 100
+
+                  updatedItems[index] = {
+                    ...updatedItems[index],
+                    discountAmount: discountAmt,
+                    taxableAmount: taxableAmt,
+                    totalTaxAmount: totalTaxAmt,
+                    lineTotal: taxableAmt + totalTaxAmt
+                  }
+
+                  // Use updateFormData to batch the update
+                  updateFormData({ items: updatedItems })
                 }}
               >
-                <SelectTrigger className={`bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white ${selectedCategory ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-300 dark:border-blue-600' : ''}`}>
+                <SelectTrigger
+                  className={`bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white ${selectedCategory ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-300 dark:border-blue-600' : ''}`}
+                  onClick={(e) => {
+                    console.log('Category SelectTrigger clicked')
+                    e.stopPropagation()
+                  }}
+                >
                   <SelectValue placeholder="Select Category" />
                 </SelectTrigger>
-                <SelectContent className="!z-[10060] bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 shadow-lg" position="popper">
-                  {categories.map((cat: any) => (
-                    <SelectItem
-                      key={cat._id}
-                      value={cat._id}
-                      className="bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-900 dark:text-white cursor-pointer"
-                    >
-                      {cat.name}
-                    </SelectItem>
-                  ))}
+                <SelectContent
+                  className="!z-[10060] bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 shadow-lg"
+                  position="popper"
+                  sideOffset={4}
+                  onCloseAutoFocus={(e) => e.preventDefault()}
+                >
+                  {categories.length === 0 ? (
+                    <div className="px-2 py-1.5 text-sm text-gray-500 dark:text-gray-400">
+                      No categories available. Click "New" to create one.
+                    </div>
+                  ) : (
+                    categories.map((cat: any) => (
+                      <SelectItem
+                        key={cat._id}
+                        value={cat._id || ''}
+                        className="bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-900 dark:text-white cursor-pointer"
+                        onClick={(e) => {
+                          console.log('Category item clicked:', cat._id, cat.name)
+                          e.stopPropagation()
+                        }}
+                      >
+                        {cat.name}
+                      </SelectItem>
+                    ))
+                  )}
                 </SelectContent>
               </Select>
             </div>
@@ -311,19 +392,38 @@ function ItemRow({
               </div>
               <Select
                 value={item.subcategoryId || ''}
-                onValueChange={(value) => updateItem(index, 'subcategoryId', value)}
+                onValueChange={(value) => {
+                  console.log('Subcategory changed to:', value, 'for item index:', index)
+                  if (!value) return
+                  updateItem(index, 'subcategoryId', value)
+                }}
                 disabled={!item.categoryId}
               >
-                <SelectTrigger className={`bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white ${!item.categoryId ? 'bg-gray-100 dark:bg-gray-800 cursor-not-allowed' : ''}`}>
+                <SelectTrigger
+                  className={`bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white ${!item.categoryId ? 'bg-gray-100 dark:bg-gray-800 cursor-not-allowed' : ''}`}
+                  onClick={(e) => {
+                    console.log('Subcategory SelectTrigger clicked')
+                    e.stopPropagation()
+                  }}
+                >
                   <SelectValue placeholder={item.categoryId ? "Select Subcategory" : "Select Category First"} />
                 </SelectTrigger>
-                <SelectContent className="!z-[10060] bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 shadow-lg" position="popper">
+                <SelectContent
+                  className="!z-[10060] bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 shadow-lg"
+                  position="popper"
+                  sideOffset={4}
+                  onCloseAutoFocus={(e) => e.preventDefault()}
+                >
                   {subcategories.length > 0 ? (
                     subcategories.map((sub: any) => (
                       <SelectItem
                         key={sub._id}
-                        value={sub._id}
+                        value={sub._id || ''}
                         className="bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-900 dark:text-white cursor-pointer"
+                        onClick={(e) => {
+                          console.log('Subcategory item clicked:', sub._id, sub.name)
+                          e.stopPropagation()
+                        }}
                       >
                         {sub.name}
                       </SelectItem>
@@ -405,21 +505,46 @@ function ItemRow({
               </div>
               <Select
                 value={item.unitId || ''}
-                onValueChange={(value) => updateItem(index, 'unitId', value)}
+                onValueChange={(value) => {
+                  console.log('Unit changed to:', value, 'for item index:', index)
+                  if (!value) return
+                  updateItem(index, 'unitId', value)
+                }}
               >
-                <SelectTrigger className={`bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white ${selectedUnit ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-300 dark:border-blue-600' : ''}`}>
+                <SelectTrigger
+                  className={`bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white ${selectedUnit ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-300 dark:border-blue-600' : ''}`}
+                  onClick={(e) => {
+                    console.log('Unit SelectTrigger clicked')
+                    e.stopPropagation()
+                  }}
+                >
                   <SelectValue placeholder="Select Unit" />
                 </SelectTrigger>
-                <SelectContent className="!z-[10060] bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 shadow-lg" position="popper">
-                  {units.map((unit: any) => (
-                    <SelectItem
-                      key={unit._id}
-                      value={unit._id}
-                      className="bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-900 dark:text-white cursor-pointer"
-                    >
-                      {unit.name} ({unit.symbol})
-                    </SelectItem>
-                  ))}
+                <SelectContent
+                  className="!z-[10060] bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 shadow-lg"
+                  position="popper"
+                  sideOffset={4}
+                  onCloseAutoFocus={(e) => e.preventDefault()}
+                >
+                  {units.length === 0 ? (
+                    <div className="px-2 py-1.5 text-sm text-gray-500 dark:text-gray-400">
+                      No units available. Click "New" to create one.
+                    </div>
+                  ) : (
+                    units.map((unit: any) => (
+                      <SelectItem
+                        key={unit._id}
+                        value={unit._id || ''}
+                        className="bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-900 dark:text-white cursor-pointer"
+                        onClick={(e) => {
+                          console.log('Unit item clicked:', unit._id, unit.name)
+                          e.stopPropagation()
+                        }}
+                      >
+                        {unit.name} ({unit.symbol})
+                      </SelectItem>
+                    ))
+                  )}
                 </SelectContent>
               </Select>
             </div>
@@ -683,6 +808,7 @@ export function ItemsSection({ formData, updateFormData }: ItemsSectionProps) {
                 index={index}
                 formData={formData}
                 updateItem={updateItem}
+                updateFormData={updateFormData}
                 removeItem={removeItem}
                 inventoryItems={inventoryItems}
                 inventoryLoading={inventoryLoading}

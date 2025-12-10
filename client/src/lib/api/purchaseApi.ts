@@ -81,22 +81,22 @@ export interface CreatePurchaseOrderRequest {
   poType: 'standard' | 'blanket' | 'contract' | 'planned' | 'emergency' | 'service' | 'capital'
   priority: 'low' | 'medium' | 'high' | 'urgent'
   category: 'raw_material' | 'finished_goods' | 'consumables' | 'services' | 'capital_goods' | 'maintenance'
-  supplier: {
-    supplierId: string
-    supplierCode: string
-    supplierName: string
-    gstin: string
-    pan: string
-    contactPerson: string
-    phone: string
-    email: string
-    address: {
-      addressLine1: string
-      addressLine2: string
-      city: string
-      state: string
-      pincode: string
-      country: string
+  supplier?: {
+    supplierId?: string
+    supplierCode?: string
+    supplierName?: string
+    gstin?: string
+    pan?: string
+    contactPerson?: string
+    phone?: string
+    email?: string
+    address?: {
+      addressLine1?: string
+      addressLine2?: string
+      city?: string
+      state?: string
+      pincode?: string
+      country?: string
     }
   }
   deliveryInfo: {
