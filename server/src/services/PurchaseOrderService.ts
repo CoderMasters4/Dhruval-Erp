@@ -580,8 +580,9 @@ export class PurchaseOrderService extends BaseService<IPurchaseOrder> {
       throw new AppError('Company ID is required', 400);
     }
 
-    if (!orderData.supplier?.supplierId) {
-      throw new AppError('Supplier ID is required', 400);
+    // Either supplier OR agent must be present
+    if (!orderData.supplier?.supplierId && !orderData.agent?.agentId) {
+      throw new AppError('Either supplier or agent is required', 400);
     }
 
     if (!orderData.items || orderData.items.length === 0) {

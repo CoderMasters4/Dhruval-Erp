@@ -112,22 +112,22 @@ const PurchaseOrderSchema = new Schema<IPurchaseOrder>({
     required: true
   },
 
-  // Supplier Information
+  // Supplier Information (Optional - can have either supplier OR agent)
   supplier: {
-    supplierId: { type: Schema.Types.ObjectId, ref: 'Supplier', required: true, index: true },
-    supplierCode: { type: String, required: true },
-    supplierName: { type: String, required: true },
+    supplierId: { type: Schema.Types.ObjectId, ref: 'Supplier', required: false, index: true },
+    supplierCode: { type: String, required: false },
+    supplierName: { type: String, required: false },
     gstin: { type: String },
     pan: { type: String },
     contactPerson: { type: String },
     phone: { type: String },
     email: { type: String },
     address: {
-      addressLine1: { type: String, required: true },
+      addressLine1: { type: String, required: false },
       addressLine2: { type: String },
-      city: { type: String, required: true },
-      state: { type: String, required: true },
-      pincode: { type: String, required: true },
+      city: { type: String, required: false },
+      state: { type: String, required: false },
+      pincode: { type: String, required: false },
       country: { type: String, default: 'India' }
     }
   },

@@ -111,12 +111,21 @@ export default function SupplierWisePurchaseReportPage() {
         }
       }).unwrap()
       
-      // Handle the response (could be a URL or blob)
-      if (result.data?.downloadUrl) {
-        window.open(result.data.downloadUrl, '_blank')
-      } else {
-        toast.error('Export completed but download URL not available')
-      }
+      // Handle blob response - create download link
+      const url = window.URL.createObjectURL(result)
+      const link = document.createElement('a')
+      link.href = url
+      
+      // Generate filename
+      const date = new Date().toISOString().split('T')[0]
+      const extension = exportFormat === 'xlsx' ? 'xlsx' : exportFormat === 'csv' ? 'csv' : 'pdf'
+      const fileName = `supplier-wise-purchase-report-${date}.${extension}`
+      
+      link.download = fileName
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      window.URL.revokeObjectURL(url)
       
       toast.success(`Report exported as ${exportFormat.toUpperCase()}`)
     } catch (error) {
