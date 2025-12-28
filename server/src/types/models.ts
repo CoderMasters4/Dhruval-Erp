@@ -3574,6 +3574,7 @@ export interface IPurchaseOrder extends AuditableDocument {
   performance: IPOPerformance;
   terms?: string;
   notes?: string;
+  paymentNotes?: string;
   internalNotes?: string;
   specialInstructions?: string;
   tags: string[];

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { useSelector } from 'react-redux'
 import { selectTheme } from '@/lib/features/ui/uiSlice'
 import {
@@ -22,14 +23,17 @@ import {
 } from 'lucide-react'
 import { AppLayout } from '@/components/layout/AppLayout'
 import { PurchaseHeader } from '@/components/ui/PageHeader'
+import { Button } from '@/components/ui/Button'
 import { selectCurrentUser, selectIsSuperAdmin } from '@/lib/features/auth/authSlice'
-import { useGetPurchaseOrdersQuery, useGetPurchaseOrderStatsQuery } from '@/lib/api/purchaseOrdersApi'
+import { useGetPurchaseOrdersQuery, useGetPurchaseOrderStatsQuery, useDeletePurchaseOrderMutation } from '@/lib/api/purchaseOrdersApi'
 import { PurchaseOrderViewModal } from '@/components/purchase/PurchaseOrderViewModal'
 import { PurchaseOrderEditModal } from '@/components/purchase/PurchaseOrderEditModal'
 import { QuickStatusUpdate } from '@/components/purchase/QuickStatusUpdate'
 import clsx from 'clsx'
+import toast from 'react-hot-toast'
 
 export default function PurchaseOrdersPage() {
+  const router = useRouter()
   const user = useSelector(selectCurrentUser)
   const isSuperAdmin = useSelector(selectIsSuperAdmin)
   const theme = useSelector(selectTheme)
@@ -43,7 +47,7 @@ export default function PurchaseOrdersPage() {
   const [showEditModal, setShowEditModal] = useState(false)
 
   // Fetch purchase orders data
-  const { data: ordersData, isLoading, error } = useGetPurchaseOrdersQuery({
+  const { data: ordersData, isLoading, error, refetch } = useGetPurchaseOrdersQuery({
     page,
     limit: 10,
     search: searchTerm,
@@ -54,9 +58,16 @@ export default function PurchaseOrdersPage() {
   // Fetch purchase order statistics
   const { data: orderStats } = useGetPurchaseOrderStatsQuery({})
 
-  // Ensure orders is always an array
-  const orders = Array.isArray(ordersData?.data) ? ordersData.data : []
-  const pagination = ordersData?.pagination
+  // Delete mutation
+  const [deletePurchaseOrder, { isLoading: isDeleting }] = useDeletePurchaseOrderMutation()
+
+  // Extract orders and pagination from API response
+  // API returns: { success, message, data: [...orders...] }
+  // Check if data is an array (direct response) or has nested data.data structure
+  const orders = Array.isArray(ordersData?.data)
+    ? ordersData.data
+    : ordersData?.data?.data || []
+  const pagination = ordersData?.data?.pagination
 
   // Debug logging in development
   if (process.env.NODE_ENV === 'development' && ordersData) {
@@ -64,7 +75,9 @@ export default function PurchaseOrdersPage() {
       ordersData,
       dataType: typeof ordersData?.data,
       isArray: Array.isArray(ordersData?.data),
-      ordersLength: orders.length
+      hasNestedData: !!ordersData?.data?.data,
+      ordersLength: orders.length,
+      pagination
     })
   }
 
@@ -126,8 +139,8 @@ export default function PurchaseOrdersPage() {
 
   // Handler functions for modals
   const handleViewOrder = (order: any) => {
-    setSelectedOrder(order)
-    setShowViewModal(true)
+    // Navigate to details page instead of opening modal
+    router.push(`/purchase-orders/${order._id}`)
   }
 
   const handleEditOrder = (order: any) => {
@@ -135,10 +148,19 @@ export default function PurchaseOrdersPage() {
     setShowEditModal(true)
   }
 
-  const handleDeleteOrder = (order: any) => {
-    if (confirm('Are you sure you want to delete this purchase order?')) {
-      // Implement delete functionality
-      console.log('Delete order:', order._id)
+  const handleDeleteOrder = async (order: any) => {
+    if (!confirm(`Are you sure you want to delete purchase order ${order.poNumber || order.orderNumber || order._id}? This action cannot be undone.`)) {
+      return
+    }
+
+    try {
+      await deletePurchaseOrder(order._id).unwrap()
+      toast.success('Purchase order deleted successfully')
+      // Refetch the list to update the UI
+      refetch()
+    } catch (error: any) {
+      console.error('Delete error:', error)
+      toast.error(error?.data?.message || 'Failed to delete purchase order')
     }
   }
 
@@ -159,13 +181,15 @@ export default function PurchaseOrdersPage() {
           showRefresh={true}
           onRefresh={() => window.location.reload()}
         >
-          <button
-            onClick={() => window.location.href = '/purchase/create'}
-            className="flex items-center px-4 py-2 bg-white dark:bg-gray-800 text-emerald-600 dark:text-emerald-400 rounded-lg hover:bg-emerald-50 dark:hover:bg-emerald-900 border border-white dark:border-gray-700 transition-colors shadow-sm hover:shadow-md"
+          <Button
+            onClick={() => router.push('/purchase/create')}
+            variant="ghost"
+            size="sm"
+            className="text-white hover:bg-white/20 border-white/30"
           >
             <Plus className="h-4 w-4 mr-2" />
-            Create Purchase Order
-          </button>
+            Create Purchase
+          </Button>
         </PurchaseHeader>
 
         {/* Stats Cards */}
@@ -179,7 +203,7 @@ export default function PurchaseOrdersPage() {
               <ShoppingCart className="h-8 w-8 text-sky-500 dark:text-sky-400" />
             </div>
           </div>
-          
+
           <div className="bg-white dark:bg-gray-800 rounded-xl border-2 border-sky-500 dark:border-sky-400 p-4 shadow-sm hover:shadow-md transition-shadow duration-200">
             <div className="flex items-center justify-between">
               <div>
@@ -189,7 +213,7 @@ export default function PurchaseOrdersPage() {
               <Clock className="h-8 w-8 text-yellow-500 dark:text-yellow-400" />
             </div>
           </div>
-          
+
           <div className="bg-white dark:bg-gray-800 rounded-xl border-2 border-sky-500 dark:border-sky-400 p-4 shadow-sm hover:shadow-md transition-shadow duration-200">
             <div className="flex items-center justify-between">
               <div>
@@ -201,7 +225,7 @@ export default function PurchaseOrdersPage() {
               <DollarSign className="h-8 w-8 text-green-500 dark:text-green-400" />
             </div>
           </div>
-          
+
           <div className="bg-white dark:bg-gray-800 rounded-xl border-2 border-sky-500 dark:border-sky-400 p-4 shadow-sm hover:shadow-md transition-shadow duration-200">
             <div className="flex items-center justify-between">
               <div>
@@ -309,7 +333,7 @@ export default function PurchaseOrdersPage() {
                 <thead className="bg-sky-50 dark:bg-sky-900">
                   <tr>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 dark:text-white uppercase tracking-wider">
-                      Order Details
+                      PO Number
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-900 dark:text-white uppercase tracking-wider">
                       Supplier
@@ -333,31 +357,39 @@ export default function PurchaseOrdersPage() {
                     <tr key={order._id} className="hover:bg-sky-50 dark:hover:bg-sky-900">
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div>
-                          <div className="text-sm font-medium text-gray-900 dark:text-white">
-                            {order.orderNumber}
-                          </div>
+                          <button
+                            onClick={() => router.push(`/purchase-orders/${order._id}`)}
+                            className="text-sm font-medium text-gray-900 dark:text-white hover:text-sky-600 dark:hover:text-sky-400 cursor-pointer text-left"
+                          >
+                            {order.poNumber || order.orderNumber || 'N/A'}
+                          </button>
                           <div className="text-sm text-sky-600 dark:text-sky-400">
                             {order.items?.length || 0} items
                           </div>
+                          {(order.poDate || order.orderDate) && (
+                            <div className="text-xs text-gray-500 dark:text-gray-400">
+                              {formatDate(order.poDate || order.orderDate || '')}
+                            </div>
+                          )}
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm font-medium text-gray-900 dark:text-white">
-                          {order.supplier?.supplierName || 'N/A'}
+                          {order.supplier?.supplierName || order.agent?.agentName || 'N/A'}
                         </div>
                         <div className="text-sm text-sky-600 dark:text-sky-400">
-                          {order.supplier?.supplierCode || 'N/A'}
+                          {order.supplier?.supplierCode || (order.agent ? 'Agent' : 'N/A')}
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <QuickStatusUpdate 
-                          order={order} 
+                        <QuickStatusUpdate
+                          order={order}
                           onStatusUpdate={handleQuickStatusUpdate}
                         />
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm font-medium text-gray-900 dark:text-white">
-                          {formatCurrency(order.totalAmount || 0)}
+                          {formatCurrency(order.amounts?.grandTotal || order.totalAmount || 0)}
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
@@ -367,23 +399,24 @@ export default function PurchaseOrdersPage() {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                         <div className="flex space-x-2">
-                          <button 
+                          <button
                             onClick={() => handleViewOrder(order)}
                             className="text-sky-500 dark:text-sky-400 hover:text-sky-700 dark:hover:text-sky-300 p-1 rounded hover:bg-sky-50 dark:hover:bg-sky-800"
                             title="View Details"
                           >
                             <Eye className="h-4 w-4" />
                           </button>
-                          <button 
+                          <button
                             onClick={() => handleEditOrder(order)}
                             className="text-sky-500 dark:text-sky-400 hover:text-sky-700 dark:hover:text-sky-300 p-1 rounded hover:bg-sky-50 dark:hover:bg-sky-800"
                             title="Edit Order"
                           >
                             <Edit className="h-4 w-4" />
                           </button>
-                          <button 
+                          <button
                             onClick={() => handleDeleteOrder(order)}
-                            className="text-red-500 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 p-1 rounded hover:bg-red-50 dark:hover:bg-red-800"
+                            disabled={isDeleting}
+                            className="text-red-500 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 p-1 rounded hover:bg-red-50 dark:hover:bg-red-800 disabled:opacity-50 disabled:cursor-not-allowed"
                             title="Delete Order"
                           >
                             <Trash2 className="h-4 w-4" />

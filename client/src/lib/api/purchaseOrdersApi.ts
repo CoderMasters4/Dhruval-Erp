@@ -2,35 +2,117 @@ import { baseApi } from './baseApi'
 
 export interface PurchaseOrder {
   _id: string
-  orderNumber: string
-  supplierId: string
+  // Support both poNumber (from API) and orderNumber (legacy)
+  poNumber?: string
+  orderNumber?: string
+  supplierId?: string
   supplier?: {
-    supplierName: string
-    supplierCode: string
+    supplierName?: string
+    supplierCode?: string
+    address?: {
+      country?: string
+    }
     contactInfo?: {
       email: string
       phone: string
     }
   }
+  agent?: {
+    agentId: string
+    agentName: string
+  }
   status: 'draft' | 'pending' | 'approved' | 'ordered' | 'partial' | 'received' | 'cancelled'
-  orderDate: string
+  // Support both poDate (from API) and orderDate (legacy)
+  poDate?: string
+  orderDate?: string
   expectedDeliveryDate?: string
   actualDeliveryDate?: string
+  financialYear?: string
+  poType?: string
+  priority?: string
+  category?: string
   items: Array<{
     itemId: string
     itemName: string
     itemCode: string
     quantity: number
-    unitPrice: number
-    totalPrice: number
+    unitPrice?: number
+    rate?: number
+    totalPrice?: number
+    lineTotal?: number
     receivedQuantity?: number
+    pendingQuantity?: number
+    rejectedQuantity?: number
     specifications?: string
+    description?: string
+    hsnCode?: string
+    unit?: string
+    discount?: {
+      type: string
+      value: number
+    }
+    discountAmount?: number
+    taxableAmount?: number
+    taxBreakup?: Array<{
+      taxType: string
+      rate: number
+      amount: number
+    }>
+    totalTaxAmount?: number
+    deliveryDate?: string
+    notes?: string
   }>
-  subtotal: number
-  taxAmount: number
+  subtotal?: number
+  taxAmount?: number
   discountAmount?: number
-  totalAmount: number
-  paymentTerms?: string
+  totalAmount?: number
+  amounts?: {
+    subtotal: number
+    totalDiscount: number
+    taxableAmount: number
+    totalTaxAmount: number
+    freightCharges: number
+    packingCharges: number
+    otherCharges: number
+    roundingAdjustment: number
+    grandTotal: number
+  }
+  taxDetails?: {
+    placeOfSupply: string
+    isReverseCharge: boolean
+    taxBreakup: Array<{
+      taxType: string
+      rate: number
+      taxableAmount: number
+      taxAmount: number
+      _id: string
+    }>
+    totalTaxAmount: number
+  }
+  paymentTerms?: string | {
+    termType: string
+    days: number
+    advancePercentage: number
+    description: string
+    milestones: any[]
+  }
+  deliveryInfo?: {
+    deliveryAddress: {
+      addressLine1: string
+      addressLine2?: string
+      city: string
+      state: string
+      pincode: string
+      country: string
+    }
+    warehouseId: string
+    warehouseName: string
+    contactPerson: string
+    contactPhone: string
+    deliveryInstructions?: string
+    workingHours?: string
+    deliveryType: string
+  }
   deliveryAddress?: {
     addressLine1: string
     addressLine2?: string
@@ -40,6 +122,9 @@ export interface PurchaseOrder {
     country: string
   }
   notes?: string
+  paymentNotes?: string
+  specialInstructions?: string
+  tags?: string[]
   attachments?: Array<{
     fileName: string
     fileUrl: string
@@ -49,8 +134,31 @@ export interface PurchaseOrder {
   approvedAt?: string
   receivedBy?: string
   receivedAt?: string
+  paymentStatus?: string
+  lastPaymentAmount?: number
+  approvalStatus?: string
+  receivingStatus?: string
+  totalReceived?: number
+  totalPending?: number
+  terms?: string
+  qualityRequirements?: {
+    inspectionRequired: boolean
+    qualityParameters: any[]
+    qualityCertificates: any[]
+    testReports: any[]
+  }
+  performance?: {
+    issues: any[]
+    improvements: any[]
+  }
+  deliverySchedules?: any[]
+  approvalWorkflow?: any[]
   companyId: string
   createdBy: string
+  buyerId?: string
+  buyerName?: string
+  lastModifiedBy?: string
+  isActive?: boolean
   createdAt: string
   updatedAt: string
 }
@@ -101,22 +209,28 @@ export interface CreatePurchaseOrderRequest {
     country: string
   }
   notes?: string
+  paymentNotes?: string
 }
 
 export const purchaseOrdersApi = baseApi.injectEndpoints({
   overrideExisting: true,
   endpoints: (builder) => ({
     // Get all purchase orders with filtering and pagination
+    // NOTE: API returns { success, message, data: { data: [...], pagination: {...} } }
     getPurchaseOrders: builder.query<
       {
         success: boolean
-        data: PurchaseOrder[]
-        pagination: {
-          page: number
-          limit: number
-          total: number
-          pages: number
+        message: string
+        data: {
+          data: PurchaseOrder[]
+          pagination: {
+            page: number
+            limit: number
+            total: number
+            pages: number
+          }
         }
+        timestamp?: string
       },
       {
         page?: number

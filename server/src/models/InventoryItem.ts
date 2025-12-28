@@ -149,12 +149,17 @@ const InventoryItemSchema = new Schema<IInventoryItem>({
     msdsRequired: { type: Boolean, default: true }, // Material Safety Data Sheet
     msdsUrl: { type: String }, // URL to MSDS document
 
-    // Batch Information
+    // Batch & Inward Information
     batchNumber: { type: String, trim: true, index: true },
     lotNumber: { type: String, trim: true },
     challan: { type: String, trim: true },
     manufacturingDate: { type: Date },
     expiryDate: { type: Date },
+
+    // Purchase Order Linkage (for tracking partial receipts)
+    poNumber: { type: String, trim: true, index: true },
+    poOrderedQuantity: { type: Number, min: 0 },
+    poReceivedQuantity: { type: Number, min: 0 },
     
     // Additional Fields
     hsnCode: { type: String, trim: true },

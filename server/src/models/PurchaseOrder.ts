@@ -299,6 +299,7 @@ const PurchaseOrderSchema = new Schema<IPurchaseOrder>({
   // Additional Information
   terms: { type: String },
   notes: { type: String },
+  paymentNotes: { type: String },
   internalNotes: { type: String },
   specialInstructions: { type: String },
   tags: [String],

@@ -230,7 +230,7 @@ export function GreyFabricInwardForm({
   const isLoading = isCreating || isUpdating;
   const isFormDisabled =
     formData.entryType === "purchase_order" &&
-    (!purchaseOrders?.data?.length ||
+    (!purchaseOrders?.data?.data?.length ||
       !!ordersError ||
       formData.purchaseOrderId === "loading" ||
       formData.purchaseOrderId === "error" ||
@@ -291,9 +291,9 @@ export function GreyFabricInwardForm({
 
   // Auto-populate form when PO is selected
   useEffect(() => {
-    if (formData.purchaseOrderId && purchaseOrders?.data) {
-      const selectedOrder = purchaseOrders.data.find(
-        (po) => po._id === formData.purchaseOrderId
+    if (formData.purchaseOrderId && purchaseOrders?.data?.data) {
+      const selectedOrder = purchaseOrders.data.data.find(
+        (po: any) => po._id === formData.purchaseOrderId
       );
       if (selectedOrder) {
         setSelectedPO(selectedOrder);
@@ -352,7 +352,7 @@ export function GreyFabricInwardForm({
         }
       }
     }
-  }, [formData.purchaseOrderId, purchaseOrders?.data]);
+  }, [formData.purchaseOrderId, purchaseOrders?.data?.data]);
 
   // Re-populate form when selected item index changes
   useEffect(() => {
@@ -598,7 +598,7 @@ export function GreyFabricInwardForm({
 
     // Check if required data is available (only for purchase order entries)
     if (formData.entryType === "purchase_order") {
-      if (!purchaseOrders?.data || purchaseOrders.data.length === 0) {
+      if (!purchaseOrders?.data?.data || purchaseOrders.data.data.length === 0) {
         alert(
           "No purchase orders available. Please create a purchase order first."
         );
@@ -989,9 +989,9 @@ export function GreyFabricInwardForm({
                         >
                           Error loading orders
                         </SelectItem>
-                      ) : purchaseOrders?.data &&
-                        purchaseOrders.data.length > 0 ? (
-                        purchaseOrders.data.map((order: any) => (
+                      ) : purchaseOrders?.data?.data &&
+                        purchaseOrders.data.data.length > 0 ? (
+                        purchaseOrders.data.data.map((order: any) => (
                           <SelectItem
                             key={order._id}
                             value={order._id}

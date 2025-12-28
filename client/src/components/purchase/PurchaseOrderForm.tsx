@@ -98,6 +98,7 @@ export interface PurchaseOrderFormData {
   // Notes
   terms: string
   notes: string
+  paymentNotes?: string
 }
 
 export function PurchaseOrderForm({ onSuccess, onCancel, isSubmitting, setIsSubmitting }: PurchaseOrderFormProps) {
@@ -136,7 +137,8 @@ export function PurchaseOrderForm({ onSuccess, onCancel, isSubmitting, setIsSubm
     paymentDays: 30,
     advancePercentage: 0,
     terms: '',
-    notes: ''
+    notes: '',
+    paymentNotes: ''
   })
 
   // Get categories and units for resolving IDs to names (after formData is initialized)
@@ -438,6 +440,7 @@ export function PurchaseOrderForm({ onSuccess, onCancel, isSubmitting, setIsSubm
           email: formData.selectedAgent.contactInfo?.primaryEmail || '',
         } : undefined,
         notes: formData.notes,
+        paymentNotes: formData.paymentNotes || '',
         specialInstructions: '',
         createdBy: userId,
         lastModifiedBy: userId,

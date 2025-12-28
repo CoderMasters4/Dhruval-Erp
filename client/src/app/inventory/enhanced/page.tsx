@@ -1,11 +1,10 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 import { useSelector } from 'react-redux';
-import {
-  useGetInventoryItemsQuery,
-  useGetInventoryStatsQuery,
+import { 
+  useGetInventoryItemsQuery, 
+  useGetInventoryStatsQuery, 
   useGetInventoryAlertsQuery,
   useCreateInventoryItemMutation,
   useUpdateInventoryItemMutation,
@@ -14,34 +13,28 @@ import {
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Activity } from 'lucide-react';
 import { selectTheme } from '@/lib/features/ui/uiSlice';
-import {
+import { 
   InventoryHeader,
   InventoryFilters,
+  InventoryAnalytics,
   InventoryGrid,
   InventoryList,
   CreateInventoryItemModal,
   InventoryDetailsModal,
   InventoryItemForm
 } from '@/components/inventory';
-import { MoveToScrapModal } from '@/components/inventory/MoveToScrapModal';
-import { GoodsReturnModal } from '@/components/inventory/GoodsReturnModal';
 
 const EnhancedInventoryPage = () => {
-  const router = useRouter();
   const theme = useSelector(selectTheme);
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [selectedItem, setSelectedItem] = useState<any>(null);
-  const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
+  const [viewMode, setViewMode] = useState<'list' | 'grid' | 'analytics'>('list');
   const [isClient, setIsClient] = useState(false);
   const [viewDetails, setViewDetails] = useState<any>(null);
-  const [showScrapModal, setShowScrapModal] = useState(false);
-  const [selectedItemForScrap, setSelectedItemForScrap] = useState<any>(null);
-  const [showGoodsReturnModal, setShowGoodsReturnModal] = useState(false);
-  const [selectedItemForReturn, setSelectedItemForReturn] = useState<any>(null);
-
+  
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
@@ -74,7 +67,7 @@ const EnhancedInventoryPage = () => {
   const items = inventoryData?.data?.data || [];
   const stats = inventoryStats?.data;
   const alerts = inventoryAlerts?.data || [];
-
+  
   // Pagination data
   const pagination = inventoryData?.data?.pagination;
   const totalItems = pagination?.total || 0;
@@ -103,15 +96,15 @@ const EnhancedInventoryPage = () => {
 
   // Ensure items is always an array before filtering
   const safeItems = Array.isArray(items) ? items : [];
-
+  
   const filteredItems = safeItems.filter((item: any) => {
-    const matchesSearch = !searchTerm ||
+    const matchesSearch = !searchTerm || 
       (item.itemName?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
       (item.itemCode?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
       (item.itemDescription?.toLowerCase() || '').includes(searchTerm.toLowerCase());
     const matchesCategory = !categoryFilter || item.category?.primary === categoryFilter;
     const matchesStatus = !statusFilter || getStockStatus(item) === statusFilter;
-
+    
     return matchesSearch && matchesCategory && matchesStatus;
   });
 
@@ -130,10 +123,10 @@ const EnhancedInventoryPage = () => {
       console.error('No selected item for update');
       return;
     }
-
+    
     console.log('Updating item:', selectedItem._id);
     console.log('Update data:', formData);
-
+    
     try {
       const result = await updateInventoryItem({ itemId: selectedItem._id, itemData: formData }).unwrap();
       console.log('Item updated successfully:', result);
@@ -160,7 +153,7 @@ const EnhancedInventoryPage = () => {
   };
 
   const handleViewDetails = (item: any) => {
-    router.push(`/inventory/enhanced/${item._id}`);
+    setViewDetails(item);
   };
 
   const handleEditItem = (item: any) => {
@@ -175,62 +168,48 @@ const EnhancedInventoryPage = () => {
   };
 
   const handleFormSubmit = (formData: any) => {
-    // InventoryItemForm already sends nested structure, so we need to merge/validate it
-    // Ensure category.primary is a string, not an object
-    let categoryPrimary = formData.category?.primary;
-    if (typeof categoryPrimary === 'object' && categoryPrimary !== null) {
-      // If it's an object, extract the primary value
-      categoryPrimary = categoryPrimary.primary || categoryPrimary.name || 'raw_material';
-    } else if (!categoryPrimary) {
-      categoryPrimary = 'raw_material';
-    }
-
-    // Ensure unit is present in stock
-    const unit = formData.stock?.unit || formData.unit || '';
-    if (!unit) {
-      alert('Please select a unit');
-      return;
-    }
-
-    // Build the transformed data structure
+    // Transform flat form data to nested structure that API expects
+    // Only include fields that the working API format accepts
     const transformedData = {
       itemName: formData.itemName,
-      itemCode: formData.itemCode,
-      itemDescription: formData.itemDescription,
       category: {
-        primary: categoryPrimary,
-        secondary: formData.category?.secondary || '',
-        tertiary: formData.category?.tertiary || ''
+        primary: formData.category || 'raw_material',
+        secondary: '',
+        tertiary: ''
       },
       warehouseId: formData.warehouseId,
-      companyId: formData.companyId,
-      specifications: {
-        ...formData.specifications,
-        // Ensure tare and fold are included if they exist
-        tareWeight: formData.specifications?.tareWeight !== undefined ? formData.specifications.tareWeight : undefined,
-        fold: formData.specifications?.fold !== undefined ? formData.specifications.fold : undefined,
-        grossQuantity: formData.specifications?.grossQuantity !== undefined ? formData.specifications.grossQuantity : undefined,
-      },
+      reorderPoint: Number(formData.reorderPoint) || 0,
+      reorderQuantity: Number(formData.reorderQuantity) || 0,
+      stockingMethod: formData.stockingMethod || 'fifo',
+      currentStock: Number(formData.currentStock) || 0,
+      costPrice: Number(formData.costPrice) || 0,
+      sellingPrice: Number(formData.sellingPrice) || 0,
       stock: {
-        unit: unit,
-        currentStock: Number(formData.stock?.currentStock || formData.currentStock || 0),
-        availableStock: Number(formData.stock?.availableStock || formData.stock?.currentStock || formData.currentStock || 0),
-        netQuantity: formData.stock?.netQuantity,
-        reorderLevel: Number(formData.stock?.reorderLevel || 0),
-        minStockLevel: Number(formData.stock?.minStockLevel || 0),
-        maxStockLevel: Number(formData.stock?.maxStockLevel || 0),
-        economicOrderQuantity: Number(formData.stock?.economicOrderQuantity || 0),
-        valuationMethod: formData.stock?.valuationMethod || 'FIFO',
-        averageCost: Number(formData.stock?.averageCost || formData.pricing?.costPrice || 0),
-        totalValue: Number(formData.stock?.totalValue || 0)
+        unit: formData.unit, // This is the key field that was missing
+        currentStock: Number(formData.currentStock) || 0,
+        availableStock: Number(formData.currentStock) || 0,
+        reorderLevel: Number(formData.reorderLevel) || 0,
+        minStockLevel: Number(formData.minStockLevel) || 0,
+        maxStockLevel: Number(formData.maxStockLevel) || 0,
+        economicOrderQuantity: Number(formData.reorderQuantity) || 0,
+        valuationMethod: formData.valuationMethod || 'FIFO',
+        averageCost: Number(formData.costPrice) || 0,
+        totalValue: (Number(formData.currentStock) || 0) * (Number(formData.costPrice) || 0)
       },
       pricing: {
-        costPrice: Number(formData.pricing?.costPrice || 0),
-        sellingPrice: Number(formData.pricing?.sellingPrice || 0),
-        mrp: Number(formData.pricing?.mrp || formData.pricing?.sellingPrice || 0),
-        currency: formData.pricing?.currency || 'INR'
+        costPrice: Number(formData.costPrice) || 0,
+        sellingPrice: Number(formData.sellingPrice) || 0,
+        currency: 'INR'
       },
-      locations: formData.locations || []
+      locations: [
+        {
+          warehouseId: formData.warehouseId,
+          warehouseName: "Main Warehouse",
+          quantity: Number(formData.currentStock) || 0,
+          lastUpdated: new Date().toISOString(),
+          isActive: true
+        }
+      ]
     };
 
     console.log('Original form data:', formData);
@@ -247,7 +226,7 @@ const EnhancedInventoryPage = () => {
   const getStockStatus = (item: any) => {
     const currentStock = item.stock?.currentStock || 0;
     const reorderLevel = item.stock?.reorderLevel || 0;
-
+    
     if (currentStock === 0) return 'out_of_stock';
     if (currentStock <= reorderLevel) return 'low_stock';
     if (currentStock > reorderLevel * 2) return 'overstocked';
@@ -263,298 +242,303 @@ const EnhancedInventoryPage = () => {
 
   return (
     <AppLayout>
-      <div
-        className={`transition-theme ${theme === 'dark' ? 'bg-gray-900' : 'bg-gray-50'
-          }`}
-      >
-        <div className="mx-auto max-w-7xl px-3 py-4 sm:px-4 sm:py-5 lg:px-6 lg:py-6 space-y-4 sm:space-y-6">
-          {/* Header */}
-          <InventoryHeader
-            totalItems={totalItems}
-            lowStockCount={lowStockCount}
-            onAddItem={() => setShowCreateModal(true)}
-            onRefresh={() => refetch()}
-            onExport={() => { }}
-            onImport={() => { }}
-            searchTerm={searchTerm}
-            onSearchChange={setSearchTerm}
+      <div className={`space-y-6 transition-theme ${theme === 'dark' ? 'bg-gray-900' : 'bg-gray-50'}`}>
+        {/* Header */}
+        <InventoryHeader
+          totalItems={totalItems}
+          lowStockCount={lowStockCount}
+          onAddItem={() => setShowCreateModal(true)}
+          onRefresh={() => refetch()}
+          onExport={() => console.log('Export clicked')}
+          onImport={() => console.log('Import clicked')}
+          searchTerm={searchTerm}
+          onSearchChange={setSearchTerm}
+          theme={theme}
+        />
+
+        {/* Filters */}
+          <InventoryFilters
+            categoryFilter={categoryFilter}
+            statusFilter={statusFilter}
+            onCategoryChange={setCategoryFilter}
+            onStatusChange={setStatusFilter}
+            onClearFilters={() => {
+              setCategoryFilter('');
+              setStatusFilter('');
+            }}
             theme={theme}
           />
 
-          {/* Filters */}
-          <div
-            className={`rounded-lg border transition-theme ${theme === 'dark'
-                ? 'bg-gray-900/60 border-gray-800'
-                : 'bg-white border-gray-200 shadow-sm'
-              }`}
-          >
-            <div className="p-3 sm:p-4">
-              <InventoryFilters
-                searchTerm={searchTerm}
-                onSearchChange={setSearchTerm}
-                categoryFilter={categoryFilter || 'all'}
-                onCategoryFilterChange={setCategoryFilter}
-                statusFilter={statusFilter || 'all'}
-                onStatusFilterChange={setStatusFilter}
-                viewMode={viewMode}
-                onViewModeChange={setViewMode}
-              />
-            </div>
-          </div>
-
           {/* Alerts Section - Show on all views */}
           {alerts && alerts.length > 0 && (
-            <div
-              className={`rounded-lg p-3 sm:p-4 transition-theme ${theme === 'dark'
-                  ? 'bg-orange-900/20 border border-orange-800'
-                  : 'bg-orange-50 border border-orange-200'
-                }`}
-            >
-              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between mb-3">
-                <h3 className={`text-lg font-semibold flex items-center ${theme === 'dark' ? 'text-orange-200' : 'text-orange-800'
-                  }`}>
+            <div className={`rounded-lg p-4 transition-theme ${
+              theme === 'dark' 
+                ? 'bg-orange-900/20 border border-orange-800' 
+                : 'bg-orange-50 border border-orange-200'
+            }`}>
+              <div className="flex items-center justify-between mb-3">
+                <h3 className={`text-lg font-semibold flex items-center ${
+                  theme === 'dark' ? 'text-orange-200' : 'text-orange-800'
+                }`}>
                   <Activity className="w-5 h-5 mr-2" />
                   Inventory Alerts ({alerts.length})
                 </h3>
-                <span className={`text-sm ${theme === 'dark' ? 'text-orange-300' : 'text-orange-600'
-                  }`}>
-                  Review low stock items and plan replenishment
+                <span className={`text-sm ${
+                  theme === 'dark' ? 'text-orange-300' : 'text-orange-600'
+                }`}>
+                  {viewMode === 'analytics' ? 'Viewing in Analytics' : 'Switch to Analytics for detailed view'}
                 </span>
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                 {alerts.slice(0, 3).map((alert: any, index: number) => (
-                  <div key={alert.id || index} className={`p-3 rounded-lg border transition-theme ${theme === 'dark'
-                      ? 'bg-gray-800 border-orange-700'
+                  <div key={alert.id || index} className={`p-3 rounded-lg border transition-theme ${
+                    theme === 'dark' 
+                      ? 'bg-gray-800 border-orange-700' 
                       : 'bg-white border-orange-300'
-                    }`}>
+                  }`}>
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-1">
-                          <div className={`w-2 h-2 rounded-full ${alert.severity === 'critical' ? 'bg-red-500' :
-                              alert.severity === 'warning' ? 'bg-orange-500' :
-                                'bg-blue-500'
-                            }`}></div>
-                          <span className={`text-xs font-medium uppercase ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
-                            }`}>
+                          <div className={`w-2 h-2 rounded-full ${
+                            alert.severity === 'critical' ? 'bg-red-500' : 
+                            alert.severity === 'warning' ? 'bg-orange-500' : 
+                            'bg-blue-500'
+                          }`}></div>
+                          <span className={`text-xs font-medium uppercase ${
+                            theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
+                          }`}>
                             {alert.type?.replace('_', ' ')}
                           </span>
                         </div>
-                        <p className={`text-sm font-medium mb-1 ${theme === 'dark' ? 'text-gray-100' : 'text-gray-900'
-                          }`}>{alert.message}</p>
-                        <p className={`text-xs ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
-                          }`}>Item: {alert.itemCode}</p>
+                        <p className={`text-sm font-medium mb-1 ${
+                          theme === 'dark' ? 'text-gray-100' : 'text-gray-900'
+                        }`}>{alert.message}</p>
+                        <p className={`text-xs ${
+                          theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
+                        }`}>Item: {alert.itemCode}</p>
                       </div>
                     </div>
                   </div>
                 ))}
               </div>
             </div>
-          )}
+                    )}
 
-          {/* Main Content */}
-          {viewMode === 'grid' ? (
-            <InventoryGrid
-              items={filteredItems}
-              onViewDetails={handleViewDetails}
-              onEditItem={handleEditItem}
-              onDeleteItem={handleDeleteItem}
-              onMoveToScrap={(item) => {
-                setSelectedItemForScrap(item);
-                setShowScrapModal(true);
-              }}
-              onGoodsReturn={(item) => {
-                setSelectedItemForReturn(item);
-                setShowGoodsReturnModal(true);
-              }}
-              theme={theme}
-            />
-          ) : (
-            <InventoryList
-              items={filteredItems}
-              onViewDetails={handleViewDetails}
-              onEditItem={handleEditItem}
-              onDeleteItem={handleDeleteItem}
-              onMoveToScrap={(item) => {
-                setSelectedItemForScrap(item);
-                setShowScrapModal(true);
-              }}
-              onGoodsReturn={(item) => {
-                setSelectedItemForReturn(item);
-                setShowGoodsReturnModal(true);
-              }}
-              theme={theme}
-            />
-          )}
-
-          {/* Pagination Controls */}
-          {totalItems > 0 && (
-            <div
-              className={`rounded-lg border p-3 sm:p-4 transition-theme ${theme === 'dark'
-                  ? 'bg-gray-800 border-gray-700'
-                  : 'bg-white border-gray-200 shadow-sm'
-                }`}
+          {/* View Mode Toggle */}
+        <div className="flex justify-center">
+            <div className={`flex rounded-lg p-1 transition-theme ${
+              theme === 'dark' ? 'bg-gray-800' : 'bg-gray-100'
+            }`}>
+            <button
+                onClick={() => setViewMode('list')}
+              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                viewMode === 'list' 
+                  ? theme === 'dark'
+                    ? 'bg-gray-700 text-gray-100 shadow-sm'
+                    : 'bg-white text-gray-900 shadow-sm'
+                  : theme === 'dark'
+                    ? 'text-gray-400 hover:text-gray-200'
+                    : 'text-gray-600 hover:text-gray-900'
+              }`}
             >
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-4 space-y-2 sm:space-y-0">
-                  <span className={`text-sm ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'
-                    }`}>
-                    Showing {((currentPage - 1) * pageSize) + 1} to {Math.min(currentPage * pageSize, totalItems)} of {totalItems} items
-                  </span>
-                  <select
-                    value={pageSize}
-                    onChange={(e) => handlePageSizeChange(Number(e.target.value))}
-                    className={`px-3 py-1 border rounded-md text-sm transition-theme ${theme === 'dark'
-                        ? 'border-gray-600 bg-gray-700 text-gray-100'
-                        : 'border-gray-300 bg-white text-gray-900'
-                      }`}
-                  >
-                    <option value={10}>10 per page</option>
-                    <option value={25}>25 per page</option>
-                    <option value={50}>50 per page</option>
-                    <option value={100}>100 per page</option>
-                  </select>
-                </div>
-
-                <div className="flex items-center justify-between sm:justify-end space-x-2">
-                  <button
-                    onClick={() => handlePageChange(currentPage - 1)}
-                    disabled={!hasPrevPage}
-                    className={`px-3 py-1 text-sm border rounded-md disabled:opacity-50 disabled:cursor-not-allowed transition-theme ${theme === 'dark'
-                        ? 'border-gray-600 bg-gray-700 text-gray-100 hover:bg-gray-600'
-                        : 'border-gray-300 bg-white text-gray-900 hover:bg-gray-50'
-                      }`}
-                  >
-                    Previous
-                  </button>
-
-                  <div className="hidden sm:flex items-center space-x-1">
-                    {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                      let pageNum;
-                      if (totalPages <= 5) {
-                        pageNum = i + 1;
-                      } else if (currentPage <= 3) {
-                        pageNum = i + 1;
-                      } else if (currentPage >= totalPages - 2) {
-                        pageNum = totalPages - 4 + i;
-                      } else {
-                        pageNum = currentPage - 2 + i;
-                      }
-
-                      return (
-                        <button
-                          key={pageNum}
-                          onClick={() => handlePageChange(pageNum)}
-                          className={`px-3 py-1 text-sm border rounded-md transition-theme ${currentPage === pageNum
-                              ? theme === 'dark'
-                                ? 'bg-blue-600 text-white border-blue-600'
-                                : 'bg-blue-500 text-white border-blue-500'
-                              : theme === 'dark'
-                                ? 'border-gray-600 bg-gray-700 text-gray-100 hover:bg-gray-600'
-                                : 'border-gray-300 bg-white text-gray-900 hover:bg-gray-50'
-                            }`}
-                        >
-                          {pageNum}
-                        </button>
-                      );
-                    })}
-                  </div>
-
-                  <button
-                    onClick={() => handlePageChange(currentPage + 1)}
-                    disabled={!hasNextPage}
-                    className={`px-3 py-1 text-sm border rounded-md disabled:opacity-50 disabled:cursor-not-allowed transition-theme ${theme === 'dark'
-                        ? 'border-gray-600 bg-gray-700 text-gray-100 hover:bg-gray-600'
-                        : 'border-gray-300 bg-white text-gray-900 hover:bg-gray-50'
-                      }`}
-                  >
-                    Next
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Create/Edit Modal */}
-          {showCreateModal && (
-            <div
-              className={`fixed inset-0 flex items-center justify-center z-[9999] transition-theme ${theme === 'dark'
-                  ? 'bg-gray-900/80 backdrop-blur-sm'
-                  : 'bg-gray-900/40 backdrop-blur-sm'
-                }`}
+              List View
+            </button>
+            <button
+                onClick={() => setViewMode('grid')}
+              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                viewMode === 'grid' 
+                  ? theme === 'dark'
+                    ? 'bg-gray-700 text-gray-100 shadow-sm'
+                    : 'bg-white text-gray-900 shadow-sm'
+                  : theme === 'dark'
+                    ? 'text-gray-400 hover:text-gray-200'
+                    : 'text-gray-600 hover:text-gray-900'
+              }`}
             >
-              <div
-                className={`w-full max-w-4xl mx-3 sm:mx-4 rounded-xl p-4 sm:p-6 max-h-[92vh] overflow-y-auto shadow-2xl transition-theme border ${theme === 'dark'
-                    ? 'bg-gray-800 border-gray-700'
-                    : 'bg-white border-gray-200'
-                  }`}
+              Grid View
+            </button>
+            <button
+                onClick={() => setViewMode('analytics')}
+              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                viewMode === 'analytics' 
+                  ? theme === 'dark'
+                    ? 'bg-gray-700 text-gray-100 shadow-sm'
+                    : 'bg-white text-gray-900 shadow-sm'
+                  : theme === 'dark'
+                    ? 'text-gray-400 hover:text-gray-200'
+                    : 'text-gray-600 hover:text-gray-900'
+              }`}
               >
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className={`text-xl font-semibold ${theme === 'dark' ? 'text-gray-100' : 'text-gray-900'
-                    }`}>
-                    {selectedItem ? 'Edit Inventory Item' : 'Create New Inventory Item'}
-                  </h2>
-                  <button
-                    onClick={handleFormClose}
-                    className={`text-2xl transition-colors ${theme === 'dark' ? 'text-gray-400 hover:text-gray-200' : 'text-gray-400 hover:text-gray-600'
-                      }`}
-                  >
-                    ✕
-                  </button>
+                Analytics
+            </button>
+          </div>
+        </div>
+
+        {/* Main Content */}
+        {viewMode === 'analytics' ? (
+          <InventoryAnalytics stats={stats} alerts={alerts} theme={theme} />
+        ) : viewMode === 'grid' ? (
+          <InventoryGrid
+            items={filteredItems}
+            onViewDetails={handleViewDetails}
+            onEditItem={handleEditItem}
+            onDeleteItem={handleDeleteItem}
+            theme={theme}
+          />
+        ) : (
+          <InventoryList
+            items={filteredItems}
+            onViewDetails={handleViewDetails}
+            onEditItem={handleEditItem}
+            onDeleteItem={handleDeleteItem}
+            theme={theme}
+          />
+        )}
+
+        {/* Pagination Controls */}
+        {totalItems > 0 && (
+          <div className={`rounded-lg border p-4 transition-theme ${
+            theme === 'dark' 
+              ? 'bg-gray-800 border-gray-700' 
+              : 'bg-white border-gray-200'
+          }`}>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-4">
+                <span className={`text-sm ${
+                  theme === 'dark' ? 'text-gray-300' : 'text-gray-700'
+                }`}>
+                  Showing {((currentPage - 1) * pageSize) + 1} to {Math.min(currentPage * pageSize, totalItems)} of {totalItems} items
+                </span>
+                <select
+                  value={pageSize}
+                  onChange={(e) => handlePageSizeChange(Number(e.target.value))}
+                  className={`px-3 py-1 border rounded-md text-sm transition-theme ${
+                    theme === 'dark'
+                      ? 'border-gray-600 bg-gray-700 text-gray-100'
+                      : 'border-gray-300 bg-white text-gray-900'
+                  }`}
+                >
+                  <option value={10}>10 per page</option>
+                  <option value={25}>25 per page</option>
+                  <option value={50}>50 per page</option>
+                  <option value={100}>100 per page</option>
+                </select>
+              </div>
+              
+              <div className="flex items-center space-x-2">
+                <button
+                  onClick={() => handlePageChange(currentPage - 1)}
+                  disabled={!hasPrevPage}
+                  className={`px-3 py-1 text-sm border rounded-md disabled:opacity-50 disabled:cursor-not-allowed transition-theme ${
+                    theme === 'dark'
+                      ? 'border-gray-600 bg-gray-700 text-gray-100 hover:bg-gray-600'
+                      : 'border-gray-300 bg-white text-gray-900 hover:bg-gray-50'
+                  }`}
+                >
+                  Previous
+                </button>
+                
+                <div className="flex items-center space-x-1">
+                  {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                    let pageNum;
+                    if (totalPages <= 5) {
+                      pageNum = i + 1;
+                    } else if (currentPage <= 3) {
+                      pageNum = i + 1;
+                    } else if (currentPage >= totalPages - 2) {
+                      pageNum = totalPages - 4 + i;
+                    } else {
+                      pageNum = currentPage - 2 + i;
+                    }
+                    
+                    return (
+                      <button
+                        key={pageNum}
+                        onClick={() => handlePageChange(pageNum)}
+                        className={`px-3 py-1 text-sm border rounded-md transition-theme ${
+                          currentPage === pageNum
+                            ? theme === 'dark'
+                              ? 'bg-blue-600 text-white border-blue-600'
+                              : 'bg-blue-500 text-white border-blue-500'
+                            : theme === 'dark'
+                              ? 'border-gray-600 bg-gray-700 text-gray-100 hover:bg-gray-600'
+                              : 'border-gray-300 bg-white text-gray-900 hover:bg-gray-50'
+                        }`}
+                      >
+                        {pageNum}
+                      </button>
+                    );
+                  })}
                 </div>
-                {/* Debug banner removed for cleaner UI */}
-                <InventoryItemForm
-                  key={selectedItem?._id || 'new'}
-                  item={selectedItem}
-                  onSubmit={handleFormSubmit}
-                  onCancel={handleFormClose}
-                  theme={theme}
-                />
+                
+                <button
+                  onClick={() => handlePageChange(currentPage + 1)}
+                  disabled={!hasNextPage}
+                  className={`px-3 py-1 text-sm border rounded-md disabled:opacity-50 disabled:cursor-not-allowed transition-theme ${
+                    theme === 'dark'
+                      ? 'border-gray-600 bg-gray-700 text-gray-100 hover:bg-gray-600'
+                      : 'border-gray-300 bg-white text-gray-900 hover:bg-gray-50'
+                  }`}
+                >
+                  Next
+                </button>
               </div>
             </div>
-          )}
+          </div>
+        )}
 
-          {/* View Details Modal */}
-          {viewDetails && (
-            <InventoryDetailsModal
-              item={viewDetails}
-              onClose={() => setViewDetails(null)}
-              onEdit={handleEditItem}
-              onDelete={handleDeleteItem}
-              theme={theme}
-            />
-          )}
+        {/* Create/Edit Modal */}
+        {showCreateModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 dark:bg-black dark:bg-opacity-70 flex items-center justify-center z-[9999] transition-theme">
+            <div className={`rounded-lg p-6 max-w-4xl mx-4 max-h-[90vh] overflow-y-auto border-4 border-red-500 transition-theme ${
+              theme === 'dark' ? 'bg-gray-800' : 'bg-white'
+            }`}>
+              <div className="flex items-center justify-between mb-4">
+                <h2 className={`text-xl font-semibold ${
+                  theme === 'dark' ? 'text-gray-100' : 'text-gray-900'
+                }`}>
+                  {selectedItem ? 'Edit Inventory Item' : 'Create New Inventory Item'}
+                </h2>
+                <button
+                  onClick={handleFormClose}
+                  className={`text-2xl transition-colors ${
+                    theme === 'dark' ? 'text-gray-400 hover:text-gray-200' : 'text-gray-400 hover:text-gray-600'
+                  }`}
+                >
+                  ✕
+                </button>
+              </div>
+              <div className={`p-4 mb-4 rounded transition-theme ${
+                theme === 'dark' ? 'bg-yellow-900/20' : 'bg-yellow-100'
+              }`}>
+                <p className={`${
+                  theme === 'dark' ? 'text-yellow-200' : 'text-yellow-800'
+                }`}>Modal is open! showCreateModal: {showCreateModal.toString()}</p>
+              </div>
+              <InventoryItemForm
+                key={selectedItem?._id || 'new'}
+                item={selectedItem}
+                onSubmit={handleFormSubmit}
+                onCancel={handleFormClose}
+                theme={theme}
+              />
+            </div>
+          </div>
+        )}
 
-          {/* Move to Scrap Modal */}
-          <MoveToScrapModal
-            isOpen={showScrapModal}
-            onClose={() => {
-              setShowScrapModal(false);
-              setSelectedItemForScrap(null);
-            }}
-            inventoryItem={selectedItemForScrap}
-            onSuccess={() => {
-              refetch();
-            }}
+      {/* View Details Modal */}
+      {viewDetails && (
+          <InventoryDetailsModal
+            item={viewDetails}
+            onClose={() => setViewDetails(null)}
+            onEdit={handleEditItem}
+            onDelete={handleDeleteItem}
             theme={theme}
           />
-
-          {/* Goods Return Modal */}
-          <GoodsReturnModal
-            isOpen={showGoodsReturnModal}
-            onClose={() => {
-              setShowGoodsReturnModal(false);
-              setSelectedItemForReturn(null);
-            }}
-            inventoryItem={selectedItemForReturn}
-            onSuccess={() => {
-              refetch();
-            }}
-            theme={theme}
-          />
-        </div>
+      )}
       </div>
     </AppLayout>
   );
-}
+};
 
 export default EnhancedInventoryPage;

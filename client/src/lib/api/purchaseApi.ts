@@ -171,6 +171,7 @@ export interface CreatePurchaseOrderRequest {
   }
   terms: string
   notes: string
+  paymentNotes?: string
   specialInstructions: string
 }
 
