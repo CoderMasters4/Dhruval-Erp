@@ -336,11 +336,103 @@ const navigationItems: NavigationItem[] = [
     icon: Factory,
     permission: 'view:ProductionOrder',
     children: [
-
+      // Core Production Modules (Implemented)
       {
-        name: 'Grey Fabric Inward',
-        href: '/production/grey-fabric-inward',
+        name: 'Program Details',
+        href: '/production/program-details',
+        icon: FileText,
+        permission: 'view:ProductionOrder',
+        roles: ['admin', 'manager', 'production']
+      },
+      {
+        name: 'Bleaching Process',
+        href: '/production/bleaching',
+        icon: Palette,
+        permission: 'view:ProductionOrder',
+        roles: ['admin', 'manager', 'production']
+      },
+      {
+        name: 'After Bleaching',
+        href: '/production/after-bleaching',
+        icon: CheckCircle,
+        permission: 'view:ProductionOrder',
+        roles: ['admin', 'manager', 'production']
+      },
+      {
+        name: 'Batch Center',
+        href: '/production/batch-center',
+        icon: Layers,
+        permission: 'view:ProductionOrder',
+        roles: ['admin', 'manager', 'production']
+      },
+      // {
+      //   name: 'Grey Fabric Inward',
+      //   href: '/production/grey-fabric-inward',
+      //   icon: Package,
+      //   permission: 'view:ProductionOrder',
+      //   roles: ['admin', 'manager', 'production']
+      // },
+      // Future Production Modules (To Be Implemented)
+      {
+        name: 'Printing',
+        href: '/production/printing',
+        icon: Printer,
+        permission: 'view:ProductionOrder',
+        roles: ['admin', 'manager', 'production']
+      },
+      {
+        name: 'Hazer/Silicate/Curing',
+        href: '/production/hazer-silicate-curing',
+        icon: Zap,
+        permission: 'view:ProductionOrder',
+        roles: ['admin', 'manager', 'production']
+      },
+      {
+        name: 'Washing',
+        href: '/production/washing',
+        icon: RotateCcw,
+        permission: 'view:ProductionOrder',
+        roles: ['admin', 'manager', 'production']
+      },
+      {
+        name: 'Finishing',
+        href: '/production/finishing',
+        icon: CheckCircle,
+        permission: 'view:ProductionOrder',
+        roles: ['admin', 'manager', 'production']
+      },
+      {
+        name: 'Felt',
+        href: '/production/felt',
+        icon: Clock,
+        permission: 'view:ProductionOrder',
+        roles: ['admin', 'manager', 'production']
+      },
+      {
+        name: 'Folding & Checking',
+        href: '/production/folding-checking',
+        icon: Scissors,
+        permission: 'view:ProductionOrder',
+        roles: ['admin', 'manager', 'production']
+      },
+      {
+        name: 'Packing',
+        href: '/production/packing',
         icon: Package,
+        permission: 'view:ProductionOrder',
+        roles: ['admin', 'manager', 'production']
+      },
+      {
+        name: 'Longation Stock',
+        href: '/production/longation-stock',
+        icon: TrendingUp,
+        permission: 'view:ProductionOrder',
+        roles: ['admin', 'manager', 'production']
+      },
+      {
+        name: 'Rejection Stock',
+        href: '/production/rejection-stock',
+        icon: AlertTriangle,
         permission: 'view:ProductionOrder',
         roles: ['admin', 'manager', 'production']
       },
@@ -387,13 +479,13 @@ const navigationItems: NavigationItem[] = [
       //   icon: Factory,
       //   permission: 'view:ProductionOrder'
       // },
-      {
-        name: 'Production Batches',
-        href: '/production/batches',
-        icon: Layers,
-        permission: 'view:ProductionOrder',
-        roles: ['admin', 'manager', 'production']
-      },
+      // {
+      //   name: 'Production Batches',
+      //   href: '/production/batches',
+      //   icon: Layers,
+      //   permission: 'view:ProductionOrder',
+      //   roles: ['admin', 'manager', 'production']
+      // },
       // {
       //   name: 'Production Tracking',
       //   href: '/production-tracking',

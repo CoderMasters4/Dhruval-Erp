@@ -23,6 +23,7 @@ import {
   InventoryDetailsModal,
   InventoryItemForm
 } from '@/components/inventory';
+import { ViewMode as FilterViewMode } from '@/components/ui/ViewToggle';
 
 const EnhancedInventoryPage = () => {
   const theme = useSelector(selectTheme);
@@ -258,15 +259,14 @@ const EnhancedInventoryPage = () => {
 
         {/* Filters */}
           <InventoryFilters
+            searchTerm={searchTerm}
+            onSearchChange={setSearchTerm}
             categoryFilter={categoryFilter}
+            onCategoryFilterChange={setCategoryFilter}
             statusFilter={statusFilter}
-            onCategoryChange={setCategoryFilter}
-            onStatusChange={setStatusFilter}
-            onClearFilters={() => {
-              setCategoryFilter('');
-              setStatusFilter('');
-            }}
-            theme={theme}
+            onStatusFilterChange={setStatusFilter}
+            viewMode={viewMode === 'analytics' ? 'list' : (viewMode as FilterViewMode)}
+            onViewModeChange={(mode: FilterViewMode) => setViewMode(mode)}
           />
 
           {/* Alerts Section - Show on all views */}

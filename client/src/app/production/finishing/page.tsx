@@ -1,284 +1,203 @@
-'use client';
+'use client'
 
-import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/Button';
-import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { AppLayout } from '@/components/layout/AppLayout';
-import { 
-  Zap, 
-  Play, 
-  Pause, 
-  CheckCircle, 
-  Clock, 
-  AlertCircle,
-  Eye,
-  Settings,
-  BarChart3,
-  Factory,
-  Package,
-  Truck
-} from 'lucide-react';
+import React, { useState, useEffect } from 'react'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/Button'
+import { Input } from '@/components/ui/Input'
+import { Label } from '@/components/ui/label'
+import { AppLayout } from '@/components/layout/AppLayout'
+import { Badge } from '@/components/ui/badge'
+import {
+  useGetFinishingsQuery,
+  useGetFinishingWIPQuery,
+  useCreateFinishingMutation,
+  useUpdateFinishingOutputMutation,
+  Finishing
+} from '@/lib/api/productionModulesApi'
+import { Plus, CheckCircle, Clock } from 'lucide-react'
+import { toast } from 'react-hot-toast'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { CustomerSearchInput } from '@/components/production/CustomerSearchInput'
+import { useGetLotDetailsQuery, useGetAvailableInputMeterQuery } from '@/lib/api/productionModulesApi'
 
 export default function FinishingPage() {
-  const [activeTab, setActiveTab] = useState('overview');
+  const [showCreateModal, setShowCreateModal] = useState(false)
+  const [showOutputModal, setShowOutputModal] = useState(false)
+  const [selectedFinishing, setSelectedFinishing] = useState<Finishing | null>(null)
+  const [formData, setFormData] = useState({
+    lotNumber: '',
+    partyName: '',
+    customerId: '',
+    quality: '',
+    inputMeter: 0,
+    washingId: '',
+    finishWidth: 0,
+    gsm: 0,
+    finishingType: 'soft' as 'soft' | 'stiff' | 'export_finish',
+    operatorName: '',
+    date: new Date().toISOString().split('T')[0]
+  })
+  const [outputData, setOutputData] = useState({
+    finishedMeter: 0,
+    rejectedMeter: 0
+  })
 
-  // Mock data - replace with actual API calls
-  const finishingProcesses = [
-    {
-      id: '1',
-      batchNumber: 'FIN-001',
-      productionOrderNumber: 'PO-2024-001',
-      customerName: 'ABC Textiles',
-      finishingType: 'stenter',
-      status: 'in_progress',
-      progress: 70,
-      startTime: '2024-01-15T11:00:00Z',
-      expectedEndTime: '2024-01-15T20:00:00Z',
-      temperature: { planned: 180, actual: 175 },
-      efficiency: 82
-    },
-    {
-      id: '2',
-      batchNumber: 'FIN-002',
-      productionOrderNumber: 'PO-2024-002',
-      customerName: 'XYZ Fabrics',
-      finishingType: 'coating',
-      status: 'completed',
-      progress: 100,
-      startTime: '2024-01-14T10:00:00Z',
-      endTime: '2024-01-14T17:30:00Z',
-      temperature: { planned: 160, actual: 158 },
-      efficiency: 89
-    }
-  ];
+  const { data, isLoading, refetch } = useGetFinishingsQuery({})
+  const { data: wipData } = useGetFinishingWIPQuery()
+  const [createFinishing] = useCreateFinishingMutation()
+  const [updateOutput] = useUpdateFinishingOutputMutation()
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'completed': return 'bg-green-100 text-green-800';
-      case 'in_progress': return 'bg-blue-100 text-blue-800';
-      case 'pending': return 'bg-gray-100 text-gray-800';
-      case 'on_hold': return 'bg-yellow-100 text-yellow-800';
-      case 'rejected': return 'bg-red-100 text-red-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
-  };
+  // Auto-fill from lot number
+  const { data: lotDetailsData, refetch: refetchLotDetails } = useGetLotDetailsQuery(
+    formData.lotNumber,
+    { skip: !formData.lotNumber || formData.lotNumber.length < 3 }
+  )
+  const { data: availableMeterData } = useGetAvailableInputMeterQuery(
+    { lotNumber: formData.lotNumber, targetModule: 'finishing' },
+    { skip: !formData.lotNumber || formData.lotNumber.length < 3 }
+  )
 
-  const getStatusText = (status: string) => {
-    switch (status) {
-      case 'completed': return 'Completed';
-      case 'in_progress': return 'In Progress';
-      case 'pending': return 'Pending';
-      case 'on_hold': return 'On Hold';
-      case 'rejected': return 'Rejected';
-      default: return 'Unknown';
+  const finishings = data?.data || []
+  const wip = wipData?.data || []
+
+  // Auto-fill party name, quality, and customerId when lot number changes
+  useEffect(() => {
+    if (lotDetailsData?.data?.lotDetails && formData.lotNumber) {
+      const lotDetails = lotDetailsData.data.lotDetails
+      setFormData(prev => ({
+        ...prev,
+        partyName: lotDetails.partyName || prev.partyName,
+        customerId: lotDetails.customerId || prev.customerId,
+        quality: lotDetails.quality || prev.quality
+      }))
     }
-  };
+  }, [lotDetailsData, formData.lotNumber])
+
+  // Auto-fill input meter from Washing module
+  useEffect(() => {
+    if (availableMeterData?.data?.availableMeter && availableMeterData.data.availableMeter > 0) {
+      setFormData(prev => ({
+        ...prev,
+        inputMeter: availableMeterData.data.availableMeter
+      }))
+    }
+  }, [availableMeterData])
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    try {
+      await createFinishing(formData).unwrap()
+      toast.success('Finishing entry created successfully')
+      setShowCreateModal(false)
+      resetForm()
+      refetch()
+    } catch (error: any) {
+      toast.error(error?.data?.message || 'Failed to create finishing entry')
+    }
+  }
+
+  const handleUpdateOutput = async () => {
+    if (!selectedFinishing) return
+    if (outputData.finishedMeter + outputData.rejectedMeter > selectedFinishing.inputMeter) {
+      toast.error('Finished + Rejected meter cannot exceed input meter')
+      return
+    }
+    try {
+      await updateOutput({
+        id: selectedFinishing._id!,
+        data: outputData
+      }).unwrap()
+      toast.success('Finishing output updated successfully')
+      setShowOutputModal(false)
+      setSelectedFinishing(null)
+      setOutputData({ finishedMeter: 0, rejectedMeter: 0 })
+      refetch()
+    } catch (error: any) {
+      toast.error(error?.data?.message || 'Failed to update finishing output')
+    }
+  }
+
+  const resetForm = () => {
+    setFormData({
+      lotNumber: '',
+      partyName: '',
+      customerId: '',
+      quality: '',
+      inputMeter: 0,
+      washingId: '',
+      finishWidth: 0,
+      gsm: 0,
+      finishingType: 'soft',
+      operatorName: '',
+      date: new Date().toISOString().split('T')[0]
+    })
+  }
+
+  const getStatusBadge = (status: string) => {
+    const variants: Record<string, 'default' | 'secondary' | 'destructive' | 'outline'> = {
+      pending: 'outline',
+      in_progress: 'default',
+      completed: 'secondary'
+    }
+    return <Badge variant={variants[status] || 'default'}>{status.replace('_', ' ')}</Badge>
+  }
 
   return (
     <AppLayout>
       <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Finishing Process</h1>
-          <p className="text-gray-600">Manage and monitor finishing operations (Stenter, Coating)</p>
-        </div>
-        <Button className="flex items-center gap-2">
-          <Zap className="h-4 w-4" />
-          New Finishing Process
-        </Button>
-      </div>
-
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center">
-              <div className="p-2 bg-blue-100 rounded-lg">
-                <Factory className="h-6 w-6 text-blue-600" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Total Processes</p>
-                <p className="text-2xl font-bold text-gray-900">16</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center">
-              <div className="p-2 bg-green-100 rounded-lg">
-                <CheckCircle className="h-6 w-6 text-green-600" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Completed</p>
-                <p className="text-2xl font-bold text-gray-900">12</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center">
-              <div className="p-2 bg-yellow-100 rounded-lg">
-                <Clock className="h-6 w-6 text-yellow-600" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">In Progress</p>
-                <p className="text-2xl font-bold text-gray-900">3</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center">
-              <div className="p-2 bg-purple-100 rounded-lg">
-                <BarChart3 className="h-6 w-6 text-purple-600" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Avg Efficiency</p>
-                <p className="text-2xl font-bold text-gray-900">85%</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Main Content */}
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="processes">Processes</TabsTrigger>
-          <TabsTrigger value="analytics">Analytics</TabsTrigger>
-          <TabsTrigger value="settings">Settings</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="overview" className="space-y-6">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Recent Processes */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Recent Finishing Processes</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {finishingProcesses.map((process) => (
-                    <div key={process.id} className="flex items-center justify-between p-4 border rounded-lg">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-2">
-                          <h3 className="font-semibold">{process.batchNumber}</h3>
-                          <Badge className={getStatusColor(process.status)}>
-                            {getStatusText(process.status)}
-                          </Badge>
-                        </div>
-                        <p className="text-sm text-gray-600">{process.productionOrderNumber} - {process.customerName}</p>
-                        <p className="text-sm text-gray-500">Type: {process.finishingType}</p>
-                        <div className="mt-2">
-                          <div className="flex items-center justify-between text-sm mb-1">
-                            <span>Progress</span>
-                            <span>{process.progress}%</span>
-                          </div>
-                          <Progress value={process.progress} className="h-2" />
-                        </div>
-                      </div>
-                      <div className="flex gap-2">
-                        <Button variant="outline" size="sm">
-                          <Eye className="h-4 w-4" />
-                        </Button>
-                        <Button variant="outline" size="sm">
-                          <Settings className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Process Status */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Process Status</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium">Active Processes</span>
-                    <span className="text-2xl font-bold text-blue-600">3</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium">Completed Today</span>
-                    <span className="text-2xl font-bold text-green-600">2</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium">Average Cycle Time</span>
-                    <span className="text-2xl font-bold text-purple-600">7.5h</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium">Quality Pass Rate</span>
-                    <span className="text-2xl font-bold text-green-600">92%</span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-3xl font-bold">Finishing Module</h1>
+            <p className="text-muted-foreground">Manage finishing processes</p>
           </div>
-        </TabsContent>
+          <Button onClick={() => setShowCreateModal(true)}>
+            <Plus className="mr-2 h-4 w-4" />
+            New Finishing Entry
+          </Button>
+        </div>
 
-        <TabsContent value="processes">
+        {/* WIP Section */}
+        {wip.length > 0 && (
           <Card>
             <CardHeader>
-              <CardTitle>All Finishing Processes</CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                <Clock className="h-5 w-5" />
+                Work In Progress ({wip.length})
+              </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {finishingProcesses.map((process) => (
-                  <div key={process.id} className="border rounded-lg p-6">
-                    <div className="flex items-center justify-between mb-4">
+                {wip.map((finishing) => (
+                  <div key={finishing._id} className="border rounded-lg p-4">
+                    <div className="flex justify-between items-start">
                       <div>
-                        <h3 className="text-lg font-semibold">{process.batchNumber}</h3>
-                        <p className="text-gray-600">{process.productionOrderNumber} - {process.customerName}</p>
-                      </div>
-                      <Badge className={getStatusColor(process.status)}>
-                        {getStatusText(process.status)}
-                      </Badge>
-                    </div>
-                    
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                      <div>
-                        <p className="text-sm text-gray-500">Finishing Type</p>
-                        <p className="font-medium">{process.finishingType}</p>
-                      </div>
-                      <div>
-                        <p className="text-sm text-gray-500">Temperature</p>
-                        <p className="font-medium">{process.temperature.actual}°C / {process.temperature.planned}°C</p>
-                      </div>
-                      <div>
-                        <p className="text-sm text-gray-500">Efficiency</p>
-                        <p className="font-medium">{process.efficiency}%</p>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center justify-between">
-                      <div className="flex-1 mr-4">
-                        <div className="flex items-center justify-between text-sm mb-1">
-                          <span>Progress</span>
-                          <span>{process.progress}%</span>
+                        <div className="font-semibold">{finishing.partyName} - Lot: {finishing.lotNumber}</div>
+                        <div className="text-sm text-muted-foreground">
+                          Type: {finishing.finishingType} | Quality: {finishing.quality}
                         </div>
-                        <Progress value={process.progress} className="h-2" />
+                        <div className="text-sm mt-2">
+                          Input: {finishing.inputMeter}m |
+                          Finished: {finishing.finishedMeter}m |
+                          Rejected: {finishing.rejectedMeter}m |
+                          Pending: {finishing.pendingMeter}m
+                        </div>
                       </div>
                       <div className="flex gap-2">
-                        <Button variant="outline" size="sm">
-                          <Eye className="h-4 w-4" />
-                        </Button>
-                        <Button variant="outline" size="sm">
-                          <Settings className="h-4 w-4" />
+                        {getStatusBadge(finishing.status)}
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => {
+                            setSelectedFinishing(finishing)
+                            setOutputData({
+                              finishedMeter: finishing.finishedMeter,
+                              rejectedMeter: finishing.rejectedMeter
+                            })
+                            setShowOutputModal(true)
+                          }}
+                        >
+                          Update Output
                         </Button>
                       </div>
                     </div>
@@ -287,37 +206,234 @@ export default function FinishingPage() {
               </div>
             </CardContent>
           </Card>
-        </TabsContent>
+        )}
 
-        <TabsContent value="analytics">
-          <Card>
-            <CardHeader>
-              <CardTitle>Finishing Analytics</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-center py-8">
-                <BarChart3 className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-500">Analytics charts will be implemented here</p>
+        {/* All Finishings */}
+        <Card>
+          <CardHeader>
+            <CardTitle>All Finishing Entries</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {isLoading ? (
+              <div>Loading...</div>
+            ) : finishings.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">No finishing entries found</div>
+            ) : (
+              <div className="space-y-4">
+                {finishings.map((finishing) => (
+                  <div key={finishing._id} className="border rounded-lg p-4">
+                    <div className="flex justify-between items-start">
+                      <div className="flex-1">
+                        <div className="font-semibold">{finishing.partyName} - Lot: {finishing.lotNumber}</div>
+                        <div className="text-sm text-muted-foreground mt-1">
+                          Type: {finishing.finishingType} | Quality: {finishing.quality}
+                        </div>
+                        {finishing.finishWidth && (
+                          <div className="text-sm text-muted-foreground">
+                            Finish Width: {finishing.finishWidth} | GSM: {finishing.gsm || 'N/A'}
+                          </div>
+                        )}
+                        <div className="mt-2 grid grid-cols-4 gap-4 text-sm">
+                          <div>
+                            <span className="text-muted-foreground">Input:</span> {finishing.inputMeter}m
+                          </div>
+                          <div>
+                            <span className="text-muted-foreground">Finished:</span> {finishing.finishedMeter}m
+                          </div>
+                          <div>
+                            <span className="text-muted-foreground">Rejected:</span> {finishing.rejectedMeter}m
+                          </div>
+                          <div>
+                            <span className="text-muted-foreground">Pending:</span> {finishing.pendingMeter}m
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex gap-2">
+                        {getStatusBadge(finishing.status)}
+                        {finishing.pendingMeter > 0 && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => {
+                              setSelectedFinishing(finishing)
+                              setOutputData({
+                                finishedMeter: finishing.finishedMeter,
+                                rejectedMeter: finishing.rejectedMeter
+                              })
+                              setShowOutputModal(true)
+                            }}
+                          >
+                            Update Output
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
               </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
+            )}
+          </CardContent>
+        </Card>
 
-        <TabsContent value="settings">
-          <Card>
-            <CardHeader>
-              <CardTitle>Finishing Settings</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-center py-8">
-                <Settings className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-500">Settings configuration will be implemented here</p>
+        {/* Create Modal */}
+        <Dialog open={showCreateModal} onOpenChange={setShowCreateModal}>
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Create New Finishing Entry</DialogTitle>
+            </DialogHeader>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label>Lot Number *</Label>
+                  <Input
+                    value={formData.lotNumber}
+                    onChange={(e) => {
+                      setFormData({ ...formData, lotNumber: e.target.value })
+                      if (e.target.value.length >= 3) {
+                        refetchLotDetails()
+                      }
+                    }}
+                    placeholder="Enter lot number to auto-fill details"
+                    required
+                  />
+                  {lotDetailsData?.data?.lotDetails && (
+                    <p className="text-xs text-green-600 mt-1">
+                      ✓ Auto-filled from {lotDetailsData.data.lotDetails.sourceModule}
+                    </p>
+                  )}
+                </div>
+                <CustomerSearchInput
+                  value={formData.partyName}
+                  customerId={formData.customerId}
+                  onChange={(partyName, customerId) => {
+                    setFormData({ ...formData, partyName, customerId })
+                  }}
+                  label="Party Name"
+                  required
+                />
+                <div>
+                  <Label>Quality *</Label>
+                  <Input
+                    value={formData.quality}
+                    onChange={(e) => setFormData({ ...formData, quality: e.target.value })}
+                    required
+                  />
+                </div>
+                <div>
+                  <Label>Input Meter *</Label>
+                  <Input
+                    type="number"
+                    value={formData.inputMeter}
+                    onChange={(e) => setFormData({ ...formData, inputMeter: Number(e.target.value) })}
+                    required
+                  />
+                </div>
+                <div>
+                  <Label>Finishing Type *</Label>
+                  <Select
+                    value={formData.finishingType}
+                    onValueChange={(value: 'soft' | 'stiff' | 'export_finish') =>
+                      setFormData({ ...formData, finishingType: value })
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="soft">Soft</SelectItem>
+                      <SelectItem value="stiff">Stiff</SelectItem>
+                      <SelectItem value="export_finish">Export Finish</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label>Finish Width</Label>
+                  <Input
+                    type="number"
+                    value={formData.finishWidth}
+                    onChange={(e) => setFormData({ ...formData, finishWidth: Number(e.target.value) })}
+                  />
+                </div>
+                <div>
+                  <Label>GSM</Label>
+                  <Input
+                    type="number"
+                    value={formData.gsm}
+                    onChange={(e) => setFormData({ ...formData, gsm: Number(e.target.value) })}
+                  />
+                </div>
+                <div>
+                  <Label>Operator Name</Label>
+                  <Input
+                    value={formData.operatorName}
+                    onChange={(e) => setFormData({ ...formData, operatorName: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <Label>Date *</Label>
+                  <Input
+                    type="date"
+                    value={formData.date}
+                    onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+                    required
+                  />
+                </div>
               </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+              <div className="flex justify-end gap-2">
+                <Button type="button" variant="outline" onClick={() => setShowCreateModal(false)}>
+                  Cancel
+                </Button>
+                <Button type="submit">Create</Button>
+              </div>
+            </form>
+          </DialogContent>
+        </Dialog>
+
+        {/* Update Output Modal */}
+        <Dialog open={showOutputModal} onOpenChange={setShowOutputModal}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Update Finishing Output</DialogTitle>
+            </DialogHeader>
+            {selectedFinishing && (
+              <div className="space-y-4">
+                <div className="text-sm text-muted-foreground">
+                  Total Input: {selectedFinishing.inputMeter}m
+                </div>
+                <div>
+                  <Label>Finished Meter *</Label>
+                  <Input
+                    type="number"
+                    value={outputData.finishedMeter}
+                    onChange={(e) => setOutputData({ ...outputData, finishedMeter: Number(e.target.value) })}
+                    max={selectedFinishing.inputMeter}
+                    required
+                  />
+                </div>
+                <div>
+                  <Label>Rejected Meter *</Label>
+                  <Input
+                    type="number"
+                    value={outputData.rejectedMeter}
+                    onChange={(e) => setOutputData({ ...outputData, rejectedMeter: Number(e.target.value) })}
+                    max={selectedFinishing.inputMeter - outputData.finishedMeter}
+                    required
+                  />
+                </div>
+                <div className="text-sm text-muted-foreground">
+                  Pending: {selectedFinishing.inputMeter - outputData.finishedMeter - outputData.rejectedMeter}m
+                </div>
+                <div className="flex justify-end gap-2">
+                  <Button type="button" variant="outline" onClick={() => setShowOutputModal(false)}>
+                    Cancel
+                  </Button>
+                  <Button onClick={handleUpdateOutput}>Update</Button>
+                </div>
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
       </div>
     </AppLayout>
-  );
+  )
 }
