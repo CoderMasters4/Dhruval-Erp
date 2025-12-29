@@ -50,16 +50,29 @@ export class BatchCenterService extends BaseService<any> {
         throw new AppError('Received meter cannot exceed total meter', 400);
       }
 
-      const updatedBatch = await this.update(batchId, {
-        receivedMeter,
-        updatedBy: updatedBy || batch.createdBy
-      }, updatedBy);
+      // Use findById and save to trigger pre-save middleware
+      const batchDoc = await this.model.findById(batchId);
+      if (!batchDoc) {
+        throw new AppError('Batch entry not found', 404);
+      }
+
+      if (receivedMeter > batchDoc.totalMeter) {
+        throw new AppError('Received meter cannot exceed total meter', 400);
+      }
+
+      // Update the fields
+      batchDoc.receivedMeter = receivedMeter;
+      batchDoc.updatedBy = updatedBy || batchDoc.createdBy;
+      batchDoc.updatedAt = new Date();
+
+      // Save to trigger pre-save middleware (this will auto-calculate pendingMeter and status)
+      const updatedBatch = await batchDoc.save();
 
       if (!updatedBatch) {
         throw new AppError('Failed to update batch entry', 500);
       }
 
-      logger.info('Batch received meter updated', { batchId, receivedMeter });
+      logger.info('Batch received meter updated', { batchId, receivedMeter, status: updatedBatch.status });
       return updatedBatch;
     } catch (error: any) {
       logger.error('Error updating received meter', { error, batchId, receivedMeter });

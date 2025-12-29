@@ -90,5 +90,36 @@ export class ProgramDetailsService extends BaseService<any> {
       throw new AppError('Failed to fetch program details', 500, error);
     }
   }
+
+  /**
+   * Mark program details as completed
+   */
+  async markAsCompleted(programId: string, updatedBy?: string): Promise<IProgramDetails> {
+    try {
+      const program = await this.findById(programId);
+      if (!program) {
+        throw new AppError('Program details not found', 404);
+      }
+
+      if (program.status === 'completed') {
+        throw new AppError('Program is already completed', 400);
+      }
+
+      const updatedProgram = await this.update(programId, {
+        status: 'completed',
+        updatedBy: updatedBy || program.createdBy
+      }, updatedBy);
+
+      if (!updatedProgram) {
+        throw new AppError('Failed to update program details', 500);
+      }
+
+      logger.info('Program details marked as completed', { programId });
+      return updatedProgram;
+    } catch (error: any) {
+      logger.error('Error marking program as completed', { error, programId });
+      throw new AppError('Failed to mark program as completed', 500, error);
+    }
+  }
 }
 

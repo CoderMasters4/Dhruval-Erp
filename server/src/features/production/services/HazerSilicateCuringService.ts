@@ -49,12 +49,20 @@ export class HazerSilicateCuringService extends BaseService<any> {
         throw new AppError('Processed + Loss meter cannot exceed input meter', 400);
       }
 
-      // Update process
-      const updatedProcess = await this.update(processId, {
-        processedMeter,
-        lossMeter,
-        updatedBy: updatedBy || process.createdBy
-      }, updatedBy);
+      // Use findById and save to trigger pre-save middleware
+      const processDoc = await this.model.findById(processId);
+      if (!processDoc) {
+        throw new AppError('Process entry not found', 404);
+      }
+
+      // Update the fields
+      processDoc.processedMeter = processedMeter;
+      processDoc.lossMeter = lossMeter;
+      processDoc.updatedBy = updatedBy || process.createdBy;
+      processDoc.updatedAt = new Date();
+
+      // Save to trigger pre-save middleware (this will auto-calculate pendingMeter and status)
+      const updatedProcess = await processDoc.save();
 
       if (!updatedProcess) {
         throw new AppError('Failed to update process', 500);

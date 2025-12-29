@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useMemo } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
@@ -15,7 +15,7 @@ import {
   useUpdatePrintingOutputMutation,
   Printing
 } from '@/lib/api/productionModulesApi'
-import { Plus, Edit, Printer, CheckCircle, XCircle, Clock } from 'lucide-react'
+import { Plus, Edit, Printer, CheckCircle, XCircle, Clock, Search, Filter, ArrowUpDown, ChevronLeft, ChevronRight } from 'lucide-react'
 import { toast } from 'react-hot-toast'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
@@ -51,6 +51,16 @@ export default function PrintingPage() {
     rejectedMeter: 0
   })
 
+  // Search, Filter, Sort, and Pagination states
+  const [searchQuery, setSearchQuery] = useState('')
+  const [statusFilter, setStatusFilter] = useState<string>('all')
+  const [printingTypeFilter, setPrintingTypeFilter] = useState<string>('all')
+  const [sortBy, setSortBy] = useState<string>('date')
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc')
+  const [currentPage, setCurrentPage] = useState(1)
+  const [itemsPerPage, setItemsPerPage] = useState(10)
+  const [showFilters, setShowFilters] = useState(false)
+
   const { data, isLoading, refetch } = useGetPrintingsQuery({})
   const { data: wipData } = useGetPrintingWIPQuery()
   const [createPrinting] = useCreatePrintingMutation()
@@ -69,6 +79,155 @@ export default function PrintingPage() {
 
   const printings = data?.data || []
   const wip = wipData?.data || []
+
+  // Filtered, sorted, and paginated data
+  const filteredAndSortedPrintings = useMemo(() => {
+    let filtered = printings.filter((printing) => {
+      // Search filter
+      const searchLower = searchQuery.toLowerCase()
+      const matchesSearch = !searchQuery || 
+        printing.lotNumber.toLowerCase().includes(searchLower) ||
+        printing.partyName.toLowerCase().includes(searchLower) ||
+        printing.designNumber.toLowerCase().includes(searchLower) ||
+        printing.quality.toLowerCase().includes(searchLower) ||
+        printing.orderNumber?.toLowerCase().includes(searchLower) ||
+        printing.operatorName?.toLowerCase().includes(searchLower) ||
+        printing.machineName?.toLowerCase().includes(searchLower)
+
+      // Status filter
+      const matchesStatus = statusFilter === 'all' || printing.status === statusFilter
+
+      // Printing type filter
+      const matchesPrintingType = printingTypeFilter === 'all' || printing.printingType === printingTypeFilter
+
+      return matchesSearch && matchesStatus && matchesPrintingType
+    })
+
+    // Sort
+    filtered.sort((a, b) => {
+      let aValue: any, bValue: any
+
+      switch (sortBy) {
+        case 'lotNumber':
+          aValue = a.lotNumber
+          bValue = b.lotNumber
+          break
+        case 'partyName':
+          aValue = a.partyName
+          bValue = b.partyName
+          break
+        case 'designNumber':
+          aValue = a.designNumber
+          bValue = b.designNumber
+          break
+        case 'quality':
+          aValue = a.quality
+          bValue = b.quality
+          break
+        case 'totalMeterReceived':
+          aValue = a.totalMeterReceived || 0
+          bValue = b.totalMeterReceived || 0
+          break
+        case 'printedMeter':
+          aValue = a.printedMeter || 0
+          bValue = b.printedMeter || 0
+          break
+        case 'rejectedMeter':
+          aValue = a.rejectedMeter || 0
+          bValue = b.rejectedMeter || 0
+          break
+        case 'pendingMeter':
+          aValue = a.pendingMeter || 0
+          bValue = b.pendingMeter || 0
+          break
+        case 'printingType':
+          aValue = a.printingType
+          bValue = b.printingType
+          break
+        case 'status':
+          aValue = a.status
+          bValue = b.status
+          break
+        case 'operatorName':
+          aValue = a.operatorName || ''
+          bValue = b.operatorName || ''
+          break
+        default: // date
+          aValue = new Date(a.date || 0)
+          bValue = new Date(b.date || 0)
+      }
+
+      if (typeof aValue === 'string') {
+        return sortOrder === 'asc' 
+          ? aValue.localeCompare(bValue)
+          : bValue.localeCompare(aValue)
+      } else {
+        return sortOrder === 'asc' ? aValue - bValue : bValue - aValue
+      }
+    })
+
+    return filtered
+  }, [printings, searchQuery, statusFilter, printingTypeFilter, sortBy, sortOrder])
+
+  // Pagination
+  const totalItems = filteredAndSortedPrintings.length
+  const totalPages = Math.ceil(totalItems / itemsPerPage)
+  const startIndex = (currentPage - 1) * itemsPerPage
+  const endIndex = startIndex + itemsPerPage
+  const paginatedPrintings = filteredAndSortedPrintings.slice(startIndex, endIndex)
+
+  // Get unique values for filters
+  const uniqueStatuses = [...new Set(printings.map(p => p.status).filter(Boolean))] as string[]
+  const uniquePrintingTypes = [...new Set(printings.map(p => p.printingType).filter(Boolean))] as string[]
+
+  const handleSort = (field: string) => {
+    if (sortBy === field) {
+      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')
+    } else {
+      setSortBy(field)
+      setSortOrder('asc')
+    }
+    setCurrentPage(1) // Reset to first page when sorting
+  }
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page)
+  }
+
+  const handleItemsPerPageChange = (value: string) => {
+    setItemsPerPage(parseInt(value))
+    setCurrentPage(1)
+  }
+
+  const resetFilters = () => {
+    setSearchQuery('')
+    setStatusFilter('all')
+    setPrintingTypeFilter('all')
+    setSortBy('date')
+    setSortOrder('desc')
+    setCurrentPage(1)
+  }
+
+  const handleQuickComplete = async (printing: Printing) => {
+    if (printing.status === 'completed') {
+      toast.error('Printing is already completed')
+      return
+    }
+    
+    try {
+      await updateOutput({
+        id: printing._id!,
+        data: { 
+          printedMeter: printing.totalMeterReceived,
+          rejectedMeter: 0
+        }
+      }).unwrap()
+      toast.success('Printing marked as completed')
+      refetch()
+    } catch (error: any) {
+      toast.error(error?.data?.message || 'Failed to complete printing')
+    }
+  }
 
   // Auto-fill party name, quality, and customerId when lot number changes
   useEffect(() => {
@@ -180,7 +339,9 @@ export default function PrintingPage() {
         <div className="flex justify-between items-center">
           <div>
             <h1 className="text-3xl font-bold">Printing Module</h1>
-            <p className="text-muted-foreground">Manage printing processes</p>
+            <p className="text-muted-foreground">
+              Manage printing processes ({totalItems} total, {paginatedPrintings.length} showing)
+            </p>
           </div>
           <Button onClick={() => setShowCreateModal(true)}>
             <Plus className="mr-2 h-4 w-4" />
@@ -188,58 +349,214 @@ export default function PrintingPage() {
           </Button>
         </div>
 
-        {/* WIP Section */}
-        {wip.length > 0 && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Clock className="h-5 w-5" />
-                Work In Progress ({wip.length})
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {wip.map((printing) => (
-                  <div key={printing._id} className="border rounded-lg p-4">
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <div className="font-semibold">{printing.partyName} - Lot: {printing.lotNumber}</div>
-                        <div className="text-sm text-muted-foreground">
-                          Design: {printing.designNumber} | Type: {printing.printingType}
-                        </div>
-                        <div className="text-sm mt-2">
-                          Received: {printing.totalMeterReceived}m |
-                          Printed: {printing.printedMeter}m |
-                          Rejected: {printing.rejectedMeter}m |
-                          Pending: {printing.pendingMeter}m
-                        </div>
-                      </div>
-                      <div className="flex gap-2">
-                        {getStatusBadge(printing.status)}
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => {
-                            setSelectedPrinting(printing)
-                            setOutputData({
-                              printedMeter: printing.printedMeter,
-                              rejectedMeter: printing.rejectedMeter
-                            })
-                            setShowOutputModal(true)
-                          }}
-                        >
-                          Update Output
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-                ))}
+        {/* Quick Stats */}
+        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4">
+          <Card className="bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800">
+            <CardContent className="p-4">
+              <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                {printings.length}
               </div>
+              <div className="text-sm text-blue-600 dark:text-blue-400">Total Printings</div>
             </CardContent>
           </Card>
-        )}
 
-        {/* All Printings */}
+          <Card className="bg-gray-50 dark:bg-gray-900/20 border-gray-200 dark:border-gray-800">
+            <CardContent className="p-4">
+              <div className="text-2xl font-bold text-gray-600 dark:text-gray-400">
+                {printings.filter(p => p.status === 'pending').length}
+              </div>
+              <div className="text-sm text-gray-600 dark:text-gray-400">Pending</div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-orange-50 dark:bg-orange-900/20 border-orange-200 dark:border-orange-800">
+            <CardContent className="p-4">
+              <div className="text-2xl font-bold text-orange-600 dark:text-orange-400">
+                {printings.filter(p => p.status === 'in_progress').length}
+              </div>
+              <div className="text-sm text-orange-600 dark:text-orange-400">In Progress</div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800">
+            <CardContent className="p-4">
+              <div className="text-2xl font-bold text-green-600 dark:text-green-400">
+                {printings.filter(p => p.status === 'completed').length}
+              </div>
+              <div className="text-sm text-green-600 dark:text-green-400">Completed</div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-purple-50 dark:bg-purple-900/20 border-purple-200 dark:border-purple-800">
+            <CardContent className="p-4">
+              <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
+                {printings.reduce((sum, p) => sum + (p.totalMeterReceived || 0), 0).toLocaleString()}
+              </div>
+              <div className="text-sm text-purple-600 dark:text-purple-400">Total Received</div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-teal-50 dark:bg-teal-900/20 border-teal-200 dark:border-teal-800">
+            <CardContent className="p-4">
+              <div className="text-2xl font-bold text-teal-600 dark:text-teal-400">
+                {printings.reduce((sum, p) => sum + (p.printedMeter || 0), 0).toLocaleString()}
+              </div>
+              <div className="text-sm text-teal-600 dark:text-teal-400">Printed Meters</div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800">
+            <CardContent className="p-4">
+              <div className="text-2xl font-bold text-red-600 dark:text-red-400">
+                {printings.reduce((sum, p) => sum + (p.rejectedMeter || 0), 0).toLocaleString()}
+              </div>
+              <div className="text-sm text-red-600 dark:text-red-400">Rejected Meters</div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Search and Filter Controls */}
+        <Card className="bg-white dark:bg-gray-800">
+          <CardContent className="pt-6">
+            <div className="flex flex-col lg:flex-row gap-4">
+              {/* Search */}
+              <div className="flex-1">
+                <div className="relative">
+                  <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                  <Input
+                    placeholder="Search by lot number, party name, design, quality..."
+                    value={searchQuery}
+                    onChange={(e) => {
+                      setSearchQuery(e.target.value)
+                      setCurrentPage(1)
+                    }}
+                    className="pl-10"
+                  />
+                </div>
+              </div>
+
+              {/* Filter Toggle */}
+              <Button
+                variant="outline"
+                onClick={() => setShowFilters(!showFilters)}
+                className="lg:w-auto"
+              >
+                <Filter className="h-4 w-4 mr-2" />
+                Filters
+                {(statusFilter !== 'all' || printingTypeFilter !== 'all') && (
+                  <Badge variant="secondary" className="ml-2">
+                    {[statusFilter !== 'all' ? 1 : 0, printingTypeFilter !== 'all' ? 1 : 0].reduce((a, b) => a + b, 0)}
+                  </Badge>
+                )}
+              </Button>
+
+              {/* Items per page */}
+              <Select value={itemsPerPage.toString()} onValueChange={handleItemsPerPageChange}>
+                <SelectTrigger className="w-32">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="5">5 per page</SelectItem>
+                  <SelectItem value="10">10 per page</SelectItem>
+                  <SelectItem value="20">20 per page</SelectItem>
+                  <SelectItem value="50">50 per page</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Expanded Filters */}
+            {showFilters && (
+              <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <Label className="text-sm font-medium">Status</Label>
+                    <Select value={statusFilter} onValueChange={(value) => {
+                      setStatusFilter(value)
+                      setCurrentPage(1)
+                    }}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Statuses</SelectItem>
+                        {uniqueStatuses.map(status => (
+                          <SelectItem key={status} value={status}>
+                            {status.charAt(0).toUpperCase() + status.slice(1).replace('_', ' ')}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div>
+                    <Label className="text-sm font-medium">Printing Type</Label>
+                    <Select value={printingTypeFilter} onValueChange={(value) => {
+                      setPrintingTypeFilter(value)
+                      setCurrentPage(1)
+                    }}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Types</SelectItem>
+                        {uniquePrintingTypes.map(type => (
+                          <SelectItem key={type} value={type}>
+                            {type.charAt(0).toUpperCase() + type.slice(1)}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div>
+                    <Label className="text-sm font-medium">Sort By</Label>
+                    <div className="flex gap-2">
+                      <Select value={sortBy} onValueChange={(value) => {
+                        setSortBy(value)
+                        setCurrentPage(1)
+                      }}>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="date">Date</SelectItem>
+                          <SelectItem value="lotNumber">Lot Number</SelectItem>
+                          <SelectItem value="partyName">Party Name</SelectItem>
+                          <SelectItem value="designNumber">Design Number</SelectItem>
+                          <SelectItem value="quality">Quality</SelectItem>
+                          <SelectItem value="totalMeterReceived">Received Meter</SelectItem>
+                          <SelectItem value="printedMeter">Printed Meter</SelectItem>
+                          <SelectItem value="rejectedMeter">Rejected Meter</SelectItem>
+                          <SelectItem value="pendingMeter">Pending Meter</SelectItem>
+                          <SelectItem value="printingType">Printing Type</SelectItem>
+                          <SelectItem value="status">Status</SelectItem>
+                          <SelectItem value="operatorName">Operator</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleSort(sortBy)}
+                        className="px-3"
+                      >
+                        <ArrowUpDown className="h-4 w-4" />
+                        {sortOrder === 'asc' ? '↑' : '↓'}
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex justify-end mt-4">
+                  <Button variant="outline" size="sm" onClick={resetFilters}>
+                    Reset Filters
+                  </Button>
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* All Printing Entries */}
         <Card>
           <CardHeader>
             <CardTitle>All Printing Entries</CardTitle>
@@ -247,59 +564,160 @@ export default function PrintingPage() {
           <CardContent>
             {isLoading ? (
               <div>Loading...</div>
-            ) : printings.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">No printing entries found</div>
             ) : (
-              <div className="space-y-4">
-                {printings.map((printing) => (
-                  <div key={printing._id} className="border rounded-lg p-4">
-                    <div className="flex justify-between items-start">
-                      <div className="flex-1">
-                        <div className="font-semibold">{printing.partyName} - Lot: {printing.lotNumber}</div>
-                        <div className="text-sm text-muted-foreground mt-1">
-                          Order: {printing.orderNumber || 'N/A'} | Design: {printing.designNumber} | Quality: {printing.quality}
-                        </div>
-                        <div className="text-sm text-muted-foreground">
-                          Type: {printing.printingType} | Screen: {printing.screenNo || 'N/A'} | Operator: {printing.operatorName || 'N/A'}
-                        </div>
-                        <div className="mt-2 grid grid-cols-4 gap-4 text-sm">
-                          <div>
-                            <span className="text-muted-foreground">Received:</span> {printing.totalMeterReceived}m
+              <>
+                {/* Results */}
+                <div className="space-y-4">
+                  {paginatedPrintings.length === 0 ? (
+                    <div className="text-center py-12">
+                      <p className="text-gray-500 dark:text-gray-400">
+                        {filteredAndSortedPrintings.length === 0 
+                          ? "No printing entries found matching your criteria."
+                          : "No results on this page."
+                        }
+                      </p>
+                      {(searchQuery || statusFilter !== 'all' || printingTypeFilter !== 'all') && (
+                        <Button variant="outline" onClick={resetFilters} className="mt-4">
+                          Clear Filters
+                        </Button>
+                      )}
+                    </div>
+                  ) : (
+                    paginatedPrintings.map((printing) => (
+                      <div key={printing._id} className="border rounded-lg p-4">
+                        <div className="flex justify-between items-start">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2">
+                              <div className="font-semibold">{printing.partyName} - Lot: {printing.lotNumber}</div>
+                              {printing.status === 'in_progress' && (
+                                <Badge variant="outline" className="text-orange-600 border-orange-300">
+                                  <Clock className="h-3 w-3 mr-1" />
+                                  In Progress
+                                </Badge>
+                              )}
+                              {printing.status === 'pending' && (
+                                <Badge variant="outline" className="text-gray-600 border-gray-300">
+                                  Pending
+                                </Badge>
+                              )}
+                            </div>
+                            <div className="text-sm text-muted-foreground mt-1">
+                              Order: {printing.orderNumber || 'N/A'} | Design: {printing.designNumber} | Quality: {printing.quality}
+                            </div>
+                            <div className="text-sm text-muted-foreground">
+                              Type: {printing.printingType} | Screen: {printing.screenNo || 'N/A'} | Operator: {printing.operatorName || 'N/A'}
+                            </div>
+                            <div className="mt-2 grid grid-cols-4 gap-4 text-sm">
+                              <div>
+                                <span className="text-muted-foreground">Received:</span> {printing.totalMeterReceived}m
+                              </div>
+                              <div>
+                                <span className="text-muted-foreground">Printed:</span> {printing.printedMeter}m
+                              </div>
+                              <div>
+                                <span className="text-muted-foreground">Rejected:</span> {printing.rejectedMeter}m
+                              </div>
+                              <div>
+                                <span className="text-muted-foreground">Pending:</span> {printing.pendingMeter}m
+                              </div>
+                            </div>
                           </div>
-                          <div>
-                            <span className="text-muted-foreground">Printed:</span> {printing.printedMeter}m
-                          </div>
-                          <div>
-                            <span className="text-muted-foreground">Rejected:</span> {printing.rejectedMeter}m
-                          </div>
-                          <div>
-                            <span className="text-muted-foreground">Pending:</span> {printing.pendingMeter}m
+                          <div className="flex gap-2">
+                            {getStatusBadge(printing.status)}
+                            {printing.status !== 'completed' && (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleQuickComplete(printing)}
+                                className="text-green-600 hover:text-green-700 hover:bg-green-50 dark:hover:bg-green-900/20"
+                                title="Quick Complete"
+                              >
+                                <CheckCircle className="h-4 w-4" />
+                              </Button>
+                            )}
+                            {printing.pendingMeter > 0 && (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => {
+                                  setSelectedPrinting(printing)
+                                  setOutputData({
+                                    printedMeter: printing.printedMeter,
+                                    rejectedMeter: printing.rejectedMeter
+                                  })
+                                  setShowOutputModal(true)
+                                }}
+                              >
+                                Update Output
+                              </Button>
+                            )}
                           </div>
                         </div>
                       </div>
-                      <div className="flex gap-2">
-                        {getStatusBadge(printing.status)}
-                        {printing.pendingMeter > 0 && (
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => {
-                              setSelectedPrinting(printing)
-                              setOutputData({
-                                printedMeter: printing.printedMeter,
-                                rejectedMeter: printing.rejectedMeter
-                              })
-                              setShowOutputModal(true)
-                            }}
-                          >
-                            Update Output
-                          </Button>
-                        )}
+                    ))
+                  )}
+                </div>
+
+                {/* Pagination */}
+                {totalPages > 1 && (
+                  <div className="mt-6 pt-6 border-t">
+                    <div className="flex items-center justify-between">
+                      <div className="text-sm text-gray-600 dark:text-gray-400">
+                        Showing {startIndex + 1} to {Math.min(endIndex, totalItems)} of {totalItems} results
+                      </div>
+                      
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handlePageChange(currentPage - 1)}
+                          disabled={currentPage === 1}
+                        >
+                          <ChevronLeft className="h-4 w-4" />
+                          Previous
+                        </Button>
+                        
+                        <div className="flex items-center gap-1">
+                          {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                            let pageNum
+                            if (totalPages <= 5) {
+                              pageNum = i + 1
+                            } else if (currentPage <= 3) {
+                              pageNum = i + 1
+                            } else if (currentPage >= totalPages - 2) {
+                              pageNum = totalPages - 4 + i
+                            } else {
+                              pageNum = currentPage - 2 + i
+                            }
+                            
+                            return (
+                              <Button
+                                key={pageNum}
+                                variant={currentPage === pageNum ? "default" : "outline"}
+                                size="sm"
+                                onClick={() => handlePageChange(pageNum)}
+                                className="w-10"
+                              >
+                                {pageNum}
+                              </Button>
+                            )
+                          })}
+                        </div>
+                        
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handlePageChange(currentPage + 1)}
+                          disabled={currentPage === totalPages}
+                        >
+                          Next
+                          <ChevronRight className="h-4 w-4" />
+                        </Button>
                       </div>
                     </div>
                   </div>
-                ))}
-              </div>
+                )}
+              </>
             )}
           </CardContent>
         </Card>

@@ -48,6 +48,10 @@ export interface CreateProgramDetailsRequest {
   quality?: string
 }
 
+export interface UpdateProgramDetailsRequest extends Partial<CreateProgramDetailsRequest> {
+  status?: 'draft' | 'active' | 'completed' | 'cancelled'
+}
+
 export interface BleachingProcess {
   _id?: string
   companyId: string
@@ -526,7 +530,7 @@ export const productionModulesApi = baseApi.injectEndpoints({
       invalidatesTags: ['ProductionOrder']
     }),
 
-    updateProgramDetails: builder.mutation<{ success: boolean; data: ProgramDetails }, { id: string; data: Partial<CreateProgramDetailsRequest> }>({
+    updateProgramDetails: builder.mutation<{ success: boolean; data: ProgramDetails }, { id: string; data: UpdateProgramDetailsRequest }>({
       query: ({ id, data }) => ({
         url: `/production/program-details/${id}`,
         method: 'PUT',

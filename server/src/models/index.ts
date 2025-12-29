@@ -39,11 +39,10 @@ import AdvancedReport from './AdvancedReport';
 import DocumentManagement from './DocumentManagement';
 import GreyFabricInward from './GreyFabricInward';
 import PreProcessing from './PreProcessing';
-import Dyeing from './Dyeing';
+// Dyeing and CuttingPacking models don't exist - removed imports
 // Printing and Finishing are now imported from features/production
 // import Printing from './Printing';
 // import Finishing from './Finishing';
-import CuttingPacking from './CuttingPacking';
 import ProductionLog from './ProductionLog';
 // Import production models from features/production module
 import {
@@ -98,10 +97,7 @@ export {
   DocumentManagement,
   GreyFabricInward,
   PreProcessing,
-  Dyeing,
-  Printing,
-  Finishing,
-  CuttingPacking,
+  // Dyeing and CuttingPacking models removed - don't exist
   ProductionLog,
   ProgramDetails,
   BleachingProcess,
@@ -148,10 +144,10 @@ export default {
   DocumentManagement,
   GreyFabricInward,
   PreProcessing,
-  Dyeing,
+  // Dyeing and CuttingPacking models removed - don't exist
+  // Printing and Finishing are exported from production features
   Printing,
   Finishing,
-  CuttingPacking,
   ProgramDetails,
   BleachingProcess,
   AfterBleaching,

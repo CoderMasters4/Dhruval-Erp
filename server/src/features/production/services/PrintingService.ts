@@ -75,12 +75,32 @@ export class PrintingService extends BaseService<any> {
         throw new AppError('Printed + Rejected meter cannot exceed received meter', 400);
       }
 
-      // Update printing
-      const updatedPrinting = await this.update(printingId, {
-        printedMeter,
-        rejectedMeter,
-        updatedBy: updatedBy || printing.createdBy
-      }, updatedBy);
+      // Calculate status based on output
+      const pendingMeter = printing.totalMeterReceived - printedMeter - rejectedMeter;
+      let status: 'pending' | 'in_progress' | 'completed' | 'on_hold' = 'pending';
+      
+      if (printedMeter === 0 && rejectedMeter === 0) {
+        status = 'pending';
+      } else if (pendingMeter > 0) {
+        status = 'in_progress';
+      } else if (pendingMeter === 0) {
+        status = 'completed';
+      }
+
+      // Update printing - use findById and save to trigger pre-save middleware
+      const printingDoc = await this.model.findById(printingId);
+      if (!printingDoc) {
+        throw new AppError('Printing entry not found', 404);
+      }
+
+      // Update the fields
+      printingDoc.printedMeter = printedMeter;
+      printingDoc.rejectedMeter = rejectedMeter;
+      printingDoc.updatedBy = updatedBy || printing.createdBy;
+      printingDoc.updatedAt = new Date();
+
+      // Save to trigger pre-save middleware (this will auto-calculate pendingMeter and status)
+      const updatedPrinting = await printingDoc.save();
 
       if (!updatedPrinting) {
         throw new AppError('Failed to update printing', 500);
@@ -131,7 +151,6 @@ export class PrintingService extends BaseService<any> {
       }
 
       // 3. Pending meter remains in Printing WIP (auto-calculated by pre-save middleware)
-      const pendingMeter = printing.totalMeterReceived - printedMeter - rejectedMeter;
       if (pendingMeter > 0) {
         logger.info('Pending meter remains in Printing WIP', {
           printingId,
@@ -144,6 +163,7 @@ export class PrintingService extends BaseService<any> {
         printedMeter, 
         rejectedMeter,
         pendingMeter,
+        status,
         rejectionStockCreated: !!rejectionStock,
         hazerSilicateCuringCreated: !!hazerSilicateCuring
       });

@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useMemo } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
@@ -17,9 +17,10 @@ import {
   ProgramDetails
 } from '@/lib/api/productionModulesApi'
 import { useGetCustomersQuery } from '@/lib/api/customersApi'
-import { Plus, X, Edit, Trash2, FileText, Save, Search } from 'lucide-react'
+import { Plus, X, Edit, Trash2, Save, Search, Filter, ArrowUpDown, ChevronLeft, ChevronRight, CheckCircle } from 'lucide-react'
 import { toast } from 'react-hot-toast'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 
 export default function ProgramDetailsPage() {
   const [showCreateModal, setShowCreateModal] = useState(false)
@@ -40,6 +41,16 @@ export default function ProgramDetailsPage() {
   })
   const [customerSearchQuery, setCustomerSearchQuery] = useState('')
 
+  // Search, Filter, Sort, and Pagination states
+  const [searchQuery, setSearchQuery] = useState('')
+  const [statusFilter, setStatusFilter] = useState<string>('all')
+  const [qualityFilter, setQualityFilter] = useState<string>('all')
+  const [sortBy, setSortBy] = useState<string>('createdAt')
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc')
+  const [currentPage, setCurrentPage] = useState(1)
+  const [itemsPerPage, setItemsPerPage] = useState(10)
+  const [showFilters, setShowFilters] = useState(false)
+
   const { data, isLoading, refetch } = useGetProgramDetailsQuery({})
   const [createProgram] = useCreateProgramDetailsMutation()
   const [updateProgram] = useUpdateProgramDetailsMutation()
@@ -53,6 +64,143 @@ export default function ProgramDetailsPage() {
   const customers = customersData?.data || []
 
   const programs = data?.data || []
+
+  // Filtered, sorted, and paginated data
+  const filteredAndSortedPrograms = useMemo(() => {
+    let filtered = programs.filter((program) => {
+      // Search filter
+      const searchLower = searchQuery.toLowerCase()
+      const matchesSearch = !searchQuery || 
+        program.orderNumber.toLowerCase().includes(searchLower) ||
+        program.partyName.toLowerCase().includes(searchLower) ||
+        program.quality?.toLowerCase().includes(searchLower) ||
+        program.packingBardan?.toLowerCase().includes(searchLower) ||
+        program.shippingMark?.toLowerCase().includes(searchLower) ||
+        program.designs?.some(design => 
+          design.designNumber.toLowerCase().includes(searchLower) ||
+          design.screen?.toLowerCase().includes(searchLower) ||
+          design.instructions?.toLowerCase().includes(searchLower)
+        )
+
+      // Status filter
+      const matchesStatus = statusFilter === 'all' || program.status === statusFilter
+
+      // Quality filter
+      const matchesQuality = qualityFilter === 'all' || program.quality === qualityFilter
+
+      return matchesSearch && matchesStatus && matchesQuality
+    })
+
+    // Sort
+    filtered.sort((a, b) => {
+      let aValue: any, bValue: any
+
+      switch (sortBy) {
+        case 'orderNumber':
+          aValue = a.orderNumber
+          bValue = b.orderNumber
+          break
+        case 'partyName':
+          aValue = a.partyName
+          bValue = b.partyName
+          break
+        case 'totalBale':
+          aValue = a.totalBale || 0
+          bValue = b.totalBale || 0
+          break
+        case 'yards':
+          aValue = a.yards || 0
+          bValue = b.yards || 0
+          break
+        case 'fold':
+          aValue = a.fold
+          bValue = b.fold
+          break
+        case 'quality':
+          aValue = a.quality || ''
+          bValue = b.quality || ''
+          break
+        case 'status':
+          aValue = a.status
+          bValue = b.status
+          break
+        case 'designCount':
+          aValue = a.designs?.length || 0
+          bValue = b.designs?.length || 0
+          break
+        default: // createdAt
+          aValue = new Date(a.createdAt || 0)
+          bValue = new Date(b.createdAt || 0)
+      }
+
+      if (typeof aValue === 'string') {
+        return sortOrder === 'asc' 
+          ? aValue.localeCompare(bValue)
+          : bValue.localeCompare(aValue)
+      } else {
+        return sortOrder === 'asc' ? aValue - bValue : bValue - aValue
+      }
+    })
+
+    return filtered
+  }, [programs, searchQuery, statusFilter, qualityFilter, sortBy, sortOrder])
+
+  // Pagination
+  const totalItems = filteredAndSortedPrograms.length
+  const totalPages = Math.ceil(totalItems / itemsPerPage)
+  const startIndex = (currentPage - 1) * itemsPerPage
+  const endIndex = startIndex + itemsPerPage
+  const paginatedPrograms = filteredAndSortedPrograms.slice(startIndex, endIndex)
+
+  // Get unique values for filters
+  const uniqueStatuses = [...new Set(programs.map(p => p.status).filter(Boolean))]
+  const uniqueQualities = [...new Set(programs.map(p => p.quality).filter(Boolean))] as string[]
+
+  const handleSort = (field: string) => {
+    if (sortBy === field) {
+      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')
+    } else {
+      setSortBy(field)
+      setSortOrder('asc')
+    }
+    setCurrentPage(1) // Reset to first page when sorting
+  }
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page)
+  }
+
+  const handleItemsPerPageChange = (value: string) => {
+    setItemsPerPage(parseInt(value))
+    setCurrentPage(1)
+  }
+
+  const resetFilters = () => {
+    setSearchQuery('')
+    setStatusFilter('all')
+    setQualityFilter('all')
+    setSortBy('createdAt')
+    setSortOrder('desc')
+    setCurrentPage(1)
+  }
+
+  const handleMarkComplete = async (program: ProgramDetails) => {
+    if (program.status === 'completed') {
+      toast.error('Program is already completed')
+      return
+    }
+    
+    try {
+      await updateProgram({ 
+        id: program._id!, 
+        data: { ...program, status: 'completed' } 
+      }).unwrap()
+      toast.success('Program marked as completed')
+      refetch()
+    } catch (error: any) {
+      toast.error(error?.data?.message || 'Failed to update program status')
+    }
+  }
 
   const handleAddDesign = () => {
     setFormData({
@@ -194,7 +342,9 @@ export default function ProgramDetailsPage() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Program Details</h1>
-            <p className="text-gray-600 dark:text-gray-400 mt-1">Manage production program entries</p>
+            <p className="text-gray-600 dark:text-gray-400 mt-1">
+              Manage production program entries ({totalItems} total, {paginatedPrograms.length} showing)
+            </p>
           </div>
           <Button onClick={() => {
             setEditingItem(null)
@@ -220,64 +370,353 @@ export default function ProgramDetailsPage() {
           </Button>
         </div>
 
-        {isLoading ? (
-          <div className="text-center py-12">Loading...</div>
-        ) : (
-          <div className="grid gap-4">
-            {programs.map((program) => (
-              <Card key={program._id} className="bg-white dark:bg-gray-800">
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <CardTitle className="text-lg">{program.orderNumber}</CardTitle>
-                      <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                        Party: {program.partyName} | Fold: {program.fold}
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Badge className={getStatusColor(program.status)}>
-                        {program.status}
-                      </Badge>
+        {/* Quick Stats */}
+        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+          <Card className="bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800">
+            <CardContent className="p-4">
+              <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                {programs.length}
+              </div>
+              <div className="text-sm text-blue-600 dark:text-blue-400">Total Programs</div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800">
+            <CardContent className="p-4">
+              <div className="text-2xl font-bold text-green-600 dark:text-green-400">
+                {programs.filter(p => p.status === 'active').length}
+              </div>
+              <div className="text-sm text-green-600 dark:text-green-400">Active</div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-purple-50 dark:bg-purple-900/20 border-purple-200 dark:border-purple-800">
+            <CardContent className="p-4">
+              <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
+                {programs.filter(p => p.status === 'completed').length}
+              </div>
+              <div className="text-sm text-purple-600 dark:text-purple-400">Completed</div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-orange-50 dark:bg-orange-900/20 border-orange-200 dark:border-orange-800">
+            <CardContent className="p-4">
+              <div className="text-2xl font-bold text-orange-600 dark:text-orange-400">
+                {programs.reduce((sum, p) => sum + (p.totalBale || 0), 0).toLocaleString()}
+              </div>
+              <div className="text-sm text-orange-600 dark:text-orange-400">Total Bales</div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-teal-50 dark:bg-teal-900/20 border-teal-200 dark:border-teal-800">
+            <CardContent className="p-4">
+              <div className="text-2xl font-bold text-teal-600 dark:text-teal-400">
+                {programs.reduce((sum, p) => sum + (p.yards || 0), 0).toLocaleString()}
+              </div>
+              <div className="text-sm text-teal-600 dark:text-teal-400">Total Yards</div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-indigo-50 dark:bg-indigo-900/20 border-indigo-200 dark:border-indigo-800">
+            <CardContent className="p-4">
+              <div className="text-2xl font-bold text-indigo-600 dark:text-indigo-400">
+                {programs.reduce((sum, p) => sum + (p.designs?.length || 0), 0)}
+              </div>
+              <div className="text-sm text-indigo-600 dark:text-indigo-400">Total Designs</div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Search and Filter Controls */}
+        <Card className="bg-white dark:bg-gray-800">
+          <CardContent className="pt-6">
+            <div className="flex flex-col lg:flex-row gap-4">
+              {/* Search */}
+              <div className="flex-1">
+                <div className="relative">
+                  <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                  <Input
+                    placeholder="Search by order number, party name, quality, designs..."
+                    value={searchQuery}
+                    onChange={(e) => {
+                      setSearchQuery(e.target.value)
+                      setCurrentPage(1)
+                    }}
+                    className="pl-10"
+                  />
+                </div>
+              </div>
+
+              {/* Filter Toggle */}
+              <Button
+                variant="outline"
+                onClick={() => setShowFilters(!showFilters)}
+                className="lg:w-auto"
+              >
+                <Filter className="h-4 w-4 mr-2" />
+                Filters
+                {(statusFilter !== 'all' || qualityFilter !== 'all') && (
+                  <Badge variant="secondary" className="ml-2">
+                    {[statusFilter !== 'all' ? 1 : 0, qualityFilter !== 'all' ? 1 : 0].reduce((a, b) => a + b, 0)}
+                  </Badge>
+                )}
+              </Button>
+
+              {/* Items per page */}
+              <Select value={itemsPerPage.toString()} onValueChange={handleItemsPerPageChange}>
+                <SelectTrigger className="w-32">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="5">5 per page</SelectItem>
+                  <SelectItem value="10">10 per page</SelectItem>
+                  <SelectItem value="20">20 per page</SelectItem>
+                  <SelectItem value="50">50 per page</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Expanded Filters */}
+            {showFilters && (
+              <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <Label className="text-sm font-medium">Status</Label>
+                    <Select value={statusFilter} onValueChange={(value) => {
+                      setStatusFilter(value)
+                      setCurrentPage(1)
+                    }}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Statuses</SelectItem>
+                        {uniqueStatuses.map(status => (
+                          <SelectItem key={status} value={status}>
+                            {status.charAt(0).toUpperCase() + status.slice(1)}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div>
+                    <Label className="text-sm font-medium">Quality</Label>
+                    <Select value={qualityFilter} onValueChange={(value) => {
+                      setQualityFilter(value)
+                      setCurrentPage(1)
+                    }}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Qualities</SelectItem>
+                        {uniqueQualities.map(quality => (
+                          <SelectItem key={quality} value={quality}>
+                            {quality}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div>
+                    <Label className="text-sm font-medium">Sort By</Label>
+                    <div className="flex gap-2">
+                      <Select value={sortBy} onValueChange={(value) => {
+                        setSortBy(value)
+                        setCurrentPage(1)
+                      }}>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="createdAt">Created Date</SelectItem>
+                          <SelectItem value="orderNumber">Order Number</SelectItem>
+                          <SelectItem value="partyName">Party Name</SelectItem>
+                          <SelectItem value="totalBale">Total Bale</SelectItem>
+                          <SelectItem value="yards">Yards</SelectItem>
+                          <SelectItem value="fold">Fold</SelectItem>
+                          <SelectItem value="quality">Quality</SelectItem>
+                          <SelectItem value="status">Status</SelectItem>
+                          <SelectItem value="designCount">Design Count</SelectItem>
+                        </SelectContent>
+                      </Select>
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => handleEdit(program)}
+                        onClick={() => handleSort(sortBy)}
+                        className="px-3"
                       >
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleDelete(program._id!)}
-                      >
-                        <Trash2 className="h-4 w-4" />
+                        <ArrowUpDown className="h-4 w-4" />
+                        {sortOrder === 'asc' ? '↑' : '↓'}
                       </Button>
                     </div>
                   </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                    <div>
-                      <span className="text-gray-600 dark:text-gray-400">Total Bale:</span>
-                      <span className="ml-2 font-medium">{program.totalBale || 0}</span>
+                </div>
+
+                <div className="flex justify-end mt-4">
+                  <Button variant="outline" size="sm" onClick={resetFilters}>
+                    Reset Filters
+                  </Button>
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {isLoading ? (
+          <div className="text-center py-12">Loading...</div>
+        ) : (
+          <>
+            {/* Results */}
+            <div className="grid gap-4">
+              {paginatedPrograms.length === 0 ? (
+                <Card className="bg-white dark:bg-gray-800">
+                  <CardContent className="text-center py-12">
+                    <p className="text-gray-500 dark:text-gray-400">
+                      {filteredAndSortedPrograms.length === 0 
+                        ? "No program details found matching your criteria."
+                        : "No results on this page."
+                      }
+                    </p>
+                    {(searchQuery || statusFilter !== 'all' || qualityFilter !== 'all') && (
+                      <Button variant="outline" onClick={resetFilters} className="mt-4">
+                        Clear Filters
+                      </Button>
+                    )}
+                  </CardContent>
+                </Card>
+              ) : (
+                paginatedPrograms.map((program) => (
+                  <Card key={program._id} className="bg-white dark:bg-gray-800">
+                    <CardHeader>
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <CardTitle className="text-lg">{program.orderNumber}</CardTitle>
+                          <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                            Party: {program.partyName} | Fold: {program.fold}
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Badge className={getStatusColor(program.status)}>
+                            {program.status}
+                          </Badge>
+                          {program.status !== 'completed' && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleMarkComplete(program)}
+                              className="text-green-600 hover:text-green-700 hover:bg-green-50 dark:hover:bg-green-900/20"
+                              title="Mark as Complete"
+                            >
+                              <CheckCircle className="h-4 w-4" />
+                            </Button>
+                          )}
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleEdit(program)}
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleDelete(program._id!)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                        <div>
+                          <span className="text-gray-600 dark:text-gray-400">Total Bale:</span>
+                          <span className="ml-2 font-medium">{program.totalBale || 0}</span>
+                        </div>
+                        <div>
+                          <span className="text-gray-600 dark:text-gray-400">Designs:</span>
+                          <span className="ml-2 font-medium">{program.designs?.length || 0}</span>
+                        </div>
+                        <div>
+                          <span className="text-gray-600 dark:text-gray-400">Quality:</span>
+                          <span className="ml-2 font-medium">{program.quality || 'N/A'}</span>
+                        </div>
+                        <div>
+                          <span className="text-gray-600 dark:text-gray-400">Yards:</span>
+                          <span className="ml-2 font-medium">{program.yards || 0}</span>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))
+              )}
+            </div>
+
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <Card className="bg-white dark:bg-gray-800">
+                <CardContent className="pt-6">
+                  <div className="flex items-center justify-between">
+                    <div className="text-sm text-gray-600 dark:text-gray-400">
+                      Showing {startIndex + 1} to {Math.min(endIndex, totalItems)} of {totalItems} results
                     </div>
-                    <div>
-                      <span className="text-gray-600 dark:text-gray-400">Designs:</span>
-                      <span className="ml-2 font-medium">{program.designs?.length || 0}</span>
-                    </div>
-                    <div>
-                      <span className="text-gray-600 dark:text-gray-400">Quality:</span>
-                      <span className="ml-2 font-medium">{program.quality || 'N/A'}</span>
-                    </div>
-                    <div>
-                      <span className="text-gray-600 dark:text-gray-400">Yards:</span>
-                      <span className="ml-2 font-medium">{program.yards || 0}</span>
+                    
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handlePageChange(currentPage - 1)}
+                        disabled={currentPage === 1}
+                      >
+                        <ChevronLeft className="h-4 w-4" />
+                        Previous
+                      </Button>
+                      
+                      <div className="flex items-center gap-1">
+                        {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                          let pageNum
+                          if (totalPages <= 5) {
+                            pageNum = i + 1
+                          } else if (currentPage <= 3) {
+                            pageNum = i + 1
+                          } else if (currentPage >= totalPages - 2) {
+                            pageNum = totalPages - 4 + i
+                          } else {
+                            pageNum = currentPage - 2 + i
+                          }
+                          
+                          return (
+                            <Button
+                              key={pageNum}
+                              variant={currentPage === pageNum ? "default" : "outline"}
+                              size="sm"
+                              onClick={() => handlePageChange(pageNum)}
+                              className="w-10"
+                            >
+                              {pageNum}
+                            </Button>
+                          )
+                        })}
+                      </div>
+                      
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handlePageChange(currentPage + 1)}
+                        disabled={currentPage === totalPages}
+                      >
+                        Next
+                        <ChevronRight className="h-4 w-4" />
+                      </Button>
                     </div>
                   </div>
                 </CardContent>
               </Card>
-            ))}
-          </div>
+            )}
+          </>
         )}
 
         <Dialog open={showCreateModal} onOpenChange={setShowCreateModal}>
