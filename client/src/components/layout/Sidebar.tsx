@@ -20,7 +20,7 @@
  * - Maintenance: Access to machine and equipment management
  */
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useSelector, useDispatch } from 'react-redux'
@@ -279,12 +279,6 @@ const navigationItems: NavigationItem[] = [
         permission: 'view:InventoryItem'
       },
       {
-        name: 'Spares',
-        href: '/spares',
-        icon: Settings,
-        permission: 'view:Spare'
-      },
-      {
         name: 'Warehouses',
         href: '/warehouses',
         icon: Warehouse,
@@ -342,11 +336,103 @@ const navigationItems: NavigationItem[] = [
     icon: Factory,
     permission: 'view:ProductionOrder',
     children: [
-
+      // Core Production Modules (Implemented)
       {
-        name: 'Grey Fabric Inward',
-        href: '/production/grey-fabric-inward',
+        name: 'Program Details',
+        href: '/production/program-details',
+        icon: FileText,
+        permission: 'view:ProductionOrder',
+        roles: ['admin', 'manager', 'production']
+      },
+      {
+        name: 'Bleaching Process',
+        href: '/production/bleaching',
+        icon: Palette,
+        permission: 'view:ProductionOrder',
+        roles: ['admin', 'manager', 'production']
+      },
+      {
+        name: 'After Bleaching',
+        href: '/production/after-bleaching',
+        icon: CheckCircle,
+        permission: 'view:ProductionOrder',
+        roles: ['admin', 'manager', 'production']
+      },
+      {
+        name: 'Batch Center',
+        href: '/production/batch-center',
+        icon: Layers,
+        permission: 'view:ProductionOrder',
+        roles: ['admin', 'manager', 'production']
+      },
+      // {
+      //   name: 'Grey Fabric Inward',
+      //   href: '/production/grey-fabric-inward',
+      //   icon: Package,
+      //   permission: 'view:ProductionOrder',
+      //   roles: ['admin', 'manager', 'production']
+      // },
+      // Future Production Modules (To Be Implemented)
+      {
+        name: 'Printing',
+        href: '/production/printing',
+        icon: Printer,
+        permission: 'view:ProductionOrder',
+        roles: ['admin', 'manager', 'production']
+      },
+      {
+        name: 'Hazer/Silicate/Curing',
+        href: '/production/hazer-silicate-curing',
+        icon: Zap,
+        permission: 'view:ProductionOrder',
+        roles: ['admin', 'manager', 'production']
+      },
+      {
+        name: 'Washing',
+        href: '/production/washing',
+        icon: RotateCcw,
+        permission: 'view:ProductionOrder',
+        roles: ['admin', 'manager', 'production']
+      },
+      {
+        name: 'Finishing',
+        href: '/production/finishing',
+        icon: CheckCircle,
+        permission: 'view:ProductionOrder',
+        roles: ['admin', 'manager', 'production']
+      },
+      {
+        name: 'Felt',
+        href: '/production/felt',
+        icon: Clock,
+        permission: 'view:ProductionOrder',
+        roles: ['admin', 'manager', 'production']
+      },
+      {
+        name: 'Folding & Checking',
+        href: '/production/folding-checking',
+        icon: Scissors,
+        permission: 'view:ProductionOrder',
+        roles: ['admin', 'manager', 'production']
+      },
+      {
+        name: 'Packing',
+        href: '/production/packing',
         icon: Package,
+        permission: 'view:ProductionOrder',
+        roles: ['admin', 'manager', 'production']
+      },
+      {
+        name: 'Longation Stock',
+        href: '/production/longation-stock',
+        icon: TrendingUp,
+        permission: 'view:ProductionOrder',
+        roles: ['admin', 'manager', 'production']
+      },
+      {
+        name: 'Rejection Stock',
+        href: '/production/rejection-stock',
+        icon: AlertTriangle,
         permission: 'view:ProductionOrder',
         roles: ['admin', 'manager', 'production']
       },
@@ -393,13 +479,13 @@ const navigationItems: NavigationItem[] = [
       //   icon: Factory,
       //   permission: 'view:ProductionOrder'
       // },
-      {
-        name: 'Production Batches',
-        href: '/production/batches',
-        icon: Layers,
-        permission: 'view:ProductionOrder',
-        roles: ['admin', 'manager', 'production']
-      },
+      // {
+      //   name: 'Production Batches',
+      //   href: '/production/batches',
+      //   icon: Layers,
+      //   permission: 'view:ProductionOrder',
+      //   roles: ['admin', 'manager', 'production']
+      // },
       // {
       //   name: 'Production Tracking',
       //   href: '/production-tracking',
@@ -661,6 +747,46 @@ export function Sidebar() {
     }
   ]
 
+  // Auto-expand parent items when a child is active
+  useEffect(() => {
+    const findParentForPath = (items: NavigationItem[], targetPath: string): string | null => {
+      for (const item of items) {
+        if (item.children) {
+          // Check if any child matches the current path
+          const childMatches = item.children.some(child => {
+            if (child.href === targetPath) return true
+            if (targetPath.startsWith(child.href) && child.href !== '/dashboard') return true
+            return false
+          })
+          
+          if (childMatches) {
+            return item.name
+          }
+          
+          // Recursively check nested children
+          const nestedParent = findParentForPath(item.children, targetPath)
+          if (nestedParent) {
+            return item.name
+          }
+        }
+      }
+      return null
+    }
+
+    if (pathname) {
+      const parentName = findParentForPath(finalNavigation, pathname)
+      if (parentName) {
+        setExpandedItems(prev => {
+          if (!prev.includes(parentName)) {
+            return [...prev, parentName]
+          }
+          return prev
+        })
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pathname])
+
   const toggleExpanded = (itemName: string) => {
     setExpandedItems(prev =>
       prev.includes(itemName)
@@ -670,10 +796,25 @@ export function Sidebar() {
   }
 
   const isActive = (href: string) => {
+    if (!pathname) return false
+    
     if (href === '/dashboard') {
       return pathname === href
     }
-    return pathname?.startsWith(href) || false
+    
+    // Exact match
+    if (pathname === href) {
+      return true
+    }
+    
+    // For startsWith check, ensure the next character is '/' or end of string
+    // This prevents '/job-workers' from matching '/job-work'
+    if (pathname.startsWith(href)) {
+      const nextChar = pathname[href.length]
+      return nextChar === '/' || nextChar === undefined
+    }
+    
+    return false
   }
 
   const renderNavigationItem = (item: NavigationItem, level = 0) => {
@@ -713,6 +854,12 @@ export function Sidebar() {
           ) : (
             <Link
               href={item.href}
+              onClick={(e) => {
+                // On mobile, don't close sidebar when clicking child links
+                if (level > 0 && window.innerWidth < 1024) {
+                  e.stopPropagation()
+                }
+              }}
               className={clsx(
                 'flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-all duration-200 group/nav',
                 level > 0 && 'ml-4',

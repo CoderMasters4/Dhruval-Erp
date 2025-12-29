@@ -174,28 +174,110 @@ export class PurchaseOrderController extends BaseController<IPurchaseOrder> {
         return;
       }
 
-      let query: any = { companyId };
+      const pageNum = parseInt(page as string);
+      const limitNum = parseInt(limit as string);
+      const skip = (pageNum - 1) * limitNum;
 
+      // Build base query
+      const baseQuery: any = { companyId };
       if (status) {
-        query.status = status;
+        baseQuery.status = status;
       }
+
+      let orders: any[];
+      let total: number;
 
       if (search) {
-        query.$or = [
-          { poNumber: { $regex: search, $options: 'i' } },
-          { 'supplier.supplierName': { $regex: search, $options: 'i' } }
-        ];
+        // Simple search - PO numbers are stored in uppercase, so convert search to uppercase
+        const searchTerm = String(search).trim().toUpperCase();
+        
+        // Simple query - exact match or contains match
+        // Try exact match first, then partial match
+        const PurchaseOrder = (await import('../models/PurchaseOrder')).default;
+        
+        // Build query with exact match first
+        const exactQuery = {
+          ...baseQuery,
+          $or: [
+            { poNumber: searchTerm },
+            { orderNumber: searchTerm }
+          ]
+        };
+        
+        // Try exact match first
+        let ordersResult = await PurchaseOrder.find(exactQuery)
+          .sort({ createdAt: -1 })
+          .skip(skip)
+          .limit(limitNum)
+          .lean();
+        
+        let totalCount = await PurchaseOrder.countDocuments(exactQuery);
+        
+        // If no exact match, try partial match using aggregation (to avoid schema validation)
+        if (ordersResult.length === 0) {
+          const partialMatchPipeline: any[] = [
+            { $match: baseQuery },
+            {
+              $match: {
+                $or: [
+                  { $expr: { $regexMatch: { input: { $toString: '$poNumber' }, regex: searchTerm, options: 'i' } } },
+                  { $expr: { $regexMatch: { input: { $toString: '$orderNumber' }, regex: searchTerm, options: 'i' } } }
+                ]
+              }
+            },
+            { $sort: { createdAt: -1 as const } },
+            { $skip: skip },
+            { $limit: limitNum }
+          ];
+          
+          const countPipeline: any[] = [
+            { $match: baseQuery },
+            {
+              $match: {
+                $or: [
+                  { $expr: { $regexMatch: { input: { $toString: '$poNumber' }, regex: searchTerm, options: 'i' } } },
+                  { $expr: { $regexMatch: { input: { $toString: '$orderNumber' }, regex: searchTerm, options: 'i' } } }
+                ]
+              }
+            },
+            { $count: 'total' }
+          ];
+          
+          const [partialResult, countResult] = await Promise.all([
+            PurchaseOrder.aggregate(partialMatchPipeline),
+            PurchaseOrder.aggregate(countPipeline)
+          ]);
+          
+          ordersResult = partialResult;
+          totalCount = countResult[0]?.total || 0;
+        }
+        
+        orders = ordersResult;
+        total = totalCount;
+      } else {
+        // No search - use simple find query
+        const PurchaseOrder = (await import('../models/PurchaseOrder')).default;
+        const [ordersResult, totalCount] = await Promise.all([
+          PurchaseOrder.find(baseQuery)
+            .sort({ createdAt: -1 })
+            .skip(skip)
+            .limit(limitNum)
+            .lean(),
+          PurchaseOrder.countDocuments(baseQuery)
+        ]);
+        orders = ordersResult;
+        total = totalCount;
       }
 
-      const options = {
-        page: parseInt(page as string),
-        limit: parseInt(limit as string),
-        sort: { createdAt: -1 }
-      };
-
-      const orders = await this.purchaseOrderService.findMany(query, options);
-
-      this.sendSuccess(res, orders, 'Purchase orders retrieved successfully');
+      this.sendSuccess(res, {
+        data: orders,
+        pagination: {
+          page: pageNum,
+          limit: limitNum,
+          total,
+          pages: Math.ceil(total / limitNum)
+        }
+      }, 'Purchase orders retrieved successfully');
     } catch (error) {
       this.sendError(res, error, 'Failed to get purchase orders');
     }
@@ -244,26 +326,26 @@ export class PurchaseOrderController extends BaseController<IPurchaseOrder> {
   }
 
   /**
-   * Delete purchase order (soft delete)
+   * Delete purchase order
    */
   async deletePurchaseOrder(req: Request, res: Response): Promise<void> {
     try {
       const { id } = req.params;
       const deletedBy = (req.user?.userId || req.user?._id)?.toString();
 
-      const order = await this.purchaseOrderService.update(id, {
-        status: 'cancelled',
-        cancelledAt: new Date()
-      }, deletedBy);
-
+      // Check if order exists first
+      const order = await this.purchaseOrderService.findById(id);
       if (!order) {
         this.sendError(res, new Error('Purchase order not found'), 'Purchase order not found', 404);
         return;
       }
 
-      this.sendSuccess(res, null, 'Purchase order cancelled successfully');
+      // Delete the order (soft delete if isActive field exists, otherwise hard delete)
+      await this.purchaseOrderService.delete(id, deletedBy);
+
+      this.sendSuccess(res, null, 'Purchase order deleted successfully');
     } catch (error) {
-      this.sendError(res, error, 'Failed to cancel purchase order');
+      this.sendError(res, error, 'Failed to delete purchase order');
     }
   }
 }

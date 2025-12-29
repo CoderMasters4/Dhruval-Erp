@@ -39,11 +39,27 @@ import AdvancedReport from './AdvancedReport';
 import DocumentManagement from './DocumentManagement';
 import GreyFabricInward from './GreyFabricInward';
 import PreProcessing from './PreProcessing';
-import Dyeing from './Dyeing';
-import Printing from './Printing';
-import Finishing from './Finishing';
-import CuttingPacking from './CuttingPacking';
+// Dyeing and CuttingPacking models don't exist - removed imports
+// Printing and Finishing are now imported from features/production
+// import Printing from './Printing';
+// import Finishing from './Finishing';
 import ProductionLog from './ProductionLog';
+// Import production models from features/production module
+import {
+  ProgramDetails,
+  BleachingProcess,
+  AfterBleaching,
+  BatchCenter,
+  Printing,
+  HazerSilicateCuring,
+  Washing,
+  Finishing,
+  Felt,
+  FoldingChecking,
+  Packing,
+  LongationStock,
+  RejectionStock
+} from '../features/production/models';
 
 // Export all models
 export {
@@ -81,11 +97,12 @@ export {
   DocumentManagement,
   GreyFabricInward,
   PreProcessing,
-  Dyeing,
-  Printing,
-  Finishing,
-  CuttingPacking,
+  // Dyeing and CuttingPacking models removed - don't exist
   ProductionLog,
+  ProgramDetails,
+  BleachingProcess,
+  AfterBleaching,
+  BatchCenter,
   // Export interfaces
   ISimpleVehicle,
   IGatePass
@@ -127,10 +144,14 @@ export default {
   DocumentManagement,
   GreyFabricInward,
   PreProcessing,
-  Dyeing,
+  // Dyeing and CuttingPacking models removed - don't exist
+  // Printing and Finishing are exported from production features
   Printing,
   Finishing,
-  CuttingPacking
+  ProgramDetails,
+  BleachingProcess,
+  AfterBleaching,
+  BatchCenter
 };
 
 // Model registration function

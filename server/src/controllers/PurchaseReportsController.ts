@@ -247,7 +247,7 @@ export class PurchaseReportsController {
       }
 
       if (!['xlsx', 'pdf', 'csv'].includes(format)) {
-        this.sendBadRequest(res, 'Invalid format. Supported formats: xlsx, pdf, csv');
+        this.sendBadRequest(res, `Invalid format. Supported formats: xlsx, pdf, csv. Received: ${format}`);
         return;
       }
 
@@ -285,7 +285,7 @@ export class PurchaseReportsController {
           fileName = `date-range-purchase-report-${dateFrom}-to-${dateTo}`;
           break;
         default:
-          this.sendBadRequest(res, 'Invalid report type');
+          this.sendBadRequest(res, `Invalid report type: ${reportType}`);
           return;
       }
 
@@ -299,7 +299,11 @@ export class PurchaseReportsController {
       } else if (format === 'pdf') {
         await this.generatePDFFile(res, reportData, reportType, fullFileName);
       }
-    } catch (error) {
+    } catch (error: any) {
+      logger.error('PurchaseReports exportReport error', {
+        errorMessage: error?.message,
+        stack: error?.stack,
+      });
       this.sendError(res, error as Error, 'Failed to export report', 500);
     }
   }
@@ -369,7 +373,7 @@ export class PurchaseReportsController {
    */
   private async generatePDFFile(res: Response, reportData: any, reportType: string, fileName: string): Promise<void> {
     const pdfDoc = await PDFDocument.create();
-    const page = pdfDoc.addPage([595, 842]); // A4 size
+    let page = pdfDoc.addPage([595, 842]); // A4 size
     const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
     const boldFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
 
@@ -377,30 +381,46 @@ export class PurchaseReportsController {
     const margin = 50;
     const lineHeight = 15;
 
-    // Add title
-    page.drawText(`Purchase Report - ${reportType.replace('-', ' ').toUpperCase()}`, {
-      x: margin,
-      y,
-      size: 16,
-      font: boldFont,
-    });
-    y -= 30;
-
-    // Add content based on report type
-    if (Array.isArray(reportData)) {
-      if (reportType === 'vendor-wise') {
-        y = this.generateVendorWisePDF(page, reportData, y, margin, lineHeight, font, boldFont);
-      } else if (reportType === 'item-wise') {
-        y = this.generateItemWisePDF(page, reportData, y, margin, lineHeight, font, boldFont);
-      } else if (reportType === 'category-wise') {
-        y = this.generateCategoryWisePDF(page, reportData, y, margin, lineHeight, font, boldFont);
+    const drawLine = (text: string, options: { bold?: boolean } = {}) => {
+      if (y < 60) {
+        page = pdfDoc.addPage([595, 842]);
+        y = 800;
       }
+      page.drawText(text, {
+        x: margin,
+        y,
+        size: options.bold ? 12 : 10,
+        font: options.bold ? boldFont : font,
+      });
+      y -= lineHeight;
+    };
+
+    // Title
+    drawLine(`Purchase Report - ${reportType.replace('-', ' ').toUpperCase()}`, { bold: true });
+    y -= lineHeight;
+
+    if (Array.isArray(reportData)) {
+      reportData.forEach((row: any, index: number) => {
+        drawLine(`Record ${index + 1}`, { bold: true });
+
+        Object.entries(row).forEach(([key, value]) => {
+          if (value === undefined || value === null || typeof value === 'object') return;
+          drawLine(`${key}: ${value}`);
+        });
+
+        y -= lineHeight;
+      });
+    } else if (reportData && typeof reportData === 'object') {
+      Object.entries(reportData).forEach(([key, value]) => {
+        if (Array.isArray(value) || typeof value === 'object') return;
+        drawLine(`${key}: ${value}`);
+      });
     } else {
-      y = this.generateDateRangePDF(page, reportData, y, margin, lineHeight, font, boldFont);
+      drawLine('No data available', { bold: true });
     }
 
     const pdfBytes = await pdfDoc.save();
-    
+
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
     res.send(Buffer.from(pdfBytes));
@@ -601,10 +621,6 @@ export class PurchaseReportsController {
     y -= lineHeight * 2;
 
     data.forEach(vendor => {
-      if (y < 50) {
-        const newPage = page.doc.addPage([595, 842]);
-        y = 800;
-      }
       page.drawText(`${vendor.vendorName || 'N/A'}: ₹${vendor.totalPurchases || 0}`, { x: margin, y, size: 10, font });
       y -= lineHeight;
     });
@@ -616,10 +632,6 @@ export class PurchaseReportsController {
     y -= lineHeight * 2;
 
     data.forEach(item => {
-      if (y < 50) {
-        const newPage = page.doc.addPage([595, 842]);
-        y = 800;
-      }
       page.drawText(`${item.itemName || 'N/A'}: ₹${item.totalAmount || 0}`, { x: margin, y, size: 10, font });
       y -= lineHeight;
     });
@@ -631,10 +643,6 @@ export class PurchaseReportsController {
     y -= lineHeight * 2;
 
     data.forEach(cat => {
-      if (y < 50) {
-        const newPage = page.doc.addPage([595, 842]);
-        y = 800;
-      }
       page.drawText(`${cat.category || 'N/A'}: ₹${cat.totalPurchases || 0}`, { x: margin, y, size: 10, font });
       y -= lineHeight;
     });
@@ -657,10 +665,6 @@ export class PurchaseReportsController {
       y -= lineHeight;
 
       data.poEntries.forEach((po: any) => {
-        if (y < 50) {
-          const newPage = page.doc.addPage([595, 842]);
-          y = 800;
-        }
         page.drawText(`${po.poNumber || 'N/A'}: ₹${po.totalAmount || 0}`, { x: margin + 20, y, size: 10, font });
         y -= lineHeight;
       });

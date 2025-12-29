@@ -24,6 +24,22 @@ export interface InventoryItem {
     finish: string
     safetyPrecautions: string[]
     msdsRequired: boolean
+    // Optional extended specs used in enhanced inventory form
+    hsnCode?: string
+    attributeName?: string
+    lotNumber?: string
+    challan?: string
+    grossQuantity?: number
+    tareWeight?: number
+    fold?: number
+    date?: string
+    lrNumber?: string
+    transportNumber?: string
+    additionalDetails?: string
+    // Purchase order linkage
+    poNumber?: string
+    poOrderedQuantity?: number
+    poReceivedQuantity?: number
   }
   stock: {
     currentStock: number

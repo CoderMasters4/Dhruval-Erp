@@ -334,29 +334,167 @@ export class PurchaseService extends BaseService<IPurchaseOrder> {
     }
 
     const sanitizedSearch = this.sanitizeSearch(search);
-    if (sanitizedSearch) {
-      query.$or = [
-        { purchaseOrderId: { $regex: sanitizedSearch, $options: 'i' } },
-        { 'supplier.name': { $regex: sanitizedSearch, $options: 'i' } },
-        { notes: { $regex: sanitizedSearch, $options: 'i' } },
-      ];
-    }
-
+    
+    // Build base query without search first
+    const baseQuery = { ...query };
+    
     if (category) {
-      query['items.category'] = category;
+      baseQuery['items.category'] = category;
     }
 
     const skip = (page - 1) * limit;
 
-    const [orders, total] = await Promise.all([
-      PurchaseOrder.find(query)
-        .populate('supplier.supplierId', 'name email phone category')
-        .sort({ createdAt: -1 })
-        .skip(skip)
-        .limit(limit)
-        .lean(),
-      PurchaseOrder.countDocuments(query),
-    ]);
+    let orders: any[];
+    let total: number;
+
+    if (sanitizedSearch) {
+      // Use aggregation pipeline for complex search with nested fields
+      // Build search conditions using $or in aggregation
+      const searchConditions: any[] = [
+        { poNumber: { $regex: sanitizedSearch, $options: 'i' } },
+        { orderNumber: { $regex: sanitizedSearch, $options: 'i' } },
+        { notes: { $regex: sanitizedSearch, $options: 'i' } },
+      ];
+
+      // Use aggregation $match with $expr for nested field searches
+      const aggregationPipeline: any[] = [
+        { $match: baseQuery },
+        {
+          $match: {
+            $or: [
+              ...searchConditions,
+              // For nested fields, check if they exist and match
+              {
+                $expr: {
+                  $and: [
+                    { $ne: ['$supplier.supplierName', null] },
+                    { $ne: ['$supplier.supplierName', ''] },
+                    {
+                      $regexMatch: {
+                        input: { $toString: '$supplier.supplierName' },
+                        regex: sanitizedSearch,
+                        options: 'i'
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                $expr: {
+                  $and: [
+                    { $ne: ['$agent.agentName', null] },
+                    { $ne: ['$agent.agentName', ''] },
+                    {
+                      $regexMatch: {
+                        input: { $toString: '$agent.agentName' },
+                        regex: sanitizedSearch,
+                        options: 'i'
+                      }
+                    }
+                  ]
+                }
+              },
+              // Search in items array
+              { 'items.itemName': { $regex: sanitizedSearch, $options: 'i' } },
+              { 'items.itemCode': { $regex: sanitizedSearch, $options: 'i' } }
+            ]
+          }
+        },
+        { $sort: { createdAt: -1 } },
+        { $skip: skip },
+        { $limit: limit }
+      ];
+
+      // Get total count
+      const countPipeline = [
+        { $match: baseQuery },
+        {
+          $match: {
+            $or: [
+              ...searchConditions,
+              {
+                $expr: {
+                  $and: [
+                    { $ne: ['$supplier.supplierName', null] },
+                    { $ne: ['$supplier.supplierName', ''] },
+                    {
+                      $regexMatch: {
+                        input: { $toString: '$supplier.supplierName' },
+                        regex: sanitizedSearch,
+                        options: 'i'
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                $expr: {
+                  $and: [
+                    { $ne: ['$agent.agentName', null] },
+                    { $ne: ['$agent.agentName', ''] },
+                    {
+                      $regexMatch: {
+                        input: { $toString: '$agent.agentName' },
+                        regex: sanitizedSearch,
+                        options: 'i'
+                      }
+                    }
+                  ]
+                }
+              },
+              { 'items.itemName': { $regex: sanitizedSearch, $options: 'i' } },
+              { 'items.itemCode': { $regex: sanitizedSearch, $options: 'i' } }
+            ]
+          }
+        },
+        { $count: 'total' }
+      ];
+
+      const [ordersResult, countResult] = await Promise.all([
+        PurchaseOrder.aggregate(aggregationPipeline),
+        PurchaseOrder.aggregate(countPipeline)
+      ]);
+
+      orders = ordersResult;
+      total = countResult[0]?.total || 0;
+
+      // Populate supplier if needed
+      if (orders.length > 0) {
+        const supplierIds = orders
+          .map((o: any) => o.supplier?.supplierId)
+          .filter((id: any) => id);
+        
+        if (supplierIds.length > 0) {
+          const { Supplier } = await import('../models/Supplier');
+          const suppliers = await Supplier.find({ _id: { $in: supplierIds } })
+            .select('name email phone category')
+            .lean();
+          
+          const supplierMap = new Map(suppliers.map((s: any) => [s._id.toString(), s]));
+          orders = orders.map((order: any) => {
+            if (order.supplier?.supplierId) {
+              const supplier = supplierMap.get(order.supplier.supplierId.toString());
+              if (supplier && typeof supplier === 'object' && supplier !== null) {
+                const supplierObj = supplier as Record<string, any>;
+                order.supplier = { ...order.supplier, ...supplierObj };
+              }
+            }
+            return order;
+          });
+        }
+      }
+    } else {
+      // No search - use simple find query
+      [orders, total] = await Promise.all([
+        PurchaseOrder.find(baseQuery)
+          .populate('supplier.supplierId', 'name email phone category')
+          .sort({ createdAt: -1 })
+          .skip(skip)
+          .limit(limit)
+          .lean(),
+        PurchaseOrder.countDocuments(baseQuery),
+      ]);
+    }
 
     return {
       data: orders,

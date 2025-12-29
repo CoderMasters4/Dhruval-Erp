@@ -66,3 +66,11 @@ router.delete('/:id', agentController.deleteAgent.bind(agentController));
 
 export default router;
 
+
+
+
+
+
+
+
+

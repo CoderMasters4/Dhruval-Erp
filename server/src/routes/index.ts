@@ -12,7 +12,8 @@ import v1CustomersRoutes from './v1/customers';
 import v1SuppliersRoutes from './v1/suppliers';
 import v1AgentsRoutes from './v1/agents';
 import v1InventoryRoutes from './v1/inventory';
-import v1ProductionRoutes from './v1/production';
+// Import production module routes from features (MVC Structure) - Lazy loaded
+// Don't import at top level to prevent hang
 import v1CustomerOrdersRoutes from './v1/customer-orders';
 import v1PurchaseOrdersRoutes from './v1/purchase-orders';
 import v1PurchaseRoutes from './v1/purchase';
@@ -168,33 +169,84 @@ router.use('/auth', v1AuthRoutes);
 // Apply authentication middleware to all other v1 routes
 router.use('/', authenticate);
 
-// // ADDING ROUTES BACK ONE BY ONE TO IDENTIFY HANGING ISSUE
-// // Core business management
-router.use('/companies', v1CompaniesRoutes); // ❌ HANGING: Companies route causing server hang
-router.use('/users', v1UsersRoutes); // ✅ WORKING: Users route working
-router.use('/customers', v1CustomersRoutes); // 
-router.use('/suppliers', v1SuppliersRoutes); // ✅ TESTING: Testing suppliers separately
-router.use('/agents', v1AgentsRoutes); // ✅ Agents routes
+// Core business management
+router.use('/companies', v1CompaniesRoutes);
+router.use('/users', v1UsersRoutes);
+router.use('/customers', v1CustomersRoutes);
+router.use('/suppliers', v1SuppliersRoutes);
+router.use('/agents', v1AgentsRoutes);
 
-// // Dashboard and orders
+// Dashboard and orders
 router.use('/dashboard', v1DashboardRoutes);
 router.use('/orders', v1OrdersRoutes);
 
-// // Inventory and production
+// Inventory and production
 router.use('/categories', categoryRoutes);
 router.use('/subcategories', subcategoryRoutes);
 router.use('/job-work-types', jobWorkTypeRoutes);
 router.use('/units', unitRoutes);
 router.use('/job-workers', jobWorkerRoutes);
 router.use('/inventory', v1InventoryRoutes);
-router.use('/production', v1ProductionRoutes);
+// Production Module Routes (MVC Structure - Complete)
+// All production modules registered under /production prefix
+// Ultra-lazy loading: Only load the specific route being accessed + caching
+const productionRouteCache: Record<string, any> = {};
+
+router.use('/production', (req, res, next) => {
+  try {
+    // Extract the route path (e.g., 'program-details' from '/production/program-details')
+    // req.path will be like '/program-details' or '/program-details/123' or '/program-details/order/ORD123'
+    const pathParts = req.path.split('/').filter(Boolean);
+    const firstPathSegment = pathParts[0] || '';
+    
+    // Map route paths to their module files
+    const routeMap: Record<string, () => any> = {
+      'program-details': () => require('../features/production/routes/program-details.routes').default,
+      'bleaching': () => require('../features/production/routes/bleaching-process.routes').default,
+      'after-bleaching': () => require('../features/production/routes/after-bleaching.routes').default,
+      'batch-center': () => require('../features/production/routes/batch-center.routes').default,
+      'printing': () => require('../features/production/routes/printing.routes').printingRoutes,
+      'hazer-silicate-curing': () => require('../features/production/routes/hazer-silicate-curing.routes').hazerSilicateCuringRoutes,
+      'washing': () => require('../features/production/routes/washing.routes').washingRoutes,
+      'finishing': () => require('../features/production/routes/finishing.routes').finishingRoutes,
+      'felt': () => require('../features/production/routes/felt.routes').feltRoutes,
+      'folding-checking': () => require('../features/production/routes/folding-checking.routes').foldingCheckingRoutes,
+      'packing': () => require('../features/production/routes/packing.routes').packingRoutes,
+      'longation-stock': () => require('../features/production/routes/longation-stock.routes').longationStockRoutes,
+      'rejection-stock': () => require('../features/production/routes/rejection-stock.routes').rejectionStockRoutes,
+      'lot': () => require('../features/production/routes/lot.routes').default,
+    };
+
+    // Load only the specific route being accessed (with caching)
+    if (firstPathSegment && routeMap[firstPathSegment]) {
+      // Check cache first
+      if (!productionRouteCache[firstPathSegment]) {
+        const routeLoader = routeMap[firstPathSegment];
+        productionRouteCache[firstPathSegment] = routeLoader();
+      }
+      // Create a temporary router to mount the route at the correct path
+      // This ensures Express properly strips the path segment
+      const tempRouter = Router();
+      tempRouter.use(`/${firstPathSegment}`, productionRouteCache[firstPathSegment]);
+      tempRouter(req, res, next);
+    } else {
+      // If path not found, try loading all routes (fallback)
+      const getProductionRoutes = require('../features/production').default;
+      const productionRoutes = typeof getProductionRoutes === 'function' ? getProductionRoutes() : getProductionRoutes;
+      productionRoutes(req, res, next);
+    }
+  } catch (error) {
+    console.error('Error loading production routes:', error);
+    res.status(503).json({ success: false, message: 'Production routes not available' });
+  }
+});
 router.use('/warehouses', v1WarehousesRoutes);
 router.use('/stock-movements', v1StockMovementsRoutes);
 router.use('/spares', v1SparesRoutes);
 router.use('/scrap', v1ScrapRoutes);
 router.use('/goods-returns', v1GoodsReturnsRoutes);
 
-// // New feature routes
+// New feature routes
 router.use('/maintenance', maintenanceRoutes);
 router.use('/quality', qualityRoutes);
 router.use('/compatibility', compatibilityRoutes);
@@ -202,17 +254,17 @@ router.use('/suppliers-management', suppliersRoutes);
 
 router.use('/batches', v1BatchesRoutes);
 
-// // Orders and financial - Using fixed routes with lazy loading
+// Orders and financial
 router.use('/customer-orders', v1CustomerOrdersRoutes);
 router.use('/purchase-orders', v1PurchaseOrdersRoutes);
-router.use('/purchase', v1PurchaseRoutes); // ENABLED WITH SIMPLIFIED HANDLERS
+router.use('/purchase', v1PurchaseRoutes);
 router.use('/purchase/reports', v1PurchaseReportsRoutes);
 
 router.use('/invoices', v1InvoicesRoutes);
 router.use('/quotations', v1QuotationsRoutes);
 router.use('/financial-transactions', v1FinancialTransactionsRoutes);
 
-// // Operations and management
+// Operations and management
 router.use('/manpower', v1ManpowerRoutes);
 router.use('/stickers', v1StickerRoutes);
 router.use('/visitors', v1VisitorsRoutes);
@@ -222,7 +274,7 @@ router.use('/attendance', v1AttendanceRoutes);
 router.use('/employees', v1EmployeesRoutes);
 router.use('/shifts', v1ShiftsRoutes);
 
-// // Monitoring and analytics
+// Monitoring and analytics
 router.use('/boiler-monitoring', v1BoilerMonitoringRoutes);
 router.use('/electricity-monitoring', v1ElectricityMonitoringRoutes);
 router.use('/business-analytics', v1BusinessAnalyticsRoutes);
@@ -240,7 +292,7 @@ router.use('/production-batches', productionBatchRoutes);
 router.use('/security-logs', v1SecurityLogsRoutes);
 router.use('/audit-logs', v1AuditLogsRoutes);
 
-// // Specialized services
+// Specialized services
 router.use('/hospitality', v1HospitalityRoutes);
 router.use('/customer-visits', v1CustomerVisitsRoutes);
 router.use('/dispatch', v1DispatchRoutes);
@@ -250,8 +302,8 @@ router.use('/reports', v1ReportsRoutes);
 // Advanced features
 router.use('/file-access', v1FileAccessRoutes);
 
-router.use('/production-dashboard', v1ProductionDashboardRoutes); // ✅ FIXED: Now using lazy loading
+router.use('/production-dashboard', v1ProductionDashboardRoutes);
 router.use('/advanced-reports', v1AdvancedReportsRoutes);
-router.use('/document-management', v1DocumentManagementRoutes); // ✅ FIXED: Now using lazy loading
+router.use('/document-management', v1DocumentManagementRoutes);
 
 export default router;

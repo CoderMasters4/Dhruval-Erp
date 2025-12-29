@@ -172,7 +172,12 @@ export class PurchaseOrderService extends BaseService<IPurchaseOrder> {
    */
   async getOrderStats(companyId: string, dateRange?: { start: Date; end: Date }): Promise<any> {
     try {
-      const matchQuery: any = { companyId: new Types.ObjectId(companyId) };
+      const matchQuery: any = { 
+        companyId: new Types.ObjectId(companyId),
+        isActive: { $ne: false } // Only count active orders
+      };
+      const now = new Date();
+      const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
 
       if (dateRange) {
         matchQuery.createdAt = {
@@ -185,28 +190,57 @@ export class PurchaseOrderService extends BaseService<IPurchaseOrder> {
         totalOrders,
         ordersByStatus,
         totalValue,
-        averageOrderValue
+        averageOrderValue,
+        thisMonthOrders,
+        thisMonthValue
       ] = await Promise.all([
         this.count(matchQuery),
         this.model.aggregate([
           { $match: matchQuery },
-          { $group: { _id: '$status', count: { $sum: 1 }, totalValue: { $sum: '$amounts.grandTotal' } } }
+          { $group: { _id: '$status', count: { $sum: 1 }, totalValue: { $sum: { $ifNull: ['$amounts.grandTotal', 0] } } } }
         ]),
         this.model.aggregate([
           { $match: matchQuery },
-          { $group: { _id: null, totalValue: { $sum: '$amounts.grandTotal' } } }
+          { $group: { _id: null, totalValue: { $sum: { $ifNull: ['$amounts.grandTotal', 0] } } } }
         ]),
         this.model.aggregate([
           { $match: matchQuery },
-          { $group: { _id: null, avgValue: { $avg: '$amounts.grandTotal' } } }
+          { $group: { _id: null, avgValue: { $avg: { $ifNull: ['$amounts.grandTotal', 0] } } } }
+        ]),
+        this.model.countDocuments({
+          companyId: new Types.ObjectId(companyId),
+          isActive: { $ne: false },
+          createdAt: { $gte: startOfMonth }
+        }),
+        this.model.aggregate([
+          {
+            $match: {
+              companyId: new Types.ObjectId(companyId),
+              isActive: { $ne: false },
+              createdAt: { $gte: startOfMonth }
+            }
+          },
+          { $group: { _id: null, totalValue: { $sum: { $ifNull: ['$amounts.grandTotal', 0] } } } }
         ])
       ]);
 
+      // Convert ordersByStatus array to object for easier access
+      const statusCounts: { [key: string]: number } = {};
+      ordersByStatus.forEach((item: any) => {
+        statusCounts[item._id] = item.count;
+      });
+
       return {
         totalOrders,
-        ordersByStatus,
+        pendingOrders: statusCounts['pending'] || 0,
+        approvedOrders: statusCounts['approved'] || 0,
+        receivedOrders: statusCounts['received'] || 0,
+        cancelledOrders: statusCounts['cancelled'] || 0,
         totalValue: totalValue[0]?.totalValue || 0,
-        averageOrderValue: averageOrderValue[0]?.avgValue || 0
+        thisMonthOrders: thisMonthOrders || 0,
+        thisMonthValue: thisMonthValue[0]?.totalValue || 0,
+        averageOrderValue: averageOrderValue[0]?.avgValue || 0,
+        ordersByStatus: statusCounts
       };
     } catch (error) {
       logger.error('Error getting order statistics', { error, companyId, dateRange });
