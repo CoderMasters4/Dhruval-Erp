@@ -3470,6 +3470,9 @@ export interface IInvoiceAmounts {
   totalDiscount: number;
   taxableAmount: number;
   totalTaxAmount: number;
+  transportCharges?: number;
+  packingCharges?: number;
+  otherCharges?: number;
   roundingAdjustment: number;
   grandTotal: number;
   advanceReceived: number;

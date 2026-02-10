@@ -174,6 +174,14 @@ export const gatepassesApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: ['GatePass', 'GatePassStats'],
     }),
+
+    markOutAtGate: builder.mutation<GatePass, string>({
+      query: (id) => ({
+        url: `/gatepasses/${id}/mark-out`,
+        method: 'PATCH',
+      }),
+      invalidatesTags: ['GatePass', 'GatePassStats'],
+    }),
     
     cancelGatePass: builder.mutation<GatePass, string>({
       query: (id) => ({
@@ -212,6 +220,7 @@ export const {
   useCreateGatePassMutation,
   useUpdateGatePassMutation,
   useCompleteGatePassMutation,
+  useMarkOutAtGateMutation,
   useCancelGatePassMutation,
   usePrintGatePassMutation,
   useDeleteGatePassMutation,

@@ -74,3 +74,5 @@ export function InventoryStatsCards({ stats, isClient }: InventoryStatsCardsProp
 
 
 
+
+

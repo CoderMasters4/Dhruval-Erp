@@ -23,22 +23,59 @@ export class InvoiceService extends BaseService<IInvoice> {
         invoiceData.invoiceNumber = await this.generateInvoiceNumberInternal(invoiceData.companyId!.toString());
       }
 
-      // Calculate totals
-      const totals = this.calculateInvoiceTotals(invoiceData.items || []);
+      // Normalize items (allow minimal items: description, quantity, rate, unit)
+      const rawItems = invoiceData.items || [];
+      const items = rawItems.map((it: any, idx: number) => {
+        if (it.itemId && it.itemCode && it.itemName) return it;
+        const qty = Number(it.quantity) || 0;
+        const rate = Number(it.rate) || 0;
+        const taxRate = Number(it.taxRate) ?? 18;
+        const taxable = qty * rate;
+        const taxAmt = taxable * taxRate / 100;
+        const lineTotal = taxable + taxAmt;
+        return {
+          itemId: it.itemId || new Types.ObjectId(),
+          itemCode: it.itemCode || `INV-L${idx + 1}`,
+          itemName: it.itemName || it.description || 'Item',
+          description: it.description || it.itemName || 'Item',
+          hsnCode: it.hsnCode || '5407',
+          quantity: qty,
+          unit: it.unit || 'PCS',
+          rate,
+          discount: it.discount || { type: 'percentage', value: 0 },
+          discountAmount: it.discountAmount || 0,
+          taxableAmount: taxable,
+          taxBreakup: [{ taxType: 'IGST', rate: taxRate, amount: taxAmt }],
+          totalTaxAmount: taxAmt,
+          lineTotal,
+          notes: it.notes
+        };
+      });
+
+      const totals = this.calculateInvoiceTotals(items);
+      const transport = Number((invoiceData.amounts as any)?.transportCharges) || 0;
+      const packing = Number((invoiceData.amounts as any)?.packingCharges) || 0;
+      const other = Number((invoiceData.amounts as any)?.otherCharges) || 0;
+      const roundOff = Number((invoiceData.amounts as any)?.roundingAdjustment) || 0;
+      const grandTotal = totals.totalAmount + transport + packing + other + roundOff;
 
       const invoice = await this.create({
         ...invoiceData,
+        items,
         invoiceNumber: invoiceData.invoiceNumber,
         status: 'draft',
         amounts: {
           subtotal: totals.subtotal,
-          totalTaxAmount: totals.totalTax,
-          grandTotal: totals.totalAmount,
-          balanceAmount: totals.totalAmount,
           totalDiscount: 0,
           taxableAmount: totals.subtotal,
-          roundingAdjustment: 0,
-          advanceReceived: 0
+          totalTaxAmount: totals.totalTax,
+          transportCharges: transport,
+          packingCharges: packing,
+          otherCharges: other,
+          roundingAdjustment: roundOff,
+          grandTotal,
+          advanceReceived: 0,
+          balanceAmount: grandTotal
         },
         createdAt: new Date(),
         updatedAt: new Date()
@@ -103,14 +140,15 @@ export class InvoiceService extends BaseService<IInvoice> {
   }
 
   /**
-   * Record payment
+   * Record payment (spec: payment mode, reference no)
    */
   async recordPayment(
     invoiceId: string, 
     paymentAmount: number, 
     paymentMethod: string,
     paymentDate?: Date,
-    recordedBy?: string
+    recordedBy?: string,
+    options?: { reference?: string; notes?: string }
   ): Promise<IInvoice | null> {
     try {
       const invoice = await this.findById(invoiceId);
@@ -122,33 +160,36 @@ export class InvoiceService extends BaseService<IInvoice> {
         throw new AppError('Payment amount must be greater than 0', 400);
       }
 
-      if (paymentAmount > invoice.outstandingAmount) {
+      const outstanding = (invoice as any).outstandingAmount ?? invoice.amounts?.balanceAmount ?? 0;
+      if (paymentAmount > outstanding) {
         throw new AppError('Payment amount cannot exceed outstanding amount', 400);
       }
 
-      const newOutstandingAmount = invoice.outstandingAmount - paymentAmount;
+      const newOutstandingAmount = outstanding - paymentAmount;
       const newPaidAmount = (invoice.paidAmount || 0) + paymentAmount;
 
       const paymentRecord = {
+        paymentDate: paymentDate || new Date(),
         amount: paymentAmount,
-        method: paymentMethod,
-        date: paymentDate || new Date(),
-        recordedBy: recordedBy ? new Types.ObjectId(recordedBy) : undefined,
-        recordedAt: new Date()
+        paymentMethod,
+        reference: options?.reference,
+        notes: options?.notes
       };
 
       const updateData: any = {
-        $push: { payments: paymentRecord },
+        $push: { paymentHistory: paymentRecord },
         paidAmount: newPaidAmount,
         outstandingAmount: newOutstandingAmount
       };
 
-      // Update status based on payment
+      // Update status and payment status based on payment
       if (newOutstandingAmount === 0) {
         updateData.status = 'paid';
+        updateData.paymentStatus = 'paid';
         updateData.paidAt = new Date();
-      } else if (invoice.status === 'draft') {
-        updateData.status = 'partially_paid';
+      } else {
+        updateData.status = invoice.status === 'draft' ? 'partially_paid' : invoice.status;
+        updateData.paymentStatus = 'partially_paid';
       }
 
       const updatedInvoice = await this.update(invoiceId, updateData, recordedBy);
@@ -483,15 +524,15 @@ export class InvoiceService extends BaseService<IInvoice> {
       throw new AppError('Due date is required', 400);
     }
 
-    // Validate each item
-    invoiceData.items.forEach((item, index) => {
-      if (!item.description) {
-        throw new AppError(`Item ${index + 1}: Description is required`, 400);
+    // Validate each item (description or itemName required for minimal payload)
+    invoiceData.items.forEach((item: any, index: number) => {
+      if (!item.description && !item.itemName) {
+        throw new AppError(`Item ${index + 1}: Description or name is required`, 400);
       }
       if (!item.quantity || item.quantity <= 0) {
         throw new AppError(`Item ${index + 1}: Quantity must be greater than 0`, 400);
       }
-      if (!item.rate || item.rate < 0) {
+      if (item.rate == null || item.rate < 0) {
         throw new AppError(`Item ${index + 1}: Rate must be non-negative`, 400);
       }
     });

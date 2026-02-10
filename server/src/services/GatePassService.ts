@@ -5,7 +5,7 @@ import { AppError } from '../utils/errors';
 import { logger } from '../utils/logger';
 
 export interface CreateGatePassRequest {
-  vehicleId: string;
+  vehicleId?: string;
   vehicleNumber: string;
   driverName: string;
   driverPhone: string;
@@ -17,6 +17,15 @@ export interface CreateGatePassRequest {
   department?: string;
   companyId: string;
   securityNotes?: string;
+  /** Spec: link to one of Dispatch / Invoice / Job Work */
+  dispatchId?: string;
+  invoiceId?: string;
+  jobWorkChallanId?: string;
+  partyReceiver?: string;
+  transportName?: string;
+  materialList?: { designNo?: string; description?: string; quantity: number; unit: string; baleCount?: number; cartonCount?: number }[];
+  weights?: { tare?: number; gross?: number; net?: number };
+  remarks?: string;
   items?: {
     description: string;
     quantity: number;
@@ -80,10 +89,7 @@ export class GatePassService extends BaseService<IGatePass> {
    */
   async createGatePass(gatePassData: CreateGatePassRequest, createdBy?: string): Promise<IGatePass> {
     try {
-      // Validate required fields
-      if (!gatePassData.vehicleId) {
-        throw new AppError('Vehicle ID is required', 400);
-      }
+      // Validate required fields (spec: Vehicle No required; Vehicle ID optional when creating from dispatch/invoice)
       if (!gatePassData.vehicleNumber) {
         throw new AppError('Vehicle number is required', 400);
       }
@@ -115,15 +121,20 @@ export class GatePassService extends BaseService<IGatePass> {
         throw new AppError('Vehicle already has an active gate pass', 400);
       }
 
-      const createData = {
+      const createData: any = {
         ...gatePassData,
         vehicleNumber: gatePassData.vehicleNumber.toUpperCase(),
-        vehicleId: this.validateObjectId(gatePassData.vehicleId) as any,
         companyId: this.validateObjectId(gatePassData.companyId) as any,
         status: 'active' as const,
         timeIn: new Date(),
         isActive: true
       };
+      if (gatePassData.vehicleId) {
+        createData.vehicleId = this.validateObjectId(gatePassData.vehicleId);
+      }
+      if (gatePassData.dispatchId) createData.dispatchId = this.validateObjectId(gatePassData.dispatchId);
+      if (gatePassData.invoiceId) createData.invoiceId = this.validateObjectId(gatePassData.invoiceId);
+      if (gatePassData.jobWorkChallanId) createData.jobWorkChallanId = this.validateObjectId(gatePassData.jobWorkChallanId);
       
       const gatePass = await this.create(createData, createdBy);
 
@@ -303,6 +314,30 @@ export class GatePassService extends BaseService<IGatePass> {
       return gatePass;
     } catch (error) {
       logger.error('Error completing gate pass', { error, gatePassId, completedBy });
+      throw error;
+    }
+  }
+
+  /**
+   * Mark gate pass OUT at gate (spec: Security workflow - Create → Approved/Printed → Marked OUT at Gate)
+   */
+  async markOutAtGate(gatePassId: string, markedBy?: string): Promise<IGatePass | null> {
+    try {
+      const gatePass = await this.findById(gatePassId);
+      if (!gatePass) {
+        throw new AppError('Gate pass not found', 404);
+      }
+      if (['completed', 'cancelled', 'out_at_gate'].includes(gatePass.status)) {
+        throw new AppError('Gate pass is already closed or out', 400);
+      }
+      (gatePass as any).status = 'out_at_gate';
+      (gatePass as any).gateOutAt = new Date();
+      gatePass.timeOut = new Date();
+      await gatePass.save();
+      logger.info('Gate pass marked OUT at gate', { gatePassId, gatePassNumber: gatePass.gatePassNumber, markedBy });
+      return gatePass;
+    } catch (error) {
+      logger.error('Error marking gate pass out', { error, gatePassId });
       throw error;
     }
   }
