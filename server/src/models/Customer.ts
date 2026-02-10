@@ -89,12 +89,19 @@ const CustomerSchema = new Schema<ICustomer>({
     annualTurnover: { type: String, enum: ['<1L', '1L-10L', '10L-1Cr', '1Cr-10Cr', '10Cr+'] }
   },
 
-  // Registration Details
+  // Registration Details (GSTIN: allow valid format or URD/Unregistered for non-GST customers)
   registrationDetails: {
     gstin: { 
       type: String,
       uppercase: true,
-      match: /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/,
+      validate: {
+        validator: function(v: string) {
+          if (!v || v === '') return true;
+          if (['URD', 'UNREGISTERED'].includes(v)) return true;
+          return /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/.test(v);
+        },
+        message: 'GSTIN must be valid or URD/Unregistered'
+      },
       sparse: true
     },
     pan: { 

@@ -33,6 +33,30 @@ export class CustomerController extends BaseController<ICustomer> {
   }
 
   /**
+   * Find or create customer for Sales (spec: auto-save on first entry when user types new customer)
+   */
+  async findOrCreate(req: Request, res: Response): Promise<void> {
+    try {
+      const companyId = req.user?.companyId?.toString();
+      if (!companyId) {
+        this.sendError(res, new Error('Company ID is required'), 'Company ID is required', 400);
+        return;
+      }
+      const createdBy = (req.user?.userId || req.user?._id)?.toString();
+      const payload = req.body;
+      const { customer, created } = await this.customerService.findOrCreateForSales(payload, companyId, createdBy);
+      res.status(200).json({
+        success: true,
+        message: created ? 'Customer created' : 'Customer found',
+        data: customer,
+        created
+      });
+    } catch (error) {
+      this.sendError(res, error, 'Find or create customer failed');
+    }
+  }
+
+  /**
    * Get customer by code
    */
   async getCustomerByCode(req: Request, res: Response): Promise<void> {

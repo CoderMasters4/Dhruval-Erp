@@ -11,16 +11,35 @@ export interface IDispatch extends Document {
   createdBy: mongoose.Types.ObjectId;
   assignedTo?: mongoose.Types.ObjectId;
   
-  // Source Information (simplified)
-  sourceWarehouseId: mongoose.Types.ObjectId;
+  // Source Information (optional when invoice-linked)
+  sourceWarehouseId?: mongoose.Types.ObjectId;
   
-  // Customer Order Reference (destination comes from here)
-  customerOrderId: mongoose.Types.ObjectId;
+  // Customer Order or Invoice (spec: one of these required; prefer Invoice-linked)
+  customerOrderId?: mongoose.Types.ObjectId;
+  invoiceId?: mongoose.Types.ObjectId;
   
-  // Delivery Information
+  // Delivery Information (spec: Vehicle No, Driver Name/Phone, Transport Name, Loading Date/Time)
   vehicleNumber?: string;
   deliveryPersonName?: string;
   deliveryPersonNumber?: string;
+  transportName?: string;
+  loadingDate?: Date;
+  loadingTime?: string;
+  
+  // Kata Chithi / Weigh Slip (spec: mandatory upload for every shipment)
+  weighSlipUrls?: string[];
+  kataChithiUrls?: string[];
+  
+  // Partial dispatch: item-wise qty + pending balance
+  dispatchItems?: {
+    designNo?: string;
+    productName?: string;
+    quantity: number;
+    unit: string;
+    dispatchedQty: number;
+    pendingQty?: number;
+  }[];
+  pendingBalance?: number;
   
   // Documents
   documents?: {
@@ -77,33 +96,46 @@ const dispatchSchema = new Schema<IDispatch>({
     ref: 'User'
   },
   
-  // Source Information (simplified)
+  // Source Information (simplified; optional when dispatch is invoice-linked)
   sourceWarehouseId: {
     type: Schema.Types.ObjectId,
     ref: 'Warehouse',
-    required: true
+    required: false
   },
   
-  // Customer Order Reference (destination comes from here)
+  // Customer Order or Invoice (spec: prefer Invoice-linked; one of them required)
   customerOrderId: {
     type: Schema.Types.ObjectId,
     ref: 'CustomerOrder',
-    required: true
+    required: false
+  },
+  invoiceId: {
+    type: Schema.Types.ObjectId,
+    ref: 'Invoice'
   },
   
-  // Delivery Information
-  vehicleNumber: {
-    type: String,
-    trim: true
-  },
-  deliveryPersonName: {
-    type: String,
-    trim: true
-  },
-  deliveryPersonNumber: {
-    type: String,
-    trim: true
-  },
+  // Delivery Information (spec: Vehicle No, Driver, Transport, Loading Date/Time)
+  vehicleNumber: { type: String, trim: true },
+  deliveryPersonName: { type: String, trim: true },
+  deliveryPersonNumber: { type: String, trim: true },
+  transportName: { type: String, trim: true },
+  loadingDate: { type: Date },
+  loadingTime: { type: String, trim: true },
+  
+  // Kata Chithi / Weigh Slip (mandatory upload per shipment)
+  weighSlipUrls: [{ type: String, trim: true }],
+  kataChithiUrls: [{ type: String, trim: true }],
+  
+  // Partial dispatch items and pending balance
+  dispatchItems: [{
+    designNo: { type: String, trim: true },
+    productName: { type: String, trim: true },
+    quantity: { type: Number, min: 0 },
+    unit: { type: String, trim: true },
+    dispatchedQty: { type: Number, min: 0 },
+    pendingQty: { type: Number, min: 0 }
+  }],
+  pendingBalance: { type: Number, min: 0 },
   
   // Documents
   documents: {
@@ -114,10 +146,7 @@ const dispatchSchema = new Schema<IDispatch>({
   },
   
   // Notes
-  notes: {
-    type: String,
-    trim: true
-  }
+  notes: { type: String, trim: true }
 }, {
   timestamps: true
 });

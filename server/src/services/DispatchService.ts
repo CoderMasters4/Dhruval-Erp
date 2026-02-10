@@ -194,17 +194,16 @@ export class DispatchService extends BaseService<IDispatch> {
     if (!dispatchData.companyId) {
       throw new AppError('Company ID is required', 400);
     }
-
-    if (!dispatchData.sourceWarehouseId) {
-      throw new AppError('Source warehouse ID is required', 400);
+    // Spec: Dispatch linked to Sales Order and/or Invoice (prefer Invoice-linked)
+    if (!dispatchData.customerOrderId && !dispatchData.invoiceId) {
+      throw new AppError('Either Customer order ID or Invoice ID is required', 400);
     }
-
-    if (!dispatchData.customerOrderId) {
-      throw new AppError('Customer order ID is required', 400);
+    if (!dispatchData.sourceWarehouseId && !dispatchData.invoiceId) {
+      throw new AppError('Source warehouse ID is required when not linked to invoice', 400);
     }
-
+    // Priority can default in model
     if (!dispatchData.priority) {
-      throw new AppError('Priority is required', 400);
+      (dispatchData as any).priority = 'medium';
     }
   }
 }

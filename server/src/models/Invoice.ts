@@ -129,12 +129,15 @@ const InvoiceSchema = new Schema<IInvoice>({
   // Invoice Items
   items: [InvoiceItemSchema],
 
-  // Amount Calculations
+  // Amount Calculations (spec: transport/packing/other charges, round-off)
   amounts: {
     subtotal: { type: Number, required: true, min: 0 },
     totalDiscount: { type: Number, default: 0, min: 0 },
     taxableAmount: { type: Number, required: true, min: 0 },
     totalTaxAmount: { type: Number, default: 0, min: 0 },
+    transportCharges: { type: Number, default: 0, min: 0 },
+    packingCharges: { type: Number, default: 0, min: 0 },
+    otherCharges: { type: Number, default: 0, min: 0 },
     roundingAdjustment: { type: Number, default: 0 },
     grandTotal: { type: Number, required: true, min: 0 },
     advanceReceived: { type: Number, default: 0, min: 0 },

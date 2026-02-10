@@ -227,6 +227,25 @@ router.patch('/:id/print', async (req, res) => {
 });
 
 /**
+ * @route   PATCH /api/v1/gatepasses/:id/mark-out
+ * @desc    Mark gate pass OUT at gate (security workflow)
+ * @access  Private
+ */
+router.patch('/:id/mark-out', async (req, res) => {
+  try {
+    const { GatePassController } = await import('../../controllers/GatePassController');
+    const gatePassController = new GatePassController();
+    await gatePassController.markOutAtGate(req, res);
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error',
+      error: error.message
+    });
+  }
+});
+
+/**
  * @route   DELETE /api/v1/gatepasses/:id
  * @desc    Delete gate pass (soft delete)
  * @access  Private

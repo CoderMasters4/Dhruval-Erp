@@ -18,13 +18,19 @@ import {
   CheckCircle,
   XCircle,
   AlertTriangle,
-  User
+  User,
+  CreditCard,
+  ExternalLink
 } from 'lucide-react'
 import { AppLayout } from '@/components/layout/AppLayout'
 import { FinancialHeader } from '@/components/ui/PageHeader'
 import { selectCurrentUser, selectIsSuperAdmin } from '@/lib/features/auth/authSlice'
 import { useGetInvoicesQuery, useGetInvoiceStatsQuery } from '@/lib/api/invoicesApi'
+import { CreateInvoiceModal } from '@/components/invoices/CreateInvoiceModal'
+import { RecordPaymentModal } from '@/components/invoices/RecordPaymentModal'
 import clsx from 'clsx'
+
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api/v1'
 
 export default function InvoicesPage() {
   const user = useSelector(selectCurrentUser)
@@ -34,6 +40,14 @@ export default function InvoicesPage() {
   const [customerFilter, setCustomerFilter] = useState('all')
   const [page, setPage] = useState(1)
   const [showCreateModal, setShowCreateModal] = useState(false)
+  const [paymentInvoice, setPaymentInvoice] = useState<{
+    _id: string
+    invoiceNumber: string
+    outstandingAmount?: number
+    balanceAmount?: number
+    paidAmount?: number
+    totalAmount?: number
+  } | null>(null)
 
   // Fetch invoices data
   const { data: invoicesData, isLoading, error } = useGetInvoicesQuery({
@@ -49,6 +63,10 @@ export default function InvoicesPage() {
 
   const invoices = invoicesData?.data || []
   const pagination = invoicesData?.pagination
+
+  const refreshInvoices = () => {
+    window.location.reload()
+  }
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-IN', {
@@ -342,20 +360,38 @@ export default function InvoicesPage() {
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        <div className="flex space-x-2">
-                          <button className="text-sky-500 hover:text-black p-1 rounded hover:bg-sky-50">
+                        <div className="flex flex-wrap gap-1">
+                          <a
+                            href={`${API_BASE}/invoices/${invoice._id}/pdf`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-sky-500 hover:text-black p-1.5 rounded hover:bg-sky-50 inline-flex"
+                            title="View / Print PDF"
+                          >
+                            <ExternalLink className="h-4 w-4" />
+                          </a>
+                          <button
+                            type="button"
+                            onClick={() => setPaymentInvoice({
+                              _id: invoice._id,
+                              invoiceNumber: invoice.invoiceNumber,
+                              outstandingAmount: (invoice as any).outstandingAmount ?? invoice.balanceAmount ?? ((invoice.totalAmount || 0) - (invoice.paidAmount || 0))
+                            })}
+                            className="text-green-600 hover:text-green-800 p-1.5 rounded hover:bg-green-50 inline-flex"
+                            title="Record payment"
+                          >
+                            <CreditCard className="h-4 w-4" />
+                          </button>
+                          <button className="text-sky-500 hover:text-black p-1.5 rounded hover:bg-sky-50">
                             <Eye className="h-4 w-4" />
                           </button>
-                          <button className="text-green-500 hover:text-green-700 p-1 rounded hover:bg-green-50">
+                          <button className="text-green-500 hover:text-green-700 p-1.5 rounded hover:bg-green-50">
                             <Download className="h-4 w-4" />
                           </button>
-                          <button className="text-blue-500 hover:text-blue-700 p-1 rounded hover:bg-blue-50">
-                            <Send className="h-4 w-4" />
-                          </button>
-                          <button className="text-sky-500 hover:text-black p-1 rounded hover:bg-sky-50">
+                          <button className="text-sky-500 hover:text-sky-700 p-1.5 rounded hover:bg-sky-50">
                             <Edit className="h-4 w-4" />
                           </button>
-                          <button className="text-red-500 hover:text-red-700 p-1 rounded hover:bg-red-50">
+                          <button className="text-red-500 hover:text-red-700 p-1.5 rounded hover:bg-red-50">
                             <Trash2 className="h-4 w-4" />
                           </button>
                         </div>
@@ -396,6 +432,25 @@ export default function InvoicesPage() {
               </div>
             </div>
           </div>
+        )}
+
+        {/* Create Invoice Modal */}
+        <CreateInvoiceModal
+          isOpen={showCreateModal}
+          onClose={() => setShowCreateModal(false)}
+          onSuccess={refreshInvoices}
+        />
+
+        {/* Record Payment Modal */}
+        {paymentInvoice && (
+          <RecordPaymentModal
+            isOpen={!!paymentInvoice}
+            onClose={() => setPaymentInvoice(null)}
+            onSuccess={refreshInvoices}
+            invoiceId={paymentInvoice._id}
+            invoiceNumber={paymentInvoice.invoiceNumber}
+            outstandingAmount={paymentInvoice.outstandingAmount ?? 0}
+          />
         )}
       </div>
     </AppLayout>

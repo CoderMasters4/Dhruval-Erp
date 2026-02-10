@@ -31,7 +31,22 @@ export class CustomerService extends BaseService<ICustomer> {
         }
       }
 
-      // Check if primary email already exists
+      // GST validation: prevent duplicate GSTIN in same company (spec: same rule as Vendor). Allow URD/Unregistered.
+      const gstin = (customerData.registrationDetails?.gstin || (customerData as any).gstin)?.toString()?.trim()?.toUpperCase();
+      if (gstin && gstin !== 'URD' && gstin !== 'UNREGISTERED') {
+        const existingGstin = await this.findOne({
+          companyId: customerData.companyId,
+          $or: [
+            { 'registrationDetails.gstin': gstin },
+            { 'registrationDetails.gstin': new RegExp(`^${gstin}$`, 'i') }
+          ]
+        });
+        if (existingGstin) {
+          throw new AppError('A customer with this GSTIN already exists', 400);
+        }
+      }
+
+      // Check if primary email already exists (when provided)
       if (customerData.contactInfo?.primaryEmail) {
         const existingEmail = await this.findOne({
           'contactInfo.primaryEmail': customerData.contactInfo.primaryEmail,
@@ -68,6 +83,111 @@ export class CustomerService extends BaseService<ICustomer> {
       logger.error('Error creating customer', { error, customerData, createdBy });
       throw error;
     }
+  }
+
+  /**
+   * Find or create customer for Sales (spec: create-first-time when user types new customer)
+   * Minimal fields: customerName, contactPerson, mobile, whatsapp, email, gstin, address, state, paymentTerms, notes.
+   */
+  async findOrCreateForSales(
+    payload: {
+      customerName: string;
+      contactPerson?: string;
+      mobile?: string;
+      whatsapp?: string;
+      email?: string;
+      gstin?: string;
+      address?: string;
+      state?: string;
+      paymentTerms?: string;
+      notes?: string;
+    },
+    companyId: string,
+    createdBy?: string
+  ): Promise<{ customer: ICustomer; created: boolean }> {
+    const name = payload.customerName?.trim();
+    if (!name) {
+      throw new AppError('Customer / Party name is required', 400);
+    }
+
+    const companyObjId = new Types.ObjectId(companyId);
+    const existing = await this.findOne({
+      companyId: companyObjId,
+      customerName: new RegExp(`^${name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i'),
+      isActive: true
+    });
+
+    if (existing) {
+      return { customer: existing, created: false };
+    }
+
+    const gstin = payload.gstin?.trim()?.toUpperCase();
+    if (gstin && gstin !== 'URD' && gstin !== 'UNREGISTERED') {
+      const dup = await this.findOne({
+        companyId: companyObjId,
+        'registrationDetails.gstin': gstin
+      });
+      if (dup) {
+        throw new AppError('A customer with this GSTIN already exists', 400);
+      }
+    }
+
+    const customerCode = await this.generateCustomerCode(companyId);
+    const doc: Partial<ICustomer> = {
+      companyId: companyObjId,
+      customerCode,
+      customerName: name,
+      businessInfo: { businessType: 'proprietorship' },
+      registrationDetails: {
+        gstin: gstin || undefined,
+        pan: undefined
+      },
+      contactInfo: {
+        primaryPhone: payload.mobile || payload.whatsapp || 'NA',
+        primaryEmail: payload.email || 'na@na.com',
+        whatsapp: payload.whatsapp
+      },
+      contactPersons: payload.contactPerson
+        ? [{
+            name: payload.contactPerson,
+            phone: payload.mobile || '',
+            isPrimary: true,
+            canPlaceOrders: true,
+            canMakePayments: true,
+            isActive: true
+          }]
+        : [],
+      addresses: payload.address
+        ? [{
+            type: 'billing' as const,
+            isPrimary: true,
+            addressLine1: payload.address,
+            city: '',
+            state: payload.state || '',
+            pincode: '',
+            country: 'India',
+            isActive: true
+          }]
+        : [],
+      financialInfo: {
+        paymentTerms: payload.paymentTerms,
+        creditLimit: 0,
+        creditDays: 0,
+        securityDeposit: 0,
+        outstandingAmount: 0,
+        advanceAmount: 0,
+        totalPurchases: 0,
+        currency: 'INR',
+        discountPercentage: 0,
+        taxExempt: false
+      },
+      notes: payload.notes,
+      relationship: { customerType: 'new', priority: 'medium', loyaltyPoints: 0 },
+      isActive: true
+    };
+
+    const created = await this.create(doc as any, createdBy);
+    return { customer: created, created: true };
   }
 
   /**

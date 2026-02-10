@@ -235,10 +235,11 @@ const CustomerOrderSchema = new Schema<ICustomerOrder>({
     }
   },
 
-  // Delivery Management
+  // Delivery Management (spec: estimated delivery duration-based only — 1 week, 2 weeks, 1 month, 2 months)
   delivery: {
     deliveryType: { type: String, enum: ['pickup', 'delivery', 'courier'], default: 'delivery' },
     deliveryAddress: DeliveryAddressSchema,
+    expectedDeliveryDuration: { type: String, enum: ['1_week', '2_weeks', '1_month', '2_months'] },
     expectedDeliveryDate: { type: Date },
     actualDeliveryDate: { type: Date },
     deliveryInstructions: { type: String },

@@ -758,11 +758,11 @@ export function Sidebar() {
             if (targetPath.startsWith(child.href) && child.href !== '/dashboard') return true
             return false
           })
-          
+
           if (childMatches) {
             return item.name
           }
-          
+
           // Recursively check nested children
           const nestedParent = findParentForPath(item.children, targetPath)
           if (nestedParent) {
@@ -797,23 +797,23 @@ export function Sidebar() {
 
   const isActive = (href: string) => {
     if (!pathname) return false
-    
+
     if (href === '/dashboard') {
       return pathname === href
     }
-    
+
     // Exact match
     if (pathname === href) {
       return true
     }
-    
+
     // For startsWith check, ensure the next character is '/' or end of string
     // This prevents '/job-workers' from matching '/job-work'
     if (pathname.startsWith(href)) {
       const nextChar = pathname[href.length]
       return nextChar === '/' || nextChar === undefined
     }
-    
+
     return false
   }
 

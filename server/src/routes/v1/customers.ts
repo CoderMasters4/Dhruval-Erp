@@ -9,14 +9,21 @@ const customerController = new CustomerController();
 router.use(authenticate);
 
 /**
- * @route   POST /api/v2/customers
+ * @route   POST /api/v1/customers
  * @desc    Create a new customer
  * @access  Private
  */
 router.post('/', customerController.createCustomer.bind(customerController));
 
 /**
- * @route   GET /api/v2/customers
+ * @route   POST /api/v1/customers/find-or-create
+ * @desc    Find or create customer for Sales (auto-save on first entry when typing new customer)
+ * @access  Private
+ */
+router.post('/find-or-create', customerController.findOrCreate.bind(customerController));
+
+/**
+ * @route   GET /api/v1/customers
  * @desc    Get customers by company with pagination and filters
  * @access  Private
  */

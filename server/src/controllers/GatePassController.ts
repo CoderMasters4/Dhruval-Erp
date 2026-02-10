@@ -234,6 +234,24 @@ export class GatePassController {
   }
 
   /**
+   * Mark gate pass OUT at gate (spec: security workflow)
+   */
+  async markOutAtGate(req: Request, res: Response): Promise<void> {
+    try {
+      const { id } = req.params;
+      const markedBy = (req.user?.userId || req.user?._id)?.toString();
+      const gatePass = await this.gatePassService.markOutAtGate(id, markedBy);
+      if (!gatePass) {
+        this.sendError(res, new Error('Gate pass not found'), 'Gate pass not found', 404);
+        return;
+      }
+      this.sendSuccess(res, gatePass, 'Gate pass marked OUT at gate');
+    } catch (error) {
+      this.sendError(res, error, 'Failed to mark gate pass out');
+    }
+  }
+
+  /**
    * Get gate pass statistics
    */
   async getGatePassStats(req: Request, res: Response): Promise<void> {

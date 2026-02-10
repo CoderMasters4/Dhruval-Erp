@@ -181,6 +181,30 @@ export const customersApi = baseApi.injectEndpoints({
       invalidatesTags: ['Customer'],
     }),
 
+    // Find or create customer for Sales (spec: auto-save on first entry when typing new customer)
+    findOrCreateCustomer: builder.mutation<
+      { success: boolean; data: Customer; message: string; created?: boolean },
+      {
+        customerName: string
+        contactPerson?: string
+        mobile?: string
+        whatsapp?: string
+        email?: string
+        gstin?: string
+        address?: string
+        state?: string
+        paymentTerms?: string
+        notes?: string
+      }
+    >({
+      query: (payload) => ({
+        url: '/customers/find-or-create',
+        method: 'POST',
+        body: payload,
+      }),
+      invalidatesTags: ['Customer'],
+    }),
+
     // Update customer
     updateCustomer: builder.mutation<
       { success: boolean; data: Customer; message: string },
@@ -252,6 +276,7 @@ export const {
   useGetCustomerStatsQuery,
   useGetCustomerByIdQuery,
   useCreateCustomerMutation,
+  useFindOrCreateCustomerMutation,
   useUpdateCustomerMutation,
   useDeleteCustomerMutation,
   useGetCustomerOrdersQuery,

@@ -2,7 +2,7 @@ import { Schema, model, Document } from 'mongoose';
 
 export interface IGatePass extends Document {
   gatePassNumber: string;
-  vehicleId: Schema.Types.ObjectId;
+  vehicleId?: Schema.Types.ObjectId;
   vehicleNumber: string;
   driverName: string;
   driverPhone: string;
@@ -15,8 +15,30 @@ export interface IGatePass extends Document {
   companyId: Schema.Types.ObjectId;
   timeIn: Date;
   timeOut?: Date;
-  status: 'active' | 'completed' | 'expired' | 'cancelled';
+  status: 'active' | 'completed' | 'expired' | 'cancelled' | 'approved' | 'printed' | 'out_at_gate';
   securityNotes?: string;
+  // Link to Dispatch / Invoice / Job Work Challan (spec: one of these)
+  dispatchId?: Schema.Types.ObjectId;
+  invoiceId?: Schema.Types.ObjectId;
+  jobWorkChallanId?: Schema.Types.ObjectId;
+  partyReceiver?: string;
+  transportName?: string;
+  // Material list: Design No, Qty/Unit, Bale/Carton count (spec)
+  materialList?: {
+    designNo?: string;
+    description?: string;
+    quantity: number;
+    unit: string;
+    baleCount?: number;
+    cartonCount?: number;
+  }[];
+  // Weights: Tare/Gross/Net optional (spec)
+  weights?: {
+    tare?: number;
+    gross?: number;
+    net?: number;
+  };
+  remarks?: string;
   items?: {
     description: string;
     quantity: number;
@@ -27,9 +49,9 @@ export interface IGatePass extends Document {
   printedBy?: Schema.Types.ObjectId;
   approvedBy?: Schema.Types.ObjectId;
   approvedAt?: Date;
+  gateOutAt?: Date; // Security: Marked OUT at Gate (spec)
   createdBy: Schema.Types.ObjectId;
   isActive: boolean;
-  // Instance methods
   isCurrentlyActive(): boolean;
   complete(): void;
   cancel(): void;
@@ -50,7 +72,7 @@ const GatePassSchema = new Schema<IGatePass>({
   vehicleId: {
     type: Schema.Types.ObjectId,
     ref: 'Vehicle',
-    required: true,
+    required: false,
     index: true
   },
   
@@ -128,15 +150,31 @@ const GatePassSchema = new Schema<IGatePass>({
   
   status: {
     type: String,
-    enum: ['active', 'completed', 'expired', 'cancelled'],
+    enum: ['active', 'completed', 'expired', 'cancelled', 'approved', 'printed', 'out_at_gate'],
     default: 'active',
     index: true
   },
   
-  securityNotes: {
-    type: String,
-    trim: true
+  securityNotes: { type: String, trim: true },
+  dispatchId: { type: Schema.Types.ObjectId, ref: 'Dispatch', index: true },
+  invoiceId: { type: Schema.Types.ObjectId, ref: 'Invoice', index: true },
+  jobWorkChallanId: { type: Schema.Types.ObjectId, ref: 'JobWork', index: true },
+  partyReceiver: { type: String, trim: true },
+  transportName: { type: String, trim: true },
+  materialList: [{
+    designNo: { type: String, trim: true },
+    description: { type: String, trim: true },
+    quantity: { type: Number, required: true, min: 0 },
+    unit: { type: String, trim: true },
+    baleCount: { type: Number, min: 0 },
+    cartonCount: { type: Number, min: 0 }
+  }],
+  weights: {
+    tare: { type: Number, min: 0 },
+    gross: { type: Number, min: 0 },
+    net: { type: Number, min: 0 }
   },
+  remarks: { type: String, trim: true },
   
   items: [{
     description: {
@@ -171,9 +209,8 @@ const GatePassSchema = new Schema<IGatePass>({
     ref: 'User'
   },
   
-  approvedAt: {
-    type: Date
-  },
+  approvedAt: { type: Date },
+  gateOutAt: { type: Date },
   
   createdBy: {
     type: Schema.Types.ObjectId,

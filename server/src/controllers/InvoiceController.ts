@@ -46,20 +46,22 @@ export class InvoiceController extends BaseController<IInvoice> {
   }
 
   /**
-   * Record payment
+   * Record payment (spec: payment mode, reference no)
    */
   async recordPayment(req: Request, res: Response): Promise<void> {
     try {
       const { invoiceId } = req.params;
-      const { paymentAmount, paymentMethod, paymentDate } = req.body;
+      const { paymentAmount, amount, paymentMethod, paymentDate, reference, notes } = req.body;
       const recordedBy = (req.user?.userId || req.user?._id)?.toString();
+      const paymentAmt = paymentAmount ?? amount;
 
       const invoice = await this.invoiceService.recordPayment(
         invoiceId,
-        paymentAmount,
+        paymentAmt,
         paymentMethod,
-        paymentDate,
-        recordedBy
+        paymentDate ? new Date(paymentDate) : undefined,
+        recordedBy,
+        { reference, notes }
       );
 
       this.sendSuccess(res, invoice, 'Payment recorded successfully');
